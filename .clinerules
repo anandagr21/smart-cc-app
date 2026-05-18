@@ -1,0 +1,89 @@
+# Project Rules
+
+## Documentation Sources
+
+Always read relevant files from these sources before making changes:
+
+- `/skills/*` — Treat skills as source of truth for coding conventions
+- `/docs/*` — Project architecture and domain knowledge
+
+**Read order:**
+1. `/skills/architecture.md` — understand the system layout first
+2. Relevant `/skills/*.md` files for the layer you're modifying
+3. `/docs/` files for domain-specific knowledge
+
+---
+
+## Core Directives
+
+### Follow Project Conventions Strictly
+- All code must adhere to patterns documented in `/skills/`
+- If a skill file defines a pattern, use it — do not invent alternatives
+- When conventions conflict, the skill file takes precedence
+
+### Reuse Existing Patterns Before Creating New Ones
+- Check `/skills/` for existing patterns before writing new code
+- If no pattern exists, check `/docs/` for guidance
+- If still no guidance, follow the established philosophy: simple, explicit, pure
+
+### Avoid Introducing Architectural Inconsistencies
+- Do not create new patterns that contradict existing ones
+- Do not bypass layer boundaries (see `/skills/architecture.md`)
+- If you think a new pattern is needed, document why and propose it first
+
+---
+
+## Layer Boundaries (Critical)
+
+These boundaries are **hard rules** — never violate them:
+
+1. **Business logic never in routes.** Routes are HTTP adapters only.
+2. **DB access never in services directly.** Always via repository.
+3. **AI never computes rewards.** Always call the engine via a service.
+4. **No circular imports.** Dependency direction is strictly enforced.
+5. **No global mutable state.** Use dependency injection (FastAPI `Depends`).
+6. **Config via environment variables.** Never hardcode secrets, URLs, or credentials.
+7. **Reward engine is pure.** No DB calls, no network calls, no randomness.
+
+See `/skills/architecture.md` for full dependency direction and layer responsibilities.
+
+---
+
+## Coding Standards Reference
+
+| Concern | Skill File |
+|---|---|
+| Architecture & layers | `/skills/architecture.md` |
+| Backend (Python) | `/skills/backend.md` |
+| Frontend (React Native) | `/skills/frontend.md` |
+| Database (PostgreSQL) | `/skills/database.md` |
+| API design | `/skills/api.md` |
+| Authentication | `/skills/auth.md` |
+| Reward engine | `/skills/reward-engine.md` |
+| Logging | `/skills/logging.md` |
+| Testing | `/skills/testing.md` |
+| AI / LLM patterns | `/skills/ai-patterns.md` |
+| Naming conventions | `/skills/naming-conventions.md` |
+| Deployment | `/skills/deployment.md` |
+| React Native / Expo | `/skills/react-native.md` |
+
+---
+
+## Before Writing Any Code
+
+1. Read the relevant skill file(s)
+2. Read the relevant doc file(s) from `/docs/`
+3. Check for existing implementations to reuse
+4. Follow the documented pattern exactly
+5. Add tests following `/skills/testing.md`
+
+---
+
+## Tech Stack Summary
+
+- **Backend:** FastAPI (async), SQLModel, PostgreSQL, LangGraph, Pydantic v2
+- **Frontend:** React Native (Expo), TypeScript, Zustand/Redux
+- **AI:** LangGraph agents (never compute rewards)
+- **Reward Engine:** Pure deterministic computation — single source of truth
+- **Config:** pydantic-settings (env variables)
+- **Tests:** pytest (backend), Jest (frontend)
