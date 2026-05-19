@@ -17,6 +17,9 @@ dependencies = [
     "pydantic-settings>=2.3.0",
     "python-dotenv>=1.0.0",
     "uuid7>=0.1.0",
+    "bcrypt>=4.0.0",
+    "PyJWT>=2.8.0",
+    "email-validator>=2.1.0",
 ]
 
 [project.optional-dependencies]
@@ -47,6 +50,7 @@ ignore_missing_imports = true
 packages = [
   "agents",
   "api",
+  "auth",
   "core",
   "models",
   "repositories",

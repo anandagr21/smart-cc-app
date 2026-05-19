@@ -3,10 +3,90 @@ Module: backend.api.v1.auth
 Responsibility: HTTP interface for user authentication.
 
 Architectural Boundaries:
-- Handles login, registration, and token generation requests.
-- Delegates to authentication service/core utilities.
-
-TODO:
-- Implement POST /login
-- Implement POST /register
+- Handles registration, login, and current-user endpoints.
+- Thin route handlers only — delegates all logic to AuthService.
+- No business logic, no DB access, no password hashing here.
 """
+
+from fastapi import APIRouter, Depends, status
+
+from api.deps import get_user_repo
+from auth.dependencies import get_current_user
+from auth.schemas import (
+    TokenResponse,
+    UserLoginRequest,
+    UserRegisterRequest,
+    UserResponse,
+)
+from auth.service import AuthService
+from repositories.user_repository import UserRepository
+from schemas.common import SingleResponse
+
+router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+# ---- Dependency Providers ----
+
+
+async def _get_auth_service(user_repo: UserRepository = Depends(get_user_repo)) -> AuthService:
+    """Wire AuthService with UserRepository for route injection."""
+    return AuthService(user_repo=user_repo)
+
+
+# ---- Public Routes ----
+
+
+@router.post(
+    "/register",
+    response_model=SingleResponse[TokenResponse],
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a new user",
+)
+async def register(
+    request: UserRegisterRequest,
+    auth_service: AuthService = Depends(_get_auth_service),
+) -> dict:
+    """Create a new user account and return an access token.
+
+    The password must be at least 8 characters.
+    Email must be unique — a 409 Conflict is returned if already registered.
+    """
+    result = await auth_service.register(request)
+    return {"data": result}
+
+
+@router.post(
+    "/login",
+    response_model=SingleResponse[TokenResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Log in with email and password",
+)
+async def login(
+    request: UserLoginRequest,
+    auth_service: AuthService = Depends(_get_auth_service),
+) -> dict:
+    """Authenticate with email and password, return an access token.
+
+    Returns 401 Unauthorized if credentials are invalid.
+    """
+    result = await auth_service.login(request)
+    return {"data": result}
+
+
+# ---- Protected Routes ----
+
+
+@router.get(
+    "/me",
+    response_model=SingleResponse[UserResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Get the current authenticated user",
+)
+async def get_me(
+    current_user: UserResponse = Depends(get_current_user),
+) -> dict:
+    """Return the profile of the currently authenticated user.
+
+    Requires a valid Bearer token in the Authorization header.
+    """
+    return {"data": current_user}

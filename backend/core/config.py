@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     database_max_overflow: int = 20
     database_pool_pre_ping: bool = True  # Verify connections before use — prevents stale pool errors
 
+    # ---- Auth ----
+    secret_key: str = "change-me-in-production-use-env-var"
+    access_token_expire_minutes: int = 60  # 1 hour
+
     # ---- Logging ----
     log_level: str = "INFO"
     log_format: str = "json"  # "json" (structured) or "text" (development)

@@ -20,9 +20,11 @@ Usage in routes:
 
 from collections.abc import AsyncGenerator
 
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import async_session_factory
+from repositories.user_repository import UserRepository
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -38,3 +40,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
+
+
+async def get_user_repo(db: AsyncSession = Depends(get_db)) -> UserRepository:
+    """Provide a UserRepository instance wired with the current DB session."""
+    return UserRepository(session=db)
