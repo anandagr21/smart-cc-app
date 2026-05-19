@@ -22,6 +22,8 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db  # Canonical DB dependency
+from merchants.repository import AliasRepository, MerchantRepository
+from merchants.service import MerchantService
 from repositories.card_repository import CardCatalogRepository, UserCardRepository
 from repositories.user_repository import UserRepository
 from services.card_service import CardCatalogService, UserCardService
@@ -58,3 +60,25 @@ async def get_user_card_service(
 ) -> UserCardService:
     """Provide a UserCardService instance with its repository dependency wired."""
     return UserCardService(user_card_repo=user_card_repo)
+
+
+async def get_merchant_repo(
+    db: AsyncSession = Depends(get_db),
+) -> MerchantRepository:
+    """Provide a MerchantRepository instance wired with the current DB session."""
+    return MerchantRepository(session=db)
+
+
+async def get_alias_repo(
+    db: AsyncSession = Depends(get_db),
+) -> AliasRepository:
+    """Provide an AliasRepository instance wired with the current DB session."""
+    return AliasRepository(session=db)
+
+
+async def get_merchant_service(
+    merchant_repo: MerchantRepository = Depends(get_merchant_repo),
+    alias_repo: AliasRepository = Depends(get_alias_repo),
+) -> MerchantService:
+    """Provide a MerchantService instance with its repository dependencies wired."""
+    return MerchantService(merchant_repo=merchant_repo, alias_repo=alias_repo)
