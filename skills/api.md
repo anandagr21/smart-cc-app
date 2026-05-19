@@ -95,8 +95,8 @@
 ```python
 # backend/api/v1/recommendations.py
 from fastapi import APIRouter, Depends
-from backend.schemas.recommendation import RecommendationRequest, RecommendationResponse
-from backend.services.recommendation_service import RecommendationService
+from schemas.recommendation import RecommendationRequest, RecommendationResponse
+from services.recommendation_service import RecommendationService
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 

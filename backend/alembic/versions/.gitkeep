@@ -1,0 +1,2 @@
+# Placeholder — Alembic migration files will be generated here.
+# Run: cd backend && alembic revision --autogenerate -m "description"

@@ -55,7 +55,7 @@ backend/tests/
 # tests/unit/reward_engine/test_cashback.py
 import pytest
 from decimal import Decimal
-from backend.reward_engine.cashback import compute_cashback
+from reward_engine.cashback import compute_cashback
 
 def test_cashback_standard_rate():
     result = compute_cashback(rate=Decimal("5.0"), amount=Decimal("1000"))

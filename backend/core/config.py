@@ -1,11 +1,67 @@
 """
 Module: backend.core.config
-Responsibility: Application configuration management.
+Responsibility: Application configuration via environment variables.
 
 Architectural Boundaries:
-- Centralized configuration via environment variables (pydantic-settings).
-- No hardcoded secrets.
+- Centralized configuration using pydantic-settings (Pydantic v2).
+- All secrets, URLs, and environment-specific values read from env vars only.
+- No hardcoded values — every setting has a sensible default or is required.
 
-TODO:
-- Define Settings class.
+Decision: Using Pydantic v2's `BaseSettings` (from pydantic-settings) ensures
+type-safe config with automatic env-var loading and validation at startup.
 """
+
+from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Application-wide settings sourced from environment variables.
+
+    All settings are loaded from environment variables or a `.env` file.
+    Secrets (like DATABASE_URL) must NEVER be hardcoded — they must come from env.
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",  # Ignore unknown env vars — safe with other services
+    )
+
+    # ---- Application ----
+    app_name: str = "Smart CC API"
+    app_version: str = "0.1.0"
+    debug: bool = False
+    environment: str = "development"  # "development" | "staging" | "production"
+
+    # ---- Server ----
+    host: str = "0.0.0.0"
+    port: int = 8000
+
+    # ---- Database ----
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/smart_cc"
+    database_pool_size: int = 10
+    database_max_overflow: int = 20
+    database_pool_pre_ping: bool = True  # Verify connections before use — prevents stale pool errors
+
+    # ---- Logging ----
+    log_level: str = "INFO"
+    log_format: str = "json"  # "json" (structured) or "text" (development)
+
+    # ---- CORS ----
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:19006"]
+
+    # ---- API ----
+    api_v1_prefix: str = "/api/v1"
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    """Return cached Settings singleton.
+
+    Using lru_cache ensures settings are loaded once and reused across all
+    dependency injections — avoids re-reading env vars on every request.
+    """
+    return Settings()

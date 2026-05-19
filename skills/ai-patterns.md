@@ -65,7 +65,7 @@ User question → Retrieve card data from service →
 ```python
 # backend/agents/recommendation_agent.py
 from langgraph.graph import StateGraph
-from backend.services.recommendation_service import RecommendationService
+from services.recommendation_service import RecommendationService
 
 class RecommendationAgent:
     """Parses user intent, calls service, generates explanation."""
