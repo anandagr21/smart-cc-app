@@ -55,7 +55,7 @@ async def get_current_user(
     if credentials is None:
         raise UnauthorizedException(
             message="Missing Authorization header. Provide a Bearer token.",
-            error_code="MISSING_TOKEN",
+            code="MISSING_TOKEN",
         )
 
     token = credentials.credentials
@@ -66,12 +66,12 @@ async def get_current_user(
     except jwt.ExpiredSignatureError:
         raise UnauthorizedException(
             message="Access token has expired. Please log in again.",
-            error_code="TOKEN_EXPIRED",
+            code="TOKEN_EXPIRED",
         )
     except jwt.InvalidTokenError:
         raise UnauthorizedException(
             message="Invalid access token.",
-            error_code="INVALID_TOKEN",
+            code="INVALID_TOKEN",
         )
 
     # 3. Extract user ID from the token
@@ -79,7 +79,7 @@ async def get_current_user(
     if user_id_str is None:
         raise UnauthorizedException(
             message="Token is missing the subject (sub) claim.",
-            error_code="INVALID_TOKEN",
+            code="INVALID_TOKEN",
         )
 
     try:
@@ -87,7 +87,7 @@ async def get_current_user(
     except ValueError:
         raise UnauthorizedException(
             message="Token contains an invalid user ID.",
-            error_code="INVALID_TOKEN",
+            code="INVALID_TOKEN",
         )
 
     # 4. Fetch the user (raises NotFoundException → 401 via middleware)

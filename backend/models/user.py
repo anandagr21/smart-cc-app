@@ -8,9 +8,13 @@ Architectural Boundaries:
 """
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from models.user_card import UserCard
 
 
 class User(SQLModel, table=True):
@@ -37,4 +41,10 @@ class User(SQLModel, table=True):
     updated_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column_kwargs={"onupdate": datetime.utcnow},
+    )
+
+    # ---- Relationships ----
+    user_cards: list["UserCard"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={"lazy": "selectin"},
     )

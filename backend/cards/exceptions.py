@@ -3,14 +3,14 @@ Module: backend.cards.exceptions
 Responsibility: Domain-specific exceptions for the Card Management module.
 
 Architectural Boundaries:
-- Extends the core DomainException hierarchy for card-specific errors.
+- Extends the core AppException hierarchy for card-specific errors.
 - Used by card services to raise semantically meaningful errors.
 - Caught by the global exception handler in core/middleware.py.
 """
 
 from core.exceptions import (
+    AppException,
     ConflictException,
-    DomainException,
     NotFoundException,
     ValidationException,
 )
@@ -22,7 +22,7 @@ class CardNotFoundException(NotFoundException):
     def __init__(self, card_id: str, details: dict | None = None):
         super().__init__(
             message=f"Card with id '{card_id}' not found.",
-            error_code="CARD_NOT_FOUND",
+            code="CARD_NOT_FOUND",
             details=details,
         )
 
@@ -33,7 +33,7 @@ class UserCardNotFoundException(NotFoundException):
     def __init__(self, card_id: str, details: dict | None = None):
         super().__init__(
             message=f"User card with id '{card_id}' not found.",
-            error_code="USER_CARD_NOT_FOUND",
+            code="USER_CARD_NOT_FOUND",
             details=details,
         )
 
@@ -44,7 +44,7 @@ class CardAlreadyExistsException(ConflictException):
     def __init__(self, user_id: str, card_catalog_id: str, details: dict | None = None):
         super().__init__(
             message=f"User '{user_id}' already owns card '{card_catalog_id}'.",
-            error_code="DUPLICATE_CARD",
+            code="DUPLICATE_CARD",
             details=details,
         )
 
@@ -55,7 +55,7 @@ class CardValidationException(ValidationException):
     def __init__(self, message: str, details: dict | None = None):
         super().__init__(
             message=message,
-            error_code="CARD_VALIDATION_ERROR",
+            code="CARD_VALIDATION_ERROR",
             details=details,
         )
 
@@ -66,6 +66,6 @@ class CardCatalogNotFoundException(NotFoundException):
     def __init__(self, card_id: str, details: dict | None = None):
         super().__init__(
             message=f"Card catalog entry with id '{card_id}' not found.",
-            error_code="CARD_CATALOG_NOT_FOUND",
+            code="CARD_CATALOG_NOT_FOUND",
             details=details,
         )

@@ -18,7 +18,7 @@ from httpx import ASGITransport, AsyncClient
 from auth.dependencies import get_current_user
 from auth.schemas import TokenResponse, UserResponse
 from auth.service import AuthService
-from core.exceptions import ConflictException, UnauthorizedException
+from core.exceptions import AppException, ConflictException, UnauthorizedException
 
 
 # ---- Test Data Constants ----
@@ -61,12 +61,12 @@ def _build_test_app(mock_service: MagicMock, mock_user_repo: AsyncMock = None, *
                                    If False, the real get_current_user dependency runs
                                    (useful for testing token validation behavior).
 
-    IMPORTANT: Registers a global exception handler for DomainException so that
+    IMPORTANT: Registers a global exception handler for AppException so that
     service-layer exceptions are properly converted to HTTP error responses.
     """
     from api.v1.auth import _get_auth_service, router
     from api.deps import get_user_repo
-    from core.exceptions import DomainException
+    from core.exceptions import AppException
     from starlette.requests import Request
     from starlette.responses import JSONResponse
 
@@ -81,14 +81,14 @@ def _build_test_app(mock_service: MagicMock, mock_user_repo: AsyncMock = None, *
 
     app = FastAPI()
 
-    # Register global exception handler — converts DomainException to HTTP responses
-    @app.exception_handler(DomainException)
-    async def domain_exception_handler(request: Request, exc: DomainException) -> JSONResponse:
+    # Register global exception handler — converts AppException to HTTP responses
+    @app.exception_handler(AppException)
+    async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
         return JSONResponse(
             status_code=exc.status_code,
             content={
                 "error": {
-                    "code": exc.error_code,
+                    "code": exc.code,
                     "message": exc.message,
                     "details": exc.details,
                 }
@@ -260,7 +260,7 @@ class TestRegisterRoute:
         mock_auth_service.register = AsyncMock(
             side_effect=ConflictException(
                 message="A user with this email already exists.",
-                error_code="EMAIL_ALREADY_EXISTS",
+                code="EMAIL_ALREADY_EXISTS",
             )
         )
 
@@ -309,7 +309,7 @@ class TestLoginRoute:
         mock_auth_service.login = AsyncMock(
             side_effect=UnauthorizedException(
                 message="Invalid email or password.",
-                error_code="INVALID_CREDENTIALS",
+                code="INVALID_CREDENTIALS",
             )
         )
 

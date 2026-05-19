@@ -136,7 +136,7 @@ class UserCardRepository(BaseRepository[UserCard, dict, dict]):
         if entity is None:
             raise NotFoundException(
                 message=f"User card with id '{card_id}' not found for this user.",
-                error_code="USER_CARD_NOT_FOUND",
+                code="USER_CARD_NOT_FOUND",
             )
         return entity
 

@@ -1,89 +1,367 @@
 # Project Rules
 
-## Documentation Sources
+## Primary Goal
 
-Always read relevant files from these sources before making changes:
+Maintain:
 
-- `/skills/*` — Treat skills as source of truth for coding conventions
-- `/docs/*` — Project architecture and domain knowledge
+* clean architecture
+* deterministic reward engine
+* modular design
+* low token usage
+* focused context retrieval
 
-**Read order:**
-1. `/skills/architecture.md` — understand the system layout first
-2. Relevant `/skills/*.md` files for the layer you're modifying
-3. `/docs/` files for domain-specific knowledge
+Optimize for:
 
----
-
-## Core Directives
-
-### Follow Project Conventions Strictly
-- All code must adhere to patterns documented in `/skills/`
-- If a skill file defines a pattern, use it — do not invent alternatives
-- When conventions conflict, the skill file takes precedence
-
-### Reuse Existing Patterns Before Creating New Ones
-- Check `/skills/` for existing patterns before writing new code
-- If no pattern exists, check `/docs/` for guidance
-- If still no guidance, follow the established philosophy: simple, explicit, pure
-
-### Avoid Introducing Architectural Inconsistencies
-- Do not create new patterns that contradict existing ones
-- Do not bypass layer boundaries (see `/skills/architecture.md`)
-- If you think a new pattern is needed, document why and propose it first
+* scalable AI-assisted development
+* maintainability
+* context efficiency
+* predictable code generation
 
 ---
 
-## Layer Boundaries (Critical)
+# Context Efficiency Rules (Critical)
 
-These boundaries are **hard rules** — never violate them:
+Minimize token usage aggressively.
 
-1. **Business logic never in routes.** Routes are HTTP adapters only.
-2. **DB access never in services directly.** Always via repository.
-3. **AI never computes rewards.** Always call the engine via a service.
-4. **No circular imports.** Dependency direction is strictly enforced.
-5. **No global mutable state.** Use dependency injection (FastAPI `Depends`).
-6. **Config via environment variables.** Never hardcode secrets, URLs, or credentials.
-7. **Reward engine is pure.** No DB calls, no network calls, no randomness.
+Before reading any files:
 
-See `/skills/architecture.md` for full dependency direction and layer responsibilities.
+1. Identify the exact module being modified
+2. Read ONLY directly relevant files
+3. Avoid scanning unrelated folders
+4. Avoid loading entire repository context
+5. Prefer module-level context over repo-wide context
+
+DO NOT:
+
+* read all docs automatically
+* read all skills automatically
+* scan unrelated feature folders
+* analyze entire repository unless explicitly required
+* reload stable modules unnecessarily
+
+Examples:
+
+Auth task:
+Read only:
+
+* `/skills/architecture.md`
+* `/skills/backend.md`
+* `/skills/auth.md`
+* relevant auth docs
+
+Reward engine task:
+Read only:
+
+* `/skills/architecture.md`
+* `/skills/backend.md`
+* `/skills/reward-engine.md`
+* relevant reward docs
+
+Frontend task:
+Read only:
+
+* `/skills/frontend.md`
+* `/skills/react-native.md`
 
 ---
 
-## Coding Standards Reference
+# Stable Module Rule
 
-| Concern | Skill File |
-|---|---|
-| Architecture & layers | `/skills/architecture.md` |
-| Backend (Python) | `/skills/backend.md` |
-| Frontend (React Native) | `/skills/frontend.md` |
-| Database (PostgreSQL) | `/skills/database.md` |
-| API design | `/skills/api.md` |
-| Authentication | `/skills/auth.md` |
-| Reward engine | `/skills/reward-engine.md` |
-| Logging | `/skills/logging.md` |
-| Testing | `/skills/testing.md` |
-| AI / LLM patterns | `/skills/ai-patterns.md` |
-| Naming conventions | `/skills/naming-conventions.md` |
-| Deployment | `/skills/deployment.md` |
-| React Native / Expo | `/skills/react-native.md` |
+If a module already exists and is not being modified:
+
+* do not reload full implementation
+* do not regenerate files
+* inspect only public interfaces if needed
+
+Prefer:
+
+* localized edits
+* focused modifications
+* minimal context retrieval
 
 ---
 
-## Before Writing Any Code
+# Scope Discipline
 
-1. Read the relevant skill file(s)
-2. Read the relevant doc file(s) from `/docs/`
-3. Check for existing implementations to reuse
-4. Follow the documented pattern exactly
-5. Add tests following `/skills/testing.md`
+One task = one module or feature.
+
+Avoid:
+
+* repo-wide refactors
+* unrelated architecture rewrites
+* touching multiple domains simultaneously
+
+Prefer:
+
+* focused feature implementation
+* small incremental changes
+* isolated module development
+
+Examples of GOOD scope:
+
+* implement auth routes
+* add card repository
+* fix reward ranking bug
+
+Examples of BAD scope:
+
+* redesign whole backend
+* refactor all modules
+* rebuild architecture
 
 ---
 
-## Tech Stack Summary
+# Documentation Sources
 
-- **Backend:** FastAPI (async), SQLModel, PostgreSQL, LangGraph, Pydantic v2
-- **Frontend:** React Native (Expo), TypeScript, Zustand/Redux
-- **AI:** LangGraph agents (never compute rewards)
-- **Reward Engine:** Pure deterministic computation — single source of truth
-- **Config:** pydantic-settings (env variables)
-- **Tests:** pytest (backend), Jest (frontend)
+Read files in this order:
+
+1. `/skills/architecture.md`
+2. ONLY the directly relevant skill files
+3. ONLY the directly relevant docs
+
+Treat:
+
+* `/skills/*` as implementation rules
+* `/docs/*` as architecture/domain knowledge
+
+---
+
+# Core Directives
+
+## Follow Existing Patterns
+
+* Follow patterns defined in `/skills/`
+* Reuse existing implementations before creating new ones
+* Do not invent new architectural patterns unnecessarily
+
+If no pattern exists:
+
+1. follow established project philosophy
+2. prefer simple and explicit solutions
+3. document major architectural decisions
+
+---
+
+# Layer Boundaries (Hard Rules)
+
+These rules must never be violated.
+
+## Routes
+
+Routes are HTTP adapters only.
+
+Routes MAY:
+
+* validate requests
+* call services
+* return responses
+* handle dependency injection
+
+Routes MUST NOT:
+
+* contain business logic
+* execute SQL queries
+* calculate rewards
+* call AI providers directly
+
+---
+
+## Services
+
+Services orchestrate workflows only.
+
+Services MAY:
+
+* coordinate repositories
+* coordinate engine calls
+* coordinate AI workflows
+* validate business workflows
+
+Services MUST NOT:
+
+* execute raw SQL directly
+* contain HTTP logic
+* contain reward formulas
+
+---
+
+## Repositories
+
+Repositories handle persistence only.
+
+Repositories MAY:
+
+* execute DB queries
+* map persistence models
+
+Repositories MUST NOT:
+
+* contain business logic
+* contain reward calculations
+* call AI systems
+
+---
+
+## Reward Engine
+
+Reward engine is deterministic and pure.
+
+Engine MAY:
+
+* calculate cashback
+* evaluate caps
+* rank cards
+* normalize rewards
+
+Engine MUST NOT:
+
+* access database
+* access network
+* call AI systems
+* depend on FastAPI
+* contain randomness
+
+---
+
+## AI Layer
+
+AI assists reasoning only.
+
+AI MAY:
+
+* explain recommendations
+* normalize merchants
+* parse statements
+* orchestrate workflows
+
+AI MUST NOT:
+
+* calculate rewards
+* determine final cashback values
+* replace deterministic engine logic
+
+---
+
+# Dependency Direction
+
+Allowed dependency flow:
+
+Routes
+↓
+Services
+↓
+Repositories / Engine / AI
+↓
+Database / External APIs
+
+Never reverse this flow.
+
+No circular imports.
+
+---
+
+# Shared State Rules
+
+* No global mutable state
+* Use dependency injection
+* Use FastAPI Depends
+* Use environment variables for config
+* Never hardcode credentials or secrets
+
+---
+
+# Backend Rules
+
+Tech Stack:
+
+* FastAPI
+* SQLModel
+* PostgreSQL
+* Pydantic v2
+* AsyncSession
+
+Rules:
+
+* async-first architecture
+* proper typing everywhere
+* small modular files
+* explicit dependencies
+* meaningful docstrings
+* avoid magic abstractions
+
+---
+
+# Frontend Rules
+
+Tech Stack:
+
+* React Native
+* Expo
+* TypeScript
+
+Rules:
+
+* feature-first structure
+* reusable components
+* centralized API layer
+* avoid duplicated state
+* avoid oversized screens
+
+---
+
+# Testing Rules
+
+Write tests for:
+
+* business logic
+* reward calculations
+* repositories
+* critical services
+
+Reward engine tests must be:
+
+* deterministic
+* isolated
+* reproducible
+
+---
+
+# Architecture Philosophy
+
+Prefer:
+
+* simple
+* explicit
+* modular
+* deterministic
+* composable
+
+Avoid:
+
+* overengineering
+* premature abstractions
+* unnecessary indirection
+* giant service classes
+* hidden side effects
+
+---
+
+# Important Project Constraints
+
+* AI never computes rewards
+* Reward engine is single source of truth
+* Business logic never exists in routes
+* Database access always isolated
+* Architecture consistency is mandatory
+* Keep implementation incremental and modular
+
+---
+
+# Before Writing Code
+
+1. Identify exact module being modified
+2. Read only required skill/doc files
+3. Check for reusable existing patterns
+4. Preserve architecture boundaries
+5. Keep changes localized
+6. Avoid unnecessary context expansion

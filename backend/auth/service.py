@@ -43,7 +43,7 @@ class AuthService:
         if existing is not None:
             raise ConflictException(
                 message="A user with this email already exists.",
-                error_code="EMAIL_ALREADY_EXISTS",
+                code="EMAIL_ALREADY_EXISTS",
             )
 
         # Hash password and persist
@@ -80,13 +80,13 @@ class AuthService:
         if user is None:
             raise UnauthorizedException(
                 message="Invalid email or password.",
-                error_code="INVALID_CREDENTIALS",
+                code="INVALID_CREDENTIALS",
             )
 
         if not verify_password(request.password, user.hashed_password):
             raise UnauthorizedException(
                 message="Invalid email or password.",
-                error_code="INVALID_CREDENTIALS",
+                code="INVALID_CREDENTIALS",
             )
 
         token = create_access_token(user.id)
