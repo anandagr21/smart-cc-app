@@ -7,7 +7,7 @@ Architectural Boundaries:
 - Uses SQLModel for both DB table definition and Pydantic validation.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
@@ -32,9 +32,9 @@ class User(SQLModel, table=True):
     hashed_password: str = Field(max_length=128)
     full_name: str = Field(max_length=200)
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        default_factory=datetime.utcnow
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc)},
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
     )
