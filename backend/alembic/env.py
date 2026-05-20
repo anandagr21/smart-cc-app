@@ -37,6 +37,7 @@ from models.card_catalog import CardCatalog  # noqa: F401
 from models.transaction import Transaction  # noqa: F401
 from models.user import User  # noqa: F401
 from models.user_card import UserCard  # noqa: F401
+from rewards.models import RewardRule  # noqa: F401
 
 # Target metadata for autogenerate — includes all SQLModel tables
 target_metadata = SQLModel.metadata

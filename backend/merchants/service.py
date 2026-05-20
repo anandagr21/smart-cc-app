@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from merchants.categorizer import categorize, categorize_by_tokens
+from merchants.categorizer import categorize
 from merchants.constants import UNKNOWN_CATEGORY
 from merchants.exceptions import MerchantNotFoundException
 from merchants.matcher import find_best_match as match_merchant
@@ -62,7 +62,7 @@ class MerchantService:
         This is a pure CPU-bound operation — no async needed.
         """
         canonical, tokens = normalize_with_tokens(raw_name)
-        category = categorize_by_tokens(canonical)
+        category = categorize(canonical)
         return NormalizeResponse(
             raw_name=raw_name,
             canonical_name=canonical,
@@ -83,7 +83,7 @@ class MerchantService:
         for token-hint-based categorization.
         """
         if tokens is not None:
-            return categorize_by_tokens(" ".join(tokens))
+            return categorize(" ".join(tokens))
         if raw_name is None:
             raise ValueError("Either raw_name or tokens must be provided")
         return categorize(normalize(raw_name))
@@ -144,7 +144,7 @@ class MerchantService:
 
         # Auto-detect category if not provided
         if category is None or category == UNKNOWN_CATEGORY:
-            category = categorize_by_tokens(tokens)
+            category = categorize(normalized_canonical)
 
         create_data = {
             "canonical_name": normalized_canonical,

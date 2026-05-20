@@ -175,11 +175,20 @@ def _tokenize_and_filter(text: str) -> list[str]:
     # zero merchant identity signal.
     filtered: list[str] = [t for t in raw_tokens if t not in STOP_WORDS]
 
-    # Stage 2: Remove descriptor words — words that describe what
-    # the merchant sells, not who the merchant is.
-    # "DOMINOS PIZZA" → "dominos"
-    # "IRCTC RAIL"     → "irctc"
-    filtered = [t for t in filtered if t not in DESCRIPTOR_WORDS]
+    # Stage 2: Remove trailing descriptor words — words that describe
+    # what the merchant sells, not who the merchant is.
+    # "DOMINOS PIZZA"    → "dominos"
+    # "IRCTC RAIL"        → "irctc"
+    #
+    # Descriptors are only stripped from the END of the token list,
+    # where category descriptors naturally appear. Descriptors at the
+    # start of a name are brand-identity (e.g., "Pizza Hut" → "pizza hut",
+    # not "hut").
+    #
+    # Only strip if at least one identity-bearing token remains —
+    # when the raw name IS a descriptor word (e.g., "pizza"), keep it.
+    while filtered and filtered[-1] in DESCRIPTOR_WORDS and len(filtered) > 1:
+        filtered.pop()
 
     # Stage 3: Strip trailing common corporate suffixes.
     # Only suffixes at the **end** are stripped — we don't want to

@@ -26,6 +26,7 @@ from merchants.repository import AliasRepository, MerchantRepository
 from merchants.service import MerchantService
 from repositories.card_repository import CardCatalogRepository, UserCardRepository
 from repositories.user_repository import UserRepository
+from rewards.service import RewardRuleService
 from services.card_service import CardCatalogService, UserCardService
 
 
@@ -82,3 +83,10 @@ async def get_merchant_service(
 ) -> MerchantService:
     """Provide a MerchantService instance with its repository dependencies wired."""
     return MerchantService(merchant_repo=merchant_repo, alias_repo=alias_repo)
+
+
+async def get_reward_rule_service(
+    db: AsyncSession = Depends(get_db),
+) -> RewardRuleService:
+    """Provide a RewardRuleService instance wired with the current DB session."""
+    return RewardRuleService(session=db)

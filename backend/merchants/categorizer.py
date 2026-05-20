@@ -272,10 +272,20 @@ def categorize_by_tokens(normalized_name: str) -> MerchantCategory:
         return MerchantCategory.UNKNOWN
 
     tokens: list[str] = normalized_name.strip().split()
+
+    # Exact token match
     for token in tokens:
         hint: MerchantCategory | None = _TOKEN_HINTS.get(token)
         if hint is not None:
             return hint
+
+    # Substring fallback: when a token is a compound word (e.g.,
+    # "pizzahut"), check if it contains any hint key. This handles
+    # missing-space variants without needing every permutation in rules.
+    for token in tokens:
+        for hint_key, hint_category in _TOKEN_HINTS.items():
+            if hint_key in token:
+                return hint_category
 
     return MerchantCategory.UNKNOWN
 
