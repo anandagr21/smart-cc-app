@@ -19,6 +19,7 @@ from .cards import router as cards_router
 from .health import router as health_router
 from merchants.routes import router as merchants_router
 from rewards.routes import router as reward_rules_router
+from reward_engine.eval_routes import router as eval_router
 from core.config import get_settings
 
 settings = get_settings()
@@ -31,3 +32,4 @@ api_router.include_router(cards_router)
 api_router.include_router(health_router)
 api_router.include_router(merchants_router)
 api_router.include_router(reward_rules_router)
+api_router.include_router(eval_router)
