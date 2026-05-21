@@ -45,6 +45,34 @@ class CapScope(StrEnum):
     MONTHLY = "monthly"
     CATEGORY = "category"
     ANNUAL = "annual"
+    MERCHANT = "merchant"
+
+
+# ---------------------------------------------------------------------------
+# Cap Type Constants
+# ---------------------------------------------------------------------------
+
+CAP_TYPE_TRANSACTION: str = "transaction_cap"
+CAP_TYPE_MONTHLY: str = "monthly_cap"
+CAP_TYPE_CATEGORY: str = "category_cap"
+CAP_TYPE_MERCHANT: str = "merchant_cap"
+CAP_TYPE_ANNUAL: str = "annual_cap"
+
+_CAP_TYPE_SET: frozenset[str] = frozenset(
+    {CAP_TYPE_TRANSACTION, CAP_TYPE_MONTHLY, CAP_TYPE_CATEGORY, CAP_TYPE_MERCHANT, CAP_TYPE_ANNUAL}
+)
+
+# Mapping of scope strings to CapScope enum values.
+CAP_SCOPE_MAP: dict[str, CapScope] = {
+    "per_transaction": CapScope.PER_TRANSACTION,
+    "transaction": CapScope.PER_TRANSACTION,
+    "monthly": CapScope.MONTHLY,
+    "month": CapScope.MONTHLY,
+    "category": CapScope.CATEGORY,
+    "annual": CapScope.ANNUAL,
+    "yearly": CapScope.ANNUAL,
+    "merchant": CapScope.MERCHANT,
+}
 
 
 class MatchType(StrEnum):

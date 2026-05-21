@@ -8,18 +8,17 @@ Architectural Boundaries:
 - Merchant stores canonical identities; MerchantAlias stores alternate names.
 """
 
-from __future__ import annotations
-
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import Column, Index, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlmodel import Field, Relationship, SQLModel
 
+
 if TYPE_CHECKING:
-    pass
+    from .models import MerchantAlias
 
 
 class Merchant(SQLModel, table=True):
@@ -85,13 +84,13 @@ class Merchant(SQLModel, table=True):
         sa_column_kwargs={"onupdate": datetime.utcnow},
     )
 
-    # ---- Relationships ----
-    aliases: list["MerchantAlias"] = Relationship(
+    # ---- Relationships ---
+    aliases: List["MerchantAlias"] = Relationship(
         back_populates="merchant",
         sa_relationship_kwargs={"cascade": "all, delete-orphan", "lazy": "selectin"},
     )
 
-    # ---- Table-level Indexes ----
+    # ---- Table-level Indexes ---
     __table_args__ = (
         Index("ix_merchants_normalized_tokens_gin", "normalized_tokens", postgresql_using="gin"),
         Index("ix_merchants_category_idx", "category"),
@@ -154,10 +153,10 @@ class MerchantAlias(SQLModel, table=True):
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    # ---- Relationships ----
-    merchant: Merchant = Relationship(back_populates="aliases")
+    # ---- Relationships ---
+    merchant: "Merchant" = Relationship(back_populates="aliases")
 
-    # ---- Table-level Constraints ----
+    # ---- Table-level Constraints ---
     __table_args__ = (
         UniqueConstraint("merchant_id", "normalized_name", name="uq_alias_merchant_normalized"),
         Index("ix_merchant_aliases_normalized_tokens_gin", "normalized_tokens", postgresql_using="gin"),

@@ -144,25 +144,28 @@ def validate_rule_schema(rule_type: RewardRuleType, config: dict[str, Any]) -> N
 
 
 def validate_no_duplicate_rule(
-    existing_rules: list[Any], rule_type: RewardRuleType, config: dict[str, Any]
+    existing_rules: list[Any], rule_name: str
 ) -> None:
-    """Check that no rule with the same *rule_type* and *config* already exists for a card.
+    """Check that no rule with the same *rule_name* already exists for a card.
 
     This is a convenience validator used by the service layer before creation.
 
     Args:
         existing_rules: List of existing RewardRule models for the card.
-        rule_type: The proposed rule type for the new rule.
-        config: The proposed (already normalized) rule_config.
+        rule_name: The proposed rule name for the new rule.
 
     Raises:
-        DuplicateRuleException: If an identical rule already exists for the card.
+        DuplicateRuleException: If a rule with the same name already exists for the card.
     """
     from rewards.exceptions import DuplicateRuleException
 
     for rule in existing_rules:
-        if rule.rule_type == rule_type.value and rule.rule_config == config:
+        if rule.rule_name == rule_name:
             raise DuplicateRuleException(
                 card_id=rule.card_id,
                 rule_name=rule.rule_name,
             )
+
+
+# Alias for backward compatibility with test suite
+validate_rule_config = validate_rule_schema

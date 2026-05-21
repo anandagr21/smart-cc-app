@@ -102,6 +102,9 @@ def _make_sample_reward_rule_dict(
 
 def _make_mock_reward_rule(**overrides) -> MagicMock:
     """Build a MagicMock that quacks like a RewardRule ORM instance."""
+    # Handle rule_id -> id mapping
+    if "rule_id" in overrides:
+        overrides["id"] = overrides.pop("rule_id")
     defaults = _make_sample_reward_rule_dict()
     defaults.update(overrides)
     mock = MagicMock(spec=RewardRule)
@@ -1639,5 +1642,5 @@ class TestRewardRuleRoutes:
         app = _build_test_app(mock_reward_rule_service)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as ac:
-            response = await ac.delete("/reward-rules/nonexistent")
+            response = await ac.delete(f"/reward-rules/{VALID_RULE_ID_1}")
             assert response.status_code == 404

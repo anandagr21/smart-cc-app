@@ -71,7 +71,8 @@ class RewardRuleCreate(_RewardRuleBase):
     validates the outer shape.
     """
 
-    pass
+    model_config = {"extra": "forbid"}
+
 
 
 class RewardRuleUpdate(BaseModel):
