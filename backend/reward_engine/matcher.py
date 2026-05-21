@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Optional
+from typing import Callable, Optional
 
 from reward_engine.constants import (
     KEY_CATEGORY,
@@ -57,6 +57,39 @@ def _resolve_payment_mode(config: dict) -> str:
     return config.get(KEY_PAYMENT_MODE, "any")
 
 
+# ---------------------------------------------------------------------------
+# Predicate Validation
+# ---------------------------------------------------------------------------
+
+RulePredicate = Callable[["TransactionContext", dict], bool]
+
+def _check_min_spend_predicate(txn: TransactionContext, cfg: dict) -> bool:
+    min_spend_raw = cfg.get(KEY_MIN_SPEND)
+    min_spend = Decimal(str(min_spend_raw)) if min_spend_raw is not None else ZERO_DECIMAL
+    return check_minimum_spend(txn.amount, min_spend)
+
+def _check_validity_predicate(txn: TransactionContext, cfg: dict) -> bool:
+    valid_from_raw = cfg.get(KEY_VALID_FROM)
+    valid_to_raw = cfg.get(KEY_VALID_TO)
+    valid_from = date.fromisoformat(valid_from_raw) if isinstance(valid_from_raw, str) else None
+    valid_to = date.fromisoformat(valid_to_raw) if isinstance(valid_to_raw, str) else None
+    return is_within_validity_window(txn.transaction_date, valid_from, valid_to)
+
+def _check_payment_mode_predicate(txn: TransactionContext, cfg: dict) -> bool:
+    rule_payment_mode = _resolve_payment_mode(cfg)
+    if rule_payment_mode != "any":
+        txn_pm = txn.payment_mode if isinstance(txn.payment_mode, str) else txn.payment_mode.value
+        return rule_payment_mode.lower() == txn_pm.lower()
+    return True
+
+_PREDICATES: list[RulePredicate] = [
+    _check_min_spend_predicate,
+    _check_validity_predicate,
+    _check_payment_mode_predicate,
+]
+
+
+
 def match_rules(
     txn: TransactionContext,
     rules: list[NormalizedRuleConfig],
@@ -86,26 +119,11 @@ def match_rules(
     for rule in rules:
         cfg = rule.config
 
-        # ---- Gate: minimum spend ----
-        min_spend_raw = cfg.get(KEY_MIN_SPEND)
-        min_spend = Decimal(str(min_spend_raw)) if min_spend_raw is not None else ZERO_DECIMAL
-        if not check_minimum_spend(txn.amount, min_spend):
+        # ---- Gate: constraints evaluation ----
+        if not all(predicate(txn, cfg) for predicate in _PREDICATES):
             continue
 
-        # ---- Gate: validity window ----
-        valid_from_raw = cfg.get(KEY_VALID_FROM)
-        valid_to_raw = cfg.get(KEY_VALID_TO)
-        valid_from = date.fromisoformat(valid_from_raw) if isinstance(valid_from_raw, str) else None
-        valid_to = date.fromisoformat(valid_to_raw) if isinstance(valid_to_raw, str) else None
-        if not is_within_validity_window(txn.transaction_date, valid_from, valid_to):
-            continue
-
-        # ---- Gate: payment mode ----
         rule_payment_mode = _resolve_payment_mode(cfg)
-        if rule_payment_mode != "any":
-            txn_pm = txn.payment_mode if isinstance(txn.payment_mode, str) else txn.payment_mode.value
-            if rule_payment_mode.lower() != txn_pm.lower():
-                continue
 
         # ---- Match: exact merchant ----
         rule_merchant = cfg.get(KEY_MERCHANT)
@@ -153,8 +171,9 @@ def match_rules(
 
 def _match_sort_key(
     item: tuple[NormalizedRuleConfig, MatchType],
-) -> tuple[int, int]:
+) -> tuple[int, int, Decimal, str]:
     """Sort key: lowest priority first, then most specific match type.
+    Ties broken by highest reward rate, then alphabetical rule name.
 
     MatchType ordering (most → least specific):
       EXACT_MERCHANT (0), CATEGORY_MATCH (1), PAYMENT_MODE (2), DEFAULT (3)
@@ -166,7 +185,8 @@ def _match_sort_key(
         MatchType.PAYMENT_MODE: 2,
         MatchType.DEFAULT: 3,
     }
-    return (rule.priority, match_order.get(match_type, 99))
+    reward_rate = Decimal(str(rule.config.get("reward_rate", 0)))
+    return (rule.priority, match_order.get(match_type, 99), -reward_rate, rule.rule_name)
 
 
 # -- Structural rule types that are NEVER bonus/generating rules --

@@ -257,10 +257,14 @@ def apply_caps_from_config(
     """
     from reward_engine.cap_normalizer import normalize_caps
     from reward_engine.cap_matcher import match_caps
-    from reward_engine.cap_schemas import CapResult
+    from reward_engine.schemas import CapResult
+    from reward_engine.cap_exceptions import CapInvalidConfigException
 
     # Normalize caps from config
-    caps = normalize_caps(config)
+    try:
+        caps = normalize_caps(config)
+    except CapInvalidConfigException:
+        caps = []
 
     if not caps:
         # No caps defined - return uncapped
@@ -278,7 +282,7 @@ def apply_caps_from_config(
     capped = apply_single_cap(
         uncapped_reward,
         cap.limit,
-        cumulative_spend if cap.scope == CapScope.PER_MONTH else ZERO_DECIMAL,
+        cumulative_spend if cap.scope == CapScope.MONTHLY else ZERO_DECIMAL,
         cap.scope,
     )
 

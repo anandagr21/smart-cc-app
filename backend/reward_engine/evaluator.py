@@ -20,7 +20,7 @@ Pipeline (fixed order):
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Optional
+from typing import Callable, Optional
 
 from reward_engine.caps import apply_caps_from_config
 from reward_engine.cashback import build_cashback_step, evaluate_cashback
@@ -39,6 +39,32 @@ from reward_engine.schemas import (
     TransactionContext,
 )
 from reward_engine.utils import to_decimal
+
+# ---------------------------------------------------------------------------
+# Reward Strategies Registry
+# ---------------------------------------------------------------------------
+
+RewardStrategy = Callable[
+    ["TransactionContext", "MatchResult"],
+    tuple[Optional[Decimal], Optional["PointsResult"], "EvaluationStep"]
+]
+
+def _evaluate_cashback_strategy(
+    txn: TransactionContext, match: MatchResult
+) -> tuple[Optional[Decimal], Optional[PointsResult], EvaluationStep]:
+    cashback_amount = evaluate_cashback(txn, match)
+    return cashback_amount, None, build_cashback_step(cashback_amount, match)
+
+def _evaluate_points_strategy(
+    txn: TransactionContext, match: MatchResult
+) -> tuple[Optional[Decimal], Optional[PointsResult], EvaluationStep]:
+    points_result = evaluate_points(txn, match)
+    return None, points_result, build_points_step(points_result, match)
+
+_REWARD_STRATEGIES: dict[RewardType, RewardStrategy] = {
+    RewardType.CASHBACK: _evaluate_cashback_strategy,
+    RewardType.POINTS: _evaluate_points_strategy,
+}
 
 
 def evaluate(
@@ -127,19 +153,9 @@ def evaluate(
     # ------------------------------------------------------------------
     # Step 3: Reward evaluation (cashback or points)
     # ------------------------------------------------------------------
-    cashback_amount: Optional[Decimal] = None
-    points_result: Optional[PointsResult] = None
+    strategy = _REWARD_STRATEGIES.get(match.reward_type)
 
-    if match.reward_type == RewardType.CASHBACK:
-        cashback_amount = evaluate_cashback(txn, match)
-        breakdown.append(build_cashback_step(cashback_amount, match))
-
-    elif match.reward_type == RewardType.POINTS:
-        points_result = evaluate_points(txn, match)
-        breakdown.append(build_points_step(points_result, match))
-
-    else:
-        # Future reward types (miles, vouchers) — placeholder
+    if strategy is None:
         warnings.append(
             f"Reward type '{match.reward_type.value}' is not yet implemented. No reward computed."
         )
@@ -151,6 +167,9 @@ def evaluate(
             breakdown=breakdown,
             warnings=warnings,
         )
+
+    cashback_amount, points_result, eval_step = strategy(txn, match)
+    breakdown.append(eval_step)
 
     # ------------------------------------------------------------------
     # Step 4: Cap application
@@ -190,8 +209,13 @@ def evaluate(
             # Scale points proportionally when cap reduces rupee value
             if uncapped > ZERO_DECIMAL:
                 ratio = cap_result.capped_reward / uncapped
-                points_result.earned_points = int(points_result.earned_points * float(ratio))
-                points_result.rupee_value = cap_result.capped_reward
+                new_earned = int(points_result.earned_points * float(ratio))
+                points_result = points_result.model_copy(
+                    update={
+                        "earned_points": new_earned,
+                        "rupee_value": cap_result.capped_reward,
+                    }
+                )
 
     # ------------------------------------------------------------------
     # Step 5: Normalize effective reward value
