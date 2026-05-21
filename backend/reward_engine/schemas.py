@@ -15,7 +15,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from reward_engine.constants import CapScope, MatchType, PaymentMode, RewardType
 
@@ -54,8 +54,23 @@ class TransactionContext(BaseModel):
     )
     transaction_date: date | None = Field(
         default=None,
-        description="Date when the transaction occurred.",
+        description="Date when the transaction occurred (accepts date or datetime strings).",
     )
+
+    @field_validator('transaction_date', mode='before')
+    @classmethod
+    def _parse_transaction_date(cls, v):
+        """Parse transaction_date from datetime strings or date strings."""
+        if v is None:
+            return v
+        if isinstance(v, str):
+            if 'T' in v:
+                return date.fromisoformat(v.split('T')[0])
+            return date.fromisoformat(v)
+        if isinstance(v, datetime):
+            return v.date()
+        return v
+
     is_online: bool = Field(
         default=False,
         description="Whether the transaction was conducted online.",
