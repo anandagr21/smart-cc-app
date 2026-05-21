@@ -6,10 +6,10 @@ interface CardProps extends ViewProps {
   padded?: boolean;
 }
 
-export const Card: React.FC<CardProps> = ({ children, padded = true, className, ...props }) => {
+export const Card: React.FC<CardProps> = ({ children, padded = true, className = '', ...props }) => {
   return (
     <View 
-      className={`bg-card rounded-2xl border border-border overflow-hidden ${padded ? 'p-5' : ''} ${className}`}
+      className={`bg-surface/95 rounded-2xl border border-white/5 overflow-hidden shadow-lg shadow-black/20 ${padded ? 'p-6' : ''} ${className}`}
       {...props}
     >
       {children}

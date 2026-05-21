@@ -6,12 +6,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#0F0F13',
-        card: '#1C1C21',
-        primary: '#3B82F6',
+        background: '#09090B',
+        surface: '#18181B',
+        surfaceElevated: '#27272A',
+        primary: '#10B981',
         accent: '#10B981',
+        accentGlow: 'rgba(16, 185, 129, 0.15)',
         textPrimary: '#FFFFFF',
-        textSecondary: '#9CA3AF'
+        textSecondary: '#A1A1AA',
+        textMuted: '#71717A',
+        border: '#27272A',
+        borderHighlight: '#3F3F46',
       }
     },
   },

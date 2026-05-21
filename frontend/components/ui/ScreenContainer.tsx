@@ -10,7 +10,7 @@ interface ScreenContainerProps extends ViewProps {
 export const ScreenContainer: React.FC<ScreenContainerProps> = ({ children, noPadding = false, className, ...props }) => {
   return (
     <SafeAreaView className={`flex-1 bg-background ${className}`} {...props}>
-      <View className={`flex-1 ${noPadding ? '' : 'px-4 py-2'}`}>
+      <View className={`flex-1 ${noPadding ? '' : 'px-6 py-2'}`}>
         {children}
       </View>
     </SafeAreaView>

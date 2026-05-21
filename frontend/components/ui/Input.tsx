@@ -7,17 +7,21 @@ interface InputProps extends TextInputProps {
   error?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ label, error, className, ...props }) => {
+export const Input: React.FC<InputProps> = ({ label, error, className = '', ...props }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <View className={`mb-4 ${className}`}>
-      {label && <Text className="text-textSecondary text-sm mb-1 ml-1">{label}</Text>}
+    <View className={`mb-5 ${className}`}>
+      {label && <Text className="text-textSecondary text-sm mb-2 ml-1 font-medium">{label}</Text>}
       <TextInput
-        className={`bg-card text-textPrimary px-4 py-4 rounded-xl border ${
-          error ? 'border-danger' : isFocused ? 'border-primary' : 'border-border'
+        className={`bg-surfaceElevated text-textPrimary px-4 py-4 rounded-xl border-2 transition-colors ${
+          error 
+            ? 'border-danger bg-danger/5' 
+            : isFocused 
+              ? 'border-accent bg-accent/5 shadow-sm shadow-accent/10' 
+              : 'border-white/5'
         }`}
-        placeholderTextColor={colors.textSecondary}
+        placeholderTextColor={colors.textMuted}
         onFocus={(e) => {
           setIsFocused(true);
           props.onFocus?.(e);
@@ -28,7 +32,7 @@ export const Input: React.FC<InputProps> = ({ label, error, className, ...props 
         }}
         {...props}
       />
-      {error && <Text className="text-danger text-xs mt-1 ml-1">{error}</Text>}
+      {error && <Text className="text-danger text-xs mt-2 ml-1 font-medium">{error}</Text>}
     </View>
   );
 };

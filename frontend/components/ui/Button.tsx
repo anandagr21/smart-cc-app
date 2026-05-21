@@ -11,16 +11,16 @@ export const Button: React.FC<ButtonProps> = ({
   label, 
   variant = 'primary', 
   isLoading = false, 
-  className,
+  className = '',
   disabled,
   ...props 
 }) => {
   const getVariantStyles = () => {
     switch (variant) {
       case 'primary':
-        return 'bg-primary';
+        return 'bg-accent shadow-lg shadow-accent/30';
       case 'secondary':
-        return 'bg-card border border-border';
+        return 'bg-surfaceElevated border border-white/10';
       case 'ghost':
         return 'bg-transparent';
     }
@@ -29,23 +29,23 @@ export const Button: React.FC<ButtonProps> = ({
   const getTextStyles = () => {
     switch (variant) {
       case 'primary':
-        return 'text-white font-semibold';
+        return 'text-[#09090B] font-bold tracking-wide';
       case 'secondary':
-        return 'text-textPrimary font-medium';
+        return 'text-textPrimary font-semibold tracking-wide';
       case 'ghost':
-        return 'text-primary font-medium';
+        return 'text-accent font-semibold tracking-wide';
     }
   };
 
   return (
     <TouchableOpacity
-      className={`flex-row items-center justify-center rounded-xl py-4 px-6 ${getVariantStyles()} ${disabled || isLoading ? 'opacity-50' : 'opacity-100'} ${className}`}
+      className={`flex-row items-center justify-center rounded-2xl py-4 px-6 ${getVariantStyles()} ${disabled || isLoading ? 'opacity-50' : 'opacity-100'} ${className}`}
       disabled={disabled || isLoading}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
       {...props}
     >
       {isLoading ? (
-        <ActivityIndicator color={variant === 'primary' ? '#FFF' : '#3B82F6'} />
+        <ActivityIndicator color={variant === 'primary' ? '#09090B' : '#10B981'} />
       ) : (
         <Text className={`text-base ${getTextStyles()}`}>{label}</Text>
       )}

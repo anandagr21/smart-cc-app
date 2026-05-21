@@ -13,52 +13,59 @@ interface RecommendationCardProps {
 export const RecommendationCard: React.FC<RecommendationCardProps> = ({ card, index }) => {
   const isTopRank = card.rank === 1;
 
-  // Stagger the entrance based on rank index
-  const animationDelay = 100 + index * 100;
+  // Smoother staggered entrance
+  const animationDelay = 150 + index * 150;
 
   if (isTopRank) {
     return (
       <AnimatedContainer delay={animationDelay}>
-        <View className="flex-row items-center mb-4 mt-2">
+        <View className="flex-row items-center mb-5 mt-2">
           {/* @ts-ignore */}
           <Zap size={20} color={colors.accent} />
-          <Text className="text-lg font-bold text-textPrimary ml-2">Best Match</Text>
+          <Text className="text-xl font-bold text-textPrimary ml-2 tracking-tight">Best Match</Text>
         </View>
 
-        <View className="bg-card rounded-2xl border border-accent overflow-hidden shadow-lg shadow-accent/20">
-          <View className="p-5 bg-[#10B98110]">
-            <View className="flex-row justify-between items-start mb-4">
-              <View className="flex-1 pr-4">
-                <Text className="text-textPrimary font-bold text-xl">{card.card_name}</Text>
-                <Text className="text-textSecondary mt-1 leading-5">{card.recommendation_reason}</Text>
-              </View>
-              <View className="bg-accent/20 px-3 py-1 rounded-full border border-accent/30">
-                <Text className="text-accent font-bold">Rank 1</Text>
-              </View>
+        <View className="rounded-3xl border border-white/10 overflow-hidden shadow-glow bg-surface">
+          {/* Glassy top header */}
+          <View className="px-6 py-5 bg-accent/10 border-b border-white/5 flex-row justify-between items-center">
+            <View className="flex-1 pr-4">
+              <Text className="text-textPrimary font-bold text-2xl tracking-tight">{card.card_name}</Text>
             </View>
-            
-            <View className="bg-background rounded-xl p-5 mt-2 border border-border/50">
-              <Text className="text-textSecondary text-sm mb-1 uppercase tracking-wider font-semibold">
-                Estimated Value
-              </Text>
-              <View className="flex-row items-baseline">
-                <Text className="text-accent font-bold text-4xl">₹{card.effective_reward_value}</Text>
-                <Text className="text-textSecondary ml-2 font-medium">via {card.reward_type}</Text>
-              </View>
+            <View className="bg-accent px-4 py-1.5 rounded-full shadow-sm shadow-accent/40">
+              <Text className="text-[#09090B] font-bold tracking-wide">Rank 1</Text>
             </View>
-
-            {card.warnings.length > 0 && (
-              <View className="mt-4 flex-row bg-[#F59E0B15] p-3 rounded-lg border border-[#F59E0B30]">
-                {/* @ts-ignore */}
-                <AlertCircle size={16} color={colors.warning} style={{ marginTop: 2 }} />
-                <View className="ml-2 flex-1">
-                  {card.warnings.map((warning, i) => (
-                    <Text key={i} className="text-[#F59E0B] text-sm">{warning}</Text>
-                  ))}
-                </View>
-              </View>
-            )}
           </View>
+          
+          {/* Huge Reward Value Content */}
+          <View className="px-6 py-8 items-center bg-gradient-to-b from-transparent to-black/20">
+            <Text className="text-textMuted text-sm mb-2 uppercase tracking-widest font-semibold">
+              Estimated Value
+            </Text>
+            <View className="flex-row items-baseline mb-4">
+              <Text className="text-accent font-bold text-6xl tracking-tighter shadow-sm shadow-accent/20">
+                ₹{card.effective_reward_value}
+              </Text>
+            </View>
+            <Text className="text-textSecondary text-center leading-6 max-w-[90%]">
+              {card.recommendation_reason}
+            </Text>
+            <View className="mt-4 px-4 py-1.5 rounded-full border border-white/5 bg-white/5">
+              <Text className="text-textSecondary font-medium">Earned via {card.reward_type}</Text>
+            </View>
+          </View>
+
+          {/* Warnings Section */}
+          {card.warnings.length > 0 && (
+            <View className="bg-[#F59E0B10] px-6 py-4 border-t border-[#F59E0B20] flex-row items-start">
+              {/* @ts-ignore */}
+              <AlertCircle size={18} color={colors.warning} style={{ marginTop: 2 }} />
+              <View className="ml-3 flex-1">
+                {card.warnings.map((warning, i) => (
+                  <Text key={i} className="text-[#F59E0B] text-sm leading-5 font-medium">{warning}</Text>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
       </AnimatedContainer>
     );
@@ -66,16 +73,16 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ card, in
 
   return (
     <AnimatedContainer delay={animationDelay}>
-      <View className="bg-card rounded-2xl border border-border p-4 mb-3 flex-row justify-between items-center opacity-80">
-        <View className="flex-1 pr-4">
-          <Text className="text-textPrimary font-bold text-lg">{card.card_name}</Text>
-          <Text className="text-textSecondary text-xs mt-1" numberOfLines={1}>
+      <View className="bg-surfaceElevated rounded-2xl border border-white/5 p-5 mb-4 flex-row justify-between items-center opacity-90 shadow-lg shadow-black/20">
+        <View className="flex-1 pr-6">
+          <Text className="text-textPrimary font-bold text-xl tracking-tight mb-1">{card.card_name}</Text>
+          <Text className="text-textMuted text-sm leading-5" numberOfLines={2}>
             {card.recommendation_reason}
           </Text>
         </View>
-        <View className="items-end">
-          <Text className="text-textPrimary font-bold text-xl">₹{card.effective_reward_value}</Text>
-          <Text className="text-textSecondary text-xs">Rank {card.rank}</Text>
+        <View className="items-end pl-4 border-l border-white/5">
+          <Text className="text-textPrimary font-bold text-3xl tracking-tight">₹{card.effective_reward_value}</Text>
+          <Text className="text-textMuted text-xs font-semibold mt-1">RANK {card.rank}</Text>
         </View>
       </View>
     </AnimatedContainer>

@@ -40,9 +40,9 @@ export default function RecommendationsScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* Header Section */}
-        <AnimatedContainer delay={100} className="mt-8 mb-8">
-          <Text className="text-4xl font-bold text-textPrimary">Optimize</Text>
-          <Text className="text-textSecondary text-base mt-2">
+        <AnimatedContainer delay={100} className="mt-8 mb-10">
+          <Text className="text-5xl font-bold text-textPrimary tracking-tighter">Optimize</Text>
+          <Text className="text-textSecondary text-lg mt-3 leading-6 font-medium">
             Let our engine analyze your purchase to find the maximum reward value.
           </Text>
         </AnimatedContainer>
@@ -53,12 +53,12 @@ export default function RecommendationsScreen() {
         {/* Error State */}
         {isError && (
           <AnimatedContainer delay={50}>
-            <View className="bg-[#EF444415] border border-[#EF444430] p-4 rounded-xl flex-row items-center mb-6">
+            <View className="bg-danger/10 border border-danger/20 p-5 rounded-2xl flex-row items-center mb-8 shadow-sm shadow-danger/5">
               {/* @ts-ignore */}
-              <AlertCircle size={24} color={colors.danger} />
-              <View className="ml-3 flex-1">
-                <Text className="text-danger font-bold">Analysis Failed</Text>
-                <Text className="text-danger text-sm mt-1">
+              <AlertCircle size={28} color={colors.danger} />
+              <View className="ml-4 flex-1">
+                <Text className="text-danger font-bold text-lg tracking-tight">Analysis Failed</Text>
+                <Text className="text-danger/90 text-sm mt-1 leading-5">
                   {error?.response?.data?.detail || 'An unexpected error occurred connecting to the engine.'}
                 </Text>
               </View>
@@ -71,7 +71,7 @@ export default function RecommendationsScreen() {
 
         {/* Results State */}
         {!isPending && data && data.ranked_cards.length > 0 && (
-          <View className="mt-4">
+          <View className="mt-6">
             {data.ranked_cards.map((card, index) => (
               <RecommendationCard key={card.card_id} card={card} index={index} />
             ))}
@@ -81,9 +81,9 @@ export default function RecommendationsScreen() {
         {/* Empty / No Cards State */}
         {!isPending && data && data.ranked_cards.length === 0 && (
           <AnimatedContainer delay={100}>
-            <View className="bg-card border border-border p-6 rounded-2xl items-center mt-4">
-              <Text className="text-textPrimary font-bold text-lg mb-2">No Matching Cards</Text>
-              <Text className="text-textSecondary text-center">
+            <View className="bg-surfaceElevated border border-white/5 p-8 rounded-3xl items-center mt-6 shadow-sm shadow-black/10">
+              <Text className="text-textPrimary font-bold text-xl mb-3 tracking-tight">No Matching Cards</Text>
+              <Text className="text-textSecondary text-center leading-6 font-medium px-4">
                 We couldn't find any cards in your wallet that yield rewards for this specific transaction.
               </Text>
             </View>

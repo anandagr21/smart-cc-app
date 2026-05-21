@@ -39,14 +39,14 @@ export const RecommendationForm: React.FC<RecommendationFormProps> = ({ onSubmit
   };
 
   return (
-    <View className="mb-6">
+    <View className="mb-10">
       <AnimatedContainer delay={100}>
         <Controller
           control={control}
           name="merchant_name"
           render={({ field: { onChange, onBlur, value } }) => (
             <Input
-              label="Merchant"
+              label="MERCHANT"
               placeholder="e.g. Amazon, Uber, Starbucks"
               onBlur={onBlur}
               onChangeText={onChange}
@@ -63,14 +63,14 @@ export const RecommendationForm: React.FC<RecommendationFormProps> = ({ onSubmit
           name="amount"
           render={({ field: { onChange, onBlur, value } }) => (
             <Input
-              label="Estimated Amount (₹)"
+              label="ESTIMATED AMOUNT (₹)"
               placeholder="0.00"
               keyboardType="numeric"
               onBlur={onBlur}
               onChangeText={onChange}
               value={value?.toString() || ''}
               error={errors.amount?.message as string}
-              className="mb-6"
+              className="mb-8"
             />
           )}
         />
