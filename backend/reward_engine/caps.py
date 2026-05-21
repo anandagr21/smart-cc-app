@@ -265,7 +265,8 @@ def apply_caps_from_config(
     # ValidationError (pydantic schema) indicate an unusable cap config — treat
     # either as "no cap defined" so the engine never crashes on bad rule data.
     try:
-        caps = normalize_caps(config)
+        caps_result = normalize_caps(config)
+        caps = caps_result if isinstance(caps_result, list) else [caps_result]
     except (CapInvalidConfigException, ValidationError):
         caps = []
 
