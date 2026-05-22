@@ -1,11 +1,12 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
+import { Platform } from 'react-native';
+
 const getDefaultBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
   // Android emulator needs 10.0.2.2 to access host machine's localhost
-  // return Platform.OS === 'android' ? 'http://10.0.2.2:8000/api/v1' : 'http://localhost:8000/api/v1';
-  return 'http://localhost:8000/api/v1';
+  return Platform.OS === 'android' ? 'http://10.0.2.2:8000/api/v1' : 'http://localhost:8000/api/v1';
 };
 
 export const apiClient = axios.create({

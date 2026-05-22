@@ -73,10 +73,12 @@ class RecommendationOrchestrator:
         eval_inputs: list[CardEvaluationInput] = []
         for user_card in user_cards:
             # Get catalog card details
-            card_id_str = str(user_card.card_id)
-            card_name = getattr(user_card, "card_name", "Unknown Card")
-            if hasattr(user_card, "card_details") and user_card.card_details:
-                card_name = user_card.card_details.name
+            card_id_str = str(user_card.card_catalog_id)
+            
+            # Use user's nickname if available, fallback to catalog card name
+            card_name = user_card.nickname
+            if not card_name:
+                card_name = user_card.card_details.card_name if getattr(user_card, "card_details", None) else "Unknown Card"
 
             # Fetch rules
             rules_resp = await self._reward_rule_service.get_card_active_rules(card_id_str)

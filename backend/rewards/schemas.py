@@ -113,13 +113,15 @@ class RewardRuleUpdate(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+from uuid import UUID
+
 class RewardRuleResponse(_RewardRuleBase):
     """Schema for reward rule API responses.
 
     Includes server-generated fields: id, created_at, updated_at.
     """
 
-    id: str = Field(..., description="UUID of the reward rule.")
+    id: UUID = Field(..., description="UUID of the reward rule.")
     created_at: datetime = Field(
         ...,
         description="Timestamp when this rule was created (UTC).",

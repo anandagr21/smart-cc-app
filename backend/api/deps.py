@@ -90,3 +90,16 @@ async def get_reward_rule_service(
 ) -> RewardRuleService:
     """Provide a RewardRuleService instance wired with the current DB session."""
     return RewardRuleService(session=db)
+
+
+from transactions.enrichment import TransactionEnrichmentService
+
+async def get_transaction_enrichment_service(
+    user_card_service: UserCardService = Depends(get_user_card_service),
+    reward_rule_service: RewardRuleService = Depends(get_reward_rule_service),
+) -> TransactionEnrichmentService:
+    """Provide a TransactionEnrichmentService instance wired with its dependencies."""
+    return TransactionEnrichmentService(
+        user_card_service=user_card_service,
+        reward_rule_service=reward_rule_service,
+    )

@@ -1,10 +1,13 @@
-/**
- * Hook: useCards
- * Responsibility: Custom React hook for managing user's cards state.
- *
- * Architectural Boundaries:
- * - Abstracts data fetching for user cards.
- *
- * TODO:
- * - Implement hooks for fetching and adding cards.
- */
+import { useQuery } from '@tanstack/react-query';
+import { fetchUserCards } from '../api/cardsApi';
+import { useAuthStore } from '../../auth/store/authStore';
+
+export const useCards = () => {
+  const token = useAuthStore((state) => state.token);
+
+  return useQuery({
+    queryKey: ['userCards'],
+    queryFn: fetchUserCards,
+    enabled: !!token,
+  });
+};

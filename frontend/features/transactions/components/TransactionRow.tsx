@@ -1,10 +1,75 @@
-/**
- * Component: TransactionRow
- * Responsibility: Displays a single transaction line item.
- *
- * Architectural Boundaries:
- * - Pure presentational component.
- *
- * TODO:
- * - Implement UI for merchant name, amount, date, and earned reward.
- */
+import React from 'react';
+import { View, Text, Pressable } from 'react-native';
+import { TransactionResponse } from '../types/transaction.types';
+import { getCategoryAccent } from '../utils/categoryAccents';
+import { useCards } from '../../cards/hooks/useCards';
+import * as Icons from 'lucide-react-native';
+
+import { RewardInsightPill } from './RewardInsightPill';
+
+interface TransactionRowProps {
+  transaction: TransactionResponse;
+  onPress: (transaction: TransactionResponse) => void;
+}
+
+export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
+  const { data: cardsData } = useCards();
+  const card = cardsData?.find((c) => c.id === transaction.user_card_id);
+
+  const cardName = card?.nickname || card?.card_details?.card_name || 'Unknown Card';
+  const isDifferent = transaction.normalized_merchant !== transaction.merchant_name;
+  
+  const accent = getCategoryAccent(transaction.category);
+  // @ts-ignore - dynamic icon access
+  const IconComponent = Icons[accent.iconName] || Icons.Receipt;
+
+  const formatAmount = (amt: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: transaction.currency || 'INR',
+      minimumFractionDigits: 0,
+    }).format(amt);
+  };
+
+  return (
+    <Pressable
+      onPress={() => onPress(transaction)}
+      className="flex-row items-center justify-between py-4 px-4 bg-surface/50 border-b border-white/5 active:bg-white/5"
+    >
+      <View className="flex-row items-center flex-1">
+        {/* Category Icon */}
+        <View className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${accent.bgClass}`}>
+          <IconComponent size={24} className={accent.textClass} strokeWidth={1.5} />
+        </View>
+
+        {/* Merchant & Metadata */}
+        <View className="flex-1">
+          <Text className="text-textPrimary font-semibold text-lg" numberOfLines={1}>
+            {transaction.normalized_merchant}
+          </Text>
+          <View className="flex-row items-center mt-0.5 mb-1">
+            <Text className="text-textSecondary text-sm mr-2">{cardName}</Text>
+            {isDifferent && (
+              <Text className="text-textMuted text-xs" numberOfLines={1}>
+                • {transaction.merchant_name}
+              </Text>
+            )}
+          </View>
+          
+          <RewardInsightPill 
+            rewardEarned={transaction.reward_earned} 
+            rewardType={transaction.reward_type} 
+            missedSavings={transaction.missed_savings} 
+          />
+        </View>
+      </View>
+
+      {/* Amount & Status */}
+      <View className="items-end pl-2 self-start mt-1">
+        <Text className="text-textPrimary font-bold text-lg">
+          {formatAmount(transaction.amount)}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}

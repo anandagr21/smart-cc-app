@@ -51,3 +51,19 @@ class TransactionResponse(TransactionBase):
     status: TransactionStatus
     posted_date: Optional[date] = None
     created_at: datetime
+
+
+class EnrichedTransactionResponse(TransactionResponse):
+    """Output schema for an enriched transaction with computed reward insights."""
+    
+    # Insights
+    reward_earned: Optional[Decimal] = Field(default=None, description="Effective INR value of rewards earned")
+    reward_type: Optional[str] = Field(default=None, description="Type of reward earned (cashback, points, miles)")
+    
+    # Optimization 
+    best_possible_card: Optional[str] = Field(default=None, description="Name of the #1 ranked card for this transaction")
+    missed_savings: Optional[Decimal] = Field(default=None, description="Additional INR value that could have been earned")
+    
+    # Semantics & Education
+    recommendation_reason: Optional[str] = Field(default=None, description="Primary reason the used card earned this reward")
+    warnings: list[str] = Field(default_factory=list, description="Warnings related to this transaction (e.g. cap reached)")
