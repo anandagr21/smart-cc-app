@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { TransactionResponse } from '../types/transaction.types';
 import { getCategoryAccent } from '../utils/categoryAccents';
 import { useCards } from '../../cards/hooks/useCards';
 import * as Icons from 'lucide-react-native';
-
+import { useThemeColors } from '../../theme/hooks/useThemeColors';
 import { RewardInsightPill } from './RewardInsightPill';
 
 interface TransactionRowProps {
@@ -14,6 +14,7 @@ interface TransactionRowProps {
 
 export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
   const { data: cardsData } = useCards();
+  const colors = useThemeColors();
   const card = cardsData?.find((c) => c.id === transaction.user_card_id);
 
   const cardName = card?.nickname || card?.card_details?.card_name || 'Unknown Card';
@@ -34,7 +35,8 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
   return (
     <Pressable
       onPress={() => onPress(transaction)}
-      className="flex-row items-center justify-between py-4 px-4 bg-surface/50 border-b border-white/5 active:bg-white/5"
+      className="flex-row items-center justify-between py-5 px-4 mb-2 mx-4 rounded-3xl"
+      style={{ backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: StyleSheet.hairlineWidth }}
     >
       <View className="flex-row items-center flex-1">
         {/* Category Icon */}
@@ -44,13 +46,13 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
 
         {/* Merchant & Metadata */}
         <View className="flex-1">
-          <Text className="text-textPrimary font-semibold text-lg" numberOfLines={1}>
+          <Text style={{ color: colors.textPrimary }} className="font-semibold text-base tracking-wide" numberOfLines={1}>
             {transaction.normalized_merchant}
           </Text>
           <View className="flex-row items-center mt-0.5 mb-1">
-            <Text className="text-textSecondary text-sm mr-2">{cardName}</Text>
+            <Text style={{ color: colors.textSecondary }} className="text-xs font-medium mr-2">{cardName}</Text>
             {isDifferent && (
-              <Text className="text-textMuted text-xs" numberOfLines={1}>
+              <Text style={{ color: colors.textMuted }} className="text-[10px] font-medium" numberOfLines={1}>
                 • {transaction.merchant_name}
               </Text>
             )}
@@ -66,7 +68,7 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
 
       {/* Amount & Status */}
       <View className="items-end pl-2 self-start mt-1">
-        <Text className="text-textPrimary font-bold text-lg">
+        <Text style={{ color: colors.textPrimary }} className="font-bold text-base tracking-wide">
           {formatAmount(transaction.amount)}
         </Text>
       </View>

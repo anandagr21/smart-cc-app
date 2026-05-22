@@ -1,9 +1,13 @@
 import React from 'react';
-import { View, Text, Modal, Pressable, ScrollView } from 'react-native';
+import { View, Text, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { X } from 'lucide-react-native';
 import { TransactionResponse } from '../types/transaction.types';
 import { getCategoryAccent } from '../utils/categoryAccents';
 import { useCards } from '../../cards/hooks/useCards';
+import { useThemeColors } from '../../theme/hooks/useThemeColors';
+import { useThemeStore } from '../../theme/store/themeStore';
+import { tokens } from '../../../theme/tokens';
 import * as Icons from 'lucide-react-native';
 
 import { TransactionInsightCard } from './TransactionInsightCard';
@@ -16,8 +20,12 @@ interface TransactionDetailSheetProps {
 
 export function TransactionDetailSheet({ transaction, visible, onClose }: TransactionDetailSheetProps) {
   const { data: cardsData } = useCards();
+  const colors = useThemeColors();
+  const { themeMode } = useThemeStore();
+  
   if (!transaction) return null;
 
+  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0B0E14');
   const card = cardsData?.find((c) => c.id === transaction.user_card_id);
   const cardName = card?.nickname || card?.card_details?.card_name || 'Unknown Card';
   const isDifferent = transaction.normalized_merchant !== transaction.merchant_name;
@@ -42,39 +50,53 @@ export function TransactionDetailSheet({ transaction, visible, onClose }: Transa
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View className="flex-1 justify-end bg-black/60">
-        <View className="bg-surfaceElevated rounded-t-3xl pt-6 pb-10 px-6 max-h-[90%] border-t border-white/10 shadow-lg shadow-black">
+      <View className="flex-1 justify-end bg-black/40">
+        <BlurView 
+          tint={isDark ? 'dark' : 'light'} 
+          intensity={80}
+          className="rounded-t-[40px] pt-6 pb-10 px-6 max-h-[90%] overflow-hidden"
+          style={[
+            tokens.elevation.level3,
+            { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder, borderWidth: StyleSheet.hairlineWidth }
+          ]}
+        >
+          {/* Metallic Top Highlight */}
+          <View className="absolute top-0 left-0 right-0 h-[1px]" style={{ backgroundColor: colors.glassHighlight }} />
+
           {/* Header */}
-          <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-xl font-bold text-textPrimary">Transaction Details</Text>
-            <Pressable onPress={onClose} className="p-2 bg-white/5 rounded-full">
-              <X size={20} color="#fff" />
+          <View className="flex-row justify-between items-center mb-8">
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-bold tracking-tight">Transaction Details</Text>
+            <Pressable onPress={onClose} style={{ backgroundColor: colors.surfaceElevated }} className="p-2 rounded-full">
+              <X size={20} color={colors.textPrimary} />
             </Pressable>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Hero Section */}
-            <View className="items-center mb-8">
+            <View className="items-center mb-10">
               <View className={`w-20 h-20 rounded-full items-center justify-center mb-4 ${accent.bgClass}`}>
                 <IconComponent size={40} className={accent.textClass} strokeWidth={1.5} />
               </View>
-              <Text className="text-3xl font-bold text-textPrimary text-center mb-1">
+              <Text style={{ color: colors.textPrimary }} className="text-3xl font-bold text-center mb-1 tracking-tight">
                 {transaction.normalized_merchant}
               </Text>
-              <Text className="text-4xl font-light text-textPrimary mt-2">
+              <Text style={{ color: colors.textPrimary }} className="text-4xl font-light mt-2 tracking-tighter">
                 {formatAmount(transaction.amount)}
               </Text>
             </View>
 
             {/* Details List */}
-            <View className="bg-surface/50 rounded-2xl p-4 border border-white/5 mb-6">
-              <DetailRow label="Date" value={formattedDate} />
-              <DetailRow label="Status" value={transaction.status} capitalize />
-              <DetailRow label="Payment Mode" value={transaction.payment_mode || 'Unknown'} capitalize />
-              <DetailRow label="Card Used" value={cardName} />
-              <DetailRow label="Category" value={transaction.category} capitalize />
+            <View 
+              style={{ backgroundColor: colors.surfaceElevated, borderColor: colors.borderHighlight, borderWidth: StyleSheet.hairlineWidth }} 
+              className="rounded-3xl p-5 mb-8"
+            >
+              <DetailRow label="Date" value={formattedDate} colors={colors} />
+              <DetailRow label="Status" value={transaction.status} capitalize colors={colors} />
+              <DetailRow label="Payment Mode" value={transaction.payment_mode || 'Unknown'} capitalize colors={colors} />
+              <DetailRow label="Card Used" value={cardName} colors={colors} />
+              <DetailRow label="Category" value={transaction.category} capitalize colors={colors} />
               {isDifferent && (
-                <DetailRow label="Raw Merchant" value={transaction.merchant_name} isLast />
+                <DetailRow label="Raw Merchant" value={transaction.merchant_name} isLast colors={colors} />
               )}
             </View>
 
@@ -83,17 +105,20 @@ export function TransactionDetailSheet({ transaction, visible, onClose }: Transa
             
             <View className="h-10" />
           </ScrollView>
-        </View>
+        </BlurView>
       </View>
     </Modal>
   );
 }
 
-function DetailRow({ label, value, capitalize, isLast }: { label: string; value: string; capitalize?: boolean; isLast?: boolean }) {
+function DetailRow({ label, value, capitalize, isLast, colors }: { label: string; value: string; capitalize?: boolean; isLast?: boolean; colors: any }) {
   return (
-    <View className={`flex-row justify-between items-center py-3 ${isLast ? '' : 'border-b border-white/5'}`}>
-      <Text className="text-textSecondary font-medium">{label}</Text>
-      <Text className={`text-textPrimary font-semibold ${capitalize ? 'capitalize' : ''}`}>
+    <View 
+      className={`flex-row justify-between items-center py-3.5`}
+      style={!isLast ? { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth } : {}}
+    >
+      <Text style={{ color: colors.textSecondary }} className="font-medium text-[13px] uppercase tracking-widest">{label}</Text>
+      <Text style={{ color: colors.textPrimary }} className={`font-semibold text-sm ${capitalize ? 'capitalize' : ''}`}>
         {value}
       </Text>
     </View>

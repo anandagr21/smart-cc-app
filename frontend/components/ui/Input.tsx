@@ -1,26 +1,34 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, TextInputProps } from 'react-native';
-import { colors } from '../../theme/colors';
+import { View, TextInput, Text, TextInputProps, StyleSheet } from 'react-native';
+import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
 
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ label, error, className = '', ...props }) => {
+export const Input: React.FC<InputProps> = ({ label, error, className = '', style, ...props }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const colors = useThemeColors();
 
   return (
     <View className={`mb-5 ${className}`}>
-      {label && <Text className="text-textSecondary text-sm mb-2 ml-1 font-medium">{label}</Text>}
+      {label && <Text style={{ color: colors.textSecondary }} className="text-sm mb-2 ml-2 font-medium">{label}</Text>}
       <TextInput
-        className={`bg-surfaceElevated text-textPrimary px-4 py-4 rounded-xl border-2 transition-colors ${
-          error 
-            ? 'border-danger bg-danger/5' 
-            : isFocused 
-              ? 'border-accent bg-accent/5 shadow-sm shadow-accent/10' 
-              : 'border-white/5'
-        }`}
+        style={[
+          {
+            backgroundColor: isFocused ? colors.surfaceElevated : colors.surface,
+            color: colors.textPrimary,
+            borderColor: error 
+              ? colors.danger 
+              : isFocused 
+                ? colors.primary 
+                : colors.border,
+            borderWidth: isFocused ? 2 : StyleSheet.hairlineWidth,
+          },
+          style
+        ]}
+        className={`px-5 py-4 rounded-2xl transition-colors`}
         placeholderTextColor={colors.textMuted}
         onFocus={(e) => {
           setIsFocused(true);
@@ -32,7 +40,7 @@ export const Input: React.FC<InputProps> = ({ label, error, className = '', ...p
         }}
         {...props}
       />
-      {error && <Text className="text-danger text-xs mt-2 ml-1 font-medium">{error}</Text>}
+      {error && <Text style={{ color: colors.danger }} className="text-xs mt-2 ml-2 font-medium">{error}</Text>}
     </View>
   );
 };

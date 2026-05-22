@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, SectionList, RefreshControl } from 'react-native';
+import { View, Text, Pressable, SectionList, RefreshControl, StyleSheet } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { useTransactions } from '../../features/transactions/hooks/useTransactions';
@@ -11,11 +11,14 @@ import { AddTransactionSheet } from '../../features/transactions/components/AddT
 import { TransactionDetailSheet } from '../../features/transactions/components/TransactionDetailSheet';
 import { TransactionListSkeleton } from '../../features/transactions/components/TransactionSkeleton';
 import { TransactionResponse } from '../../features/transactions/types/transaction.types';
+import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
+import { AnimatedContainer } from '../../components/ui/AnimatedContainer';
 
 export default function HistoryScreen() {
   const { data, isLoading, isRefetching, refetch, fetchNextPage, hasNextPage } = useTransactions();
   const [isAddSheetVisible, setAddSheetVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
+  const colors = useThemeColors();
 
   // Flatten infinite pages into a single array
   const allTransactions = data?.pages.flatMap((page) => page.data) || [];
@@ -33,17 +36,24 @@ export default function HistoryScreen() {
 
   return (
     <ScreenContainer className="pt-2">
-      <View className="flex-row justify-between items-center px-4 mb-4">
-        <Text className="text-3xl font-bold text-textPrimary tracking-tight">Activity</Text>
+      <View className="flex-row justify-between items-end mb-8 mt-4">
+        <AnimatedContainer delay={100}>
+          <Text style={{ color: colors.textPrimary }} className="text-4xl font-bold tracking-tight">Activity</Text>
+          <Text style={{ color: colors.textSecondary }} className="text-sm font-medium mt-1 uppercase tracking-widest">Your spending intelligence</Text>
+        </AnimatedContainer>
         
-        {/* Only show Add button here if we have transactions (Empty state has its own) */}
+        {/* Only show Add button here if we have transactions */}
         {allTransactions.length > 0 && (
-          <Pressable
-            onPress={() => setAddSheetVisible(true)}
-            className="w-10 h-10 rounded-full bg-accent/20 border border-accent/30 items-center justify-center active:bg-accent/30"
-          >
-            <Plus size={20} color="#cba766" />
-          </Pressable>
+          <AnimatedContainer delay={200}>
+            <Pressable
+              onPress={() => setAddSheetVisible(true)}
+              style={{ backgroundColor: colors.surfaceElevated, borderColor: colors.borderHighlight, borderWidth: StyleSheet.hairlineWidth }}
+              className="p-3 rounded-full shadow-sm"
+            >
+              {/* @ts-ignore */}
+              <Plus size={24} color={colors.primary} strokeWidth={2.5} />
+            </Pressable>
+          </AnimatedContainer>
         )}
       </View>
 
@@ -60,17 +70,18 @@ export default function HistoryScreen() {
               <TransactionRow transaction={item} onPress={handleTransactionPress} />
             )}
             renderSectionHeader={({ section: { title } }) => (
-              <View className="bg-background pt-6 pb-2 px-4 border-b border-white/5">
-                <Text className="text-textSecondary text-sm font-semibold uppercase tracking-widest">
+              <View style={{ backgroundColor: colors.background, borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }} className="pt-6 pb-2 px-4 mb-2">
+                <Text style={{ color: colors.textSecondary }} className="text-xs font-bold uppercase tracking-widest">
                   {title}
                 </Text>
               </View>
             )}
             ListHeaderComponent={
-              <View className="mt-4">
+              <View className="mt-4 mb-4">
                 <SavingsSummaryCard transactions={allTransactions} />
               </View>
             }
+            contentContainerStyle={{ paddingBottom: 100 }}
             stickySectionHeadersEnabled={true}
             showsVerticalScrollIndicator={false}
             onEndReached={handleEndReached}
@@ -79,7 +90,7 @@ export default function HistoryScreen() {
               <RefreshControl 
                 refreshing={isRefetching} 
                 onRefresh={refetch}
-                tintColor="#cba766"
+                tintColor={colors.primary}
               />
             }
           />

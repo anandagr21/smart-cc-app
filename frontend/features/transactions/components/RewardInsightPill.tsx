@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Sparkles, ArrowUpRight } from 'lucide-react-native';
+import { useThemeColors } from '../../theme/hooks/useThemeColors';
 
 interface RewardInsightPillProps {
   rewardEarned?: number | null;
@@ -9,6 +10,8 @@ interface RewardInsightPillProps {
 }
 
 export function RewardInsightPill({ rewardEarned, rewardType, missedSavings }: RewardInsightPillProps) {
+  const colors = useThemeColors();
+
   if (rewardEarned === undefined || rewardEarned === null) {
     return null;
   }
@@ -26,15 +29,21 @@ export function RewardInsightPill({ rewardEarned, rewardType, missedSavings }: R
 
   return (
     <View className="flex-row items-center mt-1">
-      <View className="flex-row items-center bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-        <Sparkles size={10} color="#34d399" className="mr-1" />
-        <Text className="text-emerald-400 text-xs font-semibold">{formattedReward}</Text>
+      <View 
+        style={{ backgroundColor: `${colors.success}1A`, borderColor: `${colors.success}33`, borderWidth: StyleSheet.hairlineWidth }} 
+        className="flex-row items-center px-2 py-0.5 rounded-full"
+      >
+        <Sparkles size={10} color={colors.success} className="mr-1" />
+        <Text style={{ color: colors.success }} className="text-[10px] font-bold uppercase tracking-widest">{formattedReward}</Text>
       </View>
       
       {hasMissedSavings ? (
-        <View className="flex-row items-center ml-2 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
-          <ArrowUpRight size={10} color="#9ca3af" className="mr-1" />
-          <Text className="text-textMuted text-[10px] font-medium">could have earned ₹{(numericReward + numericMissed).toFixed(0)}</Text>
+        <View 
+          style={{ backgroundColor: colors.surfaceElevated, borderColor: colors.borderHighlight, borderWidth: StyleSheet.hairlineWidth }} 
+          className="flex-row items-center ml-2 px-2 py-0.5 rounded-full"
+        >
+          <ArrowUpRight size={10} color={colors.textMuted} className="mr-1" />
+          <Text style={{ color: colors.textMuted }} className="text-[10px] font-bold uppercase tracking-widest">could be ₹{(numericReward + numericMissed).toFixed(0)}</Text>
         </View>
       ) : null}
     </View>

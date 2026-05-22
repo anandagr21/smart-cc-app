@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { Zap, AlertCircle } from 'lucide-react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { Sparkles, AlertCircle } from 'lucide-react-native';
 import { RankedCardResponse } from '../types/api';
-import { colors } from '../../../theme/colors';
+import { useThemeColors } from '../../theme/hooks/useThemeColors';
 import { AnimatedContainer } from '../../../components/ui/AnimatedContainer';
+import { Card } from '../../../components/ui/Card';
 
 interface RecommendationCardProps {
   card: RankedCardResponse;
@@ -12,79 +13,84 @@ interface RecommendationCardProps {
 
 export const RecommendationCard: React.FC<RecommendationCardProps> = ({ card, index }) => {
   const isTopRank = card.rank === 1;
-
-  // Smoother staggered entrance
+  const colors = useThemeColors();
   const animationDelay = 150 + index * 150;
 
   if (isTopRank) {
     return (
       <AnimatedContainer delay={animationDelay}>
-        <View className="flex-row items-center mb-5 mt-2">
+        <View className="flex-row items-center mb-6 mt-2">
           {/* @ts-ignore */}
-          <Zap size={20} color={colors.accent} />
-          <Text className="text-xl font-bold text-textPrimary ml-2 tracking-tight">Best Match</Text>
+          <Sparkles size={24} color={colors.success} strokeWidth={2.5} />
+          <Text style={{ color: colors.textPrimary }} className="text-2xl font-bold ml-3 tracking-tight">Optimal Strategy</Text>
         </View>
 
-        <View className="rounded-3xl border border-white/10 overflow-hidden shadow-glow bg-surface">
-          {/* Glassy top header */}
-          <View className="px-6 py-5 bg-accent/10 border-b border-white/5 flex-row justify-between items-center">
+        <Card variant="hero" padded={false} className="mb-8">
+          {/* Top header */}
+          <View 
+            style={{ backgroundColor: `${colors.success}1A`, borderBottomColor: colors.borderHighlight, borderBottomWidth: StyleSheet.hairlineWidth }} 
+            className="px-6 py-5 flex-row justify-between items-center"
+          >
             <View className="flex-1 pr-4">
-              <Text className="text-textPrimary font-bold text-2xl tracking-tight">{card.card_name}</Text>
+              <Text style={{ color: colors.textPrimary }} className="font-bold text-2xl tracking-tight">{card.card_name}</Text>
             </View>
-            <View className="bg-accent px-4 py-1.5 rounded-full shadow-sm shadow-accent/40">
-              <Text className="text-[#09090B] font-bold tracking-wide">Rank 1</Text>
+            <View style={{ backgroundColor: colors.success }} className="px-4 py-1.5 rounded-full shadow-sm">
+              <Text style={{ color: '#FFFFFF' }} className="font-bold tracking-wide">Rank 1</Text>
             </View>
           </View>
           
           {/* Huge Reward Value Content */}
-          <View className="px-6 py-8 items-center bg-gradient-to-b from-transparent to-black/20">
-            <Text className="text-textMuted text-sm mb-2 uppercase tracking-widest font-semibold">
-              Estimated Value
+          <View className="px-6 py-10 items-center">
+            <Text style={{ color: colors.textMuted }} className="text-xs mb-3 uppercase tracking-widest font-bold">
+              Maximum Value Found
             </Text>
-            <View className="flex-row items-baseline mb-4">
-              <Text className="text-accent font-bold text-6xl tracking-tighter shadow-sm shadow-accent/20">
+            <View className="flex-row items-baseline mb-6">
+              <Text style={{ color: colors.success }} className="font-bold text-7xl tracking-tighter">
                 ₹{card.effective_reward_value}
               </Text>
             </View>
-            <Text className="text-textSecondary text-center leading-6 max-w-[90%]">
+            <Text style={{ color: colors.textSecondary }} className="text-center leading-7 text-base max-w-[90%] font-medium">
               {card.recommendation_reason}
             </Text>
-            <View className="mt-4 px-4 py-1.5 rounded-full border border-white/5 bg-white/5">
-              <Text className="text-textSecondary font-medium">Earned via {card.reward_type}</Text>
+            <View style={{ backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: StyleSheet.hairlineWidth }} className="mt-6 px-5 py-2 rounded-full">
+              <Text style={{ color: colors.textSecondary }} className="font-bold text-sm">Earned via {card.reward_type}</Text>
             </View>
           </View>
 
           {/* Warnings Section */}
           {card.warnings.length > 0 && (
-            <View className="bg-[#F59E0B10] px-6 py-4 border-t border-[#F59E0B20] flex-row items-start">
+            <View 
+              style={{ backgroundColor: `${colors.warning}1A`, borderTopColor: `${colors.warning}33`, borderTopWidth: StyleSheet.hairlineWidth }} 
+              className="px-6 py-5 flex-row items-start"
+            >
               {/* @ts-ignore */}
-              <AlertCircle size={18} color={colors.warning} style={{ marginTop: 2 }} />
-              <View className="ml-3 flex-1">
+              <AlertCircle size={20} color={colors.warning} style={{ marginTop: 2 }} />
+              <View className="ml-4 flex-1">
                 {card.warnings.map((warning, i) => (
-                  <Text key={i} className="text-[#F59E0B] text-sm leading-5 font-medium">{warning}</Text>
+                  <Text key={i} style={{ color: colors.warning }} className="text-sm leading-6 font-medium mb-1">{warning}</Text>
                 ))}
               </View>
             </View>
           )}
-        </View>
+        </Card>
       </AnimatedContainer>
     );
   }
 
   return (
     <AnimatedContainer delay={animationDelay}>
-      <View className="bg-surfaceElevated rounded-2xl border border-white/5 p-5 mb-4 flex-row justify-between items-center opacity-90 shadow-lg shadow-black/20">
+      <Card variant="solid" className="mb-4 flex-row justify-between items-center opacity-90 p-5">
         <View className="flex-1 pr-6">
-          <Text className="text-textPrimary font-bold text-xl tracking-tight mb-1">{card.card_name}</Text>
-          <Text className="text-textMuted text-sm leading-5" numberOfLines={2}>
+          <Text style={{ color: colors.textPrimary }} className="font-bold text-xl tracking-tight mb-2">{card.card_name}</Text>
+          <Text style={{ color: colors.textSecondary }} className="text-sm leading-5 font-medium" numberOfLines={2}>
             {card.recommendation_reason}
           </Text>
         </View>
-        <View className="items-end pl-4 border-l border-white/5">
-          <Text className="text-textPrimary font-bold text-3xl tracking-tight">₹{card.effective_reward_value}</Text>
-          <Text className="text-textMuted text-xs font-semibold mt-1">RANK {card.rank}</Text>
+        <View style={{ borderLeftColor: colors.border, borderLeftWidth: StyleSheet.hairlineWidth }} className="items-end pl-5">
+          <Text style={{ color: colors.textPrimary }} className="font-bold text-3xl tracking-tight">₹{card.effective_reward_value}</Text>
+          <Text style={{ color: colors.textMuted }} className="text-[10px] font-bold mt-1 uppercase tracking-widest">RANK {card.rank}</Text>
         </View>
-      </View>
+      </Card>
     </AnimatedContainer>
   );
 };
