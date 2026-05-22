@@ -90,13 +90,15 @@ _PREDICATES: list[RulePredicate] = [
 
 
 
+from reward_engine.indexer import RuleIndex
+
 def match_rules(
     txn: TransactionContext,
-    rules: list[NormalizedRuleConfig],
+    rules_input: list[NormalizedRuleConfig] | RuleIndex,
 ) -> MatchResult | None:
     """Find the best matching reward rule for a transaction.
 
-    Evaluates all provided rules against the transaction and returns
+    Evaluates rules against the transaction and returns
     the highest-priority match. Rules are sorted by priority (lower = higher)
     and then by matching specificity.
 
@@ -109,14 +111,38 @@ def match_rules(
 
     Args:
         txn: The normalized transaction context.
-        rules: The list of normalized reward rules to evaluate.
+        rules_input: A pre-computed RuleIndex or a raw list of rules.
 
     Returns:
         A MatchResult if a matching rule is found, or None.
     """
     applicable: list[tuple[NormalizedRuleConfig, MatchType]] = []
 
-    for rule in rules:
+    if isinstance(rules_input, RuleIndex):
+        index = rules_input
+    else:
+        index = RuleIndex(rules_input)
+
+    # Deterministic ordered merge of candidates: Merchant -> Category -> Payment Mode -> Fallback
+    candidates: dict[str, NormalizedRuleConfig] = {}
+    
+    # helper to add deterministically
+    def _add_candidates(rules_subset: list[NormalizedRuleConfig]) -> None:
+        for r in rules_subset:
+            # use id(r) or a unique hash/name for deduplication.
+            # Assuming rule_name is unique per card, but priority+name is safer.
+            # Let's use object id(r) to ensure stable identity deduplication without modifying schema.
+            r_id = id(r)
+            if r_id not in candidates:
+                candidates[r_id] = r
+
+    _add_candidates(index.get_merchant_rules(txn.merchant))
+    _add_candidates(index.get_category_rules(txn.category))
+    txn_pm = txn.payment_mode if isinstance(txn.payment_mode, str) else txn.payment_mode.value
+    _add_candidates(index.get_payment_mode_rules(txn_pm))
+    _add_candidates(index.get_fallback_rules())
+
+    for rule in candidates.values():
         cfg = rule.config
 
         # ---- Gate: constraints evaluation ----

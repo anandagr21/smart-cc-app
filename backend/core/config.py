@@ -56,7 +56,7 @@ class Settings(BaseSettings):
 
     # ---- Auth ----
     secret_key: str = "change-me-in-production-use-env-var"
-    access_token_expire_minutes: int = 60  # 1 hour
+    access_token_expire_minutes: int = 43200  # 30 days for smoother local dev
 
     # ---- Logging ----
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"

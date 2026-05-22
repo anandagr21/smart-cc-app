@@ -22,6 +22,7 @@ TODO:
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from typing import Sequence
 
 from merchants.constants import (
@@ -130,6 +131,7 @@ def normalize_tokens(raw_name: str) -> frozenset[str]:
     return frozenset(tokenize(raw_name))
 
 
+@lru_cache(maxsize=4096)
 def normalize_with_tokens(raw_name: str) -> tuple[str, list[str]]:
     """Normalize and return both the canonical string and token list.
 

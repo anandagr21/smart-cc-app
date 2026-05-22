@@ -16,6 +16,7 @@ TODO:
 from __future__ import annotations
 
 from typing import Mapping
+from functools import lru_cache
 
 from merchants.constants import MerchantCategory
 
@@ -209,6 +210,7 @@ _TOKEN_HINTS: Mapping[str, MerchantCategory] = {
 }
 
 
+@lru_cache(maxsize=1024)
 def categorize(normalized_name: str) -> MerchantCategory:
     """Determine the merchant category from a normalized merchant name.
 

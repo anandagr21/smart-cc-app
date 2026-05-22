@@ -32,12 +32,15 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+import { useAuthStore } from '../../features/auth/store/authStore';
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Basic error handling for 401s could go here (e.g., refreshing tokens or logging out)
+    // Handle unauthorized by logging the user out
     if (error.response?.status === 401) {
-      // Handle unauthorized
+      console.warn('API returned 401 Unauthorized. Logging out.');
+      useAuthStore.getState().logout();
     }
     return Promise.reject(error);
   }

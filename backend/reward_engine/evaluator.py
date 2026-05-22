@@ -67,9 +67,14 @@ _REWARD_STRATEGIES: dict[RewardType, RewardStrategy] = {
 }
 
 
+from reward_engine.indexer import RuleIndex
+
 def evaluate(
     txn: TransactionContext,
-    rules: list[NormalizedRuleConfig],
+    rules: list[NormalizedRuleConfig] | None = None,
+    *,
+    bonus_index: RuleIndex | None = None,
+    exclusion_rules: list[NormalizedRuleConfig] | None = None,
 ) -> EvaluationResult:
     """Evaluate rewards for a single transaction against a card's rules.
 
@@ -77,22 +82,14 @@ def evaluate(
     It runs the full pipeline and returns a self-documenting result with
     an audit trail.
 
-    Edge cases handled:
-      - Empty rules list → zero result
-      - No matching rule → zero result
-      - Excluded transaction → zero result with exclusion info
-      - Cap reduces reward to 0 → valid zero-cap result
-      - Future reward types → warning, zero result
-
     Args:
         txn: The normalized transaction context.
-        rules: All normalized reward rules for the card being evaluated.
+        rules: Legacy list of rules to evaluate (will be dynamically indexed).
+        bonus_index: Pre-computed index for bonus rules (optimizes O(N) scans).
+        exclusion_rules: Pre-filtered exclusion rules.
 
     Returns:
         EvaluationResult with effective_reward_inr, breakdown, and diagnostics.
-
-    Raises:
-        Never — all errors are captured in warnings/breakdown.
     """
     breakdown: list[EvaluationStep] = []
     warnings: list[str] = []
@@ -100,7 +97,9 @@ def evaluate(
     # ------------------------------------------------------------------
     # Step 1: Exclusion check (early exit)
     # ------------------------------------------------------------------
-    exclusion_rules = filter_exclusion_rules(rules)
+    if exclusion_rules is None:
+        exclusion_rules = filter_exclusion_rules(rules) if rules else []
+    
     exclusion_result = evaluate_exclusions(txn, exclusion_rules)
 
     breakdown.append(
@@ -125,8 +124,11 @@ def evaluate(
     # ------------------------------------------------------------------
     # Step 2: Rule matching
     # ------------------------------------------------------------------
-    bonus_rules = filter_bonus_rules(rules)
-    match = match_rules(txn, bonus_rules)
+    if bonus_index is None:
+        bonus_rules = filter_bonus_rules(rules) if rules else []
+        bonus_index = RuleIndex(bonus_rules)
+
+    match = match_rules(txn, bonus_index)
 
     breakdown.append(
         EvaluationStep(
@@ -136,7 +138,7 @@ def evaluate(
                 if match
                 else "No matching rule found"
             ),
-            input_value={"bonus_rules_count": len(bonus_rules)},
+            input_value={"bonus_rules_indexed": bonus_index.total_count},
             output_value=match.model_dump() if match else None,
         )
     )

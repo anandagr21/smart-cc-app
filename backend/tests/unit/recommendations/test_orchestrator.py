@@ -30,7 +30,10 @@ class MockCardDetails:
 class MockUserCard:
     def __init__(self, card_id: str, card_name: str) -> None:
         self.card_id = card_id
+        self.id = card_id
+        self.card_catalog_id = card_id
         self.card_name = card_name
+        self.nickname = card_name
         self.card_details = MockCardDetails(card_name)
 
 class MockRewardRule:
