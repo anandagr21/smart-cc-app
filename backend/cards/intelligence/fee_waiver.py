@@ -10,6 +10,7 @@ def get_waiver_progress(user_card: Any, catalog_card: Any) -> dict[str, Any]:
 
     result = {
         "fee_waiver_threshold": waiver_threshold,
+        "annual_fee": annual_fee,
         "fee_waiver_progress_percent": 0.0,
         "remaining_spend_for_waiver": None,
         "waiver_achieved": False,

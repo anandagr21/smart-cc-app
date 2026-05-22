@@ -10,8 +10,13 @@ Architectural Boundaries:
 
 from __future__ import annotations
 
+import logging
+import time
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
+
+logger = logging.getLogger(__name__)
 
 from merchants.service import MerchantService
 from recommendations.exceptions import NoCardsError
@@ -23,6 +28,7 @@ from reward_engine.ranking import rank_cards
 from reward_engine.ranking_schemas import CardEvaluationInput, RankingResult
 from reward_engine.schemas import EvaluationResult, NormalizedRuleConfig
 from reward_engine.scoring import score_recommendation
+from reward_engine.utils import round_inr
 from rewards.service import RewardRuleService
 from services.card_service import UserCardService
 from cards.intelligence.fee_waiver import get_waiver_progress
@@ -45,6 +51,8 @@ class RecommendationOrchestrator:
         self, user_id: UUID, request: RecommendationRequest
     ) -> RecommendationResponse:
         """Run the end-to-end recommendation workflow."""
+        start_time = time.perf_counter()
+        
         # 1. Normalize merchant
         normalize_res = self._merchant_service.normalize_merchant(request.merchant_name)
         canonical_merchant = normalize_res.canonical_name
@@ -58,6 +66,8 @@ class RecommendationOrchestrator:
 
         # 3. Build Transaction Context
         txn_context = build_transaction_context(request, canonical_merchant, category)
+        
+        enrichment_time = time.perf_counter()
 
         # 4 & 5. Evaluate each card
         eval_inputs: list[CardEvaluationInput] = []
@@ -122,12 +132,14 @@ class RecommendationOrchestrator:
             # Overwrite the recommendation_reason with our reasoning summary if it's stronger
             rec_reason = intel.get("reasoning_summary") or r.recommendation_reason
             
+            cashback_score = Decimal(str(intel.get("score_breakdown", {}).get("cashback_score", r.effective_reward_inr)))
+            
             ranked_cards_response.append(
                 RankedCardResponse(
                     card_id=r.card_id,
                     card_name=r.card_name,
                     rank=r.rank,
-                    effective_reward_value=intel.get("score_breakdown", {}).get("cashback_score", r.effective_reward_inr), # Show actual cashback
+                    effective_reward_value=round_inr(cashback_score),
                     cashback_amount=r.cashback_amount,
                     reward_points=r.reward_points,
                     reward_type=r.reward_type,
@@ -145,6 +157,17 @@ class RecommendationOrchestrator:
         best_card = ranking_result.top_card_id
         if ranked_cards_response:
             best_card = ranked_cards_response[0].card_name
+
+        end_time = time.perf_counter()
+        total_ms = (end_time - start_time) * 1000
+        enrich_ms = (enrichment_time - start_time) * 1000
+        rank_ms = (end_time - enrichment_time) * 1000
+        
+        logger.info(
+            f"Orchestration complete | Total: {total_ms:.2f}ms "
+            f"| Enrichment: {enrich_ms:.2f}ms | Eval/Rank: {rank_ms:.2f}ms "
+            f"| Cards: {len(user_cards)}"
+        )
 
         return RecommendationResponse(
             normalized_merchant=canonical_merchant,

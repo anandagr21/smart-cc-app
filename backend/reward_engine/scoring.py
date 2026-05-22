@@ -43,18 +43,23 @@ def score_recommendation(
     if fee_waiver_data.get("fee_waiver_threshold"):
         if not fee_waiver_data.get("waiver_achieved"):
             remaining = float(fee_waiver_data.get("remaining_spend_for_waiver", 0))
-            if remaining > 0:
-                # How much does this transaction help?
+            annual_fee = float(fee_waiver_data.get("annual_fee", 0))
+            waiver_threshold = float(fee_waiver_data.get("fee_waiver_threshold", 0))
+            
+            if remaining > 0 and annual_fee > 0 and waiver_threshold > 0:
                 txn_amount_float = float(txn_amount)
                 contribution = min(txn_amount_float, remaining)
-                contribution_percent = (contribution / float(fee_waiver_data["fee_waiver_threshold"])) * 100
+                contribution_percent = (contribution / waiver_threshold) * 100
                 
                 waiver_impact_msg = f"Contributes {contribution_percent:.1f}% toward fee waiver."
                 optimization_factors.append("Helps achieve annual fee waiver.")
                 
-                # Assign a small bonus per rupee contributed to the waiver
-                # e.g., 0.01 INR bonus per rupee of contribution, ensuring it doesn't override huge cashback.
-                bonus_score += contribution * 0.015
+                if remaining <= txn_amount_float:
+                    # Transaction completes the waiver! Expected value is the full annual fee.
+                    bonus_score += annual_fee
+                else:
+                    # Transaction contributes to the waiver. Expected value is proportional.
+                    bonus_score += (contribution / waiver_threshold) * annual_fee
                 
         else:
             waiver_impact_msg = "Waiver already achieved."
