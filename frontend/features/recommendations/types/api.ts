@@ -19,6 +19,12 @@ export interface RankedCardResponse {
   reward_type: RewardType;
   recommendation_reason: string;
   warnings: string[];
+  optimization_factors: string[];
+  tradeoffs: string[];
+  waiver_impact: string | null;
+  milestone_impact: string | null;
+  cap_status: string | null;
+  reasoning_summary: string;
 }
 
 export interface RecommendationResponse {

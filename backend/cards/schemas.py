@@ -19,7 +19,7 @@ TODO:
 - Add card benefit rules schema when reward engine integration is needed.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -118,6 +118,7 @@ class CardCatalogResponse(BaseModel):
     network: str
     joining_fee: Decimal
     annual_fee: Decimal
+    fee_waiver_spend_threshold: Decimal | None
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -231,6 +232,7 @@ class UserCardResponse(BaseModel):
 
     Includes the card catalog details nested for convenience
     on the frontend (avoids an extra API call).
+    Also includes dynamic fee waiver tracking fields computed at runtime.
     """
 
     id: UUID
@@ -242,10 +244,18 @@ class UserCardResponse(BaseModel):
     annual_spend: Decimal
     billing_date: int
     due_date: int
+    fee_cycle_start_date: datetime | date | None = None
     is_active: bool
     created_at: datetime
     updated_at: datetime
     # Nested catalog data — populated by the service layer
     card_details: CardCatalogResponse | None = None
+
+    # Enriched intelligence fields (populated by service/intelligence layer)
+    fee_waiver_threshold: Decimal | None = None
+    fee_waiver_progress_percent: float | None = None
+    remaining_spend_for_waiver: Decimal | None = None
+    waiver_achieved: bool | None = None
+    projected_waiver_status: str | None = None
 
     model_config = ConfigDict(from_attributes=True, extra="forbid")

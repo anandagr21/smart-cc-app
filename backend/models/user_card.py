@@ -13,7 +13,7 @@ TODO:
 - Add spend tracking aggregation fields when analytics module is built.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
@@ -42,6 +42,7 @@ class UserCard(SQLModel, table=True):
         annual_spend: Cumulative spend for the card year (INR). Cannot be negative.
         billing_date: Day of month (1-31) when the billing cycle closes.
         due_date: Day of month (1-31) when payment is due.
+        fee_cycle_start_date: The start date of the annual fee cycle.
         is_active: Whether the user considers this card active.
         created_at: UTC timestamp when the card was added.
         updated_at: UTC timestamp of last modification.
@@ -72,6 +73,10 @@ class UserCard(SQLModel, table=True):
     )
     billing_date: int = Field(default=1, ge=1, le=31)
     due_date: int = Field(default=1, ge=1, le=31)
+    fee_cycle_start_date: date | None = Field(
+        default=None,
+        description="The start date of the annual fee cycle (used to calculate waiver period).",
+    )
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(

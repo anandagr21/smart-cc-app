@@ -157,7 +157,7 @@ def evaluate_caps(
     warnings: list[str] = []
 
     current_reward = max(ZERO_DECIMAL, uncapped_reward)
-    # applied_headrooms tracks cumulative earned (same semantics as input headrooms)
+    # applied_headrooms tracks remaining headroom state
     applied_headrooms: dict[str, Decimal] = dict(headrooms)  # shallow copy
 
     sorted_caps = _sort_caps(caps)
@@ -169,13 +169,17 @@ def evaluate_caps(
 
         key = build_cap_key(cap.cap_type, cap.scope.value, cap.merchant, cap.category)
 
-        # Compute remaining headroom from cumulative earned
-        cumulative_earned = applied_headrooms.get(key)
-        if cumulative_earned is None:
-            # First time this cap is tracked — full limit available.
+        # Compute remaining headroom from state
+        if cap.scope == CapScope.PER_TRANSACTION:
+            # Transaction caps always get their full limit
             headroom_before = max(ZERO_DECIMAL, cap.limit)
         else:
-            headroom_before = max(ZERO_DECIMAL, cap.limit - cumulative_earned)
+            headroom_before = applied_headrooms.get(key)
+            if headroom_before is None:
+                # First time this cap is tracked — full limit available.
+                headroom_before = max(ZERO_DECIMAL, cap.limit)
+            else:
+                headroom_before = max(ZERO_DECIMAL, headroom_before)
 
         if current_reward <= ZERO_DECIMAL:
             # Reward already fully consumed — record zero-pass detail.
@@ -188,8 +192,8 @@ def evaluate_caps(
             )
             details.append(detail)
 
-            # Keep cumulative earned unchanged
-            applied_headrooms[key] = max(ZERO_DECIMAL, cumulative_earned or ZERO_DECIMAL)
+            # Keep headroom unchanged
+            applied_headrooms[key] = headroom_before
             continue
 
         # Clamp the current reward against this cap's headroom.
@@ -205,9 +209,8 @@ def evaluate_caps(
         )
         details.append(detail)
 
-        # Update tracked cumulative earned
-        new_cumulative = max(ZERO_DECIMAL, cumulative_earned or ZERO_DECIMAL) + reward_after
-        applied_headrooms[key] = max(ZERO_DECIMAL, new_cumulative)
+        # Update tracked remaining headroom
+        applied_headrooms[key] = headroom_after
 
         # Generate near-exhaustion warning when applicable.
         if not detail.is_exhausted and is_near_exhaustion(headroom_after, cap.limit):

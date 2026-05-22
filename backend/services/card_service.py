@@ -26,6 +26,7 @@ from cards.schemas import (
     UserCardUpdate,
 )
 from repositories.card_repository import CardCatalogRepository, UserCardRepository
+from cards.intelligence.fee_waiver import get_waiver_progress
 
 
 class CardCatalogService:
@@ -155,7 +156,8 @@ class UserCardService:
     def _to_response(entity) -> UserCardResponse:
         """Convert a UserCard entity to its response schema.
 
-        Includes nested card catalog details when available via eager loading.
+        Includes nested card catalog details when available via eager loading,
+        and computes fee waiver tracking fields dynamically.
         """
         response = UserCardResponse.model_validate(entity)
 
@@ -164,5 +166,13 @@ class UserCardService:
             response.card_details = CardCatalogResponse.model_validate(
                 entity.card_catalog
             )
+            
+            # Enrich with fee waiver intelligence
+            waiver_data = get_waiver_progress(entity, entity.card_catalog)
+            response.fee_waiver_threshold = waiver_data.get("fee_waiver_threshold")
+            response.fee_waiver_progress_percent = waiver_data.get("fee_waiver_progress_percent")
+            response.remaining_spend_for_waiver = waiver_data.get("remaining_spend_for_waiver")
+            response.waiver_achieved = waiver_data.get("waiver_achieved")
+            response.projected_waiver_status = waiver_data.get("projected_waiver_status")
 
         return response

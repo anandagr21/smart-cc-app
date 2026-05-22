@@ -5,6 +5,7 @@ export interface CardCatalogResponse {
   network: string;
   joining_fee: number;
   annual_fee: number;
+  fee_waiver_spend_threshold: number | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -20,10 +21,16 @@ export interface UserCardResponse {
   annual_spend: number;
   billing_date: number;
   due_date: number;
+  fee_cycle_start_date: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   card_details?: CardCatalogResponse;
+  fee_waiver_threshold?: number | null;
+  fee_waiver_progress_percent?: number | null;
+  remaining_spend_for_waiver?: number | null;
+  waiver_achieved?: boolean | null;
+  projected_waiver_status?: string | null;
 }
 
 export interface UserCardCreate {

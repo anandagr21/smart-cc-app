@@ -49,6 +49,14 @@ class RankedCardResponse(BaseModel):
     recommendation_reason: str = Field(..., description="Primary reason for ranking.")
     warnings: list[str] = Field(default_factory=list, description="Warnings related to this card.")
 
+    # ---- Phase 2: Explainability & Intelligence ----
+    optimization_factors: list[str] = Field(default_factory=list, description="Positive factors influencing this rank.")
+    tradeoffs: list[str] = Field(default_factory=list, description="Negative tradeoffs for picking this card.")
+    waiver_impact: str | None = Field(default=None, description="How this impacts annual fee waiver.")
+    milestone_impact: str | None = Field(default=None, description="How this impacts milestone goals.")
+    cap_status: str | None = Field(default=None, description="Status of the reward caps relevant here.")
+    reasoning_summary: str = Field(default="", description="Human-readable synthesis of the recommendation logic.")
+
 
 class RecommendationResponse(BaseModel):
     """Full response for a recommendation request."""

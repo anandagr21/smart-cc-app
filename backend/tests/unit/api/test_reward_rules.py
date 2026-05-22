@@ -492,8 +492,8 @@ class TestRewardRuleSchemaValidation:
         """RewardRuleResponse should accept model_validate from ORM-like dict."""
         data = _make_sample_reward_rule_dict()
         response = RewardRuleResponse(**data)
-        assert response.id == VALID_RULE_ID_1
-        assert response.card_id == VALID_CARD_ID
+        assert str(response.id) == VALID_RULE_ID_1
+        assert str(response.card_id) == VALID_CARD_ID
         assert response.rule_type == RewardRuleType.MERCHANT_BONUS
         assert isinstance(response.created_at, datetime)
         assert response.updated_at is None
@@ -505,11 +505,12 @@ class TestRewardRuleSchemaValidation:
         assert isinstance(response.rule_config, dict)
         assert response.rule_config["merchant"] == "swiggy"
 
-    def test_reward_rule_response_id_is_string(self):
-        """id field is a string representation of UUID."""
+    def test_reward_rule_response_id_is_uuid(self):
+        """id field is a UUID object."""
+        import uuid
         data = _make_sample_reward_rule_dict()
         response = RewardRuleResponse(**data)
-        assert isinstance(response.id, str)
+        assert isinstance(response.id, uuid.UUID)
 
     def test_reward_rule_type_enum_in_schema(self):
         """rule_type should accept RewardRuleType enum directly."""
@@ -1276,7 +1277,7 @@ class TestRewardRuleService:
             result = await service.get_rule(VALID_RULE_ID_1)
 
             assert isinstance(result, RewardRuleResponse)
-            assert result.id == VALID_RULE_ID_1
+            assert str(result.id) == VALID_RULE_ID_1
             mock_get_by_id_or_raise.assert_awaited_once_with(mock_session, VALID_RULE_ID_1)
 
     @pytest.mark.asyncio

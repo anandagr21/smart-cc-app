@@ -594,14 +594,14 @@ class TestEvaluateCapsPipeline:
         assert result.caps_applied == []
 
     def test_reward_below_limit(self):
-        cap = _cap_rule(limit=1500, scope=CapScope.MONTHLY)
+        cap = _cap_rule(cap_type="monthly_cap", limit=1500, scope=CapScope.MONTHLY)
         result = evaluate_caps(Decimal("100"), [cap])
         assert result.adjusted_reward == Decimal("100")
         assert result.was_capped is False
 
     def test_reward_exceeds_limit_full_clamp(self):
-        cap = _cap_rule(limit=1500, scope=CapScope.MONTHLY)
-        headrooms = {"monthly_cap::monthly::": Decimal("1450")}
+        cap = _cap_rule(cap_type="monthly_cap", limit=1500, scope=CapScope.MONTHLY)
+        headrooms = {"monthly_cap::monthly::": Decimal("50")}
         result = evaluate_caps(Decimal("200"), [cap], headrooms=headrooms)
         # headroom = 1500 - 1450 = 50, reward 200 → clamped to 50
         assert result.adjusted_reward == Decimal("50")
@@ -764,7 +764,7 @@ class TestScenarioExamples:
 
     def test_example_1_monthly_cashback_partial(self):
         """Monthly cashback cap = ₹1500, earned = ₹1450, new = ₹100 → only ₹50 applied."""
-        cap = _cap_rule(limit=1500, scope=CapScope.MONTHLY)
+        cap = _cap_rule(cap_type="monthly_cap", limit=1500, scope=CapScope.MONTHLY)
         headrooms = {"monthly_cap::monthly::": Decimal("50")}
         result = evaluate_caps(Decimal("100"), [cap], headrooms=headrooms)
         assert result.adjusted_reward == Decimal("50")

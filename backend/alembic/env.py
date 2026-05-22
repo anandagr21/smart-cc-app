@@ -32,9 +32,7 @@ if config.config_file_name is not None:
 
 # Import all SQLModel models here so autogenerate can detect them.
 from merchants.models import Merchant, MerchantAlias  # noqa: F401
-from models.card import Card  # noqa: F401
 from models.card_catalog import CardCatalog  # noqa: F401
-from models.transaction import Transaction  # noqa: F401
 from models.user import User  # noqa: F401
 from models.user_card import UserCard  # noqa: F401
 from rewards.models import RewardRule  # noqa: F401

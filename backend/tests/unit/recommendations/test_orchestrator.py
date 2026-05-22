@@ -26,6 +26,9 @@ from reward_engine.constants import PaymentMode
 class MockCardDetails:
     def __init__(self, name: str) -> None:
         self.name = name
+        self.card_name = name
+        self.fee_waiver_spend_threshold = Decimal("100000.00")
+        self.annual_fee = Decimal("1000.00")
 
 class MockUserCard:
     def __init__(self, card_id: str, card_name: str) -> None:
@@ -34,6 +37,8 @@ class MockUserCard:
         self.card_catalog_id = card_id
         self.card_name = card_name
         self.nickname = card_name
+        self.annual_spend = Decimal("50000.00")
+        self.fee_cycle_start_date = None
         self.card_details = MockCardDetails(card_name)
 
 class MockRewardRule:

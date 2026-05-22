@@ -58,6 +58,12 @@ class CardCatalog(SQLModel, table=True):
         max_digits=12,
         decimal_places=2,
     )
+    fee_waiver_spend_threshold: Decimal | None = Field(
+        default=None,
+        max_digits=12,
+        decimal_places=2,
+        description="Amount of annual spend required to waive the annual fee.",
+    )
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(

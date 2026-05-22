@@ -57,6 +57,7 @@ def _make_sample_card_catalog_response() -> CardCatalogResponse:
         network="Visa",
         joining_fee=Decimal("500.00"),
         annual_fee=Decimal("1000.00"),
+        fee_waiver_spend_threshold=None,
         is_active=True,
         created_at=SAMPLE_DATETIME,
         updated_at=SAMPLE_DATETIME,
@@ -385,6 +386,7 @@ class TestCardCatalogService:
             network="Visa",
             joining_fee=Decimal("0"),
             annual_fee=Decimal("0"),
+            fee_waiver_spend_threshold=None,
             is_active=True,
             created_at=SAMPLE_DATETIME,
             updated_at=SAMPLE_DATETIME,
@@ -410,6 +412,7 @@ class TestCardCatalogService:
         mock_entity.network = "Visa"
         mock_entity.joining_fee = Decimal("0")
         mock_entity.annual_fee = Decimal("0")
+        mock_entity.fee_waiver_spend_threshold = None
         mock_entity.is_active = True
         mock_entity.created_at = SAMPLE_DATETIME
         mock_entity.updated_at = SAMPLE_DATETIME
