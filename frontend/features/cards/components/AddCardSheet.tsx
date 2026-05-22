@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet } from 'react-native';
 import { X } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
 import { CardCatalogResponse } from '../types/api';
 import { useCardCatalog } from '../hooks/useCardCatalog';
 import { useAddCard } from '../hooks/useAddCard';
 import { CardCatalogList } from './CardCatalogList';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
-import { colors } from '../../../theme/colors';
+import { useThemeColors } from '../../theme/hooks/useThemeColors';
+import { tokens } from '../../../theme/tokens';
+import { useThemeStore } from '../../theme/store/themeStore';
 
 interface AddCardSheetProps {
   visible: boolean;
@@ -17,6 +20,9 @@ interface AddCardSheetProps {
 export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) => {
   const { data: catalog, isLoading: isCatalogLoading } = useCardCatalog();
   const { mutateAsync: addCard, isPending } = useAddCard();
+  const colors = useThemeColors();
+  const { themeMode } = useThemeStore();
+  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0B0E14');
   
   const [selectedCard, setSelectedCard] = useState<CardCatalogResponse | null>(null);
   const [nickname, setNickname] = useState('');
@@ -52,10 +58,20 @@ export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) 
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           className="w-full h-[85%]"
         >
-          <View className="flex-1 bg-background rounded-t-3xl border-t border-white/10 overflow-hidden shadow-2xl">
+          <BlurView 
+            tint={isDark ? 'dark' : 'light'} 
+            intensity={80}
+            className="flex-1 rounded-t-[36px] overflow-hidden"
+            style={[
+              tokens.elevation.level3,
+              { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder, borderWidth: StyleSheet.hairlineWidth }
+            ]}
+          >
+            {/* Metallic Top Highlight */}
+            <View className="absolute top-0 left-0 right-0 h-[1px]" style={{ backgroundColor: colors.glassHighlight }} />
             
             {/* Header */}
-            <View className="flex-row items-center justify-between px-6 py-5 border-b border-white/5">
+            <View className="flex-row items-center justify-between px-6 py-5 mb-2">
               <Text className="text-xl font-bold text-textPrimary tracking-tight">
                 {selectedCard ? 'Configure Card' : 'Add New Card'}
               </Text>
@@ -109,7 +125,7 @@ export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) 
               </View>
             )}
 
-          </View>
+          </BlurView>
         </KeyboardAvoidingView>
       </View>
     </Modal>

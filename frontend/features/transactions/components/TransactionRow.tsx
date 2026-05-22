@@ -12,7 +12,7 @@ interface TransactionRowProps {
   onPress: (transaction: TransactionResponse) => void;
 }
 
-export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
+export const TransactionRow = React.memo(({ transaction, onPress }: TransactionRowProps) => {
   const { data: cardsData } = useCards();
   const colors = useThemeColors();
   const card = cardsData?.find((c) => c.id === transaction.user_card_id);
@@ -35,7 +35,7 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
   return (
     <Pressable
       onPress={() => onPress(transaction)}
-      className="flex-row items-center justify-between py-5 px-4 mb-2 mx-4 rounded-3xl"
+      className="flex-row items-center justify-between py-4 px-5 mb-3 mx-6 rounded-[28px]"
       style={{ backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: StyleSheet.hairlineWidth }}
     >
       <View className="flex-row items-center flex-1">
@@ -74,4 +74,4 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
       </View>
     </Pressable>
   );
-}
+});

@@ -27,21 +27,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
 
   return (
     <AnimatedContainer delay={delay}>
-      <Card variant="glass" padded={false} className="mb-5">
-        {/* Subtle physical gradient reflection */}
-        <View className="absolute inset-0 opacity-20 pointer-events-none">
-          <View 
-            style={{ 
-              backgroundColor: networkColor, 
-              width: 150, 
-              height: 150, 
-              position: 'absolute', 
-              top: -50, 
-              right: -50,
-              filter: [{ blur: 80 }]
-            }} 
-          />
-        </View>
+      <Card variant="elevated" padded={false} className="mb-5 border border-white/5 shadow-sm">
 
         <View className="p-6">
           <View className="flex-row justify-between items-start mb-10">

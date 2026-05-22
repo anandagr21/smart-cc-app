@@ -45,6 +45,18 @@ export interface TransactionBase {
 
 export interface TransactionCreate extends TransactionBase {}
 
+export interface TransactionUpdate {
+  merchant_name?: string;
+  amount?: number;
+  currency?: Currency;
+  payment_mode?: PaymentMode;
+  transaction_type?: TransactionType;
+  transaction_date?: string; // YYYY-MM-DD
+  description?: string;
+  status?: TransactionStatus;
+  user_card_id?: string;
+}
+
 export interface TransactionUpdateStatus {
   status: TransactionStatus;
   posted_date?: string;

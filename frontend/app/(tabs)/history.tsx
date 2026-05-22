@@ -7,7 +7,7 @@ import { groupTransactionsByDate } from '../../features/transactions/utils/dateG
 import { TransactionRow } from '../../features/transactions/components/TransactionRow';
 import { EmptyTransactionState } from '../../features/transactions/components/EmptyTransactionState';
 import { SavingsSummaryCard } from '../../features/transactions/components/SavingsSummaryCard';
-import { AddTransactionSheet } from '../../features/transactions/components/AddTransactionSheet';
+import { TransactionFormSheet } from '../../features/transactions/components/TransactionFormSheet';
 import { TransactionDetailSheet } from '../../features/transactions/components/TransactionDetailSheet';
 import { TransactionListSkeleton } from '../../features/transactions/components/TransactionSkeleton';
 import { TransactionResponse } from '../../features/transactions/types/transaction.types';
@@ -16,9 +16,21 @@ import { AnimatedContainer } from '../../components/ui/AnimatedContainer';
 
 export default function HistoryScreen() {
   const { data, isLoading, isRefetching, refetch, fetchNextPage, hasNextPage } = useTransactions();
-  const [isAddSheetVisible, setAddSheetVisible] = useState(false);
+  const [isFormSheetVisible, setFormSheetVisible] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<TransactionResponse | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
   const colors = useThemeColors();
+
+  const handleOpenAdd = () => {
+    setTransactionToEdit(null);
+    setFormSheetVisible(true);
+  };
+
+  const handleOpenEdit = (transaction: TransactionResponse) => {
+    setSelectedTransaction(null);
+    setTransactionToEdit(transaction);
+    setFormSheetVisible(true);
+  };
 
   // Flatten infinite pages into a single array
   const allTransactions = data?.pages.flatMap((page) => page.data) || [];
@@ -30,9 +42,13 @@ export default function HistoryScreen() {
     }
   };
 
-  const handleTransactionPress = (transaction: TransactionResponse) => {
+  const handleTransactionPress = React.useCallback((transaction: TransactionResponse) => {
     setSelectedTransaction(transaction);
-  };
+  }, []);
+
+  const renderItem = React.useCallback(({ item }: { item: TransactionResponse }) => (
+    <TransactionRow transaction={item} onPress={handleTransactionPress} />
+  ), [handleTransactionPress]);
 
   return (
     <ScreenContainer className="pt-2">
@@ -46,7 +62,7 @@ export default function HistoryScreen() {
         {allTransactions.length > 0 && (
           <AnimatedContainer delay={200}>
             <Pressable
-              onPress={() => setAddSheetVisible(true)}
+              onPress={handleOpenAdd}
               style={{ backgroundColor: colors.surfaceElevated, borderColor: colors.borderHighlight, borderWidth: StyleSheet.hairlineWidth }}
               className="p-3 rounded-full shadow-sm"
             >
@@ -61,16 +77,14 @@ export default function HistoryScreen() {
         {isLoading ? (
           <TransactionListSkeleton />
         ) : allTransactions.length === 0 ? (
-          <EmptyTransactionState onAddPress={() => setAddSheetVisible(true)} />
+          <EmptyTransactionState onAddPress={handleOpenAdd} />
         ) : (
           <SectionList
             sections={groupedTransactions}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TransactionRow transaction={item} onPress={handleTransactionPress} />
-            )}
+            renderItem={renderItem}
             renderSectionHeader={({ section: { title } }) => (
-              <View style={{ backgroundColor: colors.background, borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }} className="pt-6 pb-2 px-4 mb-2">
+              <View style={{ backgroundColor: colors.background, borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }} className="pt-6 pb-2 px-6 mb-2">
                 <Text style={{ color: colors.textSecondary }} className="text-xs font-bold uppercase tracking-widest">
                   {title}
                 </Text>
@@ -81,7 +95,7 @@ export default function HistoryScreen() {
                 <SavingsSummaryCard transactions={allTransactions} />
               </View>
             }
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ paddingBottom: 140 }}
             stickySectionHeadersEnabled={true}
             showsVerticalScrollIndicator={false}
             onEndReached={handleEndReached}
@@ -97,15 +111,17 @@ export default function HistoryScreen() {
         )}
       </View>
 
-      <AddTransactionSheet
-        visible={isAddSheetVisible}
-        onClose={() => setAddSheetVisible(false)}
+      <TransactionFormSheet
+        visible={isFormSheetVisible}
+        onClose={() => setFormSheetVisible(false)}
+        initialData={transactionToEdit}
       />
 
       <TransactionDetailSheet
         transaction={selectedTransaction}
         visible={!!selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
+        onEdit={handleOpenEdit}
       />
     </ScreenContainer>
   );

@@ -98,7 +98,7 @@ export default function ProfileScreen() {
         </AnimatedContainer>
 
         <AnimatedContainer delay={300}>
-          <Card variant="glass">
+          <Card variant="elevated">
             <Text style={{ color: colors.textSecondary }} className="text-xs font-bold uppercase tracking-widest mb-2">Account</Text>
             <SettingsRow icon={Settings} label="Preferences" colors={colors} />
             <SettingsRow icon={Bell} label="Notifications" colors={colors} />

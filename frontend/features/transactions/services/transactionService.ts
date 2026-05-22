@@ -1,6 +1,6 @@
 import { apiClient } from '../../../services/api/client';
 import { PaginatedResponse, SingleResponse } from '../../cards/types/api';
-import { TransactionCreate, TransactionResponse } from '../types/transaction.types';
+import { TransactionCreate, TransactionResponse, TransactionUpdate } from '../types/transaction.types';
 
 class TransactionService {
   /**
@@ -18,6 +18,14 @@ class TransactionService {
    */
   async createTransaction(payload: TransactionCreate): Promise<TransactionResponse> {
     const { data } = await apiClient.post<SingleResponse<TransactionResponse>>('/transactions', payload);
+    return data.data;
+  }
+
+  /**
+   * Partially update an existing transaction
+   */
+  async updateTransaction(transactionId: string, payload: TransactionUpdate): Promise<TransactionResponse> {
+    const { data } = await apiClient.patch<SingleResponse<TransactionResponse>>(`/transactions/${transactionId}`, payload);
     return data.data;
   }
 }

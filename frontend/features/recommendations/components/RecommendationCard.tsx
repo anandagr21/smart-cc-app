@@ -25,7 +25,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ card, in
           <Text style={{ color: colors.textPrimary }} className="text-2xl font-bold ml-3 tracking-tight">Optimal Strategy</Text>
         </View>
 
-        <Card variant="hero" padded={false} className="mb-8">
+        <Card variant="elevated" padded={false} className="mb-8">
           {/* Top header */}
           <View 
             style={{ backgroundColor: `${colors.success}1A`, borderBottomColor: colors.borderHighlight, borderBottomWidth: StyleSheet.hairlineWidth }} 

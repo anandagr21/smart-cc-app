@@ -46,7 +46,7 @@ export default function CardsScreen() {
         <ScrollView 
           className="flex-1" 
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }} // Extra padding for floating tab bar
+          contentContainerStyle={{ paddingBottom: 140 }} // Extra padding for floating tab bar
         >
           {cards.map((card, index) => (
             <WalletCard key={card.id} card={card} index={index} />

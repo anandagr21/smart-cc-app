@@ -81,3 +81,10 @@ class TransactionRepository:
         await self._session.commit()
         await self._session.refresh(transaction)
         return transaction
+
+    async def update_transaction(self, transaction: Transaction) -> Transaction:
+        """Persist updates to an existing transaction."""
+        self._session.add(transaction)
+        await self._session.commit()
+        await self._session.refresh(transaction)
+        return transaction

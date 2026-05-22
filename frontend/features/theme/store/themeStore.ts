@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 
@@ -12,13 +13,30 @@ interface ThemeState {
 
 const THEME_STORAGE_KEY = 'app_theme_mode';
 
+// Helper for cross-platform secure storage
+const setItemAsync = async (key: string, value: string) => {
+  if (Platform.OS === 'web') {
+    localStorage.setItem(key, value);
+  } else {
+    await SecureStore.setItemAsync(key, value);
+  }
+};
+
+const getItemAsync = async (key: string) => {
+  if (Platform.OS === 'web') {
+    return localStorage.getItem(key);
+  } else {
+    return await SecureStore.getItemAsync(key);
+  }
+};
+
 export const useThemeStore = create<ThemeState>((set) => ({
   themeMode: 'system',
   isHydrated: false,
 
   setThemeMode: async (mode: ThemeMode) => {
     try {
-      await SecureStore.setItemAsync(THEME_STORAGE_KEY, mode);
+      await setItemAsync(THEME_STORAGE_KEY, mode);
       set({ themeMode: mode });
     } catch (error) {
       console.error('Failed to save theme preference:', error);
@@ -29,7 +47,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
   initializeTheme: async () => {
     try {
-      const storedTheme = await SecureStore.getItemAsync(THEME_STORAGE_KEY);
+      const storedTheme = await getItemAsync(THEME_STORAGE_KEY);
       if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system') {
         set({ themeMode: storedTheme as ThemeMode, isHydrated: true });
       } else {

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addUserCard } from '../api/cardsApi';
 import { UserCardCreate } from '../types/api';
+import { invalidateWalletIntelligence } from '../../core/api/queryUtils';
 
 export const useAddCard = () => {
   const queryClient = useQueryClient();
@@ -9,7 +10,7 @@ export const useAddCard = () => {
     mutationFn: (data: UserCardCreate) => addUserCard(data),
     onSuccess: () => {
       // Invalidate the cards query so the wallet instantly refreshes
-      queryClient.invalidateQueries({ queryKey: ['userCards'] });
+      invalidateWalletIntelligence(queryClient);
     },
   });
 };

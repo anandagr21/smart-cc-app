@@ -15,8 +15,10 @@ from transactions.constants import TransactionStatus
 from transactions.exceptions import InvalidTransactionError
 from transactions.models import Transaction
 from transactions.repository import TransactionRepository
-from transactions.schemas import TransactionCreate, TransactionResponse, TransactionUpdateStatus
+from transactions.schemas import TransactionCreate, TransactionResponse, TransactionUpdateStatus, TransactionUpdate
 from transactions.validators import validate_status_transition, validate_transaction_dates
+
+from cards.intelligence.spend_aggregator import SpendAggregator
 
 
 class TransactionService:
@@ -26,9 +28,11 @@ class TransactionService:
         self,
         repository: TransactionRepository,
         merchant_service: MerchantService,
+        spend_aggregator: 'SpendAggregator' = None,
     ) -> None:
         self._repository = repository
         self._merchant_service = merchant_service
+        self._spend_aggregator = spend_aggregator
 
     async def create_transaction(
         self, user_id: UUID, schema: TransactionCreate
@@ -66,6 +70,11 @@ class TransactionService:
 
         # 4. Persist
         persisted = await self._repository.create_transaction(model)
+        
+        # 5. Sync derived aggregates
+        if self._spend_aggregator:
+            await self._spend_aggregator.recalculate_card_spend(schema.user_card_id)
+            
         return self._to_response(persisted)
 
     async def get_transaction(self, transaction_id: UUID) -> TransactionResponse:
@@ -103,6 +112,44 @@ class TransactionService:
         updated = await self._repository.update_transaction_status(
             transaction_id, schema.status, schema.posted_date
         )
+        
+        if self._spend_aggregator:
+            await self._spend_aggregator.recalculate_card_spend(updated.user_card_id)
+            
+        return self._to_response(updated)
+
+    async def update_transaction(
+        self, transaction_id: UUID, schema: "TransactionUpdate"  # Import added later
+    ) -> TransactionResponse:
+        """Fully update a transaction, ensuring aggregates stay synchronized."""
+        
+        transaction = await self._repository.get_transaction_by_id(transaction_id)
+        
+        old_card_id = transaction.user_card_id
+        
+        # We handle partial update manually
+        update_data = schema.model_dump(exclude_unset=True)
+        
+        if "transaction_date" in update_data:
+            validate_transaction_dates(update_data["transaction_date"], transaction.posted_date)
+            
+        if "merchant_name" in update_data and update_data["merchant_name"] != transaction.merchant_name:
+            # Re-normalize
+            normalize_res = self._merchant_service.normalize_merchant(update_data["merchant_name"])
+            update_data["normalized_merchant"] = normalize_res.canonical_name
+            update_data["category"] = normalize_res.category or "other"
+            
+        for field, value in update_data.items():
+            setattr(transaction, field, value)
+            
+        updated = await self._repository.update_transaction(transaction)
+        
+        if self._spend_aggregator:
+            # If card changed, recalculate both old and new
+            if "user_card_id" in update_data and old_card_id != updated.user_card_id:
+                await self._spend_aggregator.recalculate_card_spend(old_card_id)
+            await self._spend_aggregator.recalculate_card_spend(updated.user_card_id)
+            
         return self._to_response(updated)
 
     @staticmethod

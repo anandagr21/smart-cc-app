@@ -73,7 +73,7 @@ export default function LoginScreen() {
       </AnimatedContainer>
 
       <AnimatedContainer delay={200} className="w-full">
-        <Card variant="glass" className="mb-8">
+        <Card variant="elevated" className="mb-8">
           <Controller
             control={control}
             name="email"

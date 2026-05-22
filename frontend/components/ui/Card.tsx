@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, ViewProps, StyleSheet } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
 import { useThemeStore } from '../../features/theme/store/themeStore';
 import { tokens } from '../../theme/tokens';
@@ -8,7 +7,7 @@ import { tokens } from '../../theme/tokens';
 interface CardProps extends ViewProps {
   children: React.ReactNode;
   padded?: boolean;
-  variant?: 'glass' | 'solid' | 'elevated' | 'hero';
+  variant?: 'solid' | 'elevated';
 }
 
 export const Card: React.FC<CardProps> = ({ 
@@ -34,29 +33,6 @@ export const Card: React.FC<CardProps> = ({
     },
     style
   ];
-
-  if (variant === 'glass' || variant === 'hero') {
-    return (
-      <BlurView
-        intensity={variant === 'hero' ? (isDark ? 50 : 70) : (isDark ? 30 : 50)} // Hero gets stronger blur
-        tint={isDark ? 'dark' : 'light'}
-        className={`overflow-hidden ${radiusClass} ${paddingClass} ${className}`}
-        style={[
-          ...baseStyle,
-          { 
-            backgroundColor: colors.glassSurface,
-            borderColor: colors.glassBorder, // Slightly more pronounced border for glass
-            ...(variant === 'hero' ? tokens.elevation.level3 : tokens.elevation.level2)
-          },
-        ]}
-        {...props as any}
-      >
-        {/* Metallic top-edge highlight */}
-        <View className="absolute top-0 left-0 right-0 h-[1px]" style={{ backgroundColor: colors.glassHighlight }} />
-        {children}
-      </BlurView>
-    );
-  }
 
   // Solid or Elevated fallback
   return (

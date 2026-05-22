@@ -1,8 +1,11 @@
 import React from 'react';
 import { Text, TouchableOpacityProps, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { cssInterop } from 'nativewind';
 import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
 import { tokens } from '../../theme/tokens';
+
+cssInterop(Animated.View, { className: 'style' });
 
 interface ButtonProps extends TouchableOpacityProps {
   label: string;

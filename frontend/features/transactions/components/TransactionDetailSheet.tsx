@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { X } from 'lucide-react-native';
+import { Edit2, X } from 'lucide-react-native';
 import { TransactionResponse } from '../types/transaction.types';
 import { getCategoryAccent } from '../utils/categoryAccents';
 import { useCards } from '../../cards/hooks/useCards';
@@ -16,9 +16,10 @@ interface TransactionDetailSheetProps {
   transaction: TransactionResponse | null;
   visible: boolean;
   onClose: () => void;
+  onEdit?: (transaction: TransactionResponse) => void;
 }
 
-export function TransactionDetailSheet({ transaction, visible, onClose }: TransactionDetailSheetProps) {
+export function TransactionDetailSheet({ transaction, visible, onClose, onEdit }: TransactionDetailSheetProps) {
   const { data: cardsData } = useCards();
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
@@ -54,7 +55,7 @@ export function TransactionDetailSheet({ transaction, visible, onClose }: Transa
         <BlurView 
           tint={isDark ? 'dark' : 'light'} 
           intensity={80}
-          className="rounded-t-[40px] pt-6 pb-10 px-6 max-h-[90%] overflow-hidden"
+          className="rounded-t-[36px] pt-6 pb-6 px-6 max-h-[90%] overflow-hidden"
           style={[
             tokens.elevation.level3,
             { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder, borderWidth: StyleSheet.hairlineWidth }
@@ -66,12 +67,22 @@ export function TransactionDetailSheet({ transaction, visible, onClose }: Transa
           {/* Header */}
           <View className="flex-row justify-between items-center mb-8">
             <Text style={{ color: colors.textPrimary }} className="text-xl font-bold tracking-tight">Transaction Details</Text>
-            <Pressable onPress={onClose} style={{ backgroundColor: colors.surfaceElevated }} className="p-2 rounded-full">
-              <X size={20} color={colors.textPrimary} />
-            </Pressable>
+            <View className="flex-row items-center gap-3">
+              {onEdit && (
+                <Pressable onPress={() => onEdit(transaction)} style={{ backgroundColor: colors.surfaceElevated }} className="p-2 rounded-full">
+                  <Edit2 size={20} color={colors.textPrimary} />
+                </Pressable>
+              )}
+              <Pressable onPress={onClose} style={{ backgroundColor: colors.surfaceElevated }} className="p-2 rounded-full">
+                <X size={20} color={colors.textPrimary} />
+              </Pressable>
+            </View>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 80 }}
+          >
             {/* Hero Section */}
             <View className="items-center mb-10">
               <View className={`w-20 h-20 rounded-full items-center justify-center mb-4 ${accent.bgClass}`}>

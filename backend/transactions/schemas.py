@@ -34,6 +34,19 @@ class TransactionCreate(TransactionBase):
     pass
 
 
+class TransactionUpdate(BaseModel):
+    """Payload to partially update a transaction."""
+    merchant_name: Optional[str] = Field(None, min_length=1)
+    amount: Optional[Decimal] = Field(None, gt=0)
+    currency: Optional[Currency] = None
+    payment_mode: Optional[PaymentMode] = None
+    transaction_type: Optional[TransactionType] = None
+    transaction_date: Optional[date] = None
+    description: Optional[str] = None
+    status: Optional[TransactionStatus] = None
+    user_card_id: Optional[UUID] = None
+
+
 class TransactionUpdateStatus(BaseModel):
     """Payload to update a transaction's status."""
     status: TransactionStatus

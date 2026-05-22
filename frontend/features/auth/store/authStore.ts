@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 interface AuthState {
   token: string | null;
@@ -10,21 +11,46 @@ interface AuthState {
   initializeAuth: () => Promise<void>;
 }
 
+// Helper for cross-platform secure storage
+const setItemAsync = async (key: string, value: string) => {
+  if (Platform.OS === 'web') {
+    localStorage.setItem(key, value);
+  } else {
+    await SecureStore.setItemAsync(key, value);
+  }
+};
+
+const getItemAsync = async (key: string) => {
+  if (Platform.OS === 'web') {
+    return localStorage.getItem(key);
+  } else {
+    return await SecureStore.getItemAsync(key);
+  }
+};
+
+const deleteItemAsync = async (key: string) => {
+  if (Platform.OS === 'web') {
+    localStorage.removeItem(key);
+  } else {
+    await SecureStore.deleteItemAsync(key);
+  }
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
   token: null,
   user: null,
   isLoading: true,
   login: async (token, user) => {
-    await SecureStore.setItemAsync('auth_token', token);
+    await setItemAsync('auth_token', token);
     set({ token, user });
   },
   logout: async () => {
-    await SecureStore.deleteItemAsync('auth_token');
+    await deleteItemAsync('auth_token');
     set({ token: null, user: null });
   },
   initializeAuth: async () => {
     try {
-      const token = await SecureStore.getItemAsync('auth_token');
+      const token = await getItemAsync('auth_token');
       if (token) {
         // Here you would typically fetch user details if needed
         set({ token, isLoading: false });
