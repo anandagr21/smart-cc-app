@@ -28,6 +28,13 @@ class TransactionService {
     const { data } = await apiClient.patch<SingleResponse<TransactionResponse>>(`/transactions/${transactionId}`, payload);
     return data.data;
   }
+
+  /**
+   * Delete a transaction
+   */
+  async deleteTransaction(transactionId: string): Promise<void> {
+    await apiClient.delete(`/transactions/${transactionId}`);
+  }
 }
 
 export const transactionService = new TransactionService();

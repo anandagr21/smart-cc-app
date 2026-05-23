@@ -11,34 +11,57 @@ interface ScreenContainerProps extends ViewProps {
   noPadding?: boolean;
 }
 
-export const ScreenContainer: React.FC<ScreenContainerProps> = ({ children, noPadding = false, className, style, ...props }) => {
+export const ScreenContainer: React.FC<ScreenContainerProps> = ({
+  children,
+  noPadding = false,
+  className,
+  style,
+  ...props
+}) => {
   const colors = useThemeColors();
 
   return (
-    <SafeAreaView 
-      className={`flex-1 ${className || ''}`} 
-      style={[{ backgroundColor: colors.background }, style]} 
+    <SafeAreaView
+      style={[{ flex: 1, backgroundColor: colors.background }, style]}
       {...props}
     >
-      {/* Calm, Static Ambient Lighting */}
-      <View className="absolute top-0 left-0 right-0 bottom-0 overflow-hidden pointer-events-none">
-        <View 
-          style={{
-            position: 'absolute',
-            top: -height * 0.15,
-            right: -width * 0.3,
-            width: width,
-            height: width,
-            borderRadius: width / 2,
-            backgroundColor: colors.primarySoft,
-            filter: [{ blur: 80 }], 
-          }} 
-        />
-      </View>
+      {/* Ambient orb — top right, brand indigo */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: -height * 0.12,
+          right: -width * 0.25,
+          width: width * 0.8,
+          height: width * 0.8,
+          borderRadius: width * 0.4,
+          backgroundColor: colors.primarySoft,
+          // @ts-ignore - expo filter API
+          filter: [{ blur: 100 }],
+        }}
+      />
+      {/* Ambient orb — bottom left, slightly accent-tinted */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          bottom: -height * 0.1,
+          left: -width * 0.2,
+          width: width * 0.6,
+          height: width * 0.6,
+          borderRadius: width * 0.3,
+          backgroundColor: colors.accentSoft,
+          // @ts-ignore
+          filter: [{ blur: 120 }],
+        }}
+      />
 
-      <View 
-        className="flex-1"
-        style={{ paddingHorizontal: noPadding ? 0 : tokens.layout.screenPadding, paddingTop: noPadding ? 0 : 8 }}
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: noPadding ? 0 : tokens.layout.screenPadding,
+          paddingTop: noPadding ? 0 : 8,
+        }}
       >
         {children}
       </View>

@@ -14,6 +14,7 @@ from typing import Any
 from uuid import UUID
 
 from recommendations.explainers import aggregate_explanations
+from recommendations.utils import get_catalog_card, get_card_name
 from reward_engine.evaluator import evaluate as engine_evaluate
 from reward_engine.ranking import rank_cards
 from reward_engine.ranking_schemas import CardEvaluationInput, RankingResult
@@ -96,7 +97,7 @@ class TransactionEnrichmentService:
 
             for uc in user_cards:
                 card_id_str = str(uc.card_catalog_id)
-                card_name = uc.nickname or (uc.card_details.card_name if getattr(uc, "card_details", None) else "Unknown")
+                card_name = get_card_name(uc)
                 
                 if str(uc.id) == str(txn.user_card_id):
                     used_card_nickname = card_name

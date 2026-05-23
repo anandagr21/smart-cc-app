@@ -88,3 +88,8 @@ class TransactionRepository:
         await self._session.commit()
         await self._session.refresh(transaction)
         return transaction
+
+    async def delete_transaction(self, transaction: Transaction) -> None:
+        """Delete an existing transaction."""
+        await self._session.delete(transaction)
+        await self._session.commit()

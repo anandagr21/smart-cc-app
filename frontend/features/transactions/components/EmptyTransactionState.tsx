@@ -1,38 +1,145 @@
-import React from 'react';
-import { View, Text, Pressable } from 'react-native';
-import { Clock, Plus } from 'lucide-react-native';
-import { AnimatedContainer } from '../../../components/ui/AnimatedContainer';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { Receipt } from 'lucide-react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+  FadeIn,
+} from 'react-native-reanimated';
+import { Button } from '../../../components/ui/Button';
+import { useThemeColors } from '../../theme/hooks/useThemeColors';
+import { tokens } from '../../../theme/tokens';
+
+const Pulse: React.FC<{ delay: number }> = ({ delay }) => {
+  const colors = useThemeColors();
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(0.4);
+
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 0 }),
+        withTiming(1.5, { duration: 1400 + delay * 200 }),
+      ),
+      -1,
+      false
+    );
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.4, { duration: 0 }),
+        withTiming(0, { duration: 1400 + delay * 200 }),
+      ),
+      -1,
+      false
+    );
+  }, []);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        styles.pulseRing,
+        { borderColor: colors.primary },
+        animStyle,
+      ]}
+    />
+  );
+};
 
 interface EmptyTransactionStateProps {
   onAddPress: () => void;
 }
 
-export function EmptyTransactionState({ onAddPress }: EmptyTransactionStateProps) {
+export const EmptyTransactionState: React.FC<EmptyTransactionStateProps> = ({ onAddPress }) => {
+  const colors = useThemeColors();
+
   return (
-    <View className="flex-1 justify-center items-center px-4">
-      <AnimatedContainer delay={100} className="items-center w-full max-w-sm">
-        {/* Atmospheric Icon */}
-        <View className="w-32 h-32 rounded-full bg-surfaceElevated border border-white/5 items-center justify-center mb-8 shadow-sm shadow-black/10">
-          <View className="absolute inset-0 rounded-full bg-accent/5" />
-          <Clock size={48} color="#888" strokeWidth={1.5} />
-        </View>
-
-        {/* Editorial Typography */}
-        <Text className="text-3xl font-bold text-textPrimary text-center mb-4 tracking-tight">
-          No Activity Yet
-        </Text>
-        <Text className="text-textSecondary text-center text-lg leading-6 px-4 mb-8">
-          Your optimized transactions and captured rewards will appear here once you begin analyzing purchases.
-        </Text>
-
-        <Pressable
-          onPress={onAddPress}
-          className="bg-accent/20 border border-accent/30 flex-row items-center justify-center px-6 py-4 rounded-full active:bg-accent/30"
+    <Animated.View entering={FadeIn.delay(100)} style={styles.container}>
+      <View style={styles.iconWrap}>
+        {[0, 1, 2].map((i) => (
+          <Pulse key={i} delay={i} />
+        ))}
+        <View
+          style={[
+            styles.iconCircle,
+            { backgroundColor: colors.surface, borderColor: colors.borderHighlight },
+          ]}
         >
-          <Plus size={20} color="#cba766" className="mr-2" />
-          <Text className="text-accent font-bold text-lg">Add Transaction</Text>
-        </Pressable>
-      </AnimatedContainer>
-    </View>
+          {/* @ts-ignore */}
+          <Receipt size={36} color={colors.textMuted} strokeWidth={1.5} />
+        </View>
+      </View>
+
+      <Text style={[styles.title, { color: colors.textPrimary }]}>
+        No Activity Yet
+      </Text>
+      <Text style={[styles.body, { color: colors.textSecondary }]}>
+        Log your transactions to see AI-driven insights and track your optimized rewards over time.
+      </Text>
+
+      <Button
+        label="Log a Transaction"
+        variant="secondary"
+        onPress={onAddPress}
+        style={styles.cta}
+      />
+    </Animated.View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 100,
+    paddingHorizontal: 24,
+  },
+  iconWrap: {
+    width: 120,
+    height: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 32,
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 1,
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: tokens.fontSize.headline,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: tokens.letterSpacing.tight,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  body: {
+    fontSize: tokens.fontSize.bodyLg,
+    lineHeight: tokens.fontSize.bodyLg * 1.6,
+    textAlign: 'center',
+    marginBottom: 32,
+    maxWidth: 300,
+  },
+  cta: {
+    width: '100%',
+    maxWidth: 280,
+  },
+});

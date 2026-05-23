@@ -156,3 +156,12 @@ class TransactionService:
     def _to_response(entity: Transaction) -> TransactionResponse:
         """Convert a Transaction ORM entity to a Pydantic response."""
         return TransactionResponse.model_validate(entity)
+
+    async def delete_transaction(self, transaction_id: UUID) -> None:
+        """Delete a transaction and recalculate aggregates."""
+        transaction = await self._repository.get_transaction_by_id(transaction_id)
+        
+        await self._repository.delete_transaction(transaction)
+        
+        if self._spend_aggregator:
+            await self._spend_aggregator.recalculate_card_spend(transaction.user_card_id)

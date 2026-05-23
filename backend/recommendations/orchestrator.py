@@ -22,7 +22,7 @@ from merchants.service import MerchantService
 from recommendations.exceptions import NoCardsError
 from recommendations.explainers import aggregate_explanations
 from recommendations.schemas import RankedCardResponse, RecommendationRequest, RecommendationResponse
-from recommendations.utils import build_transaction_context
+from recommendations.utils import build_transaction_context, get_catalog_card, get_card_name
 from reward_engine.evaluator import evaluate as engine_evaluate
 from reward_engine.ranking import rank_cards
 from reward_engine.ranking_schemas import CardEvaluationInput, RankingResult
@@ -62,7 +62,14 @@ class RecommendationOrchestrator:
         user_cards, _ = await self._user_card_service.get_user_cards(user_id, skip=0, limit=100)
         
         if not user_cards:
-            raise NoCardsError()
+            return RecommendationResponse(
+                normalized_merchant=canonical_merchant,
+                category=category,
+                best_card=None,
+                ranked_cards=[],
+                explanations=["Add credit cards to your wallet to unlock optimization intelligence."],
+                warnings=["No active cards found in wallet."],
+            )
 
         # 3. Build Transaction Context
         txn_context = build_transaction_context(request, canonical_merchant, category)
@@ -76,9 +83,8 @@ class RecommendationOrchestrator:
         for user_card in user_cards:
             card_id_str = str(user_card.card_catalog_id)
             
-            card_name = user_card.nickname
-            if not card_name:
-                card_name = user_card.card_details.card_name if getattr(user_card, "card_details", None) else "Unknown Card"
+            card_name = get_card_name(user_card)
+            catalog_card = get_catalog_card(user_card)
 
             # Fetch rules
             rules_resp = await self._reward_rule_service.get_card_active_rules(card_id_str)
@@ -97,10 +103,10 @@ class RecommendationOrchestrator:
             eval_result: EvaluationResult = engine_evaluate(txn_context, normalized_rules)
             
             # Phase 2: Compute fee waiver intelligence and score
-            fee_waiver_data = get_waiver_progress(user_card, user_card.card_details) if getattr(user_card, "card_details", None) else {}
+            fee_waiver_data = get_waiver_progress(user_card, catalog_card) if catalog_card else {}
             
             score_data = score_recommendation(
-                eval_result, user_card, getattr(user_card, "card_details", None), fee_waiver_data, request.amount
+                eval_result, user_card, catalog_card, fee_waiver_data, request.amount
             )
             
             card_intelligence[card_id_str] = score_data

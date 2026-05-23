@@ -1,55 +1,74 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput } from 'react-native';
-import { Search, ChevronRight, PlusCircle } from 'lucide-react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+} from 'react-native';
+import { Search, ChevronRight } from 'lucide-react-native';
+import { Input } from '../../../components/ui/Input';
 import { CardCatalogResponse } from '../types/api';
-import { colors } from '../../../theme/colors';
+import { useThemeColors } from '../../theme/hooks/useThemeColors';
+import { useThemeStore } from '../../theme/store/themeStore';
+import { getNetworkGradient } from '../../../theme/colors';
+import { tokens } from '../../../theme/tokens';
 
 interface CardCatalogListProps {
   catalog: CardCatalogResponse[];
   onSelect: (card: CardCatalogResponse) => void;
 }
 
+/** A small colored dot showing network brand color */
+function NetworkDot({ network, isDark }: { network: string; isDark: boolean }) {
+  const gradient = getNetworkGradient(network, isDark);
+  return (
+    <View
+      style={[styles.networkDot, { backgroundColor: gradient[0] }]}
+    />
+  );
+}
+
 export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const colors = useThemeColors();
+  const { themeMode } = useThemeStore();
+  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
   const filteredCatalog = useMemo(() => {
     if (!searchQuery.trim()) return catalog;
-    const query = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase();
     return catalog.filter(
-      (c) => 
-        c.card_name.toLowerCase().includes(query) || 
-        c.bank_name.toLowerCase().includes(query) ||
-        c.network.toLowerCase().includes(query)
+      (c) =>
+        c.card_name.toLowerCase().includes(q) ||
+        c.bank_name.toLowerCase().includes(q) ||
+        c.network.toLowerCase().includes(q)
     );
   }, [catalog, searchQuery]);
 
   return (
-    <View className="flex-1">
-      {/* Search Bar */}
-      <View className="px-6 pb-4">
-        <View className="flex-row items-center bg-surface border border-white/10 rounded-2xl px-4 py-3 shadow-sm">
-          {/* @ts-ignore */}
-          <Search size={20} color={colors.textMuted} />
-          <TextInput
-            className="flex-1 text-textPrimary text-base ml-3"
-            placeholder="Search bank, card name, or network..."
-            placeholderTextColor={colors.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
+    <View style={styles.root}>
+      <View style={styles.searchWrap}>
+        <Input
+          placeholder="Search bank, card, or network..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+          leftIcon={<Search size={18} color={colors.textMuted} strokeWidth={1.5} />}
+          style={{ marginBottom: 0 }}
+        />
       </View>
 
-      <ScrollView 
-        className="flex-1" 
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
+      <ScrollView
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.list}
       >
         {filteredCatalog.length === 0 ? (
-          <View className="items-center justify-center py-12">
-            <Text className="text-textSecondary text-base">No cards found in catalog.</Text>
+          <View style={styles.emptyWrap}>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              No cards found. Try a different search.
+            </Text>
           </View>
         ) : (
           filteredCatalog.map((card, index) => (
@@ -57,22 +76,31 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
               key={card.id}
               activeOpacity={0.7}
               onPress={() => onSelect(card)}
-              className={`flex-row items-center py-4 ${index !== filteredCatalog.length - 1 ? 'border-b border-white/5' : ''}`}
+              style={[
+                styles.row,
+                index < filteredCatalog.length - 1 && {
+                  borderBottomColor: colors.border,
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                },
+              ]}
             >
-              <View className="w-10 h-10 rounded-full bg-surfaceElevated items-center justify-center border border-white/5 mr-4">
-                {/* @ts-ignore */}
-                <PlusCircle size={20} color={colors.accent} />
-              </View>
-              <View className="flex-1 pr-4">
-                <Text className="text-textPrimary font-semibold text-base mb-1" numberOfLines={1}>
+              {/* Network color dot */}
+              <NetworkDot network={card.network} isDark={isDark} />
+
+              <View style={styles.rowText}>
+                <Text
+                  style={[styles.cardName, { color: colors.textPrimary }]}
+                  numberOfLines={1}
+                >
                   {card.card_name}
                 </Text>
-                <Text className="text-textMuted text-xs uppercase tracking-wider">
-                  {card.bank_name} • {card.network}
+                <Text style={[styles.meta, { color: colors.textMuted }]}>
+                  {card.bank_name} · {card.network}
                 </Text>
               </View>
+
               {/* @ts-ignore */}
-              <ChevronRight size={20} color={colors.borderHighlight} />
+              <ChevronRight size={18} color={colors.borderHighlight} strokeWidth={1.5} />
             </TouchableOpacity>
           ))
         )}
@@ -80,3 +108,48 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  searchWrap: {
+    paddingHorizontal: 24,
+    paddingBottom: 12,
+  },
+  list: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 12,
+  },
+  networkDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    flexShrink: 0,
+  },
+  rowText: { flex: 1 },
+  cardName: {
+    fontSize: tokens.fontSize.bodyLg,
+    fontWeight: tokens.fontWeight.semibold,
+    marginBottom: 2,
+  },
+  meta: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+    textTransform: 'uppercase',
+    letterSpacing: tokens.letterSpacing.wide,
+  },
+  emptyWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+  },
+  emptyText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.medium,
+  },
+});

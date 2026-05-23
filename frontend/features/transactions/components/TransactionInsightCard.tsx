@@ -1,20 +1,26 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { TransactionResponse } from '../types/transaction.types';
 import { Sparkles, ArrowUpRight, CheckCircle2, AlertCircle } from 'lucide-react-native';
+import { useThemeColors } from '../../theme/hooks/useThemeColors';
+import { tokens } from '../../../theme/tokens';
 
 interface TransactionInsightCardProps {
   transaction: TransactionResponse;
 }
 
 export function TransactionInsightCard({ transaction }: TransactionInsightCardProps) {
+  const colors = useThemeColors();
+  
   const hasReward = transaction.reward_earned !== undefined && transaction.reward_earned !== null;
   const hasMissedSavings = transaction.missed_savings && parseFloat(transaction.missed_savings as unknown as string) > 0;
   
   if (!hasReward) {
     return (
-      <View className="bg-surface/50 rounded-2xl p-5 border border-white/5 items-center">
-        <Text className="text-textSecondary text-sm">No insights available for this transaction.</Text>
+      <View style={[styles.emptyContainer, { backgroundColor: colors.surface, borderColor: colors.borderHighlight }]}>
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+          No insights available for this transaction.
+        </Text>
       </View>
     );
   }
@@ -28,39 +34,41 @@ export function TransactionInsightCard({ transaction }: TransactionInsightCardPr
     : `+₹${numericReward.toFixed(0)} cashback`;
 
   return (
-    <View className="space-y-4">
+    <View style={styles.container}>
       {/* Reward Earned Section */}
-      <View className="bg-emerald-500/10 rounded-2xl p-5 border border-emerald-500/20">
-        <View className="flex-row items-center mb-2">
-          <Sparkles size={16} color="#34d399" className="mr-2" />
-          <Text className="text-emerald-400 text-sm font-semibold uppercase tracking-widest">
+      <View style={[styles.card, { backgroundColor: colors.successSoft, borderColor: colors.success }]}>
+        <View style={styles.header}>
+          {/* @ts-ignore */}
+          <Sparkles size={16} color={colors.success} style={styles.icon} strokeWidth={2.5} />
+          <Text style={[styles.eyebrow, { color: colors.success }]}>
             Reward Earned
           </Text>
         </View>
-        <Text className="text-textPrimary text-2xl font-bold mb-1">
+        <Text style={[styles.heroValue, { color: colors.textPrimary }]}>
           {formattedReward}
         </Text>
         
         {transaction.recommendation_reason && (
-          <Text className="text-textSecondary text-sm mt-2">
+          <Text style={[styles.reason, { color: colors.textSecondary }]}>
             {transaction.recommendation_reason}
           </Text>
         )}
       </View>
 
-      {/* Missed Savings Section (Better Card) */}
+      {/* Missed Savings Section */}
       {hasMissedSavings && (
-        <View className="bg-surface/50 rounded-2xl p-5 border border-white/5">
-          <View className="flex-row items-center mb-2">
-            <ArrowUpRight size={16} color="#cba766" className="mr-2" />
-            <Text className="text-accent text-sm font-semibold uppercase tracking-widest">
+        <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.borderHighlight, marginTop: 12 }]}>
+          <View style={styles.header}>
+            {/* @ts-ignore */}
+            <ArrowUpRight size={16} color={colors.warning} style={styles.icon} strokeWidth={2.5} />
+            <Text style={[styles.eyebrow, { color: colors.warning }]}>
               Optimization Opportunity
             </Text>
           </View>
-          <Text className="text-textPrimary text-lg font-semibold mb-1">
+          <Text style={[styles.title, { color: colors.textPrimary }]}>
             Use {transaction.best_possible_card}
           </Text>
-          <Text className="text-textSecondary text-sm">
+          <Text style={[styles.reason, { color: colors.textSecondary }]}>
             You could have earned an additional ₹{numericMissed.toFixed(0)} by using this card.
           </Text>
         </View>
@@ -68,11 +76,12 @@ export function TransactionInsightCard({ transaction }: TransactionInsightCardPr
 
       {/* Warnings */}
       {transaction.warnings && transaction.warnings.length > 0 && (
-        <View className="bg-orange-500/10 rounded-2xl p-4 border border-orange-500/20 flex-row items-start">
-          <AlertCircle size={16} color="#fb923c" className="mr-2 mt-0.5" />
-          <View className="flex-1">
+        <View style={[styles.warningCard, { backgroundColor: colors.warningSoft, borderColor: colors.warning, marginTop: 12 }]}>
+          {/* @ts-ignore */}
+          <AlertCircle size={16} color={colors.warning} style={styles.warningIcon} strokeWidth={2.5} />
+          <View style={styles.warningContent}>
             {transaction.warnings.map((warning, i) => (
-              <Text key={i} className="text-orange-400 text-sm mb-1">
+              <Text key={i} style={[styles.warningText, { color: colors.warning }]}>
                 {warning}
               </Text>
             ))}
@@ -82,9 +91,10 @@ export function TransactionInsightCard({ transaction }: TransactionInsightCardPr
       
       {/* Fully Optimized State */}
       {!hasMissedSavings && (!transaction.warnings || transaction.warnings.length === 0) && (
-        <View className="flex-row items-center justify-center p-3">
-          <CheckCircle2 size={14} color="#9ca3af" className="mr-2" />
-          <Text className="text-textMuted text-xs font-medium uppercase tracking-widest">
+        <View style={styles.optimizedWrap}>
+          {/* @ts-ignore */}
+          <CheckCircle2 size={14} color={colors.textMuted} style={styles.icon} strokeWidth={2.5} />
+          <Text style={[styles.optimizedText, { color: colors.textMuted }]}>
             Fully Optimized
           </Text>
         </View>
@@ -92,3 +102,85 @@ export function TransactionInsightCard({ transaction }: TransactionInsightCardPr
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+  },
+  emptyContainer: {
+    borderRadius: tokens.radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  card: {
+    borderRadius: tokens.radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  icon: {
+    marginRight: 8,
+  },
+  eyebrow: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: tokens.letterSpacing.widest,
+  },
+  heroValue: {
+    fontSize: tokens.fontSize.headline,
+    fontWeight: tokens.fontWeight.bold,
+    marginBottom: 4,
+  },
+  title: {
+    fontSize: tokens.fontSize.title,
+    fontWeight: tokens.fontWeight.bold,
+    marginBottom: 4,
+  },
+  reason: {
+    fontSize: tokens.fontSize.body,
+    lineHeight: tokens.fontSize.body * 1.5,
+    marginTop: 4,
+  },
+  warningCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderRadius: tokens.radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 16,
+  },
+  warningIcon: {
+    marginTop: 2,
+    marginRight: 8,
+  },
+  warningContent: {
+    flex: 1,
+  },
+  warningText: {
+    fontSize: tokens.fontSize.body,
+    lineHeight: tokens.fontSize.body * 1.4,
+    marginBottom: 4,
+  },
+  optimizedWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    marginTop: 8,
+  },
+  optimizedText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: tokens.letterSpacing.widest,
+  },
+});

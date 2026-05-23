@@ -7,46 +7,104 @@ import { tokens } from '../../theme/tokens';
 interface CardProps extends ViewProps {
   children: React.ReactNode;
   padded?: boolean;
-  variant?: 'solid' | 'elevated';
+  variant?: 'solid' | 'elevated' | 'glass';
+  accentColor?: string;   // left vertical stripe color
+  interactive?: boolean;  // reserved for future press-scale integration
 }
 
-export const Card: React.FC<CardProps> = ({ 
-  children, 
-  padded = true, 
-  className = '', 
-  style, 
-  variant = 'solid', // Default to solid for normal rows to restrict blur usage
-  ...props 
+export const Card: React.FC<CardProps> = ({
+  children,
+  padded = true,
+  className = '',
+  style,
+  variant = 'elevated',
+  accentColor,
+  interactive = false,
+  ...props
 }) => {
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
-  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0B0E14');
+  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
-  const paddingClass = padded ? 'p-6' : '';
-  const radiusClass = 'rounded-3xl'; // Softer, more premium radius
+  const padding = padded ? 20 : 0;
 
-  // Base material configuration
-  const baseStyle = [
-    { 
-      borderColor: colors.border,
-      borderWidth: StyleSheet.hairlineWidth,
-    },
-    style
-  ];
+  const getSurface = () => {
+    switch (variant) {
+      case 'elevated':
+        return colors.surface;
+      case 'glass':
+        return colors.glassSurface;
+      case 'solid':
+      default:
+        return colors.surface;
+    }
+  };
 
-  // Solid or Elevated fallback
+  const getShadow = () => {
+    switch (variant) {
+      case 'elevated':
+        return tokens.elevation.level2;
+      case 'glass':
+        return tokens.elevation.level3;
+      default:
+        return tokens.elevation.level1;
+    }
+  };
+
   return (
-    <View 
-      className={`overflow-hidden ${radiusClass} ${paddingClass} ${className}`}
+    <View
       style={[
-        ...baseStyle,
-        { backgroundColor: variant === 'elevated' ? colors.surfaceElevated : colors.surface },
-        variant === 'elevated' ? tokens.elevation.level2 : tokens.elevation.level1
+        styles.card,
+        getShadow(),
+        {
+          backgroundColor: getSurface(),
+          borderColor: colors.border,
+          padding,
+        },
+        style,
       ]}
       {...props}
     >
-      <View className="absolute top-0 left-0 right-0 h-[1px]" style={{ backgroundColor: colors.borderHighlight }} />
+      {/* Top metallic highlight line */}
+      <View
+        style={[
+          styles.topHighlight,
+          { backgroundColor: colors.glassHighlight },
+        ]}
+        pointerEvents="none"
+      />
+
+      {/* Left accent stripe */}
+      {accentColor && (
+        <View
+          style={[styles.accentStripe, { backgroundColor: accentColor }]}
+          pointerEvents="none"
+        />
+      )}
+
       {children}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: tokens.radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
+  topHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+  },
+  accentStripe: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 3,
+  },
+});

@@ -1,32 +1,82 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { SkeletonBox } from '../../../components/ui/SkeletonBox';
+import { useThemeColors } from '../../theme/hooks/useThemeColors';
+import { tokens } from '../../../theme/tokens';
 
-export function TransactionSkeleton() {
+export const TransactionListSkeleton: React.FC = () => {
+  const colors = useThemeColors();
+
   return (
-    <View className="py-4 px-4 border-b border-white/5 bg-surface/30">
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center flex-1">
-          <View className="w-12 h-12 rounded-full bg-white/5 mr-4" />
-          <View className="flex-1">
-            <View className="h-5 bg-white/5 rounded w-3/4 mb-2" />
-            <View className="h-4 bg-white/5 rounded w-1/2" />
+    <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.container}>
+      {/* Date Header Skeleton */}
+      <SkeletonBox height={16} width={100} style={styles.headerSkeleton} />
+
+      {/* Transaction Rows */}
+      {[1, 2, 3].map((i) => (
+        <View
+          key={i}
+          style={[
+            styles.row,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
+          {/* Icon Skeleton */}
+          <SkeletonBox height={44} width={44} borderRadius={22} style={styles.iconSkeleton} />
+
+          {/* Details Skeleton */}
+          <View style={styles.details}>
+            <SkeletonBox height={16} width={140} style={{ marginBottom: 8 }} />
+            <SkeletonBox height={12} width={80} />
           </View>
-        </View>
-        <View className="items-end pl-4">
-          <View className="h-6 bg-white/5 rounded w-20 mb-2" />
-          <View className="h-4 bg-white/5 rounded w-16" />
-        </View>
-      </View>
-    </View>
-  );
-}
 
-export function TransactionListSkeleton() {
-  return (
-    <View className="flex-1">
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <TransactionSkeleton key={i} />
+          {/* Amount Skeleton */}
+          <SkeletonBox height={18} width={60} />
+        </View>
       ))}
-    </View>
+
+      {/* Another Date Header Skeleton */}
+      <SkeletonBox height={16} width={100} style={[styles.headerSkeleton, { marginTop: 16 }]} />
+      
+      {/* Transaction Row */}
+      <View
+        style={[
+          styles.row,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
+        <SkeletonBox height={44} width={44} borderRadius={22} style={styles.iconSkeleton} />
+        <View style={styles.details}>
+          <SkeletonBox height={16} width={140} style={{ marginBottom: 8 }} />
+          <SkeletonBox height={12} width={80} />
+        </View>
+        <SkeletonBox height={18} width={60} />
+      </View>
+    </Animated.View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: 16,
+  },
+  headerSkeleton: {
+    marginBottom: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: tokens.radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 12,
+  },
+  iconSkeleton: {
+    marginRight: 16,
+  },
+  details: {
+    flex: 1,
+    paddingRight: 16,
+  },
+});

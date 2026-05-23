@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 import { X } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { CardCatalogResponse } from '../types/api';
 import { useCardCatalog } from '../hooks/useCardCatalog';
 import { useAddCard } from '../hooks/useAddCard';
@@ -9,8 +19,9 @@ import { CardCatalogList } from './CardCatalogList';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
 import { useThemeStore } from '../../theme/store/themeStore';
+import { getNetworkGradient } from '../../../theme/colors';
+import { tokens } from '../../../theme/tokens';
 
 interface AddCardSheetProps {
   visible: boolean;
@@ -22,8 +33,8 @@ export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) 
   const { mutateAsync: addCard, isPending } = useAddCard();
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
-  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0B0E14');
-  
+  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
+
   const [selectedCard, setSelectedCard] = useState<CardCatalogResponse | null>(null);
   const [nickname, setNickname] = useState('');
 
@@ -41,93 +52,228 @@ export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) 
         nickname: nickname.trim() || undefined,
       });
       handleClose();
-    } catch (error) {
-      alert('Failed to add card. Please try again.');
+    } catch {
+      // error handled by hook
     }
   };
 
+  const gradient = selectedCard
+    ? (getNetworkGradient(selectedCard.network, isDark) as [string, string])
+    : null;
+
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={handleClose}
-    >
-      <View className="flex-1 justify-end bg-black/60">
-        <KeyboardAvoidingView 
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
+      <View style={styles.backdrop}>
+        <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          className="w-full h-[85%]"
+          style={styles.sheet}
         >
-          <BlurView 
-            tint={isDark ? 'dark' : 'light'} 
-            intensity={80}
-            className="flex-1 rounded-t-[36px] overflow-hidden"
+          <BlurView
+            tint={isDark ? 'dark' : 'light'}
+            intensity={85}
             style={[
-              tokens.elevation.level3,
-              { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder, borderWidth: StyleSheet.hairlineWidth }
+              StyleSheet.absoluteFill,
+              {
+                borderTopLeftRadius: tokens.radius.sheet,
+                borderTopRightRadius: tokens.radius.sheet,
+                backgroundColor: colors.glassSurface,
+                borderWidth: 1,
+                borderColor: colors.glassBorder,
+                overflow: 'hidden',
+              },
             ]}
-          >
-            {/* Metallic Top Highlight */}
-            <View className="absolute top-0 left-0 right-0 h-[1px]" style={{ backgroundColor: colors.glassHighlight }} />
-            
-            {/* Header */}
-            <View className="flex-row items-center justify-between px-6 py-5 mb-2">
-              <Text className="text-xl font-bold text-textPrimary tracking-tight">
-                {selectedCard ? 'Configure Card' : 'Add New Card'}
-              </Text>
-              <TouchableOpacity onPress={handleClose} className="p-2 -mr-2 rounded-full bg-white/5">
-                {/* @ts-ignore */}
-                <X size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
+          />
+          {/* Top highlight */}
+          <View
+            style={[styles.topHighlight, { backgroundColor: colors.glassHighlight }]}
+            pointerEvents="none"
+          />
 
-            {/* Content */}
-            {selectedCard ? (
-              <View className="flex-1 px-6 pt-6">
-                <View className="bg-surface p-5 rounded-2xl border border-white/5 mb-8 shadow-sm">
-                  <Text className="text-textSecondary text-xs uppercase tracking-widest mb-1">Selected Card</Text>
-                  <Text className="text-textPrimary text-lg font-bold">{selectedCard.card_name}</Text>
-                  <Text className="text-textMuted text-sm mt-1">{selectedCard.bank_name} • {selectedCard.network}</Text>
-                </View>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+              {selectedCard ? 'Configure Card' : 'Add New Card'}
+            </Text>
+            <TouchableOpacity
+              onPress={handleClose}
+              style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}
+            >
+              {/* @ts-ignore */}
+              <X size={18} color={colors.textSecondary} strokeWidth={2} />
+            </TouchableOpacity>
+          </View>
 
+          {selectedCard ? (
+            <View style={styles.configView}>
+              {/* Mini card preview */}
+              {gradient && (
+                <LinearGradient
+                  colors={gradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.cardPreview}
+                >
+                  <View style={styles.previewTopEdge} />
+                  <Text style={styles.previewBankName}>{selectedCard.bank_name}</Text>
+                  <Text style={styles.previewCardName} numberOfLines={1}>
+                    {selectedCard.card_name}
+                  </Text>
+                  <Text style={styles.previewNetwork}>{selectedCard.network.toUpperCase()}</Text>
+                </LinearGradient>
+              )}
+
+              <View style={styles.nicknameWrap}>
                 <Input
-                  label="CARD NICKNAME (OPTIONAL)"
+                  label="Card Nickname (Optional)"
                   placeholder="e.g. Travel Rewards"
                   value={nickname}
                   onChangeText={setNickname}
                   autoCapitalize="words"
+                  hint="A friendly name to identify this card"
                 />
+              </View>
 
-                <View className="mt-auto pb-10 pt-4">
-                  <Button 
-                    label="Save Card to Wallet" 
-                    onPress={handleSave} 
-                    isLoading={isPending}
-                    className="shadow-glow"
-                  />
-                  <TouchableOpacity onPress={() => setSelectedCard(null)} className="mt-4 p-4 items-center">
-                    <Text className="text-textSecondary font-medium text-sm">Choose a different card</Text>
-                  </TouchableOpacity>
+              <View style={styles.actionRow}>
+                <Button
+                  label="Save to Wallet"
+                  onPress={handleSave}
+                  isLoading={isPending}
+                  style={styles.saveBtn}
+                />
+                <TouchableOpacity
+                  onPress={() => setSelectedCard(null)}
+                  style={styles.backLink}
+                >
+                  <Text style={[styles.backLinkText, { color: colors.textSecondary }]}>
+                    Choose a different card
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.catalogView}>
+              {isCatalogLoading ? (
+                <View style={styles.loadingWrap}>
+                  <ActivityIndicator size="large" color={colors.primary} />
                 </View>
-              </View>
-            ) : (
-              <View className="flex-1 pt-4">
-                {isCatalogLoading ? (
-                  <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color={colors.accent} />
-                  </View>
-                ) : (
-                  <CardCatalogList 
-                    catalog={catalog || []} 
-                    onSelect={setSelectedCard} 
-                  />
-                )}
-              </View>
-            )}
-
-          </BlurView>
+              ) : (
+                <CardCatalogList catalog={catalog || []} onSelect={setSelectedCard} />
+              )}
+            </View>
+          )}
         </KeyboardAvoidingView>
       </View>
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  sheet: {
+    height: '85%',
+    borderTopLeftRadius: tokens.radius.sheet,
+    borderTopRightRadius: tokens.radius.sheet,
+    overflow: 'hidden',
+  },
+  topHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    zIndex: 10,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
+  },
+  headerTitle: {
+    fontSize: tokens.fontSize.title,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: tokens.letterSpacing.tight,
+  },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: tokens.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  configView: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+  },
+  cardPreview: {
+    borderRadius: tokens.radius.card,
+    padding: 20,
+    marginBottom: 24,
+    height: 120,
+    justifyContent: 'space-between',
+    overflow: 'hidden',
+  },
+  previewTopEdge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  previewBankName: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.semibold,
+    letterSpacing: tokens.letterSpacing.widest,
+    textTransform: 'uppercase',
+  },
+  previewCardName: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: tokens.fontSize.title,
+    fontWeight: tokens.fontWeight.bold,
+  },
+  previewNetwork: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: tokens.letterSpacing.wider,
+    textTransform: 'uppercase',
+    alignSelf: 'flex-end',
+  },
+  nicknameWrap: {
+    marginBottom: 16,
+  },
+  actionRow: {
+    marginTop: 'auto',
+    paddingBottom: 32,
+  },
+  saveBtn: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  backLink: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  backLinkText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  catalogView: {
+    flex: 1,
+    paddingTop: 8,
+  },
+  loadingWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

@@ -191,3 +191,22 @@ async def update_transaction(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except InvalidTransactionError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.delete(
+    "/{transaction_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a transaction",
+)
+async def delete_transaction(
+    transaction_id: UUID,
+    current_user: UserResponse = Depends(get_current_user),
+    service: TransactionService = Depends(get_transaction_service),
+):
+    try:
+        result = await service.get_transaction(transaction_id)
+        if result.user_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+            
+        await service.delete_transaction(transaction_id)
+    except TransactionNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

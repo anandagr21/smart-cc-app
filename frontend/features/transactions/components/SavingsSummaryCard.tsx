@@ -1,9 +1,14 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { Trophy, TrendingUp } from 'lucide-react-native';
+import Animated, { FadeInDown, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
+import { TextInput } from 'react-native';
 import { TransactionResponse } from '../types/transaction.types';
-import { AnimatedContainer } from '../../../components/ui/AnimatedContainer';
 import { useThemeColors } from '../../theme/hooks/useThemeColors';
+import { tokens } from '../../../theme/tokens';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const AnimatedText = Animated.createAnimatedComponent(TextInput);
 
 interface SavingsSummaryCardProps {
   transactions: TransactionResponse[];
@@ -11,10 +16,10 @@ interface SavingsSummaryCardProps {
 
 export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
   const colors = useThemeColors();
+  const animatedValue = useSharedValue(0);
 
   if (!transactions || transactions.length === 0) return null;
 
-  // Aggregate total rewards
   const totalRewards = transactions.reduce((sum, tx) => {
     const reward = typeof tx.reward_earned === 'string' ? parseFloat(tx.reward_earned) : (tx.reward_earned || 0);
     return sum + reward;
@@ -22,7 +27,18 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
   
   if (totalRewards === 0) return null;
 
-  // Find best optimization category (category with highest total rewards)
+  useEffect(() => {
+    animatedValue.value = withTiming(totalRewards, { duration: 1500 });
+  }, [totalRewards]);
+
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      text: `₹${Math.round(animatedValue.value).toString()}`,
+      // Workaround for Android/iOS text input behavior
+      defaultValue: `₹${Math.round(animatedValue.value).toString()}`,
+    } as any;
+  });
+
   const categoryRewards = transactions.reduce((acc, tx) => {
     if (tx.reward_earned && tx.category) {
       const reward = typeof tx.reward_earned === 'string' ? parseFloat(tx.reward_earned) : tx.reward_earned;
@@ -41,35 +57,108 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
   }
 
   return (
-    <AnimatedContainer delay={50} className="mx-6 mb-6">
-      <View 
-        className="rounded-[28px] p-6 border overflow-hidden"
-        style={{ backgroundColor: colors.surfaceElevated, borderColor: colors.borderHighlight }}
+    <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.container}>
+      <LinearGradient
+        colors={[colors.surfaceElevated, colors.surface]}
+        style={styles.card}
       >
-        
-        <View className="flex-row items-center mb-4">
-          <Trophy size={20} color="#cba766" className="mr-2" />
-          <Text className="text-accent font-semibold uppercase tracking-widest text-xs">
+        {/* Top Highlight */}
+        <View style={[styles.topHighlight, { backgroundColor: colors.glassHighlight }]} />
+
+        <View style={styles.header}>
+          {/* @ts-ignore */}
+          <Trophy size={16} color={colors.warning} style={styles.icon} />
+          <Text style={[styles.eyebrow, { color: colors.warning }]}>
             Optimization Summary
           </Text>
         </View>
 
-        <Text className="text-textSecondary text-lg mb-1">
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
           You optimized
         </Text>
-        <Text className="text-4xl font-bold text-textPrimary tracking-tight mb-4">
-          ₹{totalRewards.toFixed(0)}
-        </Text>
+        
+        <AnimatedText
+          editable={false}
+          animatedProps={animatedProps}
+          style={[styles.valueText, { color: colors.textPrimary }]}
+        />
 
         {maxCategoryReward > 0 && (
-          <View className="flex-row items-center bg-black/20 self-start px-3 py-1.5 rounded-full border border-white/5">
-            <TrendingUp size={14} color="#34d399" className="mr-1.5" />
-            <Text className="text-emerald-400 text-xs font-medium">
-              Best optimization: <Text className="font-bold capitalize">{bestCategory}</Text>
+          <View style={[styles.bestCategoryPill, { backgroundColor: colors.successSoft, borderColor: colors.success }]}>
+            {/* @ts-ignore */}
+            <TrendingUp size={12} color={colors.success} style={styles.trendIcon} />
+            <Text style={[styles.bestCategoryText, { color: colors.success }]}>
+              Best optimization: <Text style={styles.bestCategoryBold}>{bestCategory}</Text>
             </Text>
           </View>
         )}
-      </View>
-    </AnimatedContainer>
+      </LinearGradient>
+    </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    marginHorizontal: 24,
+    marginBottom: 24,
+  },
+  card: {
+    borderRadius: tokens.radius.card,
+    padding: 24,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  topHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  icon: {
+    marginRight: 8,
+  },
+  eyebrow: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: tokens.letterSpacing.widest,
+  },
+  label: {
+    fontSize: tokens.fontSize.bodyLg,
+    marginBottom: 4,
+  },
+  valueText: {
+    fontSize: tokens.fontSize.hero,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: tokens.letterSpacing.tightest,
+    marginBottom: 20,
+    padding: 0,
+  },
+  bestCategoryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: tokens.radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  trendIcon: {
+    marginRight: 6,
+  },
+  bestCategoryText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  bestCategoryBold: {
+    fontWeight: tokens.fontWeight.bold,
+    textTransform: 'capitalize',
+  },
+});

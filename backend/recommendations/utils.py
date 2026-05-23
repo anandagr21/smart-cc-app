@@ -40,3 +40,28 @@ def build_transaction_context(
         mcc_code=request.mcc_code,
         cumulative_spend=0,  # Could be hydrated from analytics module later
     )
+
+
+def get_catalog_card(user_card: Any) -> Any:
+    """Safely extract the catalog card definition (template) from a UserCard.
+
+    Handles both UserCardResponse (which has `card_details` attribute)
+    and UserCard database ORM models (which has `card_catalog` relationship).
+    """
+    if not user_card:
+        return None
+    return getattr(user_card, "card_details", None) or getattr(user_card, "card_catalog", None)
+
+
+def get_card_name(user_card: Any) -> str:
+    """Resolve the display name for a user card."""
+    if not user_card:
+        return "Unknown Card"
+    nickname = getattr(user_card, "nickname", None)
+    if nickname:
+        return nickname
+    catalog_card = get_catalog_card(user_card)
+    if catalog_card:
+        return getattr(catalog_card, "card_name", "Unknown Card")
+    return "Unknown Card"
+
