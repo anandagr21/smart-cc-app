@@ -51,7 +51,7 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
   // @ts-ignore
   const IconComponent = Icons[accent.iconName] || Icons.Receipt;
 
-  const formattedDate = format(new Date(transaction.date), 'MMMM d, yyyy • h:mm a');
+  const formattedDate = format(new Date(transaction.transaction_date), 'MMMM d, yyyy • h:mm a');
   
   const formattedAmount = new Intl.NumberFormat('en-IN', {
     style: 'currency',
