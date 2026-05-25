@@ -83,7 +83,7 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
         <View style={styles.sheet}>
           <BlurView
             tint={isDark ? 'dark' : 'light'}
-            intensity={85}
+            intensity={100}
             style={[
               StyleSheet.absoluteFill,
               {

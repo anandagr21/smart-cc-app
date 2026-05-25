@@ -9,9 +9,9 @@ export const darkTheme = {
   surfaceElevated: 'rgba(24, 28, 39, 0.72)', // Elevated surface
 
   // ── Glass Materials ────────────────────────────────────────────────────────
-  glassSurface: 'rgba(255, 255, 255, 0.06)',
-  glassBorder: 'rgba(255, 255, 255, 0.08)',
-  glassHighlight: 'rgba(255, 255, 255, 0.12)',
+  glassSurface: 'rgba(10, 14, 23, 0.80)',
+  glassBorder: 'rgba(255, 255, 255, 0.12)',
+  glassHighlight: 'rgba(255, 255, 255, 0.15)',
 
   // ── Primary Accent — Brand Atmosphere ─────────────────────────────────────
   primary: '#7C83FF',           // Indigo/Violet accent

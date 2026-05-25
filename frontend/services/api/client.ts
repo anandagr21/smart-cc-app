@@ -2,10 +2,23 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 const getDefaultBaseUrl = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
-  // Android emulator needs 10.0.2.2 to access host machine's localhost
+  // Try to use the Metro server IP so physical devices work without hardcoding
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const ip = hostUri.split(':')[0];
+    if (ip) {
+      return `http://${ip}:8000/api/v1`;
+    }
+  }
+
+  if (process.env.EXPO_PUBLIC_API_URL && !process.env.EXPO_PUBLIC_API_URL.includes('localhost')) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  
+  // Fallbacks
   return Platform.OS === 'android' ? 'http://10.0.2.2:8000/api/v1' : 'http://localhost:8000/api/v1';
 };
 
@@ -17,10 +30,12 @@ export const apiClient = axios.create({
   },
 });
 
+import { useAuthStore } from '../../features/auth/store/authStore';
+
 apiClient.interceptors.request.use(
-  async (config) => {
+  (config) => {
     try {
-      const token = await SecureStore.getItemAsync('auth_token');
+      const token = useAuthStore.getState().token;
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -32,7 +47,6 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-import { useAuthStore } from '../../features/auth/store/authStore';
 
 apiClient.interceptors.response.use(
   (response) => response,

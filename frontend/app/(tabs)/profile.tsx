@@ -7,6 +7,9 @@ import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { useThemeStore } from '../../features/theme/store/themeStore';
 import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
+import { useCards } from '../../features/cards/hooks/useCards';
+import { useTransactions } from '../../features/transactions/hooks/useTransactions';
+import { SkeletonBox } from '../../components/ui/SkeletonBox';
 import { tokens } from '../../theme/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -15,6 +18,12 @@ export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
   const { themeMode, setThemeMode } = useThemeStore();
   const colors = useThemeColors();
+  
+  const { data: cards, isLoading: isLoadingCards } = useCards();
+  const { data: transactionsData, isLoading: isLoadingTransactions } = useTransactions();
+  
+  const cardCount = cards?.length || 0;
+  const txCount = transactionsData?.pages.flatMap((page) => page.data).length || 0;
 
   const handleLogout = async () => {
     await logout();
@@ -87,12 +96,20 @@ export default function ProfileScreen() {
           
           <View style={[styles.statsBar, { backgroundColor: colors.surface, borderColor: colors.borderHighlight }]}>
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>12</Text>
+              {isLoadingCards ? (
+                <SkeletonBox width={24} height={28} style={{ marginBottom: 4 }} borderRadius={4} />
+              ) : (
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{cardCount}</Text>
+              )}
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>Cards</Text>
             </View>
             <View style={[styles.statDivider, { backgroundColor: colors.borderHighlight }]} />
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>34</Text>
+              {isLoadingTransactions ? (
+                <SkeletonBox width={24} height={28} style={{ marginBottom: 4 }} borderRadius={4} />
+              ) : (
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{txCount}</Text>
+              )}
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>Transactions</Text>
             </View>
           </View>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,23 +8,32 @@ import {
   Platform,
   StyleSheet,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Store, IndianRupee, X } from 'lucide-react-native';
+import { Store, X, Search, Info } from 'lucide-react-native';
+import Fuse from 'fuse.js';
+
 import { TransactionResponse } from '../types/transaction.types';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { useCards } from '../../cards/hooks/useCards';
 import { useCreateTransaction } from '../hooks/useTransactions';
 import { useUpdateTransaction } from '../hooks/useUpdateTransaction';
+import { useRecommendation } from '../../recommendations/hooks/useRecommendation';
 import { useThemeColors } from '../../theme/hooks/useThemeColors';
 import { useThemeStore } from '../../theme/store/themeStore';
-import { getNetworkGradient } from '../../../theme/colors';
 import { tokens } from '../../../theme/tokens';
+import { useDebounce } from '../../../hooks/useDebounce';
+import { WalletListRow } from './WalletListRow';
+import { HeroRecommendationCard } from './HeroRecommendationCard';
+import { SecondaryRecommendationCard } from './SecondaryRecommendationCard';
 import { LinearGradient } from 'expo-linear-gradient';
+
+import { FeatureFlags } from '../../../config/features';
 
 const formSchema = z.object({
   merchant_name: z.string().min(1, 'Merchant name is required').transform((v) => v.trim()),
@@ -59,17 +68,55 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   const { data: cardsData } = useCards();
   const addTx = useCreateTransaction();
   const updateTx = useUpdateTransaction();
+  const getRecommendation = useRecommendation();
+  
   const isEditing = !!initialData;
 
   const {
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
+  } = useForm<any>({
     resolver: zodResolver(formSchema),
     defaultValues: { merchant_name: '', user_card_id: '', payment_mode: 'ONLINE' },
   });
+
+  const merchantName = watch('merchant_name');
+  const amount = watch('amount');
+  const paymentMode = watch('payment_mode');
+  const selectedCardId = watch('user_card_id');
+
+  const debouncedMerchant = useDebounce(merchantName, 350);
+  const debouncedAmount = useDebounce(amount, 500);
+
+  // Search Query for Wallet
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch recommendations
+  useEffect(() => {
+    if (visible && debouncedMerchant?.length >= 3 && FeatureFlags.ENABLE_SMART_RECOMMENDATIONS) {
+      // Default to 1000 if amount is empty to satisfy backend requirements and get flat rankings
+      const fetchAmount = Number(debouncedAmount) > 0 ? Number(debouncedAmount) : 1000;
+      
+      getRecommendation.mutate({
+        merchant_name: debouncedMerchant,
+        amount: fetchAmount,
+        payment_mode: (paymentMode || 'ONLINE').toLowerCase() as any,
+      }, {
+        onSuccess: (res) => {
+          if (res.best_card) {
+            const bestCardInWallet = cardsData?.find(c => c.card_details?.card_name === res.best_card || c.nickname === res.best_card);
+            if (bestCardInWallet) {
+              setValue('user_card_id', bestCardInWallet.id);
+            }
+          }
+        }
+      });
+    }
+  }, [debouncedMerchant, debouncedAmount, paymentMode, visible]);
 
   useEffect(() => {
     if (visible && initialData) {
@@ -79,6 +126,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
         user_card_id: initialData.user_card_id,
         payment_mode: initialData.payment_mode || 'ONLINE',
       });
+      setSearchQuery('');
     } else if (visible && cardsData?.length && !initialData) {
       reset({
         merchant_name: '',
@@ -86,23 +134,28 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
         user_card_id: cardsData[0].id,
         payment_mode: 'ONLINE',
       });
+      setSearchQuery('');
     }
   }, [visible, initialData, cardsData, reset]);
 
-  const onFormSubmit = async (data: FormData) => {
+  const onFormSubmit = async (data: any) => {
     try {
       if (isEditing) {
         await updateTx.mutateAsync({
           id: initialData.id,
           data: {
-            ...data,
-            category: initialData.category,
-            reward_type: initialData.reward_type,
-            reward_earned: initialData.reward_earned,
+            merchant_name: data.merchant_name,
+            amount: data.amount,
+            user_card_id: data.user_card_id,
+            payment_mode: data.payment_mode.toLowerCase() as any,
           },
         });
       } else {
-        await addTx.mutateAsync(data);
+        await addTx.mutateAsync({
+          ...data,
+          payment_mode: data.payment_mode.toLowerCase() as any,
+          transaction_date: new Date().toISOString().split('T')[0],
+        });
       }
       onClose();
     } catch {
@@ -110,13 +163,49 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
     }
   };
 
+  // --- Hybrid Picker Logic ---
+  const rankedCards = getRecommendation.data?.ranked_cards || [];
+  
+  // Top 3 Recommended
+  const topRanked = rankedCards.slice(0, 3);
+  const recommendedWalletCards = useMemo(() => {
+    return topRanked.map(rc => {
+      return {
+        card: cardsData?.find(c => c.card_details?.card_name === rc.card_name || c.nickname === rc.card_name),
+        recommendation: rc
+      };
+    }).filter(r => r.card) as { card: NonNullable<typeof cardsData>[0], recommendation: typeof topRanked[0] }[];
+  }, [topRanked, cardsData]);
+
+  // Full Wallet
+  const fuse = useMemo(() => {
+    return new Fuse(cardsData || [], {
+      keys: ['card_details.bank_name', 'nickname', 'card_details.card_name', 'card_details.network'],
+      threshold: 0.3,
+    });
+  }, [cardsData]);
+
+  const filteredCards = useMemo(() => {
+    if (!searchQuery.trim()) return cardsData || [];
+    return fuse.search(searchQuery).map(result => result.item);
+  }, [searchQuery, fuse, cardsData]);
+
+  const groupedWallet = useMemo(() => {
+    return filteredCards.reduce((acc, card) => {
+      const bank = card.card_details?.bank_name || 'Other';
+      if (!acc[bank]) acc[bank] = [];
+      acc[bank].push(card);
+      return acc;
+    }, {} as Record<string, NonNullable<typeof cardsData>[0][]>);
+  }, [filteredCards]);
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
           <BlurView
             tint={isDark ? 'dark' : 'light'}
-            intensity={85}
+            intensity={100}
             style={[
               StyleSheet.absoluteFill,
               {
@@ -131,7 +220,6 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           />
           <View style={[styles.topHighlight, { backgroundColor: colors.glassHighlight }]} />
 
-          {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
               {isEditing ? 'Edit Transaction' : 'Add Transaction'}
@@ -142,17 +230,19 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-            {/* Amount Hero Input */}
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+            
+            {/* AMOUNT HERO */}
             <View style={styles.amountHeroWrap}>
               <Controller
                 control={control}
                 name="amount"
                 render={({ field: { onChange, value } }) => (
                   <View style={styles.amountInputRow}>
-                    <Text style={[styles.currencySymbol, { color: colors.textSecondary }]}>₹</Text>
+                    <Text style={[styles.currencySymbol, { color: value ? colors.textPrimary : colors.textMuted }]}>₹</Text>
                     <Input
-                      placeholder="0.00"
+                      testID="amount-input"
+                      placeholder="0"
                       keyboardType="numeric"
                       value={value?.toString() || ''}
                       onChangeText={onChange}
@@ -161,37 +251,38 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                       inputStyle={[styles.heroInput, { color: colors.textPrimary }]}
                       hideBorder
                       hideFocusGlow
+                      autoFocus
                     />
                   </View>
                 )}
               />
-              {errors.amount && (
+              {errors.amount?.message && (
                 <Text style={[styles.errorText, { color: colors.danger, textAlign: 'center' }]}>
-                  {errors.amount.message}
+                  {errors.amount.message as string}
                 </Text>
               )}
             </View>
 
-            {/* Merchant */}
+            {/* MERCHANT */}
             <Controller
               control={control}
               name="merchant_name"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
+                  testID="merchant-input"
                   label="Merchant"
                   placeholder="Amazon, Uber, Starbucks..."
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
-                  error={errors.merchant_name?.message}
+                  error={errors.merchant_name?.message as string}
                   leftIcon={<Store size={18} color={colors.textMuted} />}
                 />
               )}
             />
 
-            {/* Payment Mode Segmented Control */}
+            {/* PAYMENT MODE */}
             <View style={styles.sectionWrap}>
-              <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Payment Mode</Text>
               <Controller
                 control={control}
                 name="payment_mode"
@@ -206,7 +297,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                           activeOpacity={0.7}
                           style={[
                             styles.segmentBtn,
-                            isActive && { backgroundColor: colors.primarySoft, borderColor: colors.primary, borderWidth: 1 }
+                            isActive && { backgroundColor: colors.surfaceElevated, borderColor: colors.primary, borderWidth: StyleSheet.hairlineWidth }
                           ]}
                         >
                           <Text style={[
@@ -226,64 +317,114 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
               />
             </View>
 
-            {/* Card Selector (Mini Previews) */}
-            <View style={styles.sectionWrap}>
-              <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Payment Card</Text>
-              <Controller
-                control={control}
-                name="user_card_id"
-                render={({ field: { onChange, value } }) => (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardScroll}>
-                    {cardsData?.map((card) => {
-                      const isActive = value === card.id;
-                      const network = card.card_details?.network || 'default';
-                      const gradient = getNetworkGradient(network, isDark) as [string, string];
-                      const cardName = card.nickname || card.card_details?.card_name;
-                      
-                      return (
-                        <TouchableOpacity
-                          key={card.id}
-                          onPress={() => onChange(card.id)}
-                          activeOpacity={0.8}
-                          style={[
-                            styles.miniCardWrap,
-                            isActive && { transform: [{ scale: 1.05 }], opacity: 1 },
-                            !isActive && { opacity: 0.5 }
-                          ]}
-                        >
-                          <LinearGradient
-                            colors={gradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.miniCard}
-                          >
-                            <View style={styles.miniTopEdge} />
-                            <Text style={styles.miniBankName} numberOfLines={1}>{card.card_details?.bank_name}</Text>
-                            <Text style={styles.miniCardName} numberOfLines={1}>{cardName}</Text>
-                          </LinearGradient>
-                          {isActive && (
-                            <View style={[styles.activeRing, { borderColor: colors.primary }]} />
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
+            {/* SECTION 1: SMART RECOMMENDED CARDS */}
+            {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && recommendedWalletCards.length > 0 && (
+              <View style={styles.recommendationSection}>
+                <View style={styles.recommendationHeader}>
+                  <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ BEST FOR THIS TRANSACTION</Text>
+                  <View style={styles.infoWrap}>
+                    <Text style={styles.infoText}>Why these?</Text>
+                    {/* @ts-ignore */}
+                    <Info size={14} color="rgba(255,255,255,0.4)" style={{ marginLeft: 4 }} />
+                  </View>
+                </View>
+
+                {/* Hero #1 Card */}
+                <HeroRecommendationCard
+                  card={recommendedWalletCards[0].card}
+                  recommendation={recommendedWalletCards[0].recommendation}
+                  delta={
+                    recommendedWalletCards.length > 1 
+                      ? Number(recommendedWalletCards[0].recommendation.effective_reward_value) - Number(recommendedWalletCards[1].recommendation.effective_reward_value) 
+                      : null
+                  }
+                  isActive={selectedCardId === recommendedWalletCards[0].card.id}
+                  onPress={() => setValue('user_card_id', recommendedWalletCards[0].card.id)}
+                />
+
+                {/* Secondary Cards */}
+                {recommendedWalletCards.length > 1 && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.secondaryScroll}>
+                    {recommendedWalletCards.slice(1).map(({ card, recommendation }) => (
+                      <SecondaryRecommendationCard
+                        key={card.id}
+                        card={card}
+                        recommendation={recommendation}
+                        isActive={selectedCardId === card.id}
+                        onPress={() => setValue('user_card_id', card.id)}
+                      />
+                    ))}
                   </ScrollView>
                 )}
-              />
-              {errors.user_card_id && (
-                <Text style={[styles.errorText, { color: colors.danger, marginTop: 4 }]}>
-                  {errors.user_card_id.message}
-                </Text>
-              )}
+              </View>
+            )}
+
+            {/* SECTION 2: SEARCHABLE FULL WALLET */}
+            <View style={styles.walletSection}>
+              <View style={styles.walletHeader}>
+                <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>YOUR WALLET</Text>
+                {errors.user_card_id?.message && (
+                  <Text style={[styles.errorText, { color: colors.danger, marginTop: 0 }]}>
+                    {errors.user_card_id.message as string}
+                  </Text>
+                )}
+              </View>
+
+              <View style={[styles.searchBar, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                {/* @ts-ignore */}
+                <Search size={16} color={colors.textMuted} style={styles.searchIcon} />
+                <TextInput
+                  placeholder="Search cards by bank, card name or network..."
+                  placeholderTextColor={colors.textMuted}
+                  style={[styles.searchInput, { color: colors.textPrimary }]}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
+
+              <View style={styles.walletList}>
+                {Object.entries(groupedWallet).map(([bank, cards]) => (
+                  <View key={bank} style={styles.bankGroup}>
+                    <Text style={[styles.bankGroupTitle, { color: colors.textMuted }]}>{bank}</Text>
+                    {cards.map(card => {
+                      const recommendation = rankedCards.find(rc => rc.card_name === card.card_details?.card_name || rc.card_name === card.nickname);
+                      return (
+                        <WalletListRow
+                          key={card.id}
+                          card={card}
+                          isActive={selectedCardId === card.id}
+                          onPress={(id) => setValue('user_card_id', id)}
+                          recommendation={recommendation}
+                        />
+                      );
+                    })}
+                  </View>
+                ))}
+                {Object.keys(groupedWallet).length === 0 && (
+                  <Text style={[styles.emptySearch, { color: colors.textMuted }]}>No cards found.</Text>
+                )}
+              </View>
             </View>
 
             {/* CTA */}
-            <Button
-              label={isEditing ? 'Save Changes' : 'Add Transaction'}
-              onPress={handleSubmit(onFormSubmit)}
-              isLoading={isSubmitting || addTx.isPending || updateTx.isPending}
-              style={styles.ctaBtn}
-            />
+            <LinearGradient
+              colors={['#10B981', '#059669']} // Emerald Glow
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={styles.ctaGradient}
+            >
+              <TouchableOpacity 
+                testID="submit-tx-btn"
+                style={styles.ctaInner}
+                onPress={handleSubmit(onFormSubmit)}
+                disabled={isSubmitting || addTx.isPending || updateTx.isPending}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.ctaText}>
+                  {isSubmitting || addTx.isPending || updateTx.isPending ? 'Processing...' : (isEditing ? 'Save Changes' : 'Add Transaction')}
+                </Text>
+              </TouchableOpacity>
+            </LinearGradient>
+
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
@@ -298,18 +439,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
-    height: '90%',
+    height: '92%',
     borderTopLeftRadius: tokens.radius.sheet,
     borderTopRightRadius: tokens.radius.sheet,
     overflow: 'hidden',
   },
   topHighlight: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    zIndex: 10,
+    top: 0, left: 0, right: 0, height: 1, zIndex: 10,
   },
   header: {
     flexDirection: 'row',
@@ -324,49 +461,49 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.bold,
   },
   closeBtn: {
-    width: 36,
-    height: 36,
+    width: 36, height: 36,
     borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
   scrollContent: {
     paddingHorizontal: 24,
     paddingBottom: 40,
   },
   amountHeroWrap: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 32,
-    marginTop: 16,
+    marginTop: 8,
   },
   amountInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   currencySymbol: {
-    fontSize: tokens.fontSize.display,
-    fontWeight: tokens.fontWeight.medium,
-    marginRight: 4,
-    marginTop: -8,
+    fontSize: tokens.fontSize.heroXl,
+    fontWeight: tokens.fontWeight.heavy,
+    marginRight: 8,
   },
   heroInputContainer: {
     marginBottom: 0,
     minHeight: 0,
-    width: 200,
+    width: 'auto',
+    minWidth: 100,
   },
   heroInput: {
-    fontSize: tokens.fontSize.heroXl,
+    fontSize: 56, // Massive Apple Wallet size
     fontWeight: tokens.fontWeight.heavy,
-    textAlign: 'center',
     height: 80,
+    letterSpacing: -2,
+    paddingVertical: 0,
+    textAlign: 'left',
   },
   sectionWrap: {
     marginBottom: 24,
   },
   sectionLabel: {
-    fontSize: tokens.fontSize.label,
-    fontWeight: tokens.fontWeight.semibold,
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.bold,
     textTransform: 'uppercase',
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 10,
@@ -381,7 +518,7 @@ const styles = StyleSheet.create({
   },
   segmentBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: tokens.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
@@ -389,48 +526,96 @@ const styles = StyleSheet.create({
   segmentText: {
     fontSize: tokens.fontSize.caption,
   },
-  cardScroll: {
-    paddingVertical: 8,
-    gap: 12,
+  recommendationSection: {
+    marginBottom: 24,
+    marginTop: 8,
   },
-  miniCardWrap: {
-    width: 140,
-    height: 85,
-    borderRadius: tokens.radius.md,
-  },
-  miniCard: {
-    flex: 1,
-    borderRadius: tokens.radius.md,
-    padding: 12,
+  recommendationHeader: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    overflow: 'hidden',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  miniTopEdge: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, height: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  sectionTitle: {
+    fontSize: tokens.fontSize.micro,
+    fontWeight: tokens.fontWeight.heavy,
+    textTransform: 'uppercase',
+    letterSpacing: tokens.letterSpacing.widest,
   },
-  miniBankName: {
-    color: 'rgba(255,255,255,0.6)',
+  infoWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: tokens.fontSize.micro,
+  },
+  secondaryScroll: {
+    paddingRight: 24,
+    paddingBottom: 4,
+  },
+  walletSection: {
+    marginBottom: 24,
+    paddingTop: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  walletHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: tokens.radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 12,
+    height: 44,
+    marginBottom: 20,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: tokens.fontSize.body,
+    height: '100%',
+  },
+  walletList: {
+    gap: 16,
+  },
+  bankGroup: {
+    gap: 8,
+  },
+  bankGroupTitle: {
     fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.bold,
     textTransform: 'uppercase',
+    letterSpacing: tokens.letterSpacing.widest,
+    marginLeft: 4,
+    marginBottom: 4,
   },
-  miniCardName: {
-    color: 'rgba(255,255,255,0.95)',
-    fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.bold,
-  },
-  activeRing: {
-    position: 'absolute',
-    top: -4, bottom: -4, left: -4, right: -4,
-    borderWidth: 2,
-    borderRadius: tokens.radius.lg,
+  emptySearch: {
+    textAlign: 'center',
+    marginTop: 24,
+    fontSize: tokens.fontSize.body,
   },
   errorText: {
     fontSize: tokens.fontSize.caption,
   },
-  ctaBtn: {
-    marginTop: 16,
+  ctaGradient: {
+    borderRadius: tokens.radius.full,
+    marginTop: 8,
+  },
+  ctaInner: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ctaText: {
+    color: '#FFF',
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.bold,
   },
 });

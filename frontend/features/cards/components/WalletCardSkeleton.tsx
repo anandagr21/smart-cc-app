@@ -45,7 +45,7 @@ export const WalletCardSkeleton: React.FC = () => {
   return (
     <Animated.View entering={FadeIn} exiting={FadeOut} className="mt-2">
       {[1, 2, 3].map((i) => (
-        <View key={i} className="bg-surface rounded-3xl border border-white/5 mb-4 overflow-hidden p-6 shadow-sm shadow-black/10">
+        <View key={i} className="bg-surface rounded-3xl border border-white/5 mb-4 overflow-hidden p-6">
           <View className="flex-row justify-between items-start mb-6">
             <View>
               <SkeletonItem height={28} width={180} className="mb-2" />

@@ -33,7 +33,10 @@ export default function LoginScreen() {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginFormData>({ 
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' }
+  });
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -58,6 +61,8 @@ export default function LoginScreen() {
           const msg = Array.isArray(detail) ? detail[0].msg : detail;
           setError('email', { message: msg || 'Registration failed. Try again.' });
         }
+      } else if (!error.response) {
+        setError('email', { message: 'Cannot connect to server. Please check your connection.' });
       } else {
         const detail = error.response?.data?.detail;
         const msg = Array.isArray(detail) ? detail[0].msg : detail;

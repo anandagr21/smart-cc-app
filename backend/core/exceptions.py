@@ -216,7 +216,7 @@ async def pydantic_validation_handler(request: Request, exc: Exception) -> Any:
     Returns:
         A JSONResponse with standard error shape.
     """
-    from fastapi import RequestValidationError
+    from fastapi.exceptions import RequestValidationError
     from fastapi.responses import JSONResponse
 
     if isinstance(exc, RequestValidationError):

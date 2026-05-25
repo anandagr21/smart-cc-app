@@ -42,7 +42,7 @@ export const TransactionRow = React.memo(({ transaction, onPress, index }: Trans
 
   const scale = useSharedValue(1);
   const handlePressIn = () => { scale.value = withSpring(0.97, tokens.spring.snappy); };
-  const handlePressOut = () => { scale.value = withSpring(1, tokens.spring.calm); onPress(transaction); };
+  const handlePressOut = () => { scale.value = withSpring(1, tokens.spring.calm); };
   
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -53,9 +53,11 @@ export const TransactionRow = React.memo(({ transaction, onPress, index }: Trans
   return (
     <Animated.View entering={FadeInDown.delay(index * 50).springify()}>
       <TouchableOpacity
+        onPress={() => onPress(transaction)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         activeOpacity={1}
+        delayPressIn={100}
       >
         <Animated.View
           style={[

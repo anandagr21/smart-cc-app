@@ -68,6 +68,7 @@ export default function HistoryScreen() {
         {allTransactions.length > 0 && (
           <Animated.View entering={FadeInDown.delay(100).springify()}>
             <TouchableOpacity
+              testID="add-tx-btn"
               onPress={handleOpenAdd}
               style={[
                 styles.addBtn,

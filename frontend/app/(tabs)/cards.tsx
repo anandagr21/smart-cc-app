@@ -39,6 +39,8 @@ export default function CardsScreen() {
 
         {cards && cards.length > 0 && (
           <TouchableOpacity
+            testID="add-card-button"
+            accessibilityLabel="Add Card"
             onPress={() => setSheetVisible(true)}
             style={[
               styles.addBtn,
