@@ -1,22 +1,74 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Plus } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
+import { Plus, Search, SlidersHorizontal } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { Badge } from '../../components/ui/Badge';
 import { useCards } from '../../features/cards/hooks/useCards';
 import { EmptyWalletState } from '../../features/cards/components/EmptyWalletState';
-import { WalletCard } from '../../features/cards/components/WalletCard';
 import { WalletCardSkeleton } from '../../features/cards/components/WalletCardSkeleton';
 import { AddCardSheet } from '../../features/cards/components/AddCardSheet';
+import { CardDetailSheet } from '../../features/cards/components/CardDetailSheet';
+import { FeaturedCardsSection } from '../../features/cards/components/FeaturedCardsSection';
+import { SmartWalletInventory } from '../../features/cards/components/SmartWalletInventory';
 import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
 import { tokens } from '../../theme/tokens';
+import { useFuseSearch } from '../../shared/search/useFuseSearch';
+import { useDebounce } from '../../hooks/useDebounce';
+import { UserCardResponse } from '../../features/cards/types/api';
 
 export default function CardsScreen() {
   const { data: cards, isLoading } = useCards();
   const [isSheetVisible, setSheetVisible] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<UserCardResponse | null>(null);
   const colors = useThemeColors();
   const cardCount = cards?.length ?? 0;
+
+  // Search Logic
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  const { results: filteredCards } = useFuseSearch({
+    items: cards || [],
+    query: debouncedSearch,
+    keys: [
+      { name: 'card_details.card_name', weight: 0.7 },
+      { name: 'nickname', weight: 0.7 },
+      { name: 'card_details.bank_name', weight: 0.3 },
+      { name: 'card_details.network', weight: 0.2 },
+    ],
+    threshold: 0.3,
+  });
+
+  const renderHeaderComponent = () => {
+    return (
+      <View>
+        <FeaturedCardsSection cards={cards || []} onSelectCard={setSelectedCard} />
+        
+        <View style={styles.searchSection}>
+          <View style={[styles.searchBar, { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+            {/* @ts-ignore */}
+            <Search size={18} color={colors.textMuted} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.textPrimary }]}
+              placeholder="Search cards by name, bank or network..."
+              placeholderTextColor={colors.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+            {/* @ts-ignore */}
+            <SlidersHorizontal size={18} color={colors.textMuted} />
+          </View>
+          
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 24, marginBottom: -8, marginLeft: 24 }]}>
+            YOUR WALLET
+          </Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <ScreenContainer>
@@ -29,7 +81,7 @@ export default function CardsScreen() {
           <View style={styles.titleRow}>
             <Text style={[styles.title, { color: colors.textPrimary }]}>Wallet</Text>
             {cardCount > 0 && (
-              <Badge label={`${cardCount} card${cardCount !== 1 ? 's' : ''}`} variant="primary" size="md" />
+              <Badge label={`${cardCount} CARDS`} variant="primary" size="md" />
             )}
           </View>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -45,7 +97,6 @@ export default function CardsScreen() {
             style={[
               styles.addBtn,
               {
-                backgroundColor: colors.primarySoft,
                 borderColor: colors.primary,
                 borderWidth: 1,
               },
@@ -59,18 +110,15 @@ export default function CardsScreen() {
       </Animated.View>
 
       {isLoading ? (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <WalletCardSkeleton />
-        </ScrollView>
+        <WalletCardSkeleton />
       ) : cards && cards.length > 0 ? (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.list}
-        >
-          {cards.map((card, index) => (
-            <WalletCard key={card.id} card={card} index={index} />
-          ))}
-        </ScrollView>
+        <View style={styles.inventoryContainer}>
+          <SmartWalletInventory 
+            cards={filteredCards} 
+            ListHeaderComponent={renderHeaderComponent()} 
+            onSelectCard={setSelectedCard}
+          />
+        </View>
       ) : (
         <EmptyWalletState onAddCard={() => setSheetVisible(true)} />
       )}
@@ -78,6 +126,12 @@ export default function CardsScreen() {
       <AddCardSheet
         visible={isSheetVisible}
         onClose={() => setSheetVisible(false)}
+      />
+
+      {/* Card Detail Intelligence Sheet Placeholder */}
+      <CardDetailSheet 
+        card={selectedCard} 
+        onClose={() => setSelectedCard(null)} 
       />
     </ScreenContainer>
   );
@@ -89,7 +143,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 12,
-    marginBottom: 28,
+    marginBottom: 24,
+    paddingHorizontal: 24,
   },
   titleRow: {
     flexDirection: 'row',
@@ -106,7 +161,6 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.label,
     fontWeight: tokens.fontWeight.medium,
     letterSpacing: tokens.letterSpacing.wider,
-    textTransform: 'uppercase',
   },
   addBtn: {
     width: 40,
@@ -115,7 +169,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  list: {
-    paddingBottom: 140,
+  inventoryContainer: {
+    flex: 1,
+  },
+  searchSection: {
+    paddingHorizontal: 24,
+    marginBottom: 16,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+    borderRadius: tokens.radius.lg,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 12,
+    marginRight: 12,
+    fontSize: tokens.fontSize.body,
+    height: '100%',
+  },
+  sectionTitle: {
+    fontSize: tokens.fontSize.micro,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: tokens.letterSpacing.widest,
+    textTransform: 'uppercase',
   },
 });
