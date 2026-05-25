@@ -58,7 +58,7 @@ export const RecommendationForm: React.FC<RecommendationFormProps> = ({
   const onFormSubmit = (data: FormData) => {
     onSubmit({
       merchant_name: data.merchant_name,
-      amount: data.amount,
+      amount: data.amount || 0,
       payment_mode: (data.payment_mode?.toLowerCase() ?? 'any') as PaymentMode,
     });
   };
