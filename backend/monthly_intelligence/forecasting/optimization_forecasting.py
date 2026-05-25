@@ -2,7 +2,7 @@ import datetime
 from typing import List
 from uuid import UUID
 
-from cards.models.user_card import UserCard
+from models.user_card import UserCard
 from monthly_intelligence.schemas import ConfidenceLevel, Forecast
 from cards.intelligence.spend_aggregator import SpendAggregator
 

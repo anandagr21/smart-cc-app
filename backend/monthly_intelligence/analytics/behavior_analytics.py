@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import List, Optional
 from uuid import UUID
 
-from cards.models.user_card import UserCard
+from models.user_card import UserCard
 from recommendations.service import RecommendationService
 from recommendations.schemas import RecommendationRequest
 from transactions.models import Transaction
