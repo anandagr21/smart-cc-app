@@ -5,6 +5,7 @@ import { UserCardResponse } from '../../cards/types/api';
 import { FeaturedWalletCard } from './FeaturedWalletCard';
 import { useThemeColors } from '../../theme/hooks/useThemeColors';
 import { tokens } from '../../../theme/tokens';
+import { useSpendInsights } from '../../insights/hooks/useSpendInsights';
 
 interface FeaturedCardsSectionProps {
   cards: UserCardResponse[];
@@ -13,24 +14,26 @@ interface FeaturedCardsSectionProps {
 
 export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ cards, onSelectCard }) => {
   const colors = useThemeColors();
+  const { insights } = useSpendInsights();
 
-  // Derive the top 2-3 featured cards
+  // Derive the top featured cards based on insights
   const featuredCards = useMemo(() => {
     if (!cards || cards.length === 0) return [];
     
-    // Prioritize active cards
-    const activeCards = cards.filter(c => c.is_active);
+    // Get all cards that have a specific high/medium priority insight
+    const cardsWithInsights = cards.filter(c => 
+      insights.some(i => i.relatedCardId === c.id && (i.priority === 'HIGH' || i.priority === 'MEDIUM'))
+    );
     
-    // Sort by fee waiver progress (closest to achieving)
-    const sortedByWaiver = [...activeCards].sort((a, b) => {
-      const aWaiver = a.fee_waiver_progress_percent || 0;
-      const bWaiver = b.fee_waiver_progress_percent || 0;
-      return bWaiver - aWaiver;
-    });
+    // If not enough insights, fallback to highest spend / active cards
+    if (cardsWithInsights.length < 3) {
+      const activeCards = cards.filter(c => c.is_active && !cardsWithInsights.some(ci => ci.id === c.id));
+      const sortedBySpend = [...activeCards].sort((a, b) => b.annual_spend - a.annual_spend);
+      cardsWithInsights.push(...sortedBySpend.slice(0, 3 - cardsWithInsights.length));
+    }
 
-    // If we have some, return top 3. Otherwise return empty.
-    return sortedByWaiver.slice(0, 3);
-  }, [cards]);
+    return cardsWithInsights.slice(0, 3);
+  }, [cards, insights]);
 
   if (featuredCards.length === 0) return null;
 
@@ -56,13 +59,17 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
         decelerationRate="fast"
         snapToInterval={220 + 16} // card width + margin
       >
-        {featuredCards.map(card => (
-          <FeaturedWalletCard 
-            key={card.id} 
-            card={card} 
-            onPress={() => onSelectCard(card)} 
-          />
-        ))}
+        {featuredCards.map(card => {
+          const insight = insights.find(i => i.relatedCardId === card.id);
+          return (
+            <FeaturedWalletCard 
+              key={card.id} 
+              card={card} 
+              insight={insight}
+              onPress={() => onSelectCard(card)} 
+            />
+          );
+        })}
       </ScrollView>
     </View>
   );
