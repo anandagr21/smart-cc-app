@@ -1,121 +1,301 @@
 """
 Module: backend.core.exceptions
-Responsibility: Domain exception hierarchy for consistent error handling.
+Responsibility: Application-wide exception hierarchy and FastAPI exception handlers.
 
 Architectural Boundaries:
-- Defines domain-specific errors that map to HTTP status codes.
-- These exceptions are caught by the global exception handler in middleware.
-- Services raise these exceptions; they NEVER leak to clients as-is.
+- Pure exception classes — no I/O, no database, no network access.
+- FastAPI exception handlers are registered here but leverage `responses.py` for formatting.
+- Every exception carries an error code and HTTP status for consistent responses.
+- Domain-specific exceptions should subclass `AppException`, not FastAPI's HTTPException.
 
-Decision: A clean exception hierarchy with an `error_code` (SCREAMING_SNAKE_CASE)
-and `status_code` enables the global handler to produce consistent error responses
-without knowing domain details. Each exception maps to the API error format
-defined in skills/api.md.
+Decision: A unified exception hierarchy ensures every error response follows the
+skills/api.md format: { "error": { "code": "...", "message": "...", "details": {} } }.
+Domain modules define their own exceptions by subclassing `AppException`.
 """
 
+from __future__ import annotations
 
-class DomainException(Exception):
-    """Base exception for all domain-level errors.
+import logging
+from typing import Any
 
-    All business-logic errors should extend this class.
-    The global exception handler catches DomainException and returns
-    a structured error response to the client.
+from starlette.requests import Request
+
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Base Application Exception
+# ---------------------------------------------------------------------------
+
+
+class AppException(Exception):
+    """Base exception for all application-level errors.
+
+    Subclasses define `status_code` and `code` to produce consistent error responses.
+    All unhandled `AppException` instances are caught by the global handler and
+    rendered via the standard error response schema.
+
+    Attributes:
+        message: Human-readable error description.
+        code: Machine-readable error code (SCREAMING_SNAKE_CASE).
+        status_code: HTTP status code to return.
+        details: Optional dict of additional context (e.g., validation errors).
     """
 
+    status_code: int = 500
+    code: str = "INTERNAL_ERROR"
+
     def __init__(
         self,
-        message: str,
-        error_code: str = "INTERNAL_ERROR",
-        status_code: int = 500,
-        details: dict | None = None,
-    ):
+        message: str = "An unexpected error occurred.",
+        *,
+        code: str | None = None,
+        details: dict[str, Any] | None = None,
+    ) -> None:
         self.message = message
-        self.error_code = error_code
-        self.status_code = status_code
+        if code is not None:
+            self.code = code
         self.details = details or {}
-        super().__init__(self.message)
+        super().__init__(message)
 
 
-class NotFoundException(DomainException):
-    """Resource not found — maps to HTTP 404."""
-
-    def __init__(
-        self,
-        message: str = "Resource not found.",
-        error_code: str = "NOT_FOUND",
-        details: dict | None = None,
-    ):
-        super().__init__(
-            message=message,
-            error_code=error_code,
-            status_code=404,
-            details=details,
-        )
+# ---------------------------------------------------------------------------
+# 4xx Client Errors
+# ---------------------------------------------------------------------------
 
 
-class ValidationException(DomainException):
-    """Invalid input or business rule violation — maps to HTTP 400."""
+class BadRequestException(AppException):
+    """Generic 400 — invalid input or malformed request."""
 
-    def __init__(
-        self,
-        message: str = "Invalid input.",
-        error_code: str = "INVALID_INPUT",
-        details: dict | None = None,
-    ):
-        super().__init__(
-            message=message,
-            error_code=error_code,
-            status_code=400,
-            details=details,
-        )
+    status_code = 400
+    code = "INVALID_INPUT"
 
 
-class ConflictException(DomainException):
-    """Duplicate resource or state conflict — maps to HTTP 409."""
+class ValidationException(AppException):
+    """422 — Pydantic validation failure."""
 
-    def __init__(
-        self,
-        message: str = "Resource conflict.",
-        error_code: str = "CONFLICT",
-        details: dict | None = None,
-    ):
-        super().__init__(
-            message=message,
-            error_code=error_code,
-            status_code=409,
-            details=details,
-        )
+    status_code = 422
+    code = "VALIDATION_ERROR"
 
 
-class UnauthorizedException(DomainException):
-    """Authentication required — maps to HTTP 401."""
+class UnauthorizedException(AppException):
+    """401 — missing or invalid authentication credentials."""
 
-    def __init__(
-        self,
-        message: str = "Authentication required.",
-        error_code: str = "UNAUTHORIZED",
-        details: dict | None = None,
-    ):
-        super().__init__(
-            message=message,
-            error_code=error_code,
-            status_code=401,
-            details=details,
-        )
+    status_code = 401
+    code = "UNAUTHORIZED"
 
 
-class ForbiddenException(DomainException):
-    """Authenticated but not authorized — maps to HTTP 403."""
+class ForbiddenException(AppException):
+    """403 — authenticated but insufficient permissions."""
+
+    status_code = 403
+    code = "FORBIDDEN"
+
+
+class NotFoundException(AppException):
+    """404 — requested resource does not exist."""
+
+    status_code = 404
+    code = "NOT_FOUND"
+
+
+class ConflictException(AppException):
+    """409 — duplicate resource or state conflict."""
+
+    status_code = 409
+    code = "CONFLICT"
+
+
+# ---------------------------------------------------------------------------
+# 5xx Server Errors
+# ---------------------------------------------------------------------------
+
+
+class InternalServerException(AppException):
+    """500 — unexpected server error (never expose details to client in production)."""
+
+    status_code = 500
+    code = "INTERNAL_ERROR"
 
     def __init__(
         self,
-        message: str = "Access denied.",
-        error_code: str = "FORBIDDEN",
-        details: dict | None = None,
-    ):
-        super().__init__(
-            message=message,
-            error_code=error_code,
-            status_code=403,
-            details=details,
+        message: str = "An unexpected error occurred. Please try again later.",
+        *,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message, details=details)
+
+
+class ServiceUnavailableException(AppException):
+    """503 — upstream service or database unavailable."""
+
+    status_code = 503
+    code = "SERVICE_UNAVAILABLE"
+
+
+# ---------------------------------------------------------------------------
+# Infrastructure Exceptions
+# ---------------------------------------------------------------------------
+
+
+class DatabaseException(AppException):
+    """Raised when a database operation fails unexpectedly.
+
+    Not for routine not-found cases — use NotFoundException for those.
+    """
+
+    status_code = 500
+    code = "DATABASE_ERROR"
+
+
+class ConfigurationException(AppException):
+    """Raised at startup when required configuration is missing or invalid.
+
+    This is fatal — the application should not start.
+    """
+
+    status_code = 500
+    code = "CONFIGURATION_ERROR"
+
+
+# ---------------------------------------------------------------------------
+# FastAPI Exception Handlers
+# ---------------------------------------------------------------------------
+
+
+async def app_exception_handler(request: Request, exc: AppException) -> Any:
+    """Handle all AppException subclasses and render a standard error response.
+
+    Logs warnings for client errors (4xx) and errors for server errors (5xx).
+    Does NOT return a Response directly — returns a dict that FastAPI serializes
+    as JSON. This allows the response_model in routes to remain consistent.
+
+    Args:
+        request: The incoming Starlette request.
+        exc: The caught AppException instance.
+
+    Returns:
+        A dict structured as { "error": { "code": ..., "message": ..., "details": ... } }.
+    """
+    from fastapi.responses import JSONResponse
+
+    log = logger.warning if exc.status_code < 500 else logger.error
+    log(
+        exc.message,
+        extra={
+            "error_code": exc.code,
+            "status_code": exc.status_code,
+            "path": request.url.path,
+            "method": request.method,
+        },
+        exc_info=exc.status_code >= 500,
+    )
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "code": exc.code,
+                "message": exc.message,
+                "details": exc.details,
+            },
+        },
+    )
+
+
+async def pydantic_validation_handler(request: Request, exc: Exception) -> Any:
+    """Handle Pydantic RequestValidationError and render a standard error response.
+
+    Maps FastAPI's built-in validation errors to the VALIDATION_ERROR code
+    and 422 status, matching our standard error format.
+
+    Args:
+        request: The incoming Starlette request.
+        exc: The caught RequestValidationError exception.
+
+    Returns:
+        A JSONResponse with standard error shape.
+    """
+    from fastapi.exceptions import RequestValidationError
+    from fastapi.responses import JSONResponse
+
+    if isinstance(exc, RequestValidationError):
+        # Normalize FastAPI validation errors to a list of field-level messages
+        details: list[dict[str, object]] = []
+        for error in exc.errors():
+            loc = " -> ".join(str(part) for part in error["loc"])
+            details.append({
+                "field": loc,
+                "message": error.get("msg", "Invalid value"),
+                "type": error.get("type", "unknown"),
+            })
+
+        logger.warning(
+            "Request validation failed",
+            extra={
+                "path": request.url.path,
+                "method": request.method,
+                "validation_errors": len(details),
+            },
         )
+
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request validation failed. Check the details for field-level errors.",
+                    "details": {"errors": details},
+                },
+            },
+        )
+
+    # Fallback — shouldn't be reached but safe
+    logger.error("Unhandled exception in validation handler", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred.",
+                "details": {},
+            },
+        },
+    )
+
+
+async def generic_exception_handler(request: Request, exc: Exception) -> Any:
+    """Catch-all handler for unexpected (non-AppException) exceptions.
+
+    Logs the full traceback server-side but returns a sanitised 500 to the client.
+    Never leaks internal error details in production.
+
+    Args:
+        request: The incoming Starlette request.
+        exc: The unhandled exception.
+
+    Returns:
+        A JSONResponse with a sanitised error.
+    """
+    from fastapi.responses import JSONResponse
+
+    logger.critical(
+        "Unhandled exception",
+        extra={
+            "path": request.url.path,
+            "method": request.method,
+            "exception_type": type(exc).__name__,
+        },
+        exc_info=True,
+    )
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred. Please try again later.",
+                "details": {},
+            },
+        },
+    )

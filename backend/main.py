@@ -91,6 +91,19 @@ def create_app() -> FastAPI:
     # Request ID, logging, global exception handling
     setup_middleware(app)
 
+    # Register global exception handlers
+    from core.exceptions import (
+        AppException,
+        app_exception_handler,
+        pydantic_validation_handler,
+        generic_exception_handler,
+    )
+    from fastapi.exceptions import RequestValidationError
+    
+    app.add_exception_handler(AppException, app_exception_handler)
+    app.add_exception_handler(RequestValidationError, pydantic_validation_handler)
+    app.add_exception_handler(Exception, generic_exception_handler)
+
     # API routes — all versioned under /api/v1
     app.include_router(api_router)
 

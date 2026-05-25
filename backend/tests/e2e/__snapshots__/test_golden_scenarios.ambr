@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_golden_scenario_cashback_dominance
+  dict({
+    'best_card': 'Card A',
+    'category': 'electronics',
+    'explanations': list([
+      "Transaction categorized as 'Electronics' to find the best rewards.",
+    ]),
+    'normalized_merchant': 'apple store',
+    'ranked_cards': list([
+      dict({
+        'cap_status': None,
+        'card_id': '00000000-0000-0000-0000-000000000001',
+        'card_name': 'Card A',
+        'cashback_amount': Decimal('2000.00'),
+        'effective_reward_value': Decimal('2000.00'),
+        'milestone_impact': None,
+        'optimization_factors': list([
+          'Helps achieve annual fee waiver.',
+        ]),
+        'rank': 1,
+        'reasoning_summary': 'Excellent balance of immediate rewards and long-term goals.',
+        'recommendation_reason': 'Excellent balance of immediate rewards and long-term goals.',
+        'reward_points': None,
+        'reward_type': <RewardType.CASHBACK: 'cashback'>,
+        'tradeoffs': list([
+        ]),
+        'waiver_impact': 'Contributes 100.0% toward fee waiver.',
+        'warnings': list([
+        ]),
+      }),
+      dict({
+        'cap_status': None,
+        'card_id': '00000000-0000-0000-0000-000000000002',
+        'card_name': 'Card B',
+        'cashback_amount': Decimal('1000.00'),
+        'effective_reward_value': Decimal('1000.00'),
+        'milestone_impact': None,
+        'optimization_factors': list([
+          'Helps achieve annual fee waiver.',
+        ]),
+        'rank': 2,
+        'reasoning_summary': 'Excellent balance of immediate rewards and long-term goals.',
+        'recommendation_reason': 'Excellent balance of immediate rewards and long-term goals.',
+        'reward_points': None,
+        'reward_type': <RewardType.CASHBACK: 'cashback'>,
+        'tradeoffs': list([
+        ]),
+        'waiver_impact': 'Contributes 10.0% toward fee waiver.',
+        'warnings': list([
+        ]),
+      }),
+    ]),
+    'warnings': list([
+    ]),
+  })
+# ---

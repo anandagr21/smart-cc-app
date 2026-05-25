@@ -1,0 +1,20 @@
+"""
+Module: backend.models
+Responsibility: Centralizes all SQLModel entity imports for Alembic autogenerate.
+
+All models MUST be imported here so that SQLModel.metadata discovers them
+for migration generation.
+"""
+
+from merchants.models import Merchant, MerchantAlias
+from models.card_catalog import CardCatalog
+from models.user import User
+from models.user_card import UserCard
+
+__all__ = [
+    "CardCatalog",
+    "Merchant",
+    "MerchantAlias",
+    "User",
+    "UserCard",
+]

@@ -1,80 +1,80 @@
-# Architecture Patterns
+# Architecture Patterns (FINALIZED GOVERNANCE)
+
+> [!IMPORTANT]  
+> **ARCHITECTURE FREEZE ALIGNMENT**  
+> The architectural styles defined here are **FINAL** and frozen. Do NOT redesign the architecture or introduce new structural styles without explicit critical requirements. The goal is strict governance and preventing future architecture drift.
 
 ## System Overview
 
-Smart CC is an AI-powered credit card optimization platform with **three concerns**:
-1. **Deterministic Reward Engine** — pure financial computation
-2. **AI Orchestration Layer** — natural language understanding, routing, explanation
-3. **Data Layer** — PostgreSQL + SQLModel ORM
+Smart CC is an AI-powered credit card optimization platform with **three core concerns**:
+1. **Deterministic Reward Engine** — pure financial computation (Shared Core).
+2. **Domain Vertical Slices** — feature-focused backend modules (e.g., Transactions, Merchants).
+3. **AI Orchestration Layer** — natural language understanding, routing, explanation.
 
 ---
 
-## Layer Architecture
+## 1. Backend Architecture (Vertical Slice Canonical)
 
-```
-API Routes (thin) → Services (use cases) → Reward Engine (pure)
-                                          → Repositories (DB) → Models
-AI Agents (LangGraph) → Services (data retrieval only)
-```
+The backend has standardized on a **Vertical Slice Architecture**. 
+- Old horizontal layers (global `services/`, `repositories/`) are deprecated.
+- **Business modules live as domain slices** (e.g., `backend/transactions/`, `backend/recommendations/`).
+- **Deterministic reward engine remains isolated/shared** (`backend/reward_engine/`).
 
----
-
-## Layer Responsibilities
+### Layer Responsibilities inside a Vertical Slice
 
 | Layer | Responsibility | Must NOT Do |
 |---|---|---|
-| `api/` | HTTP interface, input parsing, auth | Business logic, DB queries |
-| `services/` | Use case orchestration | DB access directly, AI calls |
-| `reward_engine/` | Pure financial computation | I/O, DB, AI, randomness |
-| `repositories/` | DB access only | Business logic |
-| `agents/` | AI orchestration, intent parsing | Compute rewards, write DB |
-| `models/` | SQLModel DB schema | Business logic |
-| `schemas/` | Pydantic API contracts | DB logic |
-| `core/` | Config, auth, shared utilities | Domain logic |
+| `routes.py` | HTTP interface, input parsing | Business logic, DB queries |
+| `service.py` | Use case orchestration | DB access directly, AI calls |
+| `repository.py` | Persistence only | Business logic |
+| `models.py` | SQLModel DB schema | Business logic |
+| `schemas.py` | Pydantic API contracts | DB logic |
 
 ---
 
-## Dependency Direction
+## 2. Frontend Architecture (Feature-First Canonical)
+
+The frontend has standardized on a **Feature-First Architecture**.
+- **`app/` is routing only**: Expo Router file-based routing. Keep files thin.
+- **`features/` owns domain-specific UI**: Each domain (e.g., `auth`, `dashboard`) owns its specific UI components, hooks, and API integrations.
+- **`components/` contains only truly shared UI**: Only generic primitives (e.g., `<Button>`, `<Card>`) live here. Do not place feature-specific UI in this global folder.
+- Avoid future folder reshuffling.
+
+---
+
+## 3. Dependency Philosophy
+
+- **Minimize Dependency Count**: Prefer built-in solutions or building custom logic over importing external libraries.
+- **Battle-Tested & Open Source**: Prefer heavily maintained, MIT/open-source libraries.
+- **Avoid Heavy Frameworks**: Do not introduce massive, highly-opinionated frameworks (e.g., UI Kitten, NativeBase) that abstract away control.
+
+---
+
+## 4. Backend Dependency Direction
 
 ```
-api/ → services/ → reward_engine/
-              ↘ repositories/ → models/
-agents/ → services/
+api/v1 (aggregates) → domain slices (e.g. transactions/) → reward_engine/ (pure)
+                                                           ↘ core/
 ```
 
 **Forbidden imports:**
-- Any layer importing from a layer above it
-- `reward_engine/` importing from `repositories/` or `services/`
-- `repositories/` importing from `services/`
-- `api/` importing from `repositories/` directly
+- `reward_engine/` importing from ANY domain slice or repository.
+- Cross-slice DB model inheritance or hidden mutable state dependencies.
 
 ---
 
-## Preferred Patterns
+## 5. Deterministic Engine Philosophy
 
-- **Dependency injection** via FastAPI `Depends()`
-- **Pure functions** in reward engine — no side effects, no I/O, testable
-- **Stateless services** for horizontal scaling
-- **JSONB** for card benefit rules — avoids schema migrations
-- **Pydantic v2** for all validation, `model_config = ConfigDict(extra="forbid")`
-
----
-
-## Anti-Patterns
-
-- Business logic in API routes
-- AI computing financial rewards (LLMs are probabilistic, finance must be exact)
-- Circular imports across layers
-- Direct DB access from services or agents
-- Magic numbers — use `core/constants.py`
-- Global mutable state
+The reward engine must remain **PURE**.
+- No DB access inside the engine.
+- No AI calculations inside the engine (LLMs are probabilistic; finance must be exact).
+- No FastAPI dependencies.
+- No hidden mutable state.
+- Deterministic outputs are mandatory. Same inputs must always equal the same outputs.
 
 ---
 
-## Best Practices from Codebase
+## 6. Shared vs Feature Ownership Rules
 
-- All modules start with docstrings declaring architectural boundaries and TODOs
-- Reward engine modules are pure computation with no I/O
-- Services coordinate between repositories and engine, never compute themselves
-- AI agents are stateless per request
-- Card configs stored as structured JSONB for extensibility
+- **Shared (`frontend/components/`, `backend/reward_engine/`, `backend/core/`)**: Generic logic or pure computation used by multiple domains. Treat this as a strictly governed internal library.
+- **Feature (`frontend/features/`, `backend/<domain_slice>/`)**: Specific business use-cases. They own their internal UI, services, and schemas, and cannot leak internal components to other features.

@@ -31,8 +31,11 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Import all SQLModel models here so autogenerate can detect them.
-# Add new model imports as they are created.
-# Example: from models.user import User  # noqa: F401
+from merchants.models import Merchant, MerchantAlias  # noqa: F401
+from models.card_catalog import CardCatalog  # noqa: F401
+from models.user import User  # noqa: F401
+from models.user_card import UserCard  # noqa: F401
+from rewards.models import RewardRule  # noqa: F401
 
 # Target metadata for autogenerate — includes all SQLModel tables
 target_metadata = SQLModel.metadata

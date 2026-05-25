@@ -36,19 +36,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy virtualenv
-COPY --from=builder /app/.venv /app/.venv
+# Copy virtualenv to /opt/venv (outside /app) so bind mount doesn't wipe it
+COPY --from=builder /app/.venv /opt/venv
 
 # Copy source
 COPY . .
 
 # Activate venv
-ENV PATH="/app/.venv/bin:$PATH"
+ENV PATH="/opt/venv/bin:$PATH"
 
-EXPOSE 8000
-
-
-# Environment
+# Default environment
 ENV ENVIRONMENT=development
 
 EXPOSE 8000
@@ -56,7 +53,7 @@ EXPOSE 8000
 # Run based on environment
 CMD sh -c '\
     if [ "$ENVIRONMENT" = "development" ]; then \
-        uvicorn main:app --reload --host 0.0.0.0 --port 8000; \
+        python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000; \
     else \
         gunicorn main:app \
             -k uvicorn.workers.UvicornWorker \

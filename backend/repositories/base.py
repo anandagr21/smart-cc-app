@@ -121,7 +121,11 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         Returns:
             The newly created SQLModel entity (flushed to DB, not yet committed).
         """
-        entity = self.model(**create_schema.model_dump())
+        # Handle both Pydantic schemas and plain dicts
+        if isinstance(create_schema, dict):
+            entity = self.model(**create_schema)
+        else:
+            entity = self.model(**create_schema.model_dump())
         self.session.add(entity)
         await self.session.flush()
         await self.session.refresh(entity)
