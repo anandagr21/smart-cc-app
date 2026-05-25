@@ -13,4 +13,7 @@ export const QueryKeys = {
   catalog: {
     all: ['catalog'] as const,
   },
+  insights: {
+    all: ['insights'] as const,
+  },
 };

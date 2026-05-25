@@ -1,14 +1,13 @@
 import { UserCardResponse } from '../../cards/types/api';
 import { TransactionResponse } from '../../transactions/types/transaction.types';
 
-export type InsightPriority = 'HIGH' | 'MEDIUM' | 'INFORMATIONAL';
+export type InsightPriority = 'URGENT' | 'HIGH' | 'MEDIUM' | 'INFORMATIONAL';
 
 export type InsightCategory = 
   | 'FEE_WAIVER'
   | 'MISSED_REWARDS'
   | 'UNDERUTILIZED_CARD'
-  | 'PORTFOLIO_OPTIMIZATION'
-  | 'MONTHLY_SUMMARY';
+  | 'PORTFOLIO_OPTIMIZATION';
 
 export type InsightConfidence = 'HIGH' | 'MODERATE' | 'ESTIMATED';
 
@@ -18,26 +17,20 @@ export interface InsightResult {
   priority: InsightPriority;
   confidence: InsightConfidence;
   
-  // Presentation
-  title: string;          // E.g., "NEAR WAIVER"
-  description: string;    // E.g., "₹12k more spend unlocks fee waiver on Amex."
-  reasoning: string;      // E.g., "You have spent ₹88k out of ₹100k target this year."
-  icon: any;              // LucideIcon component reference
-  color: string;          // Hex color for presentation
+  title: string;
+  summary: string;
+  reasoning: string;
   
-  // Mathematical Context (Optional, for sorting/deltas)
-  monetaryValue?: number; // E.g., 420 for "Missed 420 in rewards"
-  relatedCardId?: string; // If this insight points to a specific card
+  badge_label: string;
+  badge_color: string;
+  
+  related_card_id?: string;
+  monetary_value?: number;
+  recommended_action?: Record<string, any>;
+  source_transactions: string[];
+  actionability_score: number;
+  insight_hash: string;
+  cooldown_period_hours: number;
+  generated_at: string;
+  expires_at?: string;
 }
-
-export interface InsightEngineContext {
-  cards: UserCardResponse[];
-  transactions: TransactionResponse[];
-  // Extensible for future summary windows
-  timeWindow?: {
-    start: Date;
-    end: Date;
-  };
-}
-
-export type InsightGenerator = (context: InsightEngineContext) => InsightResult[];

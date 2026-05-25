@@ -22,7 +22,7 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
     
     // Get all cards that have a specific high/medium priority insight
     const cardsWithInsights = cards.filter(c => 
-      insights.some(i => i.relatedCardId === c.id && (i.priority === 'HIGH' || i.priority === 'MEDIUM'))
+      insights.some(i => i.related_card_id === c.id && (i.priority === 'HIGH' || i.priority === 'MEDIUM' || i.priority === 'URGENT'))
     );
     
     // If not enough insights, fallback to highest spend / active cards
@@ -60,7 +60,7 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
         snapToInterval={220 + 16} // card width + margin
       >
         {featuredCards.map(card => {
-          const insight = insights.find(i => i.relatedCardId === card.id);
+          const insight = insights.find(i => i.related_card_id === card.id);
           return (
             <FeaturedWalletCard 
               key={card.id} 

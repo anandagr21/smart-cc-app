@@ -10,6 +10,7 @@ from merchants.models import Merchant, MerchantAlias
 from models.card_catalog import CardCatalog
 from models.user import User
 from models.user_card import UserCard
+from models.insight_suppression import InsightSuppression
 
 __all__ = [
     "CardCatalog",
@@ -17,4 +18,5 @@ __all__ = [
     "MerchantAlias",
     "User",
     "UserCard",
+    "InsightSuppression",
 ]

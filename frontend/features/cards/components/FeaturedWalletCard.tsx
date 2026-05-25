@@ -31,16 +31,16 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   const network = card.card_details?.network || 'VISA';
 
   // Fallback values if no specific AI insight exists
-  const topTag = insight?.title || (card.is_active ? 'ACTIVE CARD' : 'INACTIVE');
-  const topTagColor = insight?.color || (card.is_active ? colors.success : colors.textSecondary);
-  const IconComponent = insight?.icon || CheckCircle2;
+  const topTag = insight?.badge_label || (card.is_active ? 'ACTIVE CARD' : 'INACTIVE');
+  const topTagColor = insight?.badge_color || (card.is_active ? colors.success : colors.textSecondary);
+  const IconComponent = CheckCircle2; // Hardcode or map by category later
 
   // Actionable Insight Rendering
   let actionableContent;
   
-  if (insight?.category === 'FEE_WAIVER' && insight.monetaryValue !== undefined) {
+  if (insight?.category === 'FEE_WAIVER' && insight.monetary_value !== undefined) {
     const currentSpend = Number(card.current_spend) || 0;
-    const target = currentSpend + insight.monetaryValue;
+    const target = currentSpend + insight.monetary_value;
     const percentComplete = Math.min((currentSpend / target) * 100, 100);
 
     actionableContent = (
@@ -68,7 +68,7 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
           />
         </View>
         <Text style={styles.waiverSub}>
-          {insight.description}
+          {insight.summary}
         </Text>
       </View>
     );
@@ -77,7 +77,7 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
       <View style={styles.insightRow}>
         <IconComponent size={12} color={topTagColor} style={{ marginRight: 6, flexShrink: 0 }} />
         <Text style={styles.insightText} numberOfLines={2}>
-          {insight?.description || `${formatCurrencyIN(card.annual_spend)} annual spend`}
+          {insight?.summary || `${formatCurrencyIN(card.annual_spend)} annual spend`}
         </Text>
       </View>
     );
