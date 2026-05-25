@@ -9,6 +9,7 @@ import { useThemeColors } from '../../theme/hooks/useThemeColors';
 import { tokens } from '../../../theme/tokens';
 import { getNetworkGradient } from '../../../theme/colors';
 import { useThemeStore } from '../../theme/store/themeStore';
+import { formatCurrencyIN } from '../../../utils/currency';
 
 interface HeroRecommendationCardProps {
   card: UserCardResponse;
@@ -34,23 +35,23 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
   
   // Compute concrete reward tag
   const rewardTag = recommendation.reward_type === 'CASHBACK' && recommendation.cashback_amount 
-    ? `${recommendation.cashback_amount} Cashback` 
+    ? `Cashback` 
     : recommendation.reward_type === 'POINTS' && recommendation.reward_points 
-      ? `${recommendation.reward_points} Pts` 
-      : 'Top Choice';
+      ? `Points` 
+      : 'Reward';
 
-  const estimatedReward = recommendation.cashback_amount 
-    ? `₹${Math.round(recommendation.cashback_amount)}`
-    : recommendation.reward_points
-      ? `${Math.round(recommendation.reward_points)}`
-      : `₹${Math.round(recommendation.effective_reward_value)}`;
+  const estimatedRewardValue = recommendation.cashback_amount || recommendation.reward_points || recommendation.effective_reward_value;
+
+  const groundedReason = recommendation.recommendation_reason 
+    ? recommendation.recommendation_reason
+    : 'Highest estimated return for this transaction';
 
   const network = card.card_details?.network || 'default';
   const gradient = getNetworkGradient(network, isDark) as [string, string];
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: withSpring(isActive ? 1.02 : 1, { damping: 20, stiffness: 200 }) }],
+      transform: [{ scale: withSpring(isActive ? 1.01 : 1, { damping: 20, stiffness: 200 }) }],
       borderColor: withSpring(isActive ? '#10B981' : colors.glassBorder),
     };
   });
@@ -75,26 +76,18 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
           <View style={styles.contentRow}>
             {/* Left Side: Hierarchy */}
             <View style={styles.leftCol}>
-              <View style={styles.badgeWrap}>
-                <Text style={styles.badgeText}>BEST MATCH</Text>
-              </View>
-              
               <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
-              <Text style={styles.cardName} numberOfLines={1}>{cardName}</Text>
+              <Text style={styles.cardName} numberOfLines={1} adjustsFontSizeToFit>{cardName}</Text>
               
               <View style={styles.concreteReasonRow}>
                 <View style={styles.concreteTag}>
+                  {/* @ts-ignore */}
+                  <Sparkles size={10} color="#FFFFFF" style={{ marginRight: 4 }} />
                   <Text style={styles.concreteTagText}>{rewardTag}</Text>
                 </View>
-                <Text style={styles.reasonText} numberOfLines={1}>
-                  {recommendation.recommendation_reason || 'You\'ll earn the most on this'}
+                <Text style={styles.reasonText} numberOfLines={2}>
+                  {groundedReason}
                 </Text>
-              </View>
-
-              <View style={styles.starRow}>
-                {/* @ts-ignore */}
-                <Sparkles size={12} color="#FBBF24" style={{ marginRight: 6 }} />
-                <Text style={styles.starText}>You'll earn the most on this transaction</Text>
               </View>
             </View>
 
@@ -108,10 +101,12 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
               </View>
               
               <View style={styles.rewardStats}>
-                <Text style={styles.rewardAmount}>{estimatedReward}</Text>
+                <Text style={styles.rewardAmount} numberOfLines={1} adjustsFontSizeToFit>
+                  {formatCurrencyIN(estimatedRewardValue)}
+                </Text>
                 <Text style={styles.rewardLabel}>EST. REWARD</Text>
                 {delta !== null && delta > 0 && (
-                  <Text style={styles.deltaText}>₹{Math.round(delta)} more than next best card</Text>
+                  <Text style={styles.deltaText} numberOfLines={1}>+{formatCurrencyIN(delta)} edge</Text>
                 )}
               </View>
             </View>
@@ -131,15 +126,15 @@ const styles = StyleSheet.create({
   },
   ambientGlow: {
     position: 'absolute',
-    top: -10, left: -10, right: -10, bottom: -10,
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    borderRadius: tokens.radius.xl + 10,
+    top: -5, left: -5, right: -5, bottom: -5,
+    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+    borderRadius: tokens.radius.xl + 5,
     zIndex: -1,
     shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   touchable: {
     borderRadius: tokens.radius.xl,
@@ -148,7 +143,7 @@ const styles = StyleSheet.create({
   cardBackground: {
     padding: 20,
     borderRadius: tokens.radius.xl,
-    minHeight: 160,
+    minHeight: 140,
   },
   topEdge: {
     position: 'absolute', top: 0, left: 0, right: 0, height: 1,
@@ -162,20 +157,7 @@ const styles = StyleSheet.create({
   leftCol: {
     flex: 1,
     paddingRight: 16,
-  },
-  badgeWrap: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-    marginBottom: 12,
-  },
-  badgeText: {
-    color: '#10B981', // Emerald
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.wider,
+    justifyContent: 'center',
   },
   bankName: {
     color: 'rgba(255,255,255,0.6)',
@@ -192,44 +174,38 @@ const styles = StyleSheet.create({
   },
   concreteReasonRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginTop: 'auto',
   },
   concreteTag: {
-    backgroundColor: '#0EA5E9', // Cyan accent
-    paddingHorizontal: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)', // soft emerald
+    paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 4,
     marginRight: 8,
-  },
-  concreteTagText: {
-    color: '#FFFFFF',
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
-  },
-  reasonText: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: tokens.fontSize.caption,
-    flex: 1,
-  },
-  starRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 'auto', // Push to bottom
   },
-  starText: {
-    color: '#FBBF24', // Amber/Gold
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.semibold,
+  concreteTagText: {
+    color: '#10B981',
+    fontSize: 9,
+    fontWeight: tokens.fontWeight.bold,
+    textTransform: 'uppercase',
+  },
+  reasonText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: tokens.fontSize.caption,
+    flex: 1,
+    lineHeight: 18,
   },
   rightCol: {
-    width: 110,
+    width: 100,
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
   miniArtWrap: {
-    width: 80,
-    height: 50,
+    width: 60,
+    height: 38,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
@@ -238,28 +214,29 @@ const styles = StyleSheet.create({
   },
   miniArt: {
     flex: 1,
-    padding: 6,
+    padding: 4,
     justifyContent: 'space-between',
   },
   miniArtBank: {
     color: 'rgba(255,255,255,0.8)',
-    fontSize: 6,
+    fontSize: 5,
     fontWeight: tokens.fontWeight.heavy,
   },
   miniArtNetwork: {
     color: 'rgba(255,255,255,0.8)',
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: tokens.fontWeight.heavy,
     alignSelf: 'flex-end',
   },
   rewardStats: {
     alignItems: 'flex-end',
+    width: '100%',
   },
   rewardAmount: {
     color: '#10B981',
-    fontSize: tokens.fontSize.hero,
+    fontSize: tokens.fontSize.headline,
     fontWeight: tokens.fontWeight.heavy,
-    lineHeight: 32,
+    marginBottom: 2,
   },
   rewardLabel: {
     color: 'rgba(255,255,255,0.5)',

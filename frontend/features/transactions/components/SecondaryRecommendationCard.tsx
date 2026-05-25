@@ -9,6 +9,7 @@ import { useThemeColors } from '../../theme/hooks/useThemeColors';
 import { tokens } from '../../../theme/tokens';
 import { getNetworkGradient } from '../../../theme/colors';
 import { useThemeStore } from '../../theme/store/themeStore';
+import { formatCurrencyIN } from '../../../utils/currency';
 
 interface SecondaryRecommendationCardProps {
   card: UserCardResponse;
@@ -32,11 +33,7 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
   const network = card.card_details?.network || 'default';
   const gradient = getNetworkGradient(network, isDark) as [string, string];
 
-  const estimatedReward = recommendation.cashback_amount 
-    ? `₹${Math.round(recommendation.cashback_amount)}`
-    : recommendation.reward_points
-      ? `${Math.round(recommendation.reward_points)}`
-      : `₹${Math.round(recommendation.effective_reward_value)}`;
+  const estimatedRewardValue = recommendation.cashback_amount || recommendation.reward_points || recommendation.effective_reward_value;
 
   // Naive icon mapping based on text
   const getIcon = () => {
@@ -66,7 +63,7 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
 
             <View style={styles.cardInfo}>
               <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
-              <Text style={styles.cardName} numberOfLines={1}>{cardName}</Text>
+              <Text style={styles.cardName} numberOfLines={1} adjustsFontSizeToFit>{cardName}</Text>
               <View style={styles.tagRow}>
                 {/* @ts-ignore */}
                 {getIcon()}
@@ -78,7 +75,9 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
           </View>
 
           <View style={styles.rightCol}>
-            <Text style={styles.rewardAmount}>{estimatedReward}</Text>
+            <Text style={styles.rewardAmount} numberOfLines={1} adjustsFontSizeToFit>
+              {formatCurrencyIN(estimatedRewardValue)}
+            </Text>
             <Text style={styles.rewardLabel}>EST. REWARD</Text>
           </View>
         </View>
@@ -157,6 +156,7 @@ const styles = StyleSheet.create({
   },
   rightCol: {
     alignItems: 'flex-end',
+    maxWidth: '40%',
   },
   rewardAmount: {
     color: '#10B981',
