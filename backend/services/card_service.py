@@ -118,6 +118,19 @@ class UserCardService:
         responses = [self._to_response(item) for item in items]
         return responses, total
 
+    async def fetch_raw_cards(
+        self, user_id: UUID, skip: int = 0, limit: int = 100
+    ) -> list:
+        """Fetch raw UserCard ORM entities with card_catalog eagerly loaded.
+
+        Intended for internal engine consumption (insights, recommendations)
+        where the full ORM object graph is needed, not just the API DTO.
+        """
+        items, _ = await self._user_card_repo.get_by_user(
+            user_id, skip=skip, limit=limit
+        )
+        return items
+
     async def get_card_by_id(
         self, user_id: UUID, card_id: UUID
     ) -> UserCardResponse:

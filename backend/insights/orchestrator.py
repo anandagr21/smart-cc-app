@@ -39,12 +39,11 @@ class InsightOrchestrator:
         """
         End-to-end orchestration pipeline for intelligence generation.
         """
-        # 1. Fetch user state
-        cards, _ = await self.card_service.get_user_cards(user_id, skip=0, limit=100)
+        # 1. Fetch user state — use raw ORM models so generators can access card_catalog
+        cards = await self.card_service.fetch_raw_cards(user_id, skip=0, limit=100)
         
         # We need raw transactions to enrich them
-        transactions_paginated = await self.transaction_service.get_user_transactions(user_id, skip=0, limit=200)
-        raw_transactions = transactions_paginated.items
+        raw_transactions = await self.transaction_service.fetch_raw_transactions(user_id, skip=0, limit=200)
         
         # 2. Enrich transactions
         enriched_txns = await self.enrichment_service.enrich_transactions(raw_transactions)

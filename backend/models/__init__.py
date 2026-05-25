@@ -11,6 +11,7 @@ from models.card_catalog import CardCatalog
 from models.user import User
 from models.user_card import UserCard
 from models.insight_suppression import InsightSuppression
+from models.transaction_optimization import TransactionOptimizationRecord
 
 __all__ = [
     "CardCatalog",
@@ -19,4 +20,5 @@ __all__ = [
     "User",
     "UserCard",
     "InsightSuppression",
+    "TransactionOptimizationRecord",
 ]

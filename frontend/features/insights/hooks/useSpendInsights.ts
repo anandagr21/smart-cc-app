@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../core/api/client';
+import { api } from '../../../services/api/client';
 import { QueryKeys } from '../../core/api/queryKeys';
 import { InsightResult } from '../types/insight.types';
 
@@ -13,7 +13,7 @@ export function useSpendInsights() {
   });
 
   const getInsightForCard = (cardId: string): InsightResult | undefined => {
-    return insights.find(i => i.relatedCardId === cardId);
+    return insights.find(i => i.related_card_id === cardId);
   };
 
   const primaryInsight = insights.length > 0 ? insights[0] : null;

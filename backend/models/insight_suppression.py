@@ -17,8 +17,17 @@ class InsightSuppression(SQLModel, table=True):
     # Hash representing semantically unique insight (e.g. 'FEE_WAIVER_card_123')
     insight_hash: str = Field(index=True)
     
+    # Scope of the suppression (e.g., 'GENERAL', 'MONTHLY')
+    scope: str = Field(default="GENERAL", index=True)
+    
+    # Grouping for novelty suppression (e.g., 'DINING_OPTIMIZATION_IMPROVED')
+    novelty_group: Optional[str] = Field(default=None, index=True)
+    
+    # The period this suppression applies to (e.g., '2026-05')
+    period: Optional[str] = Field(default=None, index=True)
+    
     # Track the last time this specific insight was surfaced to the user
-    last_shown_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_shown_at: datetime = Field(default_factory=datetime.utcnow)
     
     # Whether the user explicitly dismissed this insight
     is_dismissed: bool = Field(default=False)
@@ -29,8 +38,8 @@ class InsightSuppression(SQLModel, table=True):
     # Optional metadata or reason for suppression (e.g., 'user_dismissed', 'cooldown')
     suppression_reason: Optional[str] = Field(default=None)
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc)},
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
     )

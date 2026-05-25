@@ -7,6 +7,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from auth.dependencies import get_current_user
 from auth.schemas import UserResponse
 from core.database import get_db
+from api.deps import get_user_card_repo
+from services.card_service import UserCardService
 from insights.enrichment.transaction_enrichment import TransactionEnrichmentService
 from insights.generators.missed_rewards import MissedRewardsGenerator
 from insights.orchestrator import InsightOrchestrator
@@ -16,30 +18,31 @@ from merchants.repository import AliasRepository, MerchantRepository
 from merchants.service import MerchantService
 from recommendations.orchestrator import RecommendationOrchestrator
 from recommendations.service import RecommendationService
+from repositories.card_repository import UserCardRepository
 from rewards.service import RewardRuleService
-from services.card_service import UserCardService
 from transactions.repository import TransactionRepository
 from transactions.service import TransactionService
 
 router = APIRouter(prefix="/insights", tags=["insights"])
 
 def get_insight_orchestrator(
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user_card_repo: UserCardRepository = Depends(get_user_card_repo),
 ) -> InsightOrchestrator:
     # Build dependencies
-    merchant_repo = MerchantRepository(db)
-    alias_repo = AliasRepository(db)
+    merchant_repo = MerchantRepository(session=db)
+    alias_repo = AliasRepository(session=db)
     merchant_service = MerchantService(merchant_repo, alias_repo)
     
-    card_service = UserCardService(db)
-    tx_repo = TransactionRepository(db)
-    tx_service = TransactionService(tx_repo)
+    card_service = UserCardService(user_card_repo=user_card_repo)
+    tx_repo = TransactionRepository(session=db)
+    tx_service = TransactionService(tx_repo, merchant_service)
     
     enrichment_service = TransactionEnrichmentService(merchant_service)
-    cooldown_engine = CooldownEngine(db)
+    cooldown_engine = CooldownEngine(db=db)
     
     # Recommendation dependencies for Missed Rewards
-    reward_rule_service = RewardRuleService(db)
+    reward_rule_service = RewardRuleService(session=db)
     rec_orch = RecommendationOrchestrator(merchant_service, card_service, reward_rule_service)
     rec_service = RecommendationService(rec_orch)
     missed_rewards_gen = MissedRewardsGenerator(rec_service)

@@ -33,7 +33,13 @@ class UnderutilizedCardGenerator(InsightGenerator):
                 continue
                 
             last_usage_date = last_used.get(str(card.id))
-            days_inactive = (now - last_usage_date).days if last_usage_date else 90
+            if last_usage_date:
+                # Ensure offset-aware for safe subtraction with now (which is UTC-aware)
+                if last_usage_date.tzinfo is None:
+                    last_usage_date = last_usage_date.replace(tzinfo=timezone.utc)
+                days_inactive = (now - last_usage_date).days
+            else:
+                days_inactive = 90
             
             # We care most about premium fee-bearing cards going unused
             annual_fee = float(card.card_catalog.annual_fee) if card.card_catalog and card.card_catalog.annual_fee else 0

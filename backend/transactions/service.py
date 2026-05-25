@@ -7,6 +7,7 @@ Architectural Boundaries:
 - No DB queries, no reward logic, no recommendation logic.
 """
 
+from datetime import date
 from typing import Optional
 from uuid import UUID
 
@@ -151,6 +152,18 @@ class TransactionService:
             await self._spend_aggregator.recalculate_card_spend(updated.user_card_id)
             
         return self._to_response(updated)
+
+    async def fetch_raw_transactions(
+        self, user_id: UUID, skip: int = 0, limit: int = 200
+    ) -> list[Transaction]:
+        """Fetch raw Transaction ORM entities for internal engine consumption."""
+        return await self._repository.get_transactions_by_user(user_id, skip=skip, limit=limit)
+
+    async def fetch_raw_transactions_by_date(
+        self, user_id: UUID, start_date: date, end_date: date
+    ) -> list[Transaction]:
+        """Fetch raw Transaction ORM entities within a date range."""
+        return await self._repository.get_transactions_by_date_range(user_id, start_date, end_date)
 
     @staticmethod
     def _to_response(entity: Transaction) -> TransactionResponse:

@@ -30,7 +30,7 @@ class CooldownEngine:
         result = await self.db.execute(stmt)
         suppressions = result.scalars().all()
 
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         suppressed_hashes = set()
 
         for supp in suppressions:
@@ -45,7 +45,7 @@ class CooldownEngine:
         """
         Record that an insight was shown, setting its cooldown.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         # Check if exists
         stmt = select(InsightSuppression).where(
             InsightSuppression.user_id == user_id,
@@ -91,7 +91,7 @@ class CooldownEngine:
             suppression.is_dismissed = True
             suppression.suppression_reason = "user_dismissed"
         else:
-            now = datetime.now(timezone.utc)
+            now = datetime.utcnow()
             suppression = InsightSuppression(
                 user_id=user_id,
                 insight_category="UNKNOWN",

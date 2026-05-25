@@ -67,6 +67,22 @@ class TransactionRepository:
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_transactions_by_date_range(
+        self, user_id: UUID, start_date: date, end_date: date
+    ) -> list[Transaction]:
+        """Fetch all transactions for a user within a specific date range."""
+        stmt = (
+            select(Transaction)
+            .where(
+                Transaction.user_id == user_id,
+                Transaction.transaction_date >= start_date,
+                Transaction.transaction_date <= end_date
+            )
+            .order_by(Transaction.transaction_date.desc())
+        )
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
     async def update_transaction_status(
         self, transaction_id: UUID, status: TransactionStatus, posted_date: Optional[date] = None
     ) -> Transaction:

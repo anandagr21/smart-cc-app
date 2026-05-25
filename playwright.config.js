@@ -3,7 +3,7 @@ const { defineConfig } = require('@playwright/test');
 
 module.exports = defineConfig({
     testDir: './brain',
-    testMatch: 'smart_cc_ui_verification.js',
+    testMatch: ['smart_cc_ui_verification.js', 'backend_intelligence_verification.js'],
     timeout: 60000,
     use: {
         baseURL: 'http://localhost:8081',

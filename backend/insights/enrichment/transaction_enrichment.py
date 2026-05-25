@@ -44,8 +44,8 @@ class TransactionEnrichmentService:
                 amount=float(tx.amount),
                 normalized_merchant_name=normalized_name,
                 category=category,
-                date=tx.date.isoformat(),
-                card_id=str(tx.card_id) if tx.card_id else None
+                date=tx.transaction_date.isoformat(),
+                card_id=str(tx.user_card_id) if tx.user_card_id else None
             ))
             
         return enriched
