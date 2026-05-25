@@ -31,6 +31,7 @@ import { useFuseSearch } from '../../../shared/search/useFuseSearch';
 import { WalletListRow } from './WalletListRow';
 import { HeroRecommendationCard } from './HeroRecommendationCard';
 import { SecondaryRecommendationCard } from './SecondaryRecommendationCard';
+import { RecommendationExplainabilitySheet } from './RecommendationExplainabilitySheet';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { FeatureFlags } from '../../../config/features';
@@ -94,6 +95,9 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
 
   // Search Query for Wallet
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Explainability Sheet
+  const [showExplainability, setShowExplainability] = useState(false);
 
   // Fetch recommendations
   useEffect(() => {
@@ -322,11 +326,11 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
               <View style={styles.recommendationSection}>
                 <View style={styles.recommendationHeader}>
                   <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ BEST FOR THIS TRANSACTION</Text>
-                  <View style={styles.infoWrap}>
+                  <TouchableOpacity style={styles.infoWrap} onPress={() => setShowExplainability(true)} activeOpacity={0.7}>
                     <Text style={styles.infoText}>Why these?</Text>
                     {/* @ts-ignore */}
                     <Info size={14} color="rgba(255,255,255,0.4)" style={{ marginLeft: 4 }} />
-                  </View>
+                  </TouchableOpacity>
                 </View>
 
                 {/* Hero #1 Card */}
@@ -428,6 +432,12 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
+
+      <RecommendationExplainabilitySheet
+        visible={showExplainability}
+        onClose={() => setShowExplainability(false)}
+        recommendedCards={recommendedWalletCards}
+      />
     </Modal>
   );
 };
