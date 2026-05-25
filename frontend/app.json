@@ -3,6 +3,7 @@
     "name": "temp_expo",
     "slug": "temp_expo",
     "version": "1.0.0",
+    "scheme": "smartcc",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

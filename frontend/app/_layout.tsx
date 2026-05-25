@@ -51,7 +51,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-          <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
+          <Stack.Screen name="(auth)/login" options={{ animation: 'fade' }} />
           <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         </Stack>
       </QueryClientProvider>
