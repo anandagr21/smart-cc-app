@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, SectionList, RefreshControl, StyleSheet } from 'react-native';
-import { Plus } from 'lucide-react-native';
+import { Plus, X } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { useTransactions } from '../../features/transactions/hooks/useTransactions';
+import { useCards } from '../../features/cards/hooks/useCards';
 import { groupTransactionsByDate } from '../../features/transactions/utils/dateGrouping';
 import { TransactionRow } from '../../features/transactions/components/TransactionRow';
 import { EmptyTransactionState } from '../../features/transactions/components/EmptyTransactionState';
@@ -18,7 +20,13 @@ import { useThemeStore } from '../../features/theme/store/themeStore';
 import { tokens } from '../../theme/tokens';
 
 export default function HistoryScreen() {
-  const { data, isLoading, isRefetching, refetch, fetchNextPage, hasNextPage } = useTransactions();
+  const { cardId } = useLocalSearchParams<{ cardId?: string }>();
+  const router = useRouter();
+  
+  const { data: cards } = useCards();
+  const filteredCard = cards?.find(c => c.id === cardId);
+
+  const { data, isLoading, isRefetching, refetch, fetchNextPage, hasNextPage } = useTransactions({ cardId });
   const [isFormSheetVisible, setFormSheetVisible] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<TransactionResponse | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
@@ -55,6 +63,10 @@ export default function HistoryScreen() {
     [handleTransactionPress]
   );
 
+  const handleClearFilter = () => {
+    router.setParams({ cardId: '' });
+  };
+
   return (
     <ScreenContainer noPadding>
       <View style={styles.header}>
@@ -83,13 +95,40 @@ export default function HistoryScreen() {
         )}
       </View>
 
+      {cardId && filteredCard && (
+        <Animated.View entering={FadeInDown.delay(80).springify()} style={styles.filterWrap}>
+          <TouchableOpacity 
+            style={[styles.filterPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} 
+            onPress={handleClearFilter}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.filterText, { color: colors.primary }]}>
+              {filteredCard.nickname || filteredCard.card_details?.card_name || 'Card'}
+            </Text>
+            {/* @ts-ignore */}
+            <X size={14} color={colors.primary} style={{ marginLeft: 6 }} />
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
       <View style={styles.listContainer}>
         {isLoading ? (
           <View style={{ paddingHorizontal: 24 }}>
             <TransactionListSkeleton />
           </View>
         ) : allTransactions.length === 0 ? (
-          <EmptyTransactionState onAddPress={handleOpenAdd} />
+          cardId ? (
+            <View style={styles.filteredEmptyState}>
+              <Text style={[styles.emptyFilteredText, { color: colors.textSecondary }]}>
+                No transactions found for {filteredCard?.nickname || filteredCard?.card_details?.card_name || 'this card'} yet.
+              </Text>
+              <TouchableOpacity onPress={handleClearFilter} style={styles.clearBtn}>
+                <Text style={[styles.clearBtnText, { color: colors.primary }]}>Clear Filter</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <EmptyTransactionState onAddPress={handleOpenAdd} />
+          )
         ) : (
           <SectionList
             sections={groupedTransactions}
@@ -189,5 +228,43 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 140,
+  },
+  filterWrap: {
+    paddingHorizontal: tokens.layout.screenPadding,
+    marginBottom: 16,
+    flexDirection: 'row',
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: tokens.radius.full,
+    borderWidth: 1,
+  },
+  filterText: {
+    fontSize: tokens.fontSize.micro,
+    fontWeight: tokens.fontWeight.bold,
+  },
+  filteredEmptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 64,
+  },
+  emptyFilteredText: {
+    fontSize: tokens.fontSize.body,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  clearBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  clearBtnText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.bold,
   },
 });

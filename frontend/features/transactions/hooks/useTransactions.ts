@@ -4,10 +4,10 @@ import { TransactionCreate } from '../types/transaction.types';
 import { QueryKeys } from '../../core/api/queryKeys';
 import { invalidateTransactionsAndWallet } from '../../core/api/queryUtils';
 
-export function useTransactions() {
+export function useTransactions(filters?: { cardId?: string }) {
   return useInfiniteQuery({
-    queryKey: QueryKeys.transactions.feed(),
-    queryFn: ({ pageParam = 0 }) => transactionService.fetchUserTransactions(pageParam, 50),
+    queryKey: QueryKeys.transactions.feed(filters),
+    queryFn: ({ pageParam = 0 }) => transactionService.fetchUserTransactions(pageParam, 50, filters?.cardId),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       const currentCount = allPages.reduce((acc, page) => acc + page.data.length, 0);

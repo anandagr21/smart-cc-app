@@ -15,7 +15,6 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Store, X, Search, Info } from 'lucide-react-native';
-import Fuse from 'fuse.js';
 
 import { TransactionResponse } from '../types/transaction.types';
 import { Input } from '../../../components/ui/Input';
@@ -28,6 +27,7 @@ import { useThemeColors } from '../../theme/hooks/useThemeColors';
 import { useThemeStore } from '../../theme/store/themeStore';
 import { tokens } from '../../../theme/tokens';
 import { useDebounce } from '../../../hooks/useDebounce';
+import { useFuseSearch } from '../../../shared/search/useFuseSearch';
 import { WalletListRow } from './WalletListRow';
 import { HeroRecommendationCard } from './HeroRecommendationCard';
 import { SecondaryRecommendationCard } from './SecondaryRecommendationCard';
@@ -178,17 +178,17 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   }, [topRanked, cardsData]);
 
   // Full Wallet
-  const fuse = useMemo(() => {
-    return new Fuse(cardsData || [], {
-      keys: ['card_details.bank_name', 'nickname', 'card_details.card_name', 'card_details.network'],
-      threshold: 0.3,
-    });
-  }, [cardsData]);
-
-  const filteredCards = useMemo(() => {
-    if (!searchQuery.trim()) return cardsData || [];
-    return fuse.search(searchQuery).map(result => result.item);
-  }, [searchQuery, fuse, cardsData]);
+  const { results: filteredCards } = useFuseSearch({
+    items: cardsData || [],
+    query: searchQuery,
+    keys: [
+      { name: 'card_details.card_name', weight: 0.7 },
+      { name: 'nickname', weight: 0.7 },
+      { name: 'card_details.bank_name', weight: 0.3 },
+      { name: 'card_details.network', weight: 0.2 },
+    ],
+    threshold: 0.3,
+  });
 
   const groupedWallet = useMemo(() => {
     return filteredCards.reduce((acc, card) => {

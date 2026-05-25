@@ -1,7 +1,7 @@
 export const QueryKeys = {
   transactions: {
     all: ['transactions'] as const,
-    feed: () => [...QueryKeys.transactions.all, 'feed'] as const,
+    feed: (filters?: { cardId?: string }) => [...QueryKeys.transactions.all, 'feed', ...(filters ? [filters] : [])] as const,
     byCard: (cardId: string) => [...QueryKeys.transactions.all, 'card', cardId] as const,
     detail: (transactionId: string) => [...QueryKeys.transactions.all, 'detail', transactionId] as const,
   },

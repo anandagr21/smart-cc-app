@@ -6,8 +6,9 @@ class TransactionService {
   /**
    * Fetch all transactions for the current user
    */
-  async fetchUserTransactions(skip: number = 0, limit: number = 50): Promise<PaginatedResponse<TransactionResponse>> {
-    const { data } = await apiClient.get<PaginatedResponse<TransactionResponse>>('/transactions', {
+  async fetchUserTransactions(skip: number = 0, limit: number = 50, cardId?: string): Promise<PaginatedResponse<TransactionResponse>> {
+    const url = cardId ? `/transactions/card/${cardId}` : '/transactions';
+    const { data } = await apiClient.get<PaginatedResponse<TransactionResponse>>(url, {
       params: { skip, limit },
     });
     return data;
