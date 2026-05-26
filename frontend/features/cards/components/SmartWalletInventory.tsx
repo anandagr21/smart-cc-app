@@ -91,19 +91,20 @@ export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ card
     );
   }
 
+  const TypedFlashList = FlashList as any;
+
   return (
     <View style={styles.container}>
-      {/* @ts-ignore */}
-      <FlashList
+      <TypedFlashList
         data={data}
         renderItem={renderItem}
         ListHeaderComponent={ListHeaderComponent}
-        keyExtractor={(item: any, index) => {
+        keyExtractor={(item: any, index: number) => {
           if (!isGroupingEnabled) return item.id;
           return item.type === 'header' ? `header-${item.bank}` : `card-${item.card.id}`;
         }}
         estimatedItemSize={76} // estimated height of WalletInventoryRow
-        getItemType={(item) => (!isGroupingEnabled ? 'card' : item.type)}
+        getItemType={(item: any) => (!isGroupingEnabled ? 'card' : item.type)}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }} // safe area for bottom tabs
       />

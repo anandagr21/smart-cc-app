@@ -1,6 +1,7 @@
 import { InsightResult, InsightPriority } from '../types/insight.types';
 
 const PRIORITY_WEIGHTS: Record<InsightPriority, number> = {
+  URGENT: 4000,
   HIGH: 3000,
   MEDIUM: 2000,
   INFORMATIONAL: 1000,
@@ -24,8 +25,8 @@ export function prioritizeInsights(insights: InsightResult[]): InsightResult[] {
     }
 
     // 2. Monetary Value Tiebreaker (if applicable)
-    const valA = a.monetaryValue || 0;
-    const valB = b.monetaryValue || 0;
+    const valA = a.monetary_value || 0;
+    const valB = b.monetary_value || 0;
 
     if (valA !== valB) {
       return valB - valA; // Higher monetary value wins

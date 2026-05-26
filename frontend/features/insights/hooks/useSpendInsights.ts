@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../../services/api/client';
+import { apiClient } from '../../../services/api/client';
 import { QueryKeys } from '../../core/api/queryKeys';
 import { InsightResult } from '../types/insight.types';
 
@@ -7,7 +7,7 @@ export function useSpendInsights() {
   const { data: insights = [], isLoading } = useQuery<InsightResult[]>({
     queryKey: QueryKeys.insights.all,
     queryFn: async () => {
-      const response = await api.get('/insights/');
+      const response = await apiClient.get('/insights/');
       return response.data;
     },
   });
