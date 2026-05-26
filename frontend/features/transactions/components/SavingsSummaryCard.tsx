@@ -18,14 +18,11 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
   const colors = useThemeColors();
   const animatedValue = useSharedValue(0);
 
-  if (!transactions || transactions.length === 0) return null;
-
-  const totalRewards = transactions.reduce((sum, tx) => {
+  const totalRewards = (transactions || []).reduce((sum, tx) => {
+    if (!tx) return sum;
     const reward = typeof tx.reward_earned === 'string' ? parseFloat(tx.reward_earned) : (tx.reward_earned || 0);
-    return sum + reward;
+    return sum + (isNaN(reward) ? 0 : reward);
   }, 0);
-  
-  if (totalRewards === 0) return null;
 
   useEffect(() => {
     animatedValue.value = withTiming(totalRewards, { duration: 1500 });
@@ -39,8 +36,10 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
     } as any;
   });
 
+  if (!transactions || transactions.length === 0 || totalRewards === 0) return null;
+
   const categoryRewards = transactions.reduce((acc, tx) => {
-    if (tx.reward_earned && tx.category) {
+    if (tx && tx.reward_earned && tx.category) {
       const reward = typeof tx.reward_earned === 'string' ? parseFloat(tx.reward_earned) : tx.reward_earned;
       acc[tx.category] = (acc[tx.category] || 0) + reward;
     }

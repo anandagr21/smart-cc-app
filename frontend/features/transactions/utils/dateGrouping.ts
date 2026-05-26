@@ -5,6 +5,7 @@ export function groupTransactionsByDate(transactions: TransactionResponse[]): Tr
   const groups: Record<string, TransactionResponse[]> = {};
 
   transactions.forEach((tx) => {
+    if (!tx || !tx.transaction_date) return;
     // transaction_date is YYYY-MM-DD
     const date = parseISO(tx.transaction_date);
     let groupTitle = '';

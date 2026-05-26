@@ -237,3 +237,4 @@ async def deactivate_user_card(
         user_id=current_user.id, card_id=card_id
     )
     return SingleResponse(data=result)
+

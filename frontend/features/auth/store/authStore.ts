@@ -42,17 +42,23 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
   login: async (token, user) => {
     await setItemAsync('auth_token', token);
+    await setItemAsync('auth_user', JSON.stringify(user));
     set({ token, user });
   },
   logout: async () => {
     await deleteItemAsync('auth_token');
+    await deleteItemAsync('auth_user');
     set({ token: null, user: null });
   },
   initializeAuth: async () => {
     try {
       const token = await getItemAsync('auth_token');
-      if (token) {
-        // Here you would typically fetch user details if needed
+      const userStr = await getItemAsync('auth_user');
+      
+      if (token && userStr) {
+        set({ token, user: JSON.parse(userStr), isLoading: false });
+      } else if (token) {
+        // Fallback if we only have token
         set({ token, isLoading: false });
       } else {
         set({ isLoading: false });

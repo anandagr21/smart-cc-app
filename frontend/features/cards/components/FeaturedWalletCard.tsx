@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Sparkles } from 'lucide-react-native';
+import { Sparkles, CheckCircle2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { UserCardResponse } from '../../cards/types/api';
@@ -9,16 +9,17 @@ import { tokens } from '../../../theme/tokens';
 import { getNetworkGradient } from '../../../theme/colors';
 import { useThemeStore } from '../../theme/store/themeStore';
 import { formatCurrencyIN } from '../../../utils/currency';
-import { derivePrimaryInsight } from '../utils/cardIntelligence';
-import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
+import { InsightResult } from '../../insights/types/insight.types';
 
 interface FeaturedWalletCardProps {
   card: UserCardResponse;
+  insight?: InsightResult;
   onPress: () => void;
 }
 
 export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   card,
+  insight,
   onPress,
 }) => {
   const colors = useThemeColors();
@@ -28,29 +29,31 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   const network = card.card_details?.network || 'VISA';
-  const isActiveCard = card.is_active;
 
-  // Primary Intelligence Insight
-  const insight = derivePrimaryInsight(card, colors);
-  const waiver = deriveFeeWaiverProgress(card);
-
-  const topTag = insight.label;
-  const topTagColor = insight.color;
+  // Fallback values if no specific AI insight exists
+  const topTag = insight?.badge_label || (card.is_active ? 'ACTIVE CARD' : 'INACTIVE');
+  const topTagColor = insight?.badge_color || (card.is_active ? colors.success : colors.textSecondary);
+  const IconComponent = CheckCircle2; // Hardcode or map by category later
 
   // Actionable Insight Rendering
   let actionableContent;
-  if (topTag === 'NEAR WAIVER') {
+  
+  if (insight?.category === 'FEE_WAIVER' && insight.monetary_value !== undefined) {
+    const currentSpend = Number(card.current_spend) || 0;
+    const target = currentSpend + insight.monetary_value;
+    const percentComplete = Math.min((currentSpend / target) * 100, 100);
+
     actionableContent = (
       <View style={styles.waiverSection}>
         <View style={styles.waiverHeader}>
           <Text style={styles.waiverText}>
             <Text style={{ color: colors.success, fontWeight: 'bold' }}>
-              {formatCurrencyIN(waiver.currentSpend)}
+              {formatCurrencyIN(currentSpend)}
             </Text>
-            {' / '}{formatCurrencyIN(waiver.target)}
+            {' / '}{formatCurrencyIN(target)}
           </Text>
           <Text style={[styles.waiverPercent, { color: colors.success }]}>
-            {Math.min(waiver.percentComplete, 100).toFixed(0)}%
+            {percentComplete.toFixed(0)}%
           </Text>
         </View>
         <View style={styles.progressTrack}>
@@ -58,43 +61,28 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
             style={[
               styles.progressFill, 
               { 
-                width: `${Math.min(waiver.percentComplete, 100)}%`,
+                width: `${percentComplete}%`,
                 backgroundColor: colors.success
               }
             ]} 
           />
         </View>
         <Text style={styles.waiverSub}>
-          {formatCurrencyIN(waiver.remainingAmount)} remaining for waiver
+          {insight.summary}
         </Text>
       </View>
     );
   } else {
-    let subtext = '';
-    if (topTag === 'HIGHEST SPEND' || topTag === 'MOST USED') {
-      subtext = `${formatCurrencyIN(card.annual_spend)} annual spend`;
-    } else if (topTag === 'TRAVEL PICK') {
-      subtext = 'Optimized for travel rewards';
-    } else if (topTag === 'ONLINE REWARDS') {
-      subtext = 'Best for online shopping';
-    } else if (topTag === 'DINING BENEFITS') {
-      subtext = 'Best for dining and delivery';
-    } else if (topTag === 'FUEL OPTIMIZED') {
-      subtext = 'Best for fuel surcharges';
-    } else {
-      subtext = card.is_active ? 'Active and ready to use' : 'Inactive in wallet';
-    }
-
     actionableContent = (
       <View style={styles.insightRow}>
-        {/* @ts-ignore */}
-        <insight.icon size={12} color={topTagColor} style={{ marginRight: 6 }} />
-        <Text style={styles.insightText} numberOfLines={1}>{subtext}</Text>
+        <IconComponent size={12} color={topTagColor} style={{ marginRight: 6, flexShrink: 0 }} />
+        <Text style={styles.insightText} numberOfLines={2}>
+          {insight?.summary || `${formatCurrencyIN(card.annual_spend)} annual spend`}
+        </Text>
       </View>
     );
   }
 
-  // Derive mini-card gradient from network
   const networkGradient = getNetworkGradient(network, isDark) as [string, string];
 
   return (
@@ -117,11 +105,6 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
               <View style={[styles.badgeWrap, { backgroundColor: `${topTagColor}20` }]}>
                 <Text style={[styles.badgeText, { color: topTagColor }]}>{topTag}</Text>
               </View>
-              {topTag === 'BEST CASHBACK' && (
-                <View style={styles.crownWrap}>
-                  <Text style={{ fontSize: 10 }}>👑</Text>
-                </View>
-              )}
             </View>
 
             <View style={styles.namesWrap}>
@@ -138,7 +121,6 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
               <View style={styles.networkInfo}>
                 <Text style={styles.networkName}>{network.toUpperCase()}</Text>
                 <Text style={styles.cardEnds}>•••• 1234</Text>
-                {/* Hardcoded for now if backend lacks last4 */}
               </View>
             </View>
           </View>

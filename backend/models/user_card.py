@@ -77,12 +77,37 @@ class UserCard(SQLModel, table=True):
         default=None,
         description="The start date of the annual fee cycle (used to calculate waiver period).",
     )
+    user_override_annual_fee: Decimal | None = Field(
+        default=None,
+        max_digits=12,
+        decimal_places=2,
+        ge=Decimal("0.00"),
+        description="User-calibrated override for the annual fee.",
+    )
+    fee_override_updated_at: datetime | None = Field(
+        default=None,
+        description="UTC timestamp when the user last calibrated the fee.",
+    )
+    fee_override_source: str | None = Field(
+        default=None,
+        max_length=50,
+        description="Source of the override (e.g., 'USER', 'ISSUER_PROMO').",
+    )
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column_kwargs={"onupdate": datetime.utcnow},
     )
+
+    @property
+    def effective_annual_fee(self) -> Decimal:
+        """Returns the user-calibrated fee if it exists, otherwise falls back to the catalog fee."""
+        if self.user_override_annual_fee is not None:
+            return self.user_override_annual_fee
+        if self.card_catalog is not None:
+            return self.card_catalog.annual_fee
+        return Decimal("0.00")
 
     # ---- Relationships ----
     card_catalog: "CardCatalog" = Relationship(

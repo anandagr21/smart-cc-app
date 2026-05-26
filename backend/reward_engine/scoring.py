@@ -43,7 +43,7 @@ def score_recommendation(
     if fee_waiver_data.get("fee_waiver_threshold"):
         if not fee_waiver_data.get("waiver_achieved"):
             remaining = float(fee_waiver_data.get("remaining_spend_for_waiver", 0))
-            annual_fee = float(fee_waiver_data.get("annual_fee", 0))
+            annual_fee = float(fee_waiver_data.get("effective_annual_fee", 0))
             waiver_threshold = float(fee_waiver_data.get("fee_waiver_threshold", 0))
             
             if remaining > 0 and annual_fee > 0 and waiver_threshold > 0:
