@@ -19,12 +19,12 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
   // Derive the top featured cards based on insights
   const featuredCards = useMemo(() => {
     if (!cards || cards.length === 0) return [];
-    
+
     // Get all cards that have a specific high/medium priority insight
-    const cardsWithInsights = cards.filter(c => 
+    const cardsWithInsights = cards.filter(c =>
       insights.some(i => i.related_card_id === c.id && (i.priority === 'HIGH' || i.priority === 'MEDIUM' || i.priority === 'URGENT'))
     );
-    
+
     // If not enough insights, fallback to highest spend / active cards
     if (cardsWithInsights.length < 3) {
       const activeCards = cards.filter(c => c.is_active && !cardsWithInsights.some(ci => ci.id === c.id));
@@ -52,21 +52,21 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
         </View>
       </View>
 
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         decelerationRate="fast"
-        snapToInterval={220 + 16} // card width + margin
+        snapToInterval={240 + 16} // updated card width + margin
       >
         {featuredCards.map(card => {
           const insight = insights.find(i => i.related_card_id === card.id);
           return (
-            <FeaturedWalletCard 
-              key={card.id} 
-              card={card} 
+            <FeaturedWalletCard
+              key={card.id}
+              card={card}
               insight={insight}
-              onPress={() => onSelectCard(card)} 
+              onPress={() => onSelectCard(card)}
             />
           );
         })}
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    marginBottom: 16,
+    marginBottom: 8, // Reduced to balance the new paddingTop
   },
   titleWrap: {
     flexDirection: 'row',
@@ -108,5 +108,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingBottom: 24,
+    paddingTop: 16, // Added to prevent ambientGlow clipping at the top
+    gap: 22,
   },
 });

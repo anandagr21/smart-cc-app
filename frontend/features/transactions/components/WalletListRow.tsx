@@ -7,6 +7,7 @@ import { RankedCardResponse } from '../../recommendations/types/api';
 import { useThemeColors } from '../../theme/hooks/useThemeColors';
 import { useThemeStore } from '../../theme/store/themeStore';
 import { tokens } from '../../../theme/tokens';
+import { formatCurrencyIN } from '../../../utils/currency';
 
 interface WalletListRowProps {
   card: UserCardResponse;
@@ -28,9 +29,26 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   
+  const strategyLabelMap: Record<string, string> = {
+    'MAX_REWARD': 'Max Reward',
+    'FEE_WAIVER_PRESERVATION': 'Waiver Optimized',
+    'MILESTONE_ACCELERATION': 'Milestone Boost',
+    'PORTFOLIO_OPTIMIZED': 'Long-Term Value',
+  };
+
+  const getBadgeText = () => {
+    if (!recommendation) return '';
+    const strategyName = recommendation.primary_strategy 
+      ? (strategyLabelMap[recommendation.primary_strategy] || recommendation.primary_strategy)
+      : recommendation.reason_title;
+    
+    const value = formatCurrencyIN(recommendation.total_projected_value || recommendation.portfolio_score || 0);
+    return `${strategyName} · ${value}`;
+  };
+  
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: withSpring(isActive ? 1.02 : 1, { damping: 20, stiffness: 200 }) }],
+      transform: [{ scale: withSpring(isActive ? 1.01 : 1, { damping: 20, stiffness: 200 }) }],
       borderColor: withSpring(isActive ? colors.success : 'transparent'),
       backgroundColor: withSpring(isActive ? colors.surfaceElevated : colors.background),
       opacity: card.card_status === 'ACTIVE' ? 1 : 0.5,
@@ -59,11 +77,9 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
           {recommendation && card.card_status === 'ACTIVE' && (
             <Animated.View entering={FadeIn} style={styles.recommendationBadge}>
               {/* @ts-ignore */}
-              <Sparkles size={12} color={colors.success} style={{ marginRight: 4 }} />
-              <Text style={[styles.recommendationText, { color: colors.success }]}>
-                {recommendation.reward_type === 'CASHBACK' && recommendation.cashback_amount
-                  ? `₹${recommendation.cashback_amount}`
-                  : recommendation.recommendation_reason || 'Good choice'}
+              <Sparkles size={10} color={colors.success} style={{ marginRight: 4 }} />
+              <Text style={[styles.recommendationText, { color: colors.success }]} numberOfLines={1}>
+                {getBadgeText()}
               </Text>
             </Animated.View>
           )}
@@ -72,11 +88,8 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
             {isActive && card.card_status === 'ACTIVE' && (
               <Animated.View entering={FadeIn.duration(200)}>
                 {/* @ts-ignore */}
-                <CheckCircle2 size={20} color={colors.success} weight="fill" />
+                <CheckCircle2 size={18} color={colors.success} weight="fill" />
               </Animated.View>
-            )}
-            {!isActive && card.card_status === 'ACTIVE' && (
-              <View style={[styles.emptyCircle, { borderColor: colors.border }]} />
             )}
             {card.card_status !== 'ACTIVE' && (
               <View style={styles.inactiveBadgeWrapper}>
@@ -126,6 +139,7 @@ const styles = StyleSheet.create({
   rightContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 0,
   },
   recommendationBadge: {
     flexDirection: 'row',
@@ -134,23 +148,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: tokens.radius.full,
-    marginRight: 12,
+    marginRight: 8,
+    maxWidth: 160, // Prevent taking up the whole row
   },
   recommendationText: {
-    fontSize: tokens.fontSize.micro,
+    fontSize: tokens.fontSize.micro - 1,
     fontWeight: tokens.fontWeight.bold,
+    textTransform: 'uppercase',
   },
   checkCircleWrapper: {
     width: 20,
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  emptyCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.5,
   },
   inactiveBadgeWrapper: {
     backgroundColor: 'rgba(150,150,150,0.1)',

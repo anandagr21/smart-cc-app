@@ -33,51 +33,39 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   // Fallback values if no specific AI insight exists
   const topTag = insight?.badge_label || (card.is_active ? 'ACTIVE CARD' : 'INACTIVE');
   const topTagColor = insight?.badge_color || (card.is_active ? colors.success : colors.textSecondary);
-  const IconComponent = CheckCircle2; // Hardcode or map by category later
 
-  // Actionable Insight Rendering
+  // Actionable Insight Rendering (Minimal UI for the bottom left)
   let actionableContent;
   
   if (insight?.category === 'FEE_WAIVER' && insight.monetary_value !== undefined) {
     const currentSpend = Number(card.current_spend) || 0;
     const target = currentSpend + insight.monetary_value;
     const percentComplete = Math.min((currentSpend / target) * 100, 100);
+    const remaining = target - currentSpend;
 
     actionableContent = (
-      <View style={styles.waiverSection}>
-        <View style={styles.waiverHeader}>
-          <Text style={styles.waiverText}>
-            <Text style={{ color: colors.success, fontWeight: 'bold' }}>
-              {formatCurrencyIN(currentSpend)}
-            </Text>
-            {' / '}{formatCurrencyIN(target)}
-          </Text>
-          <Text style={[styles.waiverPercent, { color: colors.success }]}>
-            {percentComplete.toFixed(0)}%
-          </Text>
-        </View>
-        <View style={styles.progressTrack}>
+      <View style={styles.minimalWaiver}>
+        <Text style={styles.cognitionText} numberOfLines={1}>
+          <Text style={{ color: '#FFF', fontWeight: tokens.fontWeight.bold }}>{formatCurrencyIN(remaining)}</Text> away from waiver
+        </Text>
+        <View style={styles.tinyProgressTrack}>
           <View 
             style={[
-              styles.progressFill, 
+              styles.tinyProgressFill, 
               { 
                 width: `${percentComplete}%`,
-                backgroundColor: colors.success
+                backgroundColor: topTagColor
               }
             ]} 
           />
         </View>
-        <Text style={styles.waiverSub}>
-          {insight.summary}
-        </Text>
       </View>
     );
   } else {
     actionableContent = (
-      <View style={styles.insightRow}>
-        <IconComponent size={12} color={topTagColor} style={{ marginRight: 6, flexShrink: 0 }} />
-        <Text style={styles.insightText} numberOfLines={2}>
-          {insight?.summary || `${formatCurrencyIN(card.annual_spend)} annual spend`}
+      <View style={styles.minimalInsight}>
+        <Text style={styles.cognitionText} numberOfLines={2}>
+          {insight?.summary || (card.is_active ? 'Active and ready to use' : 'Currently inactive')}
         </Text>
       </View>
     );
@@ -107,20 +95,21 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
               </View>
             </View>
 
-            <View style={styles.namesWrap}>
-              <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
-              <Text style={styles.cardName} numberOfLines={1}>{cardName}</Text>
-            </View>
+            {/* Group names and footer at the bottom to avoid awkward gap */}
+            <View style={styles.bottomBlock}>
+              <View style={styles.namesWrap}>
+                <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
+                <Text style={styles.cardName} numberOfLines={2}>{cardName}</Text>
+              </View>
 
-            {actionableContent}
-
-            <View style={styles.footerRow}>
-              <LinearGradient colors={networkGradient} style={styles.miniChip} start={{x:0, y:0}} end={{x:1, y:1}}>
-                <View style={styles.chipInner} />
-              </LinearGradient>
-              <View style={styles.networkInfo}>
-                <Text style={styles.networkName}>{network.toUpperCase()}</Text>
-                <Text style={styles.cardEnds}>•••• 1234</Text>
+              <View style={styles.footerRow}>
+                <View style={styles.footerLeft}>
+                  {actionableContent}
+                </View>
+                <View style={styles.networkInfo}>
+                  <Text style={styles.networkName}>{network.toUpperCase()}</Text>
+                  <Text style={styles.cardEnds}>•••• 1234</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -132,9 +121,8 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: 220,
-    height: 280,
-    marginRight: 16,
+    width: 240,
+    height: 180,
     borderRadius: tokens.radius.xl,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
@@ -183,14 +171,11 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
   },
-  crownWrap: {
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-    width: 24, height: 24,
-    borderRadius: 12,
-    alignItems: 'center', justifyContent: 'center',
+  bottomBlock: {
+    marginTop: 'auto',
   },
   namesWrap: {
-    marginBottom: 12,
+    marginBottom: 24, // Space between names and footer
   },
   bankName: {
     color: 'rgba(255,255,255,0.6)',
@@ -204,74 +189,44 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.title,
     fontWeight: tokens.fontWeight.heavy,
   },
-  insightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  insightText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.medium,
-    flex: 1,
-  },
-  waiverSection: {
-    marginTop: 'auto',
-    marginBottom: 16,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    padding: 12,
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-  },
-  waiverHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  waiverText: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.medium,
-  },
-  waiverPercent: {
-    color: '#10B981',
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 2,
-    marginBottom: 6,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  waiverSub: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 9,
-  },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginTop: 'auto',
   },
-  miniChip: {
-    width: 32, height: 20,
-    borderRadius: 4,
-    opacity: 0.8,
+  footerLeft: {
+    flex: 1,
+    paddingRight: 12,
+    justifyContent: 'flex-end',
+    paddingBottom: 2,
   },
-  chipInner: {
-    position: 'absolute', top: 2, left: 2, width: 8, height: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 2,
+  minimalWaiver: {
+    width: '100%',
+  },
+  minimalInsight: {
+    width: '100%',
+  },
+  cognitionText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+    lineHeight: 16,
+  },
+  tinyProgressTrack: {
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 1.5,
+    marginTop: 6,
+    overflow: 'hidden',
+    width: '80%',
+  },
+  tinyProgressFill: {
+    height: '100%',
+    borderRadius: 1.5,
   },
   networkInfo: {
     alignItems: 'flex-end',
+    flexShrink: 0,
   },
   networkName: {
     color: '#FFF',
