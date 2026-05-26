@@ -355,11 +355,6 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
               <View style={styles.recommendationSection}>
                 <View style={styles.recommendationHeader}>
                   <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ SMARTEST FINANCIAL CHOICE</Text>
-                  <TouchableOpacity style={styles.infoWrap} onPress={() => setShowExplainability(true)} activeOpacity={0.7}>
-                    <Text style={styles.infoText}>Why these?</Text>
-                    {/* @ts-ignore */}
-                    <Info size={14} color="rgba(255,255,255,0.4)" style={{ marginLeft: 4 }} />
-                  </TouchableOpacity>
                 </View>
 
                 {(!debouncedMerchant || debouncedMerchant.length < 3) && !getRecommendation.isPending && (
@@ -382,28 +377,29 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
 
                 {!getRecommendation.isPending && winningWalletCards.length > 0 && (
                   <Animated.View entering={FadeInUp.springify().damping(20).stiffness(150)} layout={LinearTransition.springify().damping(20).stiffness(150)}>
+                    {/* HERO RECOMMENDATION */}
                     <HeroRecommendationCard
                       card={winningWalletCards[0].card}
                       recommendation={winningWalletCards[0].recommendation}
-                      delta={null}
-                      isActive={selectedCardId === winningWalletCards[0].card.id}
-                      onPress={() => setValue('user_card_id', winningWalletCards[0].card.id)}
+                      onSelect={() => setValue('user_card_id', winningWalletCards[0].card.id)}
+                      onInfoPress={() => {
+                        // Pass specific recommendation to explainability sheet
+                        setShowExplainability(true);
+                      }}
                     />
 
+                    {/* ALTERNATIVE STRATEGIES (HORIZONTAL) */}
                     {winningWalletCards.length > 1 && (
-                      <View style={styles.accordionWrap}>
-                        <TouchableOpacity 
-                          style={styles.accordionHeader} 
-                          onPress={() => setShowAlternatives(!showAlternatives)}
-                          activeOpacity={0.7}
+                      <View style={styles.alternativesWrap}>
+                        <Text style={[styles.alternativesTitle, { color: colors.textMuted }]}>
+                          OTHER STRATEGIC OPTIONS
+                        </Text>
+                        <ScrollView 
+                          horizontal 
+                          showsHorizontalScrollIndicator={false}
+                          contentContainerStyle={styles.alternativesScrollContent}
                         >
-                          <Text style={[styles.accordionText, { color: colors.textMuted }]}>
-                            {showAlternatives ? 'Hide Other Strategies' : 'See Other Strategies'}
-                          </Text>
-                        </TouchableOpacity>
-
-                        {showAlternatives && (
-                          <Animated.View entering={FadeInUp.springify().damping(20).stiffness(150)} layout={LinearTransition.springify().damping(20).stiffness(150)}>
+                          <Animated.View style={styles.alternativesInnerRow} entering={FadeInUp.springify().damping(20).stiffness(150)} layout={LinearTransition.springify().damping(20).stiffness(150)}>
                             {winningWalletCards.slice(1).map(({ card, recommendation }) => (
                               <SecondaryRecommendationCard
                                 key={card.id}
@@ -414,7 +410,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                               />
                             ))}
                           </Animated.View>
-                        )}
+                        </ScrollView>
                       </View>
                     )}
                   </Animated.View>
@@ -505,7 +501,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                     : (isEditing 
                         ? 'Save Changes' 
                         : (selectedCardId 
-                            ? `Continue with ${cardsData?.find(c => c.id === selectedCardId)?.nickname || cardsData?.find(c => c.id === selectedCardId)?.card_details?.card_name || 'Card'}`
+                            ? `Use ${cardsData?.find(c => c.id === selectedCardId)?.nickname || cardsData?.find(c => c.id === selectedCardId)?.card_details?.card_name || 'Card'}`
                             : 'Add Transaction'
                           )
                       )
@@ -736,17 +732,19 @@ const styles = StyleSheet.create({
   pulseIcon: {
     opacity: 0.8,
   },
-  accordionWrap: {
-    marginTop: 8,
+  alternativesWrap: {
+    marginTop: 20,
   },
-  accordionHeader: {
-    paddingVertical: 12,
-    alignItems: 'center',
+  alternativesTitle: {
+    fontSize: tokens.fontSize.micro,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: tokens.letterSpacing.widest,
+    marginBottom: 12,
   },
-  accordionText: {
-    fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.medium,
-    textTransform: 'uppercase',
-    letterSpacing: tokens.letterSpacing.wider,
+  alternativesScrollContent: {
+    paddingBottom: 8,
+  },
+  alternativesInnerRow: {
+    flexDirection: 'row',
   },
 });
