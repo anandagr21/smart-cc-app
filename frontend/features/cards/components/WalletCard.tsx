@@ -37,14 +37,19 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
   const cardName = card.nickname || card.card_details?.card_name || 'Credit Card';
   const bankName = card.card_details?.bank_name || '';
   const networkLabel = getNetworkLabel(network);
+  const isActive = card.is_active;
 
   return (
     <Animated.View
       entering={FadeInDown.delay(80 + index * 100).springify()}
-      style={[styles.wrapper, { ...tokens.elevation.level2 }]}
+      style={[
+        styles.wrapper, 
+        { ...tokens.elevation.level2 },
+        !isActive && { opacity: 0.6 }
+      ]}
     >
       <LinearGradient
-        colors={gradient}
+        colors={isActive ? gradient : [isDark ? '#2A2A2A' : '#A0A0A0', isDark ? '#111' : '#666']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
@@ -74,9 +79,9 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
         {/* ── Card Top Row ── */}
         <View style={styles.topRow}>
           {/* Chip icon */}
-          <View style={styles.chip}>
-            <View style={styles.chipInner} />
-            <View style={styles.chipLine} />
+          <View style={[styles.chip, !isActive && { backgroundColor: 'rgba(200,200,200,0.85)' }]}>
+            <View style={[styles.chipInner, !isActive && { borderColor: 'rgba(100,100,100,0.6)', backgroundColor: 'rgba(150,150,150,0.4)' }]} />
+            <View style={[styles.chipLine, !isActive && { backgroundColor: 'rgba(100,100,100,0.4)' }]} />
           </View>
 
           {/* NFC/Contactless */}
@@ -105,9 +110,15 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
           <View style={styles.bottomRight}>
             {/* Active badge */}
             <View style={styles.activeBadge}>
-              {/* @ts-ignore */}
-              <CheckCircle2 size={11} color="rgba(255,255,255,0.85)" strokeWidth={2} />
-              <Text style={styles.activeBadgeText}>Active</Text>
+              {isActive ? (
+                <>
+                  {/* @ts-ignore */}
+                  <CheckCircle2 size={11} color="rgba(255,255,255,0.85)" strokeWidth={2} />
+                  <Text style={styles.activeBadgeText}>Active</Text>
+                </>
+              ) : (
+                <Text style={[styles.activeBadgeText, { color: 'rgba(255,255,255,0.6)' }]}>Inactive</Text>
+              )}
             </View>
             {/* Network label */}
             <Text style={styles.networkText}>{networkLabel}</Text>
