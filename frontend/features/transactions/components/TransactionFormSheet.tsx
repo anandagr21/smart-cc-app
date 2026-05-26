@@ -170,16 +170,33 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   // --- Hybrid Picker Logic ---
   const rankedCards = getRecommendation.data?.ranked_cards || [];
   
-  // Top 3 Recommended
-  const topRanked = rankedCards.slice(0, 3);
-  const recommendedWalletCards = useMemo(() => {
-    return topRanked.map(rc => {
-      return {
-        card: cardsData?.find(c => c.card_details?.card_name === rc.card_name || c.nickname === rc.card_name),
-        recommendation: rc
-      };
-    }).filter(r => r.card) as { card: NonNullable<typeof cardsData>[0], recommendation: typeof topRanked[0] }[];
-  }, [topRanked, cardsData]);
+  // Find Unique Winners across objectives
+  const winningWalletCards = useMemo(() => {
+    if (!rankedCards) return [];
+    const winners = new Map<string, typeof rankedCards[0]>();
+    
+    // MAX_REWARD
+    const maxReward = rankedCards.find(rc => rc.objective_rankings?.['MAX_REWARD'] === 1);
+    if (maxReward) winners.set(maxReward.card_id, maxReward);
+    
+    // PORTFOLIO_OPTIMIZED
+    const longTerm = rankedCards.find(rc => rc.objective_rankings?.['PORTFOLIO_OPTIMIZED'] === 1);
+    if (longTerm) winners.set(longTerm.card_id, longTerm);
+    
+    // FEE_WAIVER
+    const waiver = rankedCards.find(rc => rc.objective_rankings?.['FEE_WAIVER'] === 1);
+    // Only include waiver if it actually has waiver value > 0
+    if (waiver && waiver.portfolio_score_breakdown?.waiver_value > 0) winners.set(waiver.card_id, waiver);
+    
+    // MILESTONE_ACCELERATION
+    const milestone = rankedCards.find(rc => rc.objective_rankings?.['MILESTONE_ACCELERATION'] === 1);
+    if (milestone && milestone.portfolio_score_breakdown?.milestone_value > 0) winners.set(milestone.card_id, milestone);
+    
+    return Array.from(winners.values()).map(rc => ({
+      card: cardsData?.find(c => c.card_details?.card_name === rc.card_name || c.nickname === rc.card_name),
+      recommendation: rc
+    })).filter(r => r.card) as { card: NonNullable<typeof cardsData>[0], recommendation: typeof rankedCards[0] }[];
+  }, [rankedCards, cardsData]);
 
   // Full Wallet
   const { results: filteredCards } = useFuseSearch({
@@ -322,10 +339,10 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
             </View>
 
             {/* SECTION 1: SMART RECOMMENDED CARDS */}
-            {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && recommendedWalletCards.length > 0 && (
+            {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && winningWalletCards.length > 0 && (
               <View style={styles.recommendationSection}>
                 <View style={styles.recommendationHeader}>
-                  <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ BEST FOR THIS TRANSACTION</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ BEST FOR YOUR PORTFOLIO</Text>
                   <TouchableOpacity style={styles.infoWrap} onPress={() => setShowExplainability(true)} activeOpacity={0.7}>
                     <Text style={styles.infoText}>Why these?</Text>
                     {/* @ts-ignore */}
@@ -333,33 +350,17 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                   </TouchableOpacity>
                 </View>
 
-                {/* Hero #1 Card */}
-                <HeroRecommendationCard
-                  card={recommendedWalletCards[0].card}
-                  recommendation={recommendedWalletCards[0].recommendation}
-                  delta={
-                    recommendedWalletCards.length > 1 
-                      ? Number(recommendedWalletCards[0].recommendation.effective_reward_value) - Number(recommendedWalletCards[1].recommendation.effective_reward_value) 
-                      : null
-                  }
-                  isActive={selectedCardId === recommendedWalletCards[0].card.id}
-                  onPress={() => setValue('user_card_id', recommendedWalletCards[0].card.id)}
-                />
-
-                {/* Secondary Cards */}
-                {recommendedWalletCards.length > 1 && (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.secondaryScroll}>
-                    {recommendedWalletCards.slice(1).map(({ card, recommendation }) => (
-                      <SecondaryRecommendationCard
-                        key={card.id}
-                        card={card}
-                        recommendation={recommendation}
-                        isActive={selectedCardId === card.id}
-                        onPress={() => setValue('user_card_id', card.id)}
-                      />
-                    ))}
-                  </ScrollView>
-                )}
+                {/* Render Winners */}
+                {winningWalletCards.map(({ card, recommendation }) => (
+                  <HeroRecommendationCard
+                    key={card.id}
+                    card={card}
+                    recommendation={recommendation}
+                    delta={null} // Deltas don't make sense cross-objective usually
+                    isActive={selectedCardId === card.id}
+                    onPress={() => setValue('user_card_id', card.id)}
+                  />
+                ))}
               </View>
             )}
 
@@ -436,7 +437,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
       <RecommendationExplainabilitySheet
         visible={showExplainability}
         onClose={() => setShowExplainability(false)}
-        recommendedCards={recommendedWalletCards}
+        recommendedCards={winningWalletCards}
       />
     </Modal>
   );

@@ -84,6 +84,13 @@ class UserCard(SQLModel, table=True):
         ge=Decimal("0.00"),
         description="User-calibrated override for the annual fee.",
     )
+    user_override_fee_waiver_threshold: Decimal | None = Field(
+        default=None,
+        max_digits=14,
+        decimal_places=2,
+        ge=Decimal("0.00"),
+        description="User-calibrated override for the fee waiver threshold.",
+    )
     fee_override_updated_at: datetime | None = Field(
         default=None,
         description="UTC timestamp when the user last calibrated the fee.",

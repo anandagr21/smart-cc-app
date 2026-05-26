@@ -10,18 +10,27 @@ export interface FeeWaiverPresentation {
 }
 
 export function deriveFeeWaiverProgress(card: UserCardResponse): FeeWaiverPresentation {
-  // If the backend actually gives us a target in the future, we can seamlessly switch here:
-  // const realTarget = card.fee_waiver_threshold;
+  const target = card.effective_fee_waiver_threshold || 0;
   
-  // TEMPORARY PRODUCT ASSUMPTION: Target is current spend + 20,000
-  const currentSpend = Number(card.current_spend) || 0;
-  const target = currentSpend + 20000;
-  const remainingAmount = 20000;
-  
+  if (!target) {
+    return {
+      hasWaiver: false,
+      target: 0,
+      currentSpend: 0,
+      remainingAmount: 0,
+      percentComplete: 0,
+      milestone: 'No Waiver',
+    };
+  }
+
+  const currentSpend = Number(card.annual_spend) || 0;
+  const remainingAmount = Math.max(0, target - currentSpend);
   const percentComplete = Math.min((currentSpend / target) * 100, 100);
   
   let milestone = 'Good Start';
-  if (percentComplete >= 90) {
+  if (percentComplete >= 100) {
+    milestone = 'Waiver Achieved';
+  } else if (percentComplete >= 90) {
     milestone = 'Almost Unlocked';
   } else if (percentComplete >= 75) {
     milestone = 'Near Waiver';
@@ -34,7 +43,7 @@ export function deriveFeeWaiverProgress(card: UserCardResponse): FeeWaiverPresen
   }
 
   return {
-    hasWaiver: true, // Always show it temporarily for premium UX
+    hasWaiver: true,
     target,
     currentSpend,
     remainingAmount,

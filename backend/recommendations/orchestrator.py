@@ -77,8 +77,11 @@ class RecommendationOrchestrator:
         enrichment_time = time.perf_counter()
 
         # 4 & 5. Evaluate each card
+        from reward_engine.portfolio_optimization.engine import PortfolioOptimizationEngine
+        portfolio_engine = PortfolioOptimizationEngine()
+        
         eval_inputs: list[CardEvaluationInput] = []
-        card_intelligence = {}
+        optimization_results = []
         
         for user_card in user_cards:
             card_id_str = str(user_card.card_catalog_id)
@@ -102,65 +105,70 @@ class RecommendationOrchestrator:
             # Pure evaluate
             eval_result: EvaluationResult = engine_evaluate(txn_context, normalized_rules)
             
-            # Phase 2: Compute fee waiver intelligence and score
+            # Phase 2: Compute fee waiver intelligence and portfolio optimization
             fee_waiver_data = get_waiver_progress(user_card, catalog_card) if catalog_card else {}
             
-            score_data = score_recommendation(
+            opt_result = portfolio_engine.evaluate_portfolio_impact(
                 eval_result, user_card, catalog_card, fee_waiver_data, request.amount
             )
-            
-            card_intelligence[card_id_str] = score_data
+            optimization_results.append(opt_result)
 
-            # Build ranking input. Overwrite effective_reward_inr with the final multi-factor score.
-            # We clone eval_result to avoid mutating shared state if any, and inject score.
-            # However, for pure ranking, we pass the eval_result but we can override the effective reward 
-            # to be the final score so the ranker ranks by multi-factor score.
-            eval_result.effective_reward_inr = score_data["final_score"]
+        # 6. Rank cards using PortfolioOptimizationEngine
+        ranked_optimization_results = portfolio_engine.rank_universe(optimization_results)
 
+        # Generate legacy RankingResult for aggregate explanations (if needed)
+        # We can map back to CardEvaluationInput for the legacy `rank_cards` if `aggregate_explanations` needs it, 
+        # or we just build explanations directly.
+        # MVP: Build a dummy RankingResult to keep aggregate_explanations working
+        for r in ranked_optimization_results:
             eval_inputs.append(
                 CardEvaluationInput(
-                    card_id=card_id_str,
-                    card_name=card_name,
-                    evaluation=eval_result,
-                    annual_fee=0, 
-                )
-            )
-
-        # 6. Rank cards
-        ranking_result: RankingResult = rank_cards(eval_inputs)
-
-        # 7. Format response
-        explanations, warnings = aggregate_explanations(normalize_res, ranking_result)
-
-        ranked_cards_response = []
-        for r in ranking_result.ranked:
-            intel = card_intelligence.get(r.card_id, {})
-            # Overwrite the recommendation_reason with our reasoning summary if it's stronger
-            rec_reason = intel.get("reasoning_summary") or r.recommendation_reason
-            
-            cashback_score = Decimal(str(intel.get("score_breakdown", {}).get("cashback_score", r.effective_reward_inr)))
-            
-            ranked_cards_response.append(
-                RankedCardResponse(
                     card_id=r.card_id,
                     card_name=r.card_name,
-                    rank=r.rank,
-                    effective_reward_value=round_inr(cashback_score),
-                    cashback_amount=r.cashback_amount,
-                    reward_points=r.reward_points,
-                    reward_type=r.reward_type,
-                    recommendation_reason=rec_reason,
-                    warnings=r.warnings,
-                    optimization_factors=intel.get("optimization_factors", []),
-                    tradeoffs=intel.get("tradeoffs", []),
-                    waiver_impact=intel.get("waiver_impact"),
-                    milestone_impact=intel.get("milestone_impact"),
-                    cap_status=intel.get("cap_status"),
-                    reasoning_summary=intel.get("reasoning_summary", "")
+                    evaluation=r.evaluation,
+                    annual_fee=0,
+                )
+            )
+        legacy_ranking_result = rank_cards(eval_inputs)
+
+        # 7. Format response
+        explanations, warnings = aggregate_explanations(normalize_res, legacy_ranking_result)
+
+        ranked_cards_response = []
+        for i, opt_res in enumerate(ranked_optimization_results):
+            # Find the legacy eval warnings
+            legacy_eval = next((e for e in legacy_ranking_result.ranked if e.card_id == opt_res.card_id), None)
+            card_warnings = legacy_eval.warnings if legacy_eval else []
+
+            ranked_cards_response.append(
+                RankedCardResponse(
+                    card_id=opt_res.card_id,
+                    card_name=opt_res.card_name,
+                    rank=i + 1,  # Master portfolio rank
+                    
+                    effective_reward_value=round_inr(Decimal(str(opt_res.portfolio_score_breakdown.immediate_reward))),
+                    cashback_amount=opt_res.evaluation.cashback_amount,
+                    reward_points=opt_res.evaluation.reward_points,
+                    reward_type=opt_res.evaluation.reward_type,
+                    
+                    recommendation_reason=opt_res.explanation, # Fallback
+                    warnings=card_warnings,
+                    
+                    # New engine fields
+                    portfolio_score=opt_res.portfolio_score,
+                    immediate_reward_value=opt_res.portfolio_score_breakdown.immediate_reward,
+                    long_term_portfolio_value=opt_res.portfolio_score_breakdown.portfolio_health,
+                    waiver_acceleration=opt_res.portfolio_score_breakdown.waiver_value,
+                    milestone_acceleration=opt_res.portfolio_score_breakdown.milestone_value,
+                    
+                    portfolio_score_breakdown=opt_res.portfolio_score_breakdown.model_dump(),
+                    objective_rankings={k.value: v for k, v in opt_res.objective_rankings.items()},
+                    reason_codes=opt_res.reason_codes,
+                    explanation=opt_res.explanation,
                 )
             )
 
-        best_card = ranking_result.top_card_id
+        best_card = legacy_ranking_result.top_card_id
         if ranked_cards_response:
             best_card = ranked_cards_response[0].card_name
 

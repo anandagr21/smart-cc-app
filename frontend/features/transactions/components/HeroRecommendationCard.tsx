@@ -79,16 +79,34 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
               <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
               <Text style={styles.cardName} numberOfLines={1} adjustsFontSizeToFit>{cardName}</Text>
               
-              <View style={styles.concreteReasonRow}>
-                <View style={styles.concreteTag}>
-                  {/* @ts-ignore */}
-                  <Sparkles size={10} color="#FFFFFF" style={{ marginRight: 4 }} />
-                  <Text style={styles.concreteTagText}>{rewardTag}</Text>
-                </View>
-                <Text style={styles.reasonText} numberOfLines={2}>
-                  {groundedReason}
-                </Text>
+              {/* Stacked Rationale Chips */}
+              <View style={styles.chipsContainer}>
+                {recommendation.objective_rankings?.['PORTFOLIO_OPTIMIZED'] === 1 && (
+                  <View style={[styles.concreteTag, { backgroundColor: 'rgba(139, 92, 246, 0.2)' }]}>
+                    {/* @ts-ignore */}
+                    <Sparkles size={10} color="#8B5CF6" style={{ marginRight: 4 }} />
+                    <Text style={[styles.concreteTagText, { color: '#8B5CF6' }]}>BEST LONG-TERM VALUE</Text>
+                  </View>
+                )}
+                {recommendation.objective_rankings?.['MAX_REWARD'] === 1 && (
+                  <View style={styles.concreteTag}>
+                    {/* @ts-ignore */}
+                    <Sparkles size={10} color="#10B981" style={{ marginRight: 4 }} />
+                    <Text style={styles.concreteTagText}>MAX IMMEDIATE REWARD</Text>
+                  </View>
+                )}
+                {recommendation.objective_rankings?.['FEE_WAIVER'] === 1 && recommendation.portfolio_score_breakdown?.waiver_value > 0 && (
+                  <View style={[styles.concreteTag, { backgroundColor: 'rgba(245, 158, 11, 0.2)' }]}>
+                    {/* @ts-ignore */}
+                    <Sparkles size={10} color="#F59E0B" style={{ marginRight: 4 }} />
+                    <Text style={[styles.concreteTagText, { color: '#F59E0B' }]}>WAIVER OPTIMIZED</Text>
+                  </View>
+                )}
               </View>
+
+              <Text style={styles.reasonText} numberOfLines={3}>
+                {groundedReason}
+              </Text>
             </View>
 
             {/* Right Side: Visuals & Math */}
@@ -104,10 +122,7 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
                 <Text style={styles.rewardAmount} numberOfLines={1} adjustsFontSizeToFit>
                   {formatCurrencyIN(estimatedRewardValue)}
                 </Text>
-                <Text style={styles.rewardLabel}>EST. REWARD</Text>
-                {delta !== null && delta > 0 && (
-                  <Text style={styles.deltaText} numberOfLines={1}>+{formatCurrencyIN(delta)} edge</Text>
-                )}
+                <Text style={styles.rewardLabel}>IMMEDIATE VALUE</Text>
               </View>
             </View>
           </View>
@@ -170,7 +185,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: tokens.fontSize.title,
     fontWeight: tokens.fontWeight.heavy,
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  chipsContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginBottom: 8,
   },
   concreteReasonRow: {
     flexDirection: 'row',

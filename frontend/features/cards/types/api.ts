@@ -34,6 +34,8 @@ export interface UserCardResponse {
   fee_confidence?: 'HIGH' | 'USER_CALIBRATED' | 'ESTIMATED' | null;
 
   fee_waiver_threshold?: number | null;
+  user_override_fee_waiver_threshold?: number | null;
+  effective_fee_waiver_threshold?: number | null;
   fee_waiver_progress_percent?: number | null;
   remaining_spend_for_waiver?: number | null;
   waiver_achieved?: boolean | null;
@@ -50,6 +52,7 @@ export interface UserCardUpdate {
   due_date?: number;
   fee_cycle_start_date?: string;
   user_override_annual_fee?: number;
+  user_override_fee_waiver_threshold?: number;
 }
 
 export interface UserCardCreate {

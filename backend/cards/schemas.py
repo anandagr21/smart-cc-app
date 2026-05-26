@@ -229,6 +229,12 @@ class UserCardUpdate(BaseModel):
         decimal_places=2,
         ge=Decimal("0.00"),
     )
+    user_override_fee_waiver_threshold: Decimal | None = Field(
+        default=None,
+        max_digits=14,
+        decimal_places=2,
+        ge=Decimal("0.00"),
+    )
 
     model_config = ConfigDict(extra="forbid")
 
@@ -264,6 +270,8 @@ class UserCardResponse(BaseModel):
 
     # Enriched intelligence fields (populated by service/intelligence layer)
     fee_waiver_threshold: Decimal | None = None
+    user_override_fee_waiver_threshold: Decimal | None = None
+    effective_fee_waiver_threshold: Decimal | None = None
     fee_waiver_progress_percent: float | None = None
     remaining_spend_for_waiver: Decimal | None = None
     waiver_achieved: bool | None = None
