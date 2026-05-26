@@ -88,7 +88,7 @@ class BehaviorAnalyticsEngine:
             card_obj = card_map[strongest_card_id]
             strongest_card_name = getattr(card_obj, "card_name", "Unknown Card")
             if hasattr(card_obj, "card_catalog") and card_obj.card_catalog:
-                strongest_card_name = card_obj.card_catalog.name
+                strongest_card_name = card_obj.card_catalog.card_name
 
         return {
             "total_spent": total_spent,

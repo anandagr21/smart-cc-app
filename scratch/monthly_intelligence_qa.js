@@ -64,15 +64,10 @@ const CREDENTIALS = { email: 'anand@test.com', password: 'password123' };
             }
 
             // Click Sign In
-            const signInBtn = page.locator('button, div[role="button"]').filter({ hasText: /Sign In|Login|Sign in/i }).first();
-            if (await signInBtn.count() > 0) {
-                await signInBtn.click({ force: true });
-                console.log('   🔘 Clicked Sign In');
-            } else {
-                // Try pressing Enter on password field
-                await pwInput.press('Enter');
-                console.log('   🔘 Pressed Enter to submit');
-            }
+            const signInBtn = page.getByText(/Sign In/i).first();
+            await signInBtn.waitFor({ state: 'visible', timeout: 5000 });
+            await signInBtn.click({ force: true });
+            console.log('   🔘 Clicked Sign In');
 
             // Wait for redirect
             await page.waitForTimeout(5000);
