@@ -60,8 +60,6 @@ export default function CardsScreen() {
               autoCorrect={false}
               autoCapitalize="none"
             />
-            {/* @ts-ignore */}
-            <SlidersHorizontal size={18} color={colors.textMuted} />
           </View>
           
           <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 24, marginBottom: -8, marginLeft: 24 }]}>

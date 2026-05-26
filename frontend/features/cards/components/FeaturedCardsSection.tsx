@@ -45,11 +45,6 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
           <Sparkles size={16} color={colors.primary} />
           <Text style={[styles.titleText, { color: colors.textSecondary }]}>FEATURED FOR YOU</Text>
         </View>
-        <View style={styles.viewAllWrap}>
-          <Text style={[styles.viewAllText, { color: colors.primary }]}>View all</Text>
-          {/* @ts-ignore */}
-          <ChevronRight size={14} color={colors.primary} />
-        </View>
       </View>
 
       <ScrollView
@@ -57,7 +52,7 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         decelerationRate="fast"
-        snapToInterval={240 + 16} // updated card width + margin
+        snapToInterval={240 + 22} // updated card width + gap
       >
         {featuredCards.map(card => {
           const insight = insights.find(i => i.related_card_id === card.id);
@@ -95,15 +90,6 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
-  },
-  viewAllWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  viewAllText: {
-    fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.medium,
   },
   scrollContent: {
     paddingHorizontal: 24,
