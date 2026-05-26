@@ -21,8 +21,9 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
   if (!transactions || transactions.length === 0) return null;
 
   const totalRewards = transactions.reduce((sum, tx) => {
+    if (!tx) return sum;
     const reward = typeof tx.reward_earned === 'string' ? parseFloat(tx.reward_earned) : (tx.reward_earned || 0);
-    return sum + reward;
+    return sum + (isNaN(reward) ? 0 : reward);
   }, 0);
   
   if (totalRewards === 0) return null;
@@ -40,7 +41,7 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
   });
 
   const categoryRewards = transactions.reduce((acc, tx) => {
-    if (tx.reward_earned && tx.category) {
+    if (tx && tx.reward_earned && tx.category) {
       const reward = typeof tx.reward_earned === 'string' ? parseFloat(tx.reward_earned) : tx.reward_earned;
       acc[tx.category] = (acc[tx.category] || 0) + reward;
     }
