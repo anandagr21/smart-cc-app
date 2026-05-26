@@ -32,10 +32,12 @@ class OptimizationForecastingEngine:
         for card in user_cards:
             annual_spend = float(card.annual_spend)
             
-            # Check if there is a waiver threshold
+            # Check if there is a waiver threshold and an actual fee
             waiver_threshold = 0.0
-            if card.card_catalog and getattr(card.card_catalog, 'annual_fee_waiver_spend', None):
-                waiver_threshold = float(card.card_catalog.annual_fee_waiver_spend)
+            annual_fee = float(card.effective_annual_fee) if card.effective_annual_fee else 0.0
+            
+            if annual_fee > 0 and card.card_catalog and getattr(card.card_catalog, 'fee_waiver_spend_threshold', None):
+                waiver_threshold = float(card.card_catalog.fee_waiver_spend_threshold)
                 
             if waiver_threshold > 0 and annual_spend > 0 and annual_spend < waiver_threshold:
                 daily_velocity = annual_spend / max(day_of_year, 1)
@@ -52,7 +54,7 @@ class OptimizationForecastingEngine:
                         forecasts.append(
                             Forecast(
                                 id=f"FEE_WAIVER_{card.id}",
-                                text=f"At your current spending behavior, you will likely unlock the fee waiver for your {card.card_catalog.name} in ~{days_remaining} days.",
+                                text=f"At your current spending behavior, you will likely unlock the fee waiver for your {card.card_catalog.card_name} in ~{days_remaining} days.",
                                 confidence=ConfidenceLevel.MODERATE_TREND,
                                 reasoning=f"Based on daily spend velocity of ₹{daily_velocity:.2f}/day.",
                                 target_metric="fee_waiver"

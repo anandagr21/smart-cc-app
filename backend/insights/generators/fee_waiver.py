@@ -23,7 +23,7 @@ class FeeWaiverGenerator(InsightGenerator):
                 continue
                 
             threshold = card.card_catalog.fee_waiver_spend_threshold
-            annual_fee = card.card_catalog.annual_fee
+            annual_fee = card.effective_annual_fee
             
             # If no threshold or fee, no insight
             if not threshold or not annual_fee or float(annual_fee) == 0:

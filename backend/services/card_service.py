@@ -15,6 +15,7 @@ TODO:
 """
 
 from uuid import UUID
+from decimal import Decimal
 
 from cards.exceptions import CardCatalogNotFoundException
 from cards.schemas import (
@@ -149,9 +150,15 @@ class UserCardService:
         # First verify the card belongs to this user
         await self._user_card_repo.get_by_user_and_id(user_id, card_id)
 
-        entity = await self._user_card_repo.update(
-            card_id, schema.model_dump(exclude_unset=True)
-        )
+        update_data = schema.model_dump(exclude_unset=True)
+        
+        # If user is overriding annual fee, set tracking metadata
+        if "user_override_annual_fee" in update_data:
+            from datetime import datetime
+            update_data["fee_override_updated_at"] = datetime.utcnow()
+            update_data["fee_override_source"] = "USER"
+
+        entity = await self._user_card_repo.update(card_id, update_data)
         return self._to_response(entity)
 
     async def deactivate_card(
@@ -179,6 +186,16 @@ class UserCardService:
             response.card_details = CardCatalogResponse.model_validate(
                 entity.card_catalog
             )
+            
+            # Map intelligence fields
+            response.catalog_annual_fee = entity.card_catalog.annual_fee
+            response.user_override_annual_fee = entity.user_override_annual_fee
+            response.effective_annual_fee = entity.effective_annual_fee
+            
+            if entity.user_override_annual_fee is not None:
+                response.fee_confidence = "USER_CALIBRATED"
+            else:
+                response.fee_confidence = "ESTIMATED"
             
             # Enrich with fee waiver intelligence
             waiver_data = get_waiver_progress(entity, entity.card_catalog)

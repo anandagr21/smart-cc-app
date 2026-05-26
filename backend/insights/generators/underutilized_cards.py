@@ -42,7 +42,7 @@ class UnderutilizedCardGenerator(InsightGenerator):
                 days_inactive = 90
             
             # We care most about premium fee-bearing cards going unused
-            annual_fee = float(card.card_catalog.annual_fee) if card.card_catalog and card.card_catalog.annual_fee else 0
+            annual_fee = float(card.effective_annual_fee) if card.effective_annual_fee else 0
             
             if days_inactive > 45:
                 # If it's a high fee card, it's HIGH priority. Otherwise INFORMATIONAL.

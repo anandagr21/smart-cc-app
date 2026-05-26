@@ -131,7 +131,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await self.session.refresh(entity)
         return entity
 
-    async def update(self, id: UUID, update_schema: UpdateSchemaType) -> ModelType:
+    async def update(self, id: UUID, update_schema: UpdateSchemaType | dict) -> ModelType:
         """Update an existing entity with partial data.
 
         Only fields explicitly set in the schema are updated (partial update).
@@ -139,7 +139,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
         Args:
             id: UUID of the entity to update.
-            update_schema: Pydantic model with fields to update (only non-None fields applied).
+            update_schema: Pydantic model or dict with fields to update.
 
         Returns:
             The updated entity.
@@ -148,7 +148,11 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             NotFoundException if the entity doesn't exist.
         """
         entity = await self.get_by_id(id)
-        update_data = update_schema.model_dump(exclude_unset=True)
+        
+        if isinstance(update_schema, dict):
+            update_data = update_schema
+        else:
+            update_data = update_schema.model_dump(exclude_unset=True)
 
         for field, value in update_data.items():
             if value is not None and hasattr(entity, field):

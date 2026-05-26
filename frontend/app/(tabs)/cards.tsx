@@ -20,9 +20,11 @@ import { UserCardResponse } from '../../features/cards/types/api';
 export default function CardsScreen() {
   const { data: cards, isLoading } = useCards();
   const [isSheetVisible, setSheetVisible] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<UserCardResponse | null>(null);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const colors = useThemeColors();
   const cardCount = cards?.length ?? 0;
+  
+  const selectedCard = cards?.find(c => c.id === selectedCardId) || null;
 
   // Search Logic
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,7 +45,7 @@ export default function CardsScreen() {
   const renderHeaderComponent = () => {
     return (
       <View>
-        <FeaturedCardsSection cards={cards || []} onSelectCard={setSelectedCard} />
+        <FeaturedCardsSection cards={cards || []} onSelectCard={(card) => setSelectedCardId(card.id)} />
         
         <View style={styles.searchSection}>
           <View style={[styles.searchBar, { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
@@ -116,7 +118,7 @@ export default function CardsScreen() {
           <SmartWalletInventory 
             cards={filteredCards} 
             ListHeaderComponent={renderHeaderComponent()} 
-            onSelectCard={setSelectedCard}
+            onSelectCard={(card) => setSelectedCardId(card.id)}
           />
         </View>
       ) : (
@@ -131,7 +133,7 @@ export default function CardsScreen() {
       {/* Card Detail Intelligence Sheet Placeholder */}
       <CardDetailSheet 
         card={selectedCard} 
-        onClose={() => setSelectedCard(null)} 
+        onClose={() => setSelectedCardId(null)} 
       />
     </ScreenContainer>
   );

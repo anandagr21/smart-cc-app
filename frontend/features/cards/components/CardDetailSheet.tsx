@@ -22,6 +22,8 @@ import { tokens } from '../../../theme/tokens';
 import { ComingSoonSheet } from './ComingSoonSheet';
 import { useUpdateCard } from '../hooks/useUpdateCard';
 import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
+import { AnnualFeeEditSheet } from './AnnualFeeEditSheet';
+import { formatCurrencyIN } from '../../../utils/currency';
 
 interface CardDetailSheetProps {
   card: UserCardResponse | null;
@@ -35,6 +37,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
   const [mockActionTitle, setMockActionTitle] = useState<string | null>(null);
+  const [isAnnualFeeEditVisible, setIsAnnualFeeEditVisible] = useState(false);
 
   const { mutate: updateCard } = useUpdateCard(card?.id || '');
 
@@ -57,7 +60,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   // Logic: Intelligence Heuristics (Max 3-5)
   const intelligenceChips = [];
   const cNameLow = cardName.toLowerCase();
-  
+
   // 1. Health
   if (hasWaiver && waiverPercent >= 75 && waiverPercent < 100) {
     intelligenceChips.push({ label: 'Near Fee Waiver', icon: Activity, color: colors.warning });
@@ -78,7 +81,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   if (cNameLow.includes('dine') || cNameLow.includes('swiggy')) {
     intelligenceChips.push({ label: 'Dining Benefits', icon: Utensils, color: '#EC4899' });
   }
-  
+
   // Trim to max 4 chips to prevent visual overload
   const finalChips = intelligenceChips.slice(0, 4);
 
@@ -124,7 +127,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-            
+
             {/* Section 1: Hero Card */}
             <Animated.View entering={FadeInUp.duration(400).delay(50)}>
               <LinearGradient
@@ -143,12 +146,12 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                   </View>
                 </View>
                 <Text style={styles.heroCardName} numberOfLines={1}>{cardName}</Text>
-                
+
                 <View style={styles.heroFooter}>
                   <View>
                     <Text style={styles.heroFeeLabel}>Annual Fee</Text>
                     <Text style={styles.heroFeeValue}>
-                      {card.card_details?.annual_fee ? `₹${card.card_details.annual_fee.toLocaleString('en-IN')}` : 'Free'}
+                      {card.effective_annual_fee ? formatCurrencyIN(card.effective_annual_fee) : 'Free'}
                     </Text>
                   </View>
                   <Text style={styles.heroNetwork}>{network.toUpperCase()}</Text>
@@ -164,7 +167,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                   {/* @ts-ignore */}
                   <Sparkles size={14} color={colors.primary} />
                 </View>
-                
+
                 <View style={styles.waiverNumbersRow}>
                   <Text style={[styles.waiverCurrent, { color: colors.success }]}>
                     ₹{card.current_spend.toLocaleString('en-IN')}
@@ -192,6 +195,29 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
               </Animated.View>
             )}
 
+            {/* Section 2.5: Annual Fee Intelligence */}
+            <Animated.View entering={FadeInUp.duration(400).delay(200)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+              <View style={styles.sectionTitleRow}>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>ANNUAL FEE INTELLIGENCE</Text>
+              </View>
+              <View style={styles.feeIntelligenceRow}>
+                <View style={styles.feeIntelligenceInfo}>
+                  <Text style={[styles.feeIntelligenceValue, { color: colors.textPrimary }]}>
+                    {card.effective_annual_fee ? `${formatCurrencyIN(card.effective_annual_fee)}` : 'Free'}
+                  </Text>
+                  <Text style={[styles.feeIntelligenceSource, { color: colors.textSecondary }]}>
+                    {card.fee_confidence === 'USER_CALIBRATED' ? 'Custom fee applied' : 'Estimated from card catalog'}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.editFeeBtn, { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder }]}
+                  onPress={() => setIsAnnualFeeEditVisible(true)}
+                >
+                  <Text style={[styles.editFeeBtnText, { color: colors.textPrimary }]}>Edit</Text>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+
             {/* Section 3: Reward Intelligence */}
             {finalChips.length > 0 && (
               <Animated.View entering={FadeInUp.duration(400).delay(250)} style={styles.section}>
@@ -212,7 +238,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
             <Animated.View entering={FadeInUp.duration(400).delay(350)} style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginBottom: 16 }]}>QUICK ACTIONS</Text>
               <View style={[styles.actionsBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                
+
                 {/* View Transactions (Real Action) */}
                 <TouchableOpacity style={styles.actionRow} onPress={handleViewTransactions}>
                   <View style={styles.actionIconWrap}>
@@ -235,9 +261,9 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                     <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Card Status</Text>
                     <Text style={[styles.actionSub, { color: colors.textMuted }]}>{isActive ? 'Active in Wallet' : 'Inactive in Wallet'}</Text>
                   </View>
-                  <Switch 
-                    value={isActive} 
-                    onValueChange={handleToggleStatus} 
+                  <Switch
+                    value={isActive}
+                    onValueChange={handleToggleStatus}
                     trackColor={{ false: 'rgba(255,255,255,0.1)', true: colors.success }}
                   />
                 </View>
@@ -277,7 +303,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                   {/* @ts-ignore */}
                   <ChevronRight size={16} color={colors.textMuted} />
                 </TouchableOpacity>
-                
+
               </View>
             </Animated.View>
 
@@ -287,10 +313,16 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
         </View>
       </View>
 
-      <ComingSoonSheet 
-        visible={!!mockActionTitle} 
-        onClose={() => setMockActionTitle(null)} 
+      <ComingSoonSheet
+        visible={!!mockActionTitle}
+        onClose={() => setMockActionTitle(null)}
         title={mockActionTitle || "Coming Soon"}
+      />
+
+      <AnnualFeeEditSheet
+        visible={isAnnualFeeEditVisible}
+        onClose={() => setIsAnnualFeeEditVisible(false)}
+        card={card}
       />
     </Modal>
   );
@@ -510,5 +542,31 @@ const styles = StyleSheet.create({
   actionDivider: {
     height: 1,
     marginLeft: 68,
+  },
+  feeIntelligenceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  feeIntelligenceInfo: {
+    flex: 1,
+  },
+  feeIntelligenceValue: {
+    fontSize: tokens.fontSize.title,
+    fontWeight: tokens.fontWeight.bold,
+    marginBottom: 4,
+  },
+  feeIntelligenceSource: {
+    fontSize: tokens.fontSize.caption,
+  },
+  editFeeBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: tokens.radius.full,
+    borderWidth: 1,
+  },
+  editFeeBtnText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
   },
 });

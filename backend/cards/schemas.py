@@ -223,6 +223,12 @@ class UserCardUpdate(BaseModel):
         le=31,
     )
     is_active: bool | None = Field(default=None)
+    user_override_annual_fee: Decimal | None = Field(
+        default=None,
+        max_digits=12,
+        decimal_places=2,
+        ge=Decimal("0.00"),
+    )
 
     model_config = ConfigDict(extra="forbid")
 
@@ -248,8 +254,13 @@ class UserCardResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
-    # Nested catalog data — populated by the service layer
     card_details: CardCatalogResponse | None = None
+
+    # Fee intelligence
+    catalog_annual_fee: Decimal | None = None
+    user_override_annual_fee: Decimal | None = None
+    effective_annual_fee: Decimal | None = None
+    fee_confidence: str | None = None
 
     # Enriched intelligence fields (populated by service/intelligence layer)
     fee_waiver_threshold: Decimal | None = None
