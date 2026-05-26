@@ -15,9 +15,10 @@ export const invalidateWalletIntelligence = (queryClient: QueryClient) => {
 };
 
 export const invalidateTransactionsAndWallet = (queryClient: QueryClient) => {
-  // When a transaction is added/edited, both the feed and the wallet (which holds spend aggregates) are stale
+  // When a transaction is added/edited, both the feed, wallet, and insights are stale
   invalidateTransactionFeed(queryClient);
   invalidateWalletIntelligence(queryClient);
+  queryClient.invalidateQueries({ queryKey: QueryKeys.insights.all });
 };
 
 export const invalidateCatalog = (queryClient: QueryClient) => {
