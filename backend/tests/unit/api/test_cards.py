@@ -75,7 +75,7 @@ def _make_sample_user_card_response() -> UserCardResponse:
         annual_spend=Decimal("85000.00"),
         billing_date=15,
         due_date=5,
-        is_active=True,
+        card_status="ACTIVE",
         created_at=SAMPLE_DATETIME,
         updated_at=SAMPLE_DATETIME,
         card_details=_make_sample_card_catalog_response(),
@@ -341,12 +341,12 @@ class TestUserCardRepository:
         assert "USER_CARD_NOT_FOUND" in exc_info.value.code
 
     @pytest.mark.asyncio
-    async def test_deactivate_sets_is_active_false(self):
-        """deactivate should set is_active=False and flush."""
+    async def test_deactivate_sets_card_status_inactive(self):
+        """deactivate should set card_status="INACTIVE" and flush."""
         from repositories.card_repository import UserCardRepository
 
         mock_entity = MagicMock()
-        mock_entity.is_active = True
+        mock_entity.card_status = "ACTIVE"
 
         mock_session = AsyncMock()
         mock_session.execute = AsyncMock()
@@ -360,9 +360,9 @@ class TestUserCardRepository:
         repo.get_by_user_and_id = mock_get_by_user_and_id
         result = await repo.deactivate(VALID_USER_UUID, VALID_USER_CARD_ID)
 
-        assert mock_entity.is_active is False
+        assert mock_entity.card_status == "INACTIVE"
         mock_session.add.assert_called_once_with(mock_entity)
-        assert result.is_active is False
+        assert result.card_status == "INACTIVE"
 
 
 # =============================================================================
@@ -387,7 +387,7 @@ class TestCardCatalogService:
             joining_fee=Decimal("0"),
             annual_fee=Decimal("0"),
             fee_waiver_spend_threshold=None,
-            is_active=True,
+            card_status="ACTIVE",
             created_at=SAMPLE_DATETIME,
             updated_at=SAMPLE_DATETIME,
         ))
@@ -413,7 +413,7 @@ class TestCardCatalogService:
         mock_entity.joining_fee = Decimal("0")
         mock_entity.annual_fee = Decimal("0")
         mock_entity.fee_waiver_spend_threshold = None
-        mock_entity.is_active = True
+        mock_entity.card_status = "ACTIVE"
         mock_entity.created_at = SAMPLE_DATETIME
         mock_entity.updated_at = SAMPLE_DATETIME
 
@@ -488,7 +488,7 @@ class TestUserCardService:
             annual_spend=Decimal("0"),
             billing_date=1,
             due_date=1,
-            is_active=False,
+            card_status="INACTIVE",
             created_at=SAMPLE_DATETIME,
             updated_at=SAMPLE_DATETIME,
             card_details=None,
@@ -496,7 +496,7 @@ class TestUserCardService:
 
         result = await service.deactivate_card(VALID_USER_UUID, VALID_USER_CARD_ID)
 
-        assert result.is_active is False
+        assert result.card_status == "INACTIVE"
         mock_repo.deactivate.assert_awaited_once_with(VALID_USER_UUID, VALID_USER_CARD_ID)
 
 

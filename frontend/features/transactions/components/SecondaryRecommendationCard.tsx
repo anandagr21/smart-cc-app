@@ -33,11 +33,11 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
   const network = card.card_details?.network || 'default';
   const gradient = getNetworkGradient(network, isDark) as [string, string];
 
-  const estimatedRewardValue = recommendation.cashback_amount || recommendation.reward_points || recommendation.effective_reward_value;
+  const estimatedRewardValue = recommendation.total_projected_value || recommendation.portfolio_score;
 
   // Naive icon mapping based on text
   const getIcon = () => {
-    const text = recommendation.recommendation_reason?.toLowerCase() || '';
+    const text = recommendation.reason_description?.toLowerCase() || recommendation.explanation?.toLowerCase() || '';
     if (text.includes('fuel')) return <Fuel size={12} color={colors.success} style={{ marginRight: 6 }} />;
     if (text.includes('travel') || text.includes('flight')) return <Plane size={12} color={colors.success} style={{ marginRight: 6 }} />;
     return <ShoppingBag size={12} color={colors.success} style={{ marginRight: 6 }} />;
@@ -68,7 +68,7 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
                 {/* @ts-ignore */}
                 {getIcon()}
                 <Text style={styles.tagText} numberOfLines={1}>
-                  {recommendation.recommendation_reason || 'Good alternative'}
+                  {recommendation.reason_title || recommendation.explanation || 'Good alternative'}
                 </Text>
               </View>
             </View>
@@ -78,7 +78,7 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
             <Text style={styles.rewardAmount} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrencyIN(estimatedRewardValue)}
             </Text>
-            <Text style={styles.rewardLabel}>EST. REWARD</Text>
+            <Text style={styles.rewardLabel}>EST. VALUE</Text>
           </View>
         </View>
       </TouchableOpacity>

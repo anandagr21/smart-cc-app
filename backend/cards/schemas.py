@@ -222,7 +222,7 @@ class UserCardUpdate(BaseModel):
         ge=1,
         le=31,
     )
-    is_active: bool | None = Field(default=None)
+    card_status: str | None = Field(default=None)
     user_override_annual_fee: Decimal | None = Field(
         default=None,
         max_digits=12,
@@ -257,7 +257,7 @@ class UserCardResponse(BaseModel):
     billing_date: int
     due_date: int
     fee_cycle_start_date: datetime | date | None = None
-    is_active: bool
+    card_status: str
     created_at: datetime
     updated_at: datetime
     card_details: CardCatalogResponse | None = None

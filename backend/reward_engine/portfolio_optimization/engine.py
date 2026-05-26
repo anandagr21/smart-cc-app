@@ -126,50 +126,94 @@ class PortfolioOptimizationEngine:
                 RecommendationObjective.MILESTONE_ACCELERATION: milestone_ranks[r.card_id],
                 RecommendationObjective.PORTFOLIO_OPTIMIZED: portfolio_ranks[r.card_id]
             }
-            r.explanation = self._generate_explanation(r, max_reward_ranks, portfolio_ranks, results)
+            # Populate structured insights and legacy explanation
+            self._generate_structured_insights(r, max_reward_ranks, portfolio_ranks, results)
             
         # Final sort by PORTFOLIO_OPTIMIZED
         sorted_final = sorted(results, key=lambda r: (r.portfolio_score, r.card_id), reverse=True)
         return sorted_final
 
-    def _generate_explanation(self, result: OptimizationResult, max_reward_ranks: Dict[str, int], portfolio_ranks: Dict[str, int], all_results: List[OptimizationResult]) -> str:
+    def _generate_structured_insights(self, result: OptimizationResult, max_reward_ranks: Dict[str, int], portfolio_ranks: Dict[str, int], all_results: List[OptimizationResult]) -> None:
         """
-        Deterministic explanation composition. 
-        MUST explain why immediate rewards were sacrificed if this card is portfolio optimal but not max reward.
+        Deterministic structured insights composition.
+        Populates reason_title, reason_description, and other metadata.
         """
         is_top_portfolio = portfolio_ranks[result.card_id] == 1
         is_top_reward = max_reward_ranks[result.card_id] == 1
         
+        result.cashback_value = result.portfolio_score_breakdown.immediate_reward
+        result.strategic_value = result.portfolio_score - result.portfolio_score_breakdown.immediate_reward
+        result.total_projected_value = result.portfolio_score
+        
+        # Determine confidence score (margin of victory heuristic)
+        if is_top_portfolio and len(all_results) > 1:
+            second_best = sorted(all_results, key=lambda r: r.portfolio_score, reverse=True)[1]
+            margin = result.portfolio_score - second_best.portfolio_score
+            result.confidence_score = min(0.99, 0.70 + (margin / (result.portfolio_score + 1.0)) * 0.3)
+        else:
+            result.confidence_score = 0.85
+            
+        result.recommendation_strength = "Strong" if result.confidence_score > 0.85 else "Moderate"
+        
+        title = "Balanced Portfolio Optimization"
+        desc = "Contributes to balanced portfolio optimization."
+        strategy = "General Optimization"
+        factors = []
+        
         if is_top_portfolio and not is_top_reward:
-            # Find the top reward card to explain the delta
             top_reward_card = next((r for r in all_results if max_reward_ranks[r.card_id] == 1), None)
+            delta = 0
             if top_reward_card:
                 delta = top_reward_card.portfolio_score_breakdown.immediate_reward - result.portfolio_score_breakdown.immediate_reward
                 
-                # Check why it won portfolio
-                if "FEE_WAIVER_ACHIEVED" in result.reason_codes:
-                    return f"Earns ₹{delta:,.0f} less immediately, but this transaction triggers your annual fee waiver."
-                elif "FEE_WAIVER_PRESERVATION" in result.reason_codes:
-                    return f"Earns ₹{delta:,.0f} less immediately, but significantly preserves your fee waiver eligibility."
-                elif "MILESTONE_ACCELERATION" in result.reason_codes:
-                    return f"Earns ₹{delta:,.0f} less immediately, but accelerates your progress towards a milestone unlock."
-                elif "DORMANT_PREMIUM_CARD" in result.reason_codes:
-                    return f"Earns ₹{delta:,.0f} less immediately, but improves utilization for this dormant premium card."
-                    
-        # General explanations
-        if is_top_reward and is_top_portfolio:
-            return "Provides the highest immediate reward and aligns with portfolio goals."
+            if "FEE_WAIVER_ACHIEVED" in result.reason_codes:
+                title = "Unlocks Annual Fee Waiver"
+                desc = f"Earns ₹{delta:,.0f} less immediately, but this transaction triggers your annual fee waiver."
+                strategy = "Fee Waiver Optimization"
+            elif "FEE_WAIVER_PRESERVATION" in result.reason_codes:
+                title = "Preserves Fee Waiver Progress"
+                desc = f"Earns ₹{delta:,.0f} less immediately, but significantly preserves your fee waiver eligibility."
+                strategy = "Fee Waiver Optimization"
+            elif "MILESTONE_ACCELERATION" in result.reason_codes:
+                title = "Accelerates Milestone Rewards"
+                desc = f"Earns ₹{delta:,.0f} less immediately, but accelerates your progress towards a milestone unlock."
+                strategy = "Milestone Optimization"
+            elif "DORMANT_PREMIUM_CARD" in result.reason_codes:
+                title = "Improves Portfolio Health"
+                desc = f"Earns ₹{delta:,.0f} less immediately, but improves utilization for this dormant premium card."
+                strategy = "Portfolio Utilization"
+        else:
+            if is_top_reward and is_top_portfolio:
+                title = "Maximum Return & Value"
+                desc = "Provides the highest immediate reward and aligns with long-term portfolio goals."
+                strategy = "Maximum Return"
+            elif "FEE_WAIVER_ACHIEVED" in result.reason_codes:
+                title = "Unlocks Annual Fee Waiver"
+                desc = "This transaction unlocks your annual fee waiver."
+                strategy = "Fee Waiver Optimization"
+            elif "FEE_WAIVER_PRESERVATION" in result.reason_codes:
+                title = "Preserves Fee Waiver Progress"
+                desc = "Helps preserve your annual fee waiver eligibility."
+                strategy = "Fee Waiver Optimization"
+            elif "MILESTONE_ACCELERATION" in result.reason_codes:
+                title = "Accelerates Milestone Rewards"
+                desc = "Accelerates milestone progress."
+                strategy = "Milestone Optimization"
+            elif "IMMEDIATE_REWARD_ONLY" in result.reason_codes:
+                title = "Highest Immediate Cashback"
+                desc = "Provides strong immediate reward value."
+                strategy = "Maximum Return"
+                
+        # Populate supporting factors
+        if result.portfolio_score_breakdown.waiver_value > 0 and strategy != "Fee Waiver Optimization":
+            factors.append("Contributes to fee waiver")
+        if result.portfolio_score_breakdown.milestone_value > 0 and strategy != "Milestone Optimization":
+            factors.append("Contributes to milestone rewards")
+        if result.portfolio_score_breakdown.portfolio_health > 0 and strategy != "Portfolio Utilization":
+            factors.append("Improves card utilization")
             
-        if "FEE_WAIVER_ACHIEVED" in result.reason_codes:
-            return "This transaction unlocks your annual fee waiver."
-            
-        if "FEE_WAIVER_PRESERVATION" in result.reason_codes:
-            return "Helps preserve your annual fee waiver eligibility."
-            
-        if "MILESTONE_ACCELERATION" in result.reason_codes:
-            return "Accelerates milestone progress."
-            
-        if "IMMEDIATE_REWARD_ONLY" in result.reason_codes:
-            return "Strong immediate reward value."
-            
-        return "Contributes to balanced portfolio optimization."
+        result.reason_title = title
+        result.reason_description = desc
+        result.primary_strategy = strategy
+        result.supporting_factors = factors
+        result.explanation = desc # Legacy fallback

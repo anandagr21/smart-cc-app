@@ -31,6 +31,16 @@ export interface RankedCardResponse {
   objective_rankings: Record<string, number>;
   reason_codes: string[];
   explanation: string;
+  
+  // Structured Metadata for UI
+  reason_title: string;
+  reason_description: string;
+  strategic_value: number;
+  total_projected_value: number;
+  confidence_score: number;
+  primary_strategy: string;
+  supporting_factors: string[];
+  recommendation_strength: string;
 }
 
 export interface RecommendationResponse {

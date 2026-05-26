@@ -48,7 +48,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   const network = card.card_details?.network || 'VISA';
-  const isActive = card.is_active;
+  const isActive = card.card_status === 'ACTIVE';
 
   const gradient = getNetworkGradient(network, isDark) as [string, string];
 
@@ -88,7 +88,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const finalChips = intelligenceChips.slice(0, 4);
 
   const handleToggleStatus = () => {
-    updateCard({ is_active: !isActive });
+    updateCard({ card_status: isActive ? 'INACTIVE' : 'ACTIVE' });
   };
 
   const handleViewTransactions = () => {

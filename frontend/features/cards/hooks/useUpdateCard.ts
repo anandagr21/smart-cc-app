@@ -5,7 +5,7 @@ import { QueryKeys } from '../../core/api/queryKeys';
 
 interface UpdateCardPayload {
   nickname?: string;
-  is_active?: boolean;
+  card_status?: string;
   credit_limit?: number;
   billing_date?: number;
   due_date?: number;

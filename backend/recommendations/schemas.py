@@ -62,6 +62,16 @@ class RankedCardResponse(BaseModel):
     objective_rankings: dict[str, int] = Field(..., description="Ranking of this card for each objective.")
     reason_codes: list[str] = Field(default_factory=list, description="Structured reason codes for why this was recommended.")
     explanation: str = Field(..., description="Human-readable explanation of the recommendation.")
+    
+    # Structured Metadata for UI
+    reason_title: str = Field(default="", description="High-level title for the recommendation reason.")
+    reason_description: str = Field(default="", description="Detailed explanation of strategic value.")
+    strategic_value: float = Field(default=0.0, description="INR value of long-term strategic benefits.")
+    total_projected_value: float = Field(default=0.0, description="Total projected INR value (immediate + strategic).")
+    confidence_score: float = Field(default=0.0, description="Engine confidence score (0-1).")
+    primary_strategy: str = Field(default="", description="The main strategic goal achieved.")
+    supporting_factors: list[str] = Field(default_factory=list, description="List of secondary benefits.")
+    recommendation_strength: str = Field(default="", description="E.g., 'Strong', 'Moderate'.")
 
 class RecommendationResponse(BaseModel):
     """Full response for a recommendation request."""

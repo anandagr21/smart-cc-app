@@ -11,6 +11,8 @@ export interface CardCatalogResponse {
   updated_at: string;
 }
 
+export type CardStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'CLOSED' | 'EXPIRED';
+
 export interface UserCardResponse {
   id: string;
   user_id: string;
@@ -22,7 +24,7 @@ export interface UserCardResponse {
   billing_date: number;
   due_date: number;
   fee_cycle_start_date: string | null;
-  is_active: boolean;
+  card_status: CardStatus;
   created_at: string;
   updated_at: string;
   card_details?: CardCatalogResponse;
@@ -44,7 +46,7 @@ export interface UserCardResponse {
 
 export interface UserCardUpdate {
   nickname?: string;
-  is_active?: boolean;
+  card_status?: CardStatus;
   credit_limit?: number;
   current_spend?: number;
   annual_spend?: number;

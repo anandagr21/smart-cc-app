@@ -33,13 +33,14 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
       transform: [{ scale: withSpring(isActive ? 1.02 : 1, { damping: 20, stiffness: 200 }) }],
       borderColor: withSpring(isActive ? colors.success : 'transparent'),
       backgroundColor: withSpring(isActive ? colors.surfaceElevated : colors.background),
+      opacity: card.card_status === 'ACTIVE' ? 1 : 0.5,
     };
   });
 
   return (
     <Animated.View style={[styles.container, animatedStyle]}>
       <TouchableOpacity
-        activeOpacity={0.7}
+        activeOpacity={card.card_status === 'ACTIVE' ? 0.7 : 1}
         onPress={() => onPress(card.id)}
         style={styles.touchable}
       >
@@ -55,7 +56,7 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
         </View>
 
         <View style={styles.rightContent}>
-          {recommendation && (
+          {recommendation && card.card_status === 'ACTIVE' && (
             <Animated.View entering={FadeIn} style={styles.recommendationBadge}>
               {/* @ts-ignore */}
               <Sparkles size={12} color={colors.success} style={{ marginRight: 4 }} />
@@ -68,14 +69,19 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
           )}
           
           <View style={styles.checkCircleWrapper}>
-            {isActive && (
+            {isActive && card.card_status === 'ACTIVE' && (
               <Animated.View entering={FadeIn.duration(200)}>
                 {/* @ts-ignore */}
                 <CheckCircle2 size={20} color={colors.success} weight="fill" />
               </Animated.View>
             )}
-            {!isActive && (
+            {!isActive && card.card_status === 'ACTIVE' && (
               <View style={[styles.emptyCircle, { borderColor: colors.border }]} />
+            )}
+            {card.card_status !== 'ACTIVE' && (
+              <View style={styles.inactiveBadgeWrapper}>
+                <Text style={[styles.inactiveText, { color: colors.textMuted }]}>INACTIVE</Text>
+              </View>
             )}
           </View>
         </View>
@@ -145,5 +151,15 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 1.5,
+  },
+  inactiveBadgeWrapper: {
+    backgroundColor: 'rgba(150,150,150,0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  inactiveText: {
+    fontSize: 10,
+    fontWeight: tokens.fontWeight.medium,
   },
 });

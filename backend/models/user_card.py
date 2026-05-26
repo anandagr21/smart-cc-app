@@ -100,7 +100,11 @@ class UserCard(SQLModel, table=True):
         max_length=50,
         description="Source of the override (e.g., 'USER', 'ISSUER_PROMO').",
     )
-    is_active: bool = Field(default=True)
+    card_status: str = Field(
+        default="ACTIVE",
+        max_length=20,
+        description="Status of the card (e.g. ACTIVE, INACTIVE, LOCKED, CLOSED, EXPIRED)"
+    )
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(
         default_factory=datetime.utcnow,

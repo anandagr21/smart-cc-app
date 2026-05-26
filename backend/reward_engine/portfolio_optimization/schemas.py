@@ -20,3 +20,14 @@ class OptimizationResult(BaseModel):
     objective_rankings: Dict[RecommendationObjective, int] = {}
     reason_codes: List[str] = []
     explanation: str = ""
+    
+    # Structured Insights
+    reason_title: str = ""
+    reason_description: str = ""
+    cashback_value: float = 0.0
+    strategic_value: float = 0.0
+    total_projected_value: float = 0.0
+    confidence_score: float = 0.0
+    primary_strategy: str = ""
+    supporting_factors: List[str] = []
+    recommendation_strength: str = ""

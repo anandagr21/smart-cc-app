@@ -24,7 +24,7 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   const network = card.card_details?.network || 'VISA';
-  const isActive = card.is_active;
+  const isActive = card.card_status === 'ACTIVE';
 
   // Temporary derived data
   const waiver = deriveFeeWaiverProgress(card);
@@ -46,25 +46,33 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
   const networkGradient = getNetworkGradient(network, isDark) as [string, string];
 
   return (
-    <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={[styles.container, { borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
+    <TouchableOpacity 
+      activeOpacity={0.7} 
+      onPress={onPress} 
+      style={[
+        styles.container, 
+        { borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+        !isActive && { opacity: 0.5 }
+      ]}
+    >
       
       {/* Mini Card Tile */}
-      <View style={styles.tileWrap}>
+      <View style={[styles.tileWrap, !isActive && { opacity: 0.5 }]}>
         <LinearGradient
-          colors={networkGradient}
+          colors={isActive ? networkGradient : [colors.surfaceElevated, colors.surfaceElevated]}
           style={styles.miniTile}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         />
         <View style={styles.networkAccent}>
-          <Text style={styles.networkAccentText}>{network}</Text>
+          <Text style={[styles.networkAccentText, !isActive && { color: colors.textMuted }]}>{network}</Text>
         </View>
       </View>
 
       {/* Main Info */}
       <View style={styles.infoCol}>
         <View style={styles.nameRow}>
-          <Text style={[styles.cardName, { color: colors.textPrimary }]} numberOfLines={1}>
+          <Text style={[styles.cardName, { color: isActive ? colors.textPrimary : colors.textSecondary }]} numberOfLines={1}>
             {bankName} {cardName}
           </Text>
         </View>
@@ -79,7 +87,7 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
 
       {/* Waiver & Status */}
       <View style={styles.rightCol}>
-        {hasWaiver ? (
+        {isActive && hasWaiver ? (
           <View style={styles.waiverWrap}>
             <View style={styles.waiverTextRow}>
               <Text style={styles.waiverValueWrap}>
@@ -101,14 +109,16 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
             </View>
           </View>
         ) : (
-          <View style={styles.waiverWrap}>
-            <Text style={[styles.tagText, { color: colors.textMuted }]}>No waiver info</Text>
-          </View>
+          isActive && (
+            <View style={styles.waiverWrap}>
+              <Text style={[styles.tagText, { color: colors.textMuted }]}>No waiver info</Text>
+            </View>
+          )
         )}
         
-        <View style={styles.statusRow}>
-          <View style={[styles.statusDot, { backgroundColor: isActive ? colors.success : colors.warning }]} />
-          <Text style={[styles.statusText, { color: isActive ? colors.success : colors.warning }]}>
+        <View style={[styles.statusRow, !isActive && styles.inactiveBadge]}>
+          {isActive && <View style={[styles.statusDot, { backgroundColor: colors.success }]} />}
+          <Text style={[styles.statusText, { color: isActive ? colors.success : colors.textMuted }]}>
             {isActive ? 'Active' : 'Inactive'}
           </Text>
         </View>
@@ -230,6 +240,12 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 10,
     fontWeight: tokens.fontWeight.medium,
+  },
+  inactiveBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: 'rgba(150,150,150,0.1)',
   },
   chevronWrap: {
     justifyContent: 'center',

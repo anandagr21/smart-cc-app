@@ -141,12 +141,14 @@ class UserCardRepository(BaseRepository[UserCard, dict, dict]):
         return entity
 
     async def deactivate(self, user_id: UUID, card_id: UUID) -> UserCard:
-        """Soft-delete a user card by setting is_active=False.
+        """Soft-delete a user card by setting card_status='INACTIVE'.
 
         Scoped to the owning user for security.
         """
+        from cards.enums import CardStatus
+        
         entity = await self.get_by_user_and_id(user_id, card_id)
-        entity.is_active = False
+        entity.card_status = CardStatus.INACTIVE
         self.session.add(entity)
         await self.session.flush()
         await self.session.refresh(entity)

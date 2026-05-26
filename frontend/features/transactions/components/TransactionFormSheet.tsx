@@ -14,7 +14,8 @@ import { BlurView } from 'expo-blur';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Store, X, Search, Info } from 'lucide-react-native';
+import { Store, X, Search, Info, Sparkles } from 'lucide-react-native';
+import Animated, { FadeIn, FadeInUp, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { TransactionResponse } from '../types/transaction.types';
 import { Input } from '../../../components/ui/Input';
@@ -98,6 +99,9 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   
   // Explainability Sheet
   const [showExplainability, setShowExplainability] = useState(false);
+
+  // Accordion state
+  const [showAlternatives, setShowAlternatives] = useState(false);
 
   // Fetch recommendations
   useEffect(() => {
@@ -211,13 +215,21 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
     threshold: 0.3,
   });
 
-  const groupedWallet = useMemo(() => {
-    return filteredCards.reduce((acc, card) => {
-      const bank = card.card_details?.bank_name || 'Other';
-      if (!acc[bank]) acc[bank] = [];
-      acc[bank].push(card);
-      return acc;
-    }, {} as Record<string, NonNullable<typeof cardsData>[0][]>);
+  const { groupedActive, inactiveCards } = useMemo(() => {
+    const grouped: Record<string, typeof filteredCards> = {};
+    const inactive: typeof filteredCards = [];
+    
+    filteredCards.forEach(card => {
+      if (card.card_status === 'ACTIVE') {
+        const bank = card.card_details?.bank_name || 'Other';
+        if (!grouped[bank]) grouped[bank] = [];
+        grouped[bank].push(card);
+      } else {
+        inactive.push(card);
+      }
+    });
+    
+    return { groupedActive: grouped, inactiveCards: inactive };
   }, [filteredCards]);
 
   return (
@@ -339,10 +351,10 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
             </View>
 
             {/* SECTION 1: SMART RECOMMENDED CARDS */}
-            {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && winningWalletCards.length > 0 && (
+            {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && (
               <View style={styles.recommendationSection}>
                 <View style={styles.recommendationHeader}>
-                  <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ BEST FOR YOUR PORTFOLIO</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ SMARTEST FINANCIAL CHOICE</Text>
                   <TouchableOpacity style={styles.infoWrap} onPress={() => setShowExplainability(true)} activeOpacity={0.7}>
                     <Text style={styles.infoText}>Why these?</Text>
                     {/* @ts-ignore */}
@@ -350,17 +362,63 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                   </TouchableOpacity>
                 </View>
 
-                {/* Render Winners */}
-                {winningWalletCards.map(({ card, recommendation }) => (
-                  <HeroRecommendationCard
-                    key={card.id}
-                    card={card}
-                    recommendation={recommendation}
-                    delta={null} // Deltas don't make sense cross-objective usually
-                    isActive={selectedCardId === card.id}
-                    onPress={() => setValue('user_card_id', card.id)}
-                  />
-                ))}
+                {(!debouncedMerchant || debouncedMerchant.length < 3) && !getRecommendation.isPending && (
+                  <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.emptyState}>
+                    <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
+                      Start typing a merchant to get smart recommendations
+                    </Text>
+                  </Animated.View>
+                )}
+
+                {getRecommendation.isPending && debouncedMerchant?.length >= 3 && (
+                  <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.thinkingState, { backgroundColor: colors.surface }]}>
+                    {/* @ts-ignore */}
+                    <Sparkles size={16} color={colors.primary} style={styles.pulseIcon} />
+                    <Text style={[styles.thinkingStateText, { color: colors.textPrimary }]}>
+                      Analyzing your portfolio...
+                    </Text>
+                  </Animated.View>
+                )}
+
+                {!getRecommendation.isPending && winningWalletCards.length > 0 && (
+                  <Animated.View entering={FadeInUp.springify().damping(20).stiffness(150)} layout={LinearTransition.springify().damping(20).stiffness(150)}>
+                    <HeroRecommendationCard
+                      card={winningWalletCards[0].card}
+                      recommendation={winningWalletCards[0].recommendation}
+                      delta={null}
+                      isActive={selectedCardId === winningWalletCards[0].card.id}
+                      onPress={() => setValue('user_card_id', winningWalletCards[0].card.id)}
+                    />
+
+                    {winningWalletCards.length > 1 && (
+                      <View style={styles.accordionWrap}>
+                        <TouchableOpacity 
+                          style={styles.accordionHeader} 
+                          onPress={() => setShowAlternatives(!showAlternatives)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.accordionText, { color: colors.textMuted }]}>
+                            {showAlternatives ? 'Hide Other Strategies' : 'See Other Strategies'}
+                          </Text>
+                        </TouchableOpacity>
+
+                        {showAlternatives && (
+                          <Animated.View entering={FadeInUp.springify().damping(20).stiffness(150)} layout={LinearTransition.springify().damping(20).stiffness(150)}>
+                            {winningWalletCards.slice(1).map(({ card, recommendation }) => (
+                              <SecondaryRecommendationCard
+                                key={card.id}
+                                card={card}
+                                recommendation={recommendation}
+                                isActive={selectedCardId === card.id}
+                                onPress={() => setValue('user_card_id', card.id)}
+                              />
+                            ))}
+                          </Animated.View>
+                        )}
+                      </View>
+                    )}
+                  </Animated.View>
+                )}
               </View>
             )}
 
@@ -388,7 +446,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
               </View>
 
               <View style={styles.walletList}>
-                {Object.entries(groupedWallet).map(([bank, cards]) => (
+                {Object.entries(groupedActive).map(([bank, cards]) => (
                   <View key={bank} style={styles.bankGroup}>
                     <Text style={[styles.bankGroupTitle, { color: colors.textMuted }]}>{bank}</Text>
                     {cards.map(card => {
@@ -405,7 +463,24 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                     })}
                   </View>
                 ))}
-                {Object.keys(groupedWallet).length === 0 && (
+                
+                {inactiveCards.length > 0 && (
+                  <View style={styles.bankGroup}>
+                    <Text style={[styles.bankGroupTitle, { color: colors.textMuted, marginTop: 8 }]}>UNAVAILABLE CARDS</Text>
+                    {inactiveCards.map(card => (
+                      <WalletListRow
+                        key={card.id}
+                        card={card}
+                        isActive={selectedCardId === card.id}
+                        onPress={() => {
+                          console.log('This card is inactive and unavailable for recommendations.');
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
+
+                {Object.keys(groupedActive).length === 0 && inactiveCards.length === 0 && (
                   <Text style={[styles.emptySearch, { color: colors.textMuted }]}>No cards found.</Text>
                 )}
               </View>
@@ -425,7 +500,16 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                 activeOpacity={0.8}
               >
                 <Text style={styles.ctaText}>
-                  {isSubmitting || addTx.isPending || updateTx.isPending ? 'Processing...' : (isEditing ? 'Save Changes' : 'Add Transaction')}
+                  {isSubmitting || addTx.isPending || updateTx.isPending 
+                    ? 'Processing...' 
+                    : (isEditing 
+                        ? 'Save Changes' 
+                        : (selectedCardId 
+                            ? `Continue with ${cardsData?.find(c => c.id === selectedCardId)?.nickname || cardsData?.find(c => c.id === selectedCardId)?.card_details?.card_name || 'Card'}`
+                            : 'Add Transaction'
+                          )
+                      )
+                  }
                 </Text>
               </TouchableOpacity>
             </LinearGradient>
@@ -628,5 +712,41 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
+  },
+  emptyState: {
+    paddingVertical: 32,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: tokens.fontSize.body,
+    fontStyle: 'italic',
+  },
+  thinkingState: {
+    paddingVertical: 32,
+    alignItems: 'center',
+    borderRadius: tokens.radius.xl,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  thinkingStateText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  pulseIcon: {
+    opacity: 0.8,
+  },
+  accordionWrap: {
+    marginTop: 8,
+  },
+  accordionHeader: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  accordionText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+    textTransform: 'uppercase',
+    letterSpacing: tokens.letterSpacing.wider,
   },
 });

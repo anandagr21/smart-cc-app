@@ -59,7 +59,11 @@ class RecommendationOrchestrator:
         category = normalize_res.category or "other"
 
         # 2. Fetch user cards
-        user_cards, _ = await self._user_card_service.get_user_cards(user_id, skip=0, limit=100)
+        from cards.enums import is_card_eligible_for_recommendation
+        all_user_cards, _ = await self._user_card_service.get_user_cards(user_id, skip=0, limit=100)
+        
+        # Filter out inactive/unusable cards before any intelligence logic
+        user_cards = [c for c in all_user_cards if is_card_eligible_for_recommendation(c.card_status)]
         
         if not user_cards:
             return RecommendationResponse(
@@ -165,6 +169,16 @@ class RecommendationOrchestrator:
                     objective_rankings={k.value: v for k, v in opt_res.objective_rankings.items()},
                     reason_codes=opt_res.reason_codes,
                     explanation=opt_res.explanation,
+                    
+                    # Structured UI Metadata
+                    reason_title=opt_res.reason_title,
+                    reason_description=opt_res.reason_description,
+                    strategic_value=opt_res.strategic_value,
+                    total_projected_value=opt_res.total_projected_value,
+                    confidence_score=opt_res.confidence_score,
+                    primary_strategy=opt_res.primary_strategy,
+                    supporting_factors=opt_res.supporting_factors,
+                    recommendation_strength=opt_res.recommendation_strength,
                 )
             )
 
