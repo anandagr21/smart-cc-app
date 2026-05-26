@@ -13,6 +13,7 @@ import { BehavioralHighlights } from '../features/monthly_intelligence/component
 import { OptimizationTimeline } from '../features/monthly_intelligence/components/OptimizationTimeline';
 import { ForecastingSurface } from '../features/monthly_intelligence/components/ForecastingSurface';
 import { ExplainabilitySheet } from '../features/monthly_intelligence/components/ExplainabilitySheet';
+import { AnticipatoryState } from '../features/monthly_intelligence/components/AnticipatoryState';
 import { Narrative, Forecast, Streak } from '../features/monthly_intelligence/types/monthly_intelligence.types';
 
 export default function MonthlyIntelligenceScreen() {
@@ -106,6 +107,10 @@ export default function MonthlyIntelligenceScreen() {
         <View style={styles.center}>
           <Text style={{ color: colors.textSecondary }}>Not enough data for this period.</Text>
         </View>
+      ) : summary.transaction_count === 0 ? (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          <AnticipatoryState />
+        </ScrollView>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           

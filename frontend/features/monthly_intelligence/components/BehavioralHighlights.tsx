@@ -52,6 +52,8 @@ export const BehavioralHighlights: React.FC<BehavioralHighlightsProps> = ({ summ
     });
   }
 
+  if (highlights.length === 0) return null;
+
   return (
     <View style={styles.container}>
       <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>BEHAVIORAL HIGHLIGHTS</Text>
