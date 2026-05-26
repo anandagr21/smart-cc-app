@@ -65,7 +65,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if entity is None:
             raise NotFoundException(
                 message=f"{self.model.__name__} with id '{id}' not found.",
-                error_code=f"{self.model.__name__.upper()}_NOT_FOUND",
+                code=f"{self.model.__name__.upper()}_NOT_FOUND",
             )
         return entity
 
