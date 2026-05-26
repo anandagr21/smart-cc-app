@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { RecommendationForm } from '../../features/recommendations/components/RecommendationForm';
@@ -10,6 +10,7 @@ import { AlertCircle, Sparkles } from 'lucide-react-native';
 import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
 import { RecommendationRequest } from '../../features/recommendations/types/api';
 import { tokens } from '../../theme/tokens';
+import { useRouter } from 'expo-router';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -22,6 +23,7 @@ export default function RecommendationsScreen() {
   const { mutate: evaluateTransaction, data, isPending, isError, error } = useRecommendation();
   const colors = useThemeColors();
   const scrollRef = useRef<ScrollView>(null);
+  const router = useRouter();
 
   const handleSubmit = (formData: RecommendationRequest) => {
     evaluateTransaction(formData, {
@@ -49,6 +51,17 @@ export default function RecommendationsScreen() {
           <Text style={[styles.subText, { color: colors.textSecondary }]}>
             Let our engine find the maximum reward value for your purchase.
           </Text>
+          
+          <TouchableOpacity 
+            style={[styles.intelligenceCta, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+            activeOpacity={0.7}
+            onPress={() => router.push('/monthly-intelligence')}
+          >
+            <Sparkles size={14} color={colors.primary} />
+            <Text style={[styles.intelligenceCtaText, { color: colors.textPrimary }]}>
+              Your Monthly Intelligence
+            </Text>
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Form */}
@@ -137,6 +150,22 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.bodyLg,
     fontWeight: tokens.fontWeight.medium,
     lineHeight: tokens.fontSize.bodyLg * 1.55,
+  },
+  intelligenceCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: tokens.radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignSelf: 'flex-start',
+  },
+  intelligenceCtaText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: tokens.letterSpacing.wide,
   },
   errorBox: {
     flexDirection: 'row',

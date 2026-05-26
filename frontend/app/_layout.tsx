@@ -53,6 +53,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
           <Stack.Screen name="(auth)/login" options={{ animation: 'fade' }} />
           <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+          <Stack.Screen name="monthly-intelligence" options={{ presentation: 'modal' }} />
         </Stack>
       </QueryClientProvider>
     </GestureHandlerRootView>

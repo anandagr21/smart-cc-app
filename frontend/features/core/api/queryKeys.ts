@@ -16,4 +16,7 @@ export const QueryKeys = {
   insights: {
     all: ['insights'] as const,
   },
+  monthlyIntelligence: {
+    summary: (year: number, month: number) => ['monthlyIntelligence', year, month] as const,
+  },
 };
