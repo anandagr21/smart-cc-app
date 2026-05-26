@@ -29,7 +29,14 @@ export default function ProfileScreen() {
     await logout();
   };
 
-  const getInitials = (email: string) => {
+  const getInitials = (name: string, email: string) => {
+    if (name && name !== 'User' && name !== 'Smart CC User') {
+      const parts = name.trim().split(' ');
+      if (parts.length > 1) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return name.substring(0, 2).toUpperCase();
+    }
     return email ? email.substring(0, 2).toUpperCase() : 'ME';
   };
 
@@ -88,10 +95,10 @@ export default function ProfileScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.avatarWrap}
           >
-            <Text style={styles.avatarText}>{getInitials(user?.email || '')}</Text>
+            <Text style={styles.avatarText}>{getInitials(user?.full_name || '', user?.email || '')}</Text>
           </LinearGradient>
           <Text style={[styles.userEmail, { color: colors.textPrimary }]}>
-            {user?.email || 'User'}
+            {user?.full_name || user?.email || 'User'}
           </Text>
           
           <View style={[styles.statsBar, { backgroundColor: colors.surface, borderColor: colors.borderHighlight }]}>

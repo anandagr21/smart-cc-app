@@ -45,7 +45,8 @@ export default function LoginScreen() {
         password: data.password,
       });
       const token = response.data.data.access_token;
-      await login(token, { email: data.email });
+      const user = response.data.data.user;
+      await login(token, user);
     } catch (error: any) {
       if (error.response?.status === 401 || error.response?.status === 404) {
         try {
@@ -55,7 +56,8 @@ export default function LoginScreen() {
             full_name: 'Smart CC User',
           });
           const token = regResponse.data.data.access_token;
-          await login(token, { email: data.email });
+          const user = regResponse.data.data.user;
+          await login(token, user);
         } catch (regError: any) {
           const detail = regError.response?.data?.detail;
           const msg = Array.isArray(detail) ? detail[0].msg : detail;
