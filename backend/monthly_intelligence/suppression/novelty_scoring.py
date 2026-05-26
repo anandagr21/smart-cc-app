@@ -48,7 +48,7 @@ class NoveltyScoringEngine:
         return filtered
 
     async def mark_narratives_shown(self, user_id: UUID, narratives: List[Narrative], period: str):
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         
         for n in narratives:
             if not n.novelty_group:
