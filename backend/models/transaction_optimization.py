@@ -2,8 +2,14 @@ import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
+import enum
+from sqlmodel import Field, SQLModel, Column, Enum
 
-from sqlmodel import Field, SQLModel
+class AdoptionStatus(str, enum.Enum):
+    ADOPTED = "ADOPTED"
+    IGNORED = "IGNORED"
+    PARTIAL = "PARTIAL"
+    PENDING = "PENDING"
 
 
 class TransactionOptimizationRecord(SQLModel, table=True):
@@ -24,6 +30,12 @@ class TransactionOptimizationRecord(SQLModel, table=True):
     
     # What card was recommended by the engine
     recommended_card_id: Optional[uuid.UUID] = Field(foreign_key="user_cards.id", default=None)
+    
+    # Status of adoption
+    adoption_status: AdoptionStatus = Field(
+        default=AdoptionStatus.PENDING,
+        sa_column=Column(Enum(AdoptionStatus))
+    )
     
     # Financial impact of the optimization
     estimated_reward_delta: Decimal = Field(default=0, max_digits=12, decimal_places=2)

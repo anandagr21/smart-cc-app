@@ -9,6 +9,7 @@ export enum NarrativeType {
   INEFFICIENCY = "INEFFICIENCY",
   PORTFOLIO = "PORTFOLIO",
   MILESTONE = "MILESTONE",
+  BEHAVIORAL_EVOLUTION = "BEHAVIORAL_EVOLUTION",
 }
 
 export interface Narrative {
@@ -18,6 +19,8 @@ export interface Narrative {
   confidence: ConfidenceLevel;
   reasoning: string;
   novelty_group: string;
+  evidence?: string[];
+  longitudinal_context?: string;
 }
 
 export interface Forecast {
@@ -38,6 +41,7 @@ export interface Streak {
 
 export interface MonthlySummaryResponse {
   period: string; // e.g. "2026-05"
+  transaction_count: number;
   total_rewards_optimized: number;
   missed_opportunity_value: number;
   optimization_rate: number;

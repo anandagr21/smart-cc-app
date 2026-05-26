@@ -12,6 +12,7 @@ class NarrativeType(str, Enum):
     INEFFICIENCY = "INEFFICIENCY"
     PORTFOLIO = "PORTFOLIO"
     MILESTONE = "MILESTONE"
+    BEHAVIORAL_EVOLUTION = "BEHAVIORAL_EVOLUTION"
 
 class Narrative(BaseModel):
     id: str
@@ -20,6 +21,8 @@ class Narrative(BaseModel):
     confidence: ConfidenceLevel
     reasoning: str  # Mandatory for explainability
     novelty_group: str
+    evidence: List[str] = []
+    longitudinal_context: Optional[str] = None
 
 class Forecast(BaseModel):
     id: str
@@ -37,6 +40,7 @@ class Streak(BaseModel):
 
 class MonthlySummaryResponse(BaseModel):
     period: str  # e.g. "2026-05"
+    transaction_count: int
     total_rewards_optimized: float
     missed_opportunity_value: float
     optimization_rate: float

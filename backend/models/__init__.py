@@ -7,11 +7,13 @@ for migration generation.
 """
 
 from merchants.models import Merchant, MerchantAlias
-from models.card_catalog import CardCatalog
-from models.user import User
-from models.user_card import UserCard
-from models.insight_suppression import InsightSuppression
-from models.transaction_optimization import TransactionOptimizationRecord
+from .user import User
+from .card_catalog import CardCatalog
+from .user_card import UserCard
+from transactions.models import Transaction
+from .insight_suppression import InsightSuppression
+from .transaction_optimization import TransactionOptimizationRecord
+from .behavioral_profile import UserBehavioralProfile
 
 __all__ = [
     "CardCatalog",
@@ -21,4 +23,5 @@ __all__ = [
     "UserCard",
     "InsightSuppression",
     "TransactionOptimizationRecord",
+    "UserBehavioralProfile",
 ]

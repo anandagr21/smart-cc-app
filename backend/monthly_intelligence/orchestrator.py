@@ -11,6 +11,7 @@ from monthly_intelligence.scoring.behavior_streak import BehaviorStreakService
 from monthly_intelligence.suppression.novelty_scoring import NoveltyScoringEngine
 from monthly_intelligence.trend_detection.trend_service import TrendDetectionService
 
+from adaptive_intelligence.orchestrator import AdaptiveOrchestrator
 from services.card_service import UserCardService
 from transactions.service import TransactionService
 
@@ -31,6 +32,7 @@ class MonthlyIntelligenceOrchestrator:
         novelty_engine: NoveltyScoringEngine,
         transaction_service: TransactionService,
         card_service: UserCardService,
+        adaptive_orchestrator: AdaptiveOrchestrator = None,
     ):
         self.analytics_engine = analytics_engine
         self.trend_service = trend_service
@@ -40,6 +42,7 @@ class MonthlyIntelligenceOrchestrator:
         self.novelty_engine = novelty_engine
         self.transaction_service = transaction_service
         self.card_service = card_service
+        self.adaptive_orchestrator = adaptive_orchestrator
 
     async def generate_monthly_summary(
         self, user_id: UUID, target_year: int, target_month: int
@@ -90,8 +93,9 @@ class MonthlyIntelligenceOrchestrator:
         opt_rate = curr_metrics.get("optimization_rate", 0)
         prev_opt_rate = prev_metrics.get("optimization_rate", 0)
         
-        return MonthlySummaryResponse(
+        base_response = MonthlySummaryResponse(
             period=period_str,
+            transaction_count=curr_metrics.get("transaction_count", 0),
             total_rewards_optimized=curr_metrics.get("total_rewards_optimized", 0.0),
             missed_opportunity_value=curr_metrics.get("missed_opportunity_value", 0.0),
             optimization_rate=opt_rate,
@@ -103,3 +107,27 @@ class MonthlyIntelligenceOrchestrator:
             forecasts=forecasts,
             supporting_metrics=curr_metrics
         )
+        
+        if self.adaptive_orchestrator:
+            adaptive_resp = await self.adaptive_orchestrator.augment_monthly_summary(
+                user_id,
+                curr_metrics,
+                curr_txns,
+                period_str
+            )
+            # Append adaptive narratives to the deterministic ones
+            from monthly_intelligence.schemas import Narrative, NarrativeType
+            for nav in adaptive_resp.narratives:
+                mapped_nav = Narrative(
+                    id=nav.narrative_id,
+                    type=NarrativeType.BEHAVIORAL_EVOLUTION if nav.type == "BEHAVIORAL_EVOLUTION" else NarrativeType.IMPROVEMENT,
+                    text=nav.text,
+                    confidence=nav.confidence,
+                    reasoning=nav.reasoning,
+                    novelty_group="ADAPTIVE_EVOLUTION",
+                    evidence=nav.evidence,
+                    longitudinal_context=nav.longitudinal_context
+                )
+                base_response.narratives.append(mapped_nav)
+                
+        return base_response
