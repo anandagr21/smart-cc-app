@@ -56,11 +56,11 @@ export function PortfolioEvolutionSurface() {
         </Text>
       </Animated.View>
 
-      {/* Hero Narrative */}
-      {data.primary_narrative && (
+      {/* Hero Narrative — prefers AI-synthesized text when available, silently falls back to deterministic */}
+      {(data.ai_narrative || data.primary_narrative) && (
         <Animated.View entering={FadeInDown.duration(800).delay(300)} style={styles.heroSection}>
           <Text style={[styles.heroNarrative, { color: colors.textPrimary }]}>
-            {data.primary_narrative}
+            {data.ai_narrative ?? data.primary_narrative}
           </Text>
         </Animated.View>
       )}

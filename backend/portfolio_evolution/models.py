@@ -27,9 +27,19 @@ class PortfolioEvolutionSnapshot(SQLModel, table=True):
     # A JSON string or field to store the generated narrative or top observation
     primary_narrative: str | None = Field(default=None)
 
-    # Structured Narrative Primitives
+    # Structured Narrative Primitives (deterministic)
     strategy_reflections: list[dict] = Field(default=[], sa_column=Column(JSON))
     evolution_observations: list[dict] = Field(default=[], sa_column=Column(JSON))
     topology_insights: list[dict] = Field(default=[], sa_column=Column(JSON))
+
+    # AI Narrative Synthesis — stored alongside deterministic state for full auditability.
+    # IMPORTANT: ai_narrative may be None. primary_narrative always has a deterministic fallback.
+    ai_narrative: str | None = Field(default=None)
+    narrative_context_hash: str | None = Field(default=None)   # SHA-256(context + prompt_version)
+    narrative_context_json: dict | None = Field(default=None, sa_column=Column(JSON))  # Raw semantic context snapshot
+    narrative_generated_at: datetime | None = Field(default=None)
+    narrative_model: str | None = Field(default=None)          # e.g. "gpt-4o" — auditability
+    narrative_prompt_version: str | None = Field(default=None) # Prompt semver — triggers regen on upgrade
+    narrative_generation_reason: str | None = Field(default=None)  # e.g. "cognition_drift", "initial_generation"
 
     created_at: datetime = Field(default_factory=datetime.utcnow)

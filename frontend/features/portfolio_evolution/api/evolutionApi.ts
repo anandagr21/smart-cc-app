@@ -22,6 +22,9 @@ export interface PortfolioEvolutionSnapshot {
   strategy_reflections: NarrativeObservation[];
   evolution_observations: NarrativeObservation[];
   topology_insights: NarrativeObservation[];
+  // AI Synthesis Layer — present only when AI is configured and cognition state has drifted
+  ai_narrative: string | null;
+  narrative_generation_reason: string | null;
   created_at: string;
 }
 

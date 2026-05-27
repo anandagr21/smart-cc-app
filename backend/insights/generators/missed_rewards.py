@@ -74,7 +74,7 @@ class MissedRewardsGenerator(InsightGenerator):
                     priority=priority,
                     confidence=ConfidenceLevel.HIGH, # Backed by deterministic engine
                     title="Missed Reward Opportunity",
-                    summary=f"Using {optimal_card.card_name} for {tx.normalized_merchant_name} could improve returns by ~{((delta / tx.amount) * 100):.1f}%.",
+                    summary=f"Using {optimal_card.card_name} for {tx.normalized_merchant_name} could improve returns by ~{((float(delta) / tx.amount) * 100):.1f}%.",
                     reasoning=f"You earned ₹{used_value} with {used_name}, but {optimal_card.card_name} would have earned ₹{optimal_value}.",
                     badge_label="MISSED REWARD",
                     badge_color="#EF4444", # Red
