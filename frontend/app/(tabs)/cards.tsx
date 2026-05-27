@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import { Plus, Search, SlidersHorizontal } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -20,6 +21,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { UserCardResponse } from '../../features/cards/types/api';
 
 export default function CardsScreen() {
+  const router = useRouter();
   const { data: cards, isLoading } = useCards();
   const [isSheetVisible, setSheetVisible] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -113,6 +115,17 @@ export default function CardsScreen() {
 
       <PortfolioLens />
       <BehavioralSignalsSurface />
+      
+      <View style={{ paddingHorizontal: 24, marginTop: 4, marginBottom: 16 }}>
+        <TouchableOpacity 
+          onPress={() => router.push('/intelligence')}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+        >
+          <Text style={{ fontSize: tokens.fontSize.sm, color: colors.primary }}>
+            Financial Intelligence
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {isLoading ? (
         <WalletCardSkeleton />
