@@ -41,6 +41,8 @@ export interface TransactionBase {
   raw_description?: string;
   source?: string;
   statement_id?: string;
+  recommended_card_id?: string;
+  override_reason?: string;
 }
 
 export interface TransactionCreate extends TransactionBase {}

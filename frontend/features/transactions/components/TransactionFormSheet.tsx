@@ -42,9 +42,18 @@ const formSchema = z.object({
   amount: z.coerce.number().positive('Amount must be positive'),
   user_card_id: z.string().min(1, 'Please select a card'),
   payment_mode: z.enum(['ONLINE', 'OFFLINE', 'INTERNATIONAL']).default('ONLINE'),
+  override_reason: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+const OVERRIDE_REASONS = [
+  { label: 'Personal preference', value: 'Personal preference' },
+  { label: 'Building milestone', value: 'Building milestone' },
+  { label: 'Simplifying wallet', value: 'Simplifying wallet' },
+  { label: 'Avoiding annual fee', value: 'Avoiding annual fee' },
+  { label: 'Temporary choice', value: 'Temporary choice' }
+];
 
 interface TransactionFormSheetProps {
   visible: boolean;
@@ -163,6 +172,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           ...data,
           payment_mode: data.payment_mode.toLowerCase() as any,
           transaction_date: new Date().toISOString().split('T')[0],
+          recommended_card_id: recommendedCardId,
         });
       }
       onClose();
@@ -201,6 +211,9 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
       recommendation: rc
     })).filter(r => r.card) as { card: NonNullable<typeof cardsData>[0], recommendation: typeof rankedCards[0] }[];
   }, [rankedCards, cardsData]);
+  
+  const recommendedCardId = winningWalletCards[0]?.card?.id;
+  const isOverride = !isEditing && recommendedCardId && selectedCardId && selectedCardId !== recommendedCardId;
 
   // Full Wallet
   const { results: filteredCards } = useFuseSearch({
@@ -482,6 +495,41 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
               </View>
             </View>
 
+            {/* OVERRIDE REASON UX */}
+            {isOverride && (
+              <Animated.View entering={FadeInUp.springify()} exiting={FadeOut} style={styles.overrideSection}>
+                <Text style={[styles.overrideTitle, { color: colors.textMuted }]}>Optional context for this selection</Text>
+                <Controller
+                  control={control}
+                  name="override_reason"
+                  render={({ field: { onChange, value } }) => (
+                    <View style={styles.overrideChipWrap}>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.overrideScroll}>
+                        {OVERRIDE_REASONS.map(reason => {
+                          const isActive = value === reason.value;
+                          return (
+                            <TouchableOpacity
+                              key={reason.value}
+                              onPress={() => onChange(isActive ? undefined : reason.value)}
+                              style={[
+                                styles.overrideChip,
+                                { backgroundColor: isActive ? colors.surfaceElevated : colors.background },
+                                isActive && { borderColor: colors.primary, borderWidth: 1 }
+                              ]}
+                            >
+                              <Text style={[styles.overrideChipText, { color: isActive ? colors.primary : colors.textSecondary }]}>
+                                {reason.label}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+                  )}
+                />
+              </Animated.View>
+            )}
+
             {/* CTA */}
             <LinearGradient
               colors={['#10B981', '#059669']} // Emerald Glow
@@ -746,5 +794,33 @@ const styles = StyleSheet.create({
   },
   alternativesInnerRow: {
     flexDirection: 'row',
+  },
+  overrideSection: {
+    marginBottom: 24,
+    marginTop: -8,
+  },
+  overrideTitle: {
+    fontSize: tokens.fontSize.micro,
+    fontWeight: tokens.fontWeight.medium,
+    marginBottom: 8,
+    marginLeft: 2,
+  },
+  overrideChipWrap: {
+    marginHorizontal: -24,
+  },
+  overrideScroll: {
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  overrideChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: tokens.radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'transparent',
+  },
+  overrideChipText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
   },
 });

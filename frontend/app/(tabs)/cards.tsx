@@ -11,6 +11,8 @@ import { AddCardSheet } from '../../features/cards/components/AddCardSheet';
 import { CardDetailSheet } from '../../features/cards/components/CardDetailSheet';
 import { FeaturedCardsSection } from '../../features/cards/components/FeaturedCardsSection';
 import { SmartWalletInventory } from '../../features/cards/components/SmartWalletInventory';
+import { PortfolioLens } from '../../features/personality/components/PortfolioLens';
+import { BehavioralSignalsSurface } from '../../features/personality/components/BehavioralSignalsSurface';
 import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
 import { tokens } from '../../theme/tokens';
 import { useFuseSearch } from '../../shared/search/useFuseSearch';
@@ -108,6 +110,9 @@ export default function CardsScreen() {
           </TouchableOpacity>
         )}
       </Animated.View>
+
+      <PortfolioLens />
+      <BehavioralSignalsSurface />
 
       {isLoading ? (
         <WalletCardSkeleton />

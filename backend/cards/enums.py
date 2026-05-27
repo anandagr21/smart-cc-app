@@ -28,3 +28,14 @@ def is_card_visible_in_wallet(status: str | CardStatus) -> bool:
     (Closed cards might eventually be hidden, but for now we keep them visible).
     """
     return status in (CardStatus.ACTIVE, CardStatus.INACTIVE, CardStatus.LOCKED, CardStatus.EXPIRED)
+
+class OptimizationPersonality(str, Enum):
+    """
+    The strategic financial philosophy of the user. 
+    Used to shift the recommendation engine's priorities and adapt UI coaching.
+    """
+    MAXIMIZE_REWARDS = "MAXIMIZE_REWARDS"
+    TRAVEL_OPTIMIZATION = "TRAVEL_OPTIMIZATION"
+    FEE_MINIMIZATION = "FEE_MINIMIZATION"
+    BALANCED_INTELLIGENCE = "BALANCED_INTELLIGENCE"
+    WALLET_SIMPLICITY = "WALLET_SIMPLICITY"

@@ -24,6 +24,7 @@ from recommendations.routes import router as recommendations_router
 from transactions.routes import router as transactions_router
 from .insights import router as insights_router
 from .monthly_intelligence import router as monthly_intelligence_router
+from .personality import router as personality_router
 from core.config import get_settings
 
 settings = get_settings()
@@ -41,3 +42,4 @@ api_router.include_router(recommendations_router)
 api_router.include_router(transactions_router)
 api_router.include_router(insights_router)
 api_router.include_router(monthly_intelligence_router)
+api_router.include_router(personality_router)

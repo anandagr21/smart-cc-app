@@ -14,6 +14,8 @@ from transactions.models import Transaction
 from .insight_suppression import InsightSuppression
 from .transaction_optimization import TransactionOptimizationRecord
 from .behavioral_profile import UserBehavioralProfile
+from .optimization_profile import OptimizationPersonalityProfile
+from behavioral_memory.models import RecommendationBehaviorRecord
 
 __all__ = [
     "CardCatalog",
@@ -24,4 +26,6 @@ __all__ = [
     "InsightSuppression",
     "TransactionOptimizationRecord",
     "UserBehavioralProfile",
+    "OptimizationPersonalityProfile",
+    "RecommendationBehaviorRecord",
 ]
