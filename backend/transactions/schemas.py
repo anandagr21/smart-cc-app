@@ -31,7 +31,8 @@ class TransactionBase(BaseModel):
 
 class TransactionCreate(TransactionBase):
     """Payload to create a new transaction."""
-    pass
+    recommended_card_id: Optional[UUID] = None
+    override_reason: Optional[str] = None
 
 
 class TransactionUpdate(BaseModel):

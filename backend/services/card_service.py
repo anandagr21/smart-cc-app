@@ -200,6 +200,8 @@ class UserCardService:
             # Enrich with fee waiver intelligence
             waiver_data = get_waiver_progress(entity, entity.card_catalog)
             response.fee_waiver_threshold = waiver_data.get("fee_waiver_threshold")
+            response.user_override_fee_waiver_threshold = waiver_data.get("user_override_fee_waiver_threshold")
+            response.effective_fee_waiver_threshold = waiver_data.get("effective_fee_waiver_threshold")
             response.fee_waiver_progress_percent = waiver_data.get("fee_waiver_progress_percent")
             response.remaining_spend_for_waiver = waiver_data.get("remaining_spend_for_waiver")
             response.waiver_achieved = waiver_data.get("waiver_achieved")

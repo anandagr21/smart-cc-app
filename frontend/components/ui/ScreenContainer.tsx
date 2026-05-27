@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, ViewProps, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { tokens } from '../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 
 const { width, height } = Dimensions.get('window');
 

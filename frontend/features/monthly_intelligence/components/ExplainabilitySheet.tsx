@@ -3,9 +3,9 @@ import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from 'rea
 import { BlurView } from 'expo-blur';
 import { X, Info, TrendingUp, CreditCard } from 'lucide-react-native';
 
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { tokens } from '@/theme/tokens';
 
 interface ExplainabilityData {
   title: string;

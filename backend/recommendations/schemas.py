@@ -50,13 +50,28 @@ class RankedCardResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list, description="Warnings related to this card.")
 
     # ---- Phase 2: Explainability & Intelligence ----
-    optimization_factors: list[str] = Field(default_factory=list, description="Positive factors influencing this rank.")
-    tradeoffs: list[str] = Field(default_factory=list, description="Negative tradeoffs for picking this card.")
-    waiver_impact: str | None = Field(default=None, description="How this impacts annual fee waiver.")
-    milestone_impact: str | None = Field(default=None, description="How this impacts milestone goals.")
-    cap_status: str | None = Field(default=None, description="Status of the reward caps relevant here.")
-    reasoning_summary: str = Field(default="", description="Human-readable synthesis of the recommendation logic.")
-
+    # Core Engine Metrics
+    portfolio_score: float = Field(..., description="Master portfolio optimization score.")
+    immediate_reward_value: float = Field(..., description="Value of immediate rewards.")
+    long_term_portfolio_value: float = Field(..., description="Value of long-term optimization.")
+    waiver_acceleration: float = Field(..., description="Value of fee waiver progress.")
+    milestone_acceleration: float = Field(..., description="Value of milestone progress.")
+    
+    # Explainability & Breakdown
+    portfolio_score_breakdown: dict[str, float] = Field(..., description="Score contributions by factor.")
+    objective_rankings: dict[str, int] = Field(..., description="Ranking of this card for each objective.")
+    reason_codes: list[str] = Field(default_factory=list, description="Structured reason codes for why this was recommended.")
+    explanation: str = Field(..., description="Human-readable explanation of the recommendation.")
+    
+    # Structured Metadata for UI
+    reason_title: str = Field(default="", description="High-level title for the recommendation reason.")
+    reason_description: str = Field(default="", description="Detailed explanation of strategic value.")
+    strategic_value: float = Field(default=0.0, description="INR value of long-term strategic benefits.")
+    total_projected_value: float = Field(default=0.0, description="Total projected INR value (immediate + strategic).")
+    confidence_score: float = Field(default=0.0, description="Engine confidence score (0-1).")
+    primary_strategy: str = Field(default="", description="The main strategic goal achieved.")
+    supporting_factors: list[str] = Field(default_factory=list, description="List of secondary benefits.")
+    recommendation_strength: str = Field(default="", description="E.g., 'Strong', 'Moderate'.")
 
 class RecommendationResponse(BaseModel):
     """Full response for a recommendation request."""

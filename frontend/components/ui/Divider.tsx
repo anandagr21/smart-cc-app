@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 
 interface DividerProps {
   style?: any;

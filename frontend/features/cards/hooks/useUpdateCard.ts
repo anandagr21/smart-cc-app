@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../../../services/api/client';
+import { apiClient } from '@/services/api/client';
 import { UserCardResponse } from '../types/api';
-import { QueryKeys } from '../../core/api/queryKeys';
+import { QueryKeys } from '@/features/core/api/queryKeys';
 
 interface UpdateCardPayload {
   nickname?: string;
-  is_active?: boolean;
+  card_status?: string;
   credit_limit?: number;
   billing_date?: number;
   due_date?: number;

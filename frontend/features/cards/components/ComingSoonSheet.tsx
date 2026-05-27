@@ -2,10 +2,10 @@ import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import { X, Sparkles } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { tokens } from '../../../theme/tokens';
-import { Button } from '../../../components/ui/Button';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { tokens } from '@/theme/tokens';
+import { Button } from '@/components/ui/Button';
 
 interface ComingSoonSheetProps {
   visible: boolean;

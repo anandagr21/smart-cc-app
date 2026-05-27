@@ -19,12 +19,28 @@ export interface RankedCardResponse {
   reward_type: RewardType;
   recommendation_reason: string;
   warnings: string[];
-  optimization_factors: string[];
-  tradeoffs: string[];
-  waiver_impact: string | null;
-  milestone_impact: string | null;
-  cap_status: string | null;
-  reasoning_summary: string;
+  // Core Engine Metrics
+  portfolio_score: number;
+  immediate_reward_value: number;
+  long_term_portfolio_value: number;
+  waiver_acceleration: number;
+  milestone_acceleration: number;
+  
+  // Explainability & Breakdown
+  portfolio_score_breakdown: Record<string, number>;
+  objective_rankings: Record<string, number>;
+  reason_codes: string[];
+  explanation: string;
+  
+  // Structured Metadata for UI
+  reason_title: string;
+  reason_description: string;
+  strategic_value: number;
+  total_projected_value: number;
+  confidence_score: number;
+  primary_strategy: string;
+  supporting_factors: string[];
+  recommendation_strength: string;
 }
 
 export interface RecommendationResponse {

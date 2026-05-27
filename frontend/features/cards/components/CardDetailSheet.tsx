@@ -15,15 +15,16 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
 import { UserCardResponse } from '../types/api';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { getNetworkGradient } from '../../../theme/colors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { getNetworkGradient } from '@/theme/colors';
+import { tokens } from '@/theme/tokens';
 import { ComingSoonSheet } from './ComingSoonSheet';
 import { useUpdateCard } from '../hooks/useUpdateCard';
 import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
 import { AnnualFeeEditSheet } from './AnnualFeeEditSheet';
-import { formatCurrencyIN } from '../../../utils/currency';
+import { AnnualSpendEditSheet } from './AnnualSpendEditSheet';
+import { formatCurrencyIN } from '@/utils/currency';
 
 interface CardDetailSheetProps {
   card: UserCardResponse | null;
@@ -38,6 +39,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
 
   const [mockActionTitle, setMockActionTitle] = useState<string | null>(null);
   const [isAnnualFeeEditVisible, setIsAnnualFeeEditVisible] = useState(false);
+  const [isAnnualSpendEditVisible, setIsAnnualSpendEditVisible] = useState(false);
 
   const { mutate: updateCard } = useUpdateCard(card?.id || '');
 
@@ -46,7 +48,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   const network = card.card_details?.network || 'VISA';
-  const isActive = card.is_active;
+  const isActive = card.card_status === 'ACTIVE';
 
   const gradient = getNetworkGradient(network, isDark) as [string, string];
 
@@ -86,7 +88,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const finalChips = intelligenceChips.slice(0, 4);
 
   const handleToggleStatus = () => {
-    updateCard({ is_active: !isActive });
+    updateCard({ card_status: isActive ? 'INACTIVE' : 'ACTIVE' });
   };
 
   const handleViewTransactions = () => {
@@ -218,6 +220,24 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
               </View>
             </Animated.View>
 
+            {/* Section 2.75: Optimization Potential */}
+            <Animated.View entering={FadeInUp.duration(400).delay(225)} style={[styles.section, styles.cardBox, { backgroundColor: 'rgba(139, 92, 246, 0.05)', borderColor: 'rgba(139, 92, 246, 0.2)' }]}>
+              <View style={styles.sectionTitleRow}>
+                <Text style={[styles.sectionTitle, { color: '#8B5CF6' }]}>OPTIMIZATION POTENTIAL</Text>
+                {/* @ts-ignore */}
+                <Sparkles size={14} color="#8B5CF6" />
+              </View>
+              {hasWaiver && waiverPercent < 100 ? (
+                <Text style={[styles.feeIntelligenceSource, { color: colors.textPrimary, lineHeight: 20 }]}>
+                  Best used for large purchases to accelerate your fee waiver. You are ₹{remainingSpend.toLocaleString('en-IN')} away from preserving your portfolio health.
+                </Text>
+              ) : (
+                <Text style={[styles.feeIntelligenceSource, { color: colors.textPrimary, lineHeight: 20 }]}>
+                  Best used for {cNameLow.includes('travel') || cNameLow.includes('miles') ? 'travel & milestone acceleration' : 'maximizing immediate cashback on daily spends'}.
+                </Text>
+              )}
+            </Animated.View>
+
             {/* Section 3: Reward Intelligence */}
             {finalChips.length > 0 && (
               <Animated.View entering={FadeInUp.duration(400).delay(250)} style={styles.section}>
@@ -281,8 +301,8 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 </TouchableOpacity>
                 <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
 
-                {/* Update Spend (Mocked) */}
-                <TouchableOpacity style={styles.actionRow} onPress={() => setMockActionTitle("Advanced Spend Tracking")}>
+                {/* Update Spend (Real Action) */}
+                <TouchableOpacity style={styles.actionRow} onPress={() => setIsAnnualSpendEditVisible(true)}>
                   <View style={styles.actionIconWrap}>
                     {/* @ts-ignore */}
                     <SlidersHorizontal size={18} color={colors.textPrimary} />
@@ -322,6 +342,11 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
       <AnnualFeeEditSheet
         visible={isAnnualFeeEditVisible}
         onClose={() => setIsAnnualFeeEditVisible(false)}
+        card={card}
+      />
+      <AnnualSpendEditSheet
+        visible={isAnnualSpendEditVisible}
+        onClose={() => setIsAnnualSpendEditVisible(false)}
         card={card}
       />
     </Modal>

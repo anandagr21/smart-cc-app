@@ -4,14 +4,14 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Mail, Lock, Fingerprint } from 'lucide-react-native';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
-import { Input } from '../../components/ui/Input';
-import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
-import { useAuthStore } from '../../features/auth/store/authStore';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { apiClient } from '../../services/api/client';
-import { tokens } from '../../theme/tokens';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { useAuthStore } from '@/features/auth/store/authStore';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { apiClient } from '@/services/api/client';
+import { tokens } from '@/theme/tokens';
 import Animated, {
   FadeInDown,
   FadeInUp,

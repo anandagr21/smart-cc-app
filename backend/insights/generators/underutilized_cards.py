@@ -28,8 +28,11 @@ class UnderutilizedCardGenerator(InsightGenerator):
                 if tx.card_id not in last_used or tx_date > last_used[tx.card_id]:
                     last_used[tx.card_id] = tx_date
 
+        from cards.enums import is_card_eligible_for_recommendation
+        
         for card in cards:
-            if not card.is_active:
+            # Skip non-active cards
+            if not is_card_eligible_for_recommendation(card.card_status):
                 continue
                 
             last_usage_date = last_used.get(str(card.id))

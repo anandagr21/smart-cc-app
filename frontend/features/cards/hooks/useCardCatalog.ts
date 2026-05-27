@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchCardCatalog } from '../api/cardsApi';
-import { useAuthStore } from '../../auth/store/authStore';
-import { QueryKeys } from '../../core/api/queryKeys';
+import { useAuthStore } from '@/features/auth/store/authStore';
+import { QueryKeys } from '@/features/core/api/queryKeys';
 
 export const useCardCatalog = () => {
   const token = useAuthStore((state) => state.token);

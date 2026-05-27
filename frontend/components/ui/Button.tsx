@@ -12,8 +12,8 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { tokens } from '../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 
 interface ButtonProps extends TouchableOpacityProps {
   label: string;

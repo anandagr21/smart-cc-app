@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { TransactionResponse } from '../types/transaction.types';
 import { Sparkles, ArrowUpRight, CheckCircle2, AlertCircle } from 'lucide-react-native';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 
 interface TransactionInsightCardProps {
   transaction: TransactionResponse;

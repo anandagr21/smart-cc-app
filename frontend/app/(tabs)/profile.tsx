@@ -3,14 +3,14 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Settings, Bell, Shield, LogOut, Moon, Sun, Monitor, ChevronRight } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
-import { useAuthStore } from '../../features/auth/store/authStore';
-import { useThemeStore } from '../../features/theme/store/themeStore';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { useCards } from '../../features/cards/hooks/useCards';
-import { useTransactions } from '../../features/transactions/hooks/useTransactions';
-import { SkeletonBox } from '../../components/ui/SkeletonBox';
-import { tokens } from '../../theme/tokens';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { useAuthStore } from '@/features/auth/store/authStore';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useCards } from '@/features/cards/hooks/useCards';
+import { useTransactions } from '@/features/transactions/hooks/useTransactions';
+import { SkeletonBox } from '@/components/ui/SkeletonBox';
+import { tokens } from '@/theme/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ProfileScreen() {

@@ -5,12 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Store, IndianRupee } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { Card } from '../../../components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { RecommendationRequest, PaymentMode } from '../types/api';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 
 const PAYMENT_MODES: { label: string; value: PaymentMode }[] = [
   { label: 'Any', value: 'ANY' as PaymentMode },

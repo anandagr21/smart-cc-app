@@ -31,15 +31,21 @@ class MockCardDetails:
         self.annual_fee = Decimal("1000.00")
 
 class MockUserCard:
-    def __init__(self, card_id: str, card_name: str) -> None:
-        self.card_id = card_id
-        self.id = card_id
-        self.card_catalog_id = card_id
-        self.card_name = card_name
-        self.nickname = card_name
-        self.annual_spend = Decimal("50000.00")
+    def __init__(self, id, name):
+        self.id = id
+        self.card_catalog_id = id
+        self.nickname = name
+        self.annual_spend = Decimal("0.00")
+        self.card_status = "ACTIVE"
         self.fee_cycle_start_date = None
-        self.card_details = MockCardDetails(card_name)
+        self.user_override_annual_fee = None
+        self.effective_annual_fee = Decimal("1000.00")
+        self.card_catalog = type("MockCatalog", (), {
+            "card_name": name,
+            "bank_name": "Bank",
+            "fee_waiver_spend_threshold": Decimal("100000.00"),
+            "annual_fee": Decimal("1000.00")
+        })
 
 class MockRewardRule:
     def __init__(self, rule_name: str, rule_type: str, priority: int, config: dict[str, Any]) -> None:
@@ -156,7 +162,7 @@ async def test_generate_recommendation_success(orchestrator: RecommendationOrche
 
 
 @pytest.mark.asyncio
-async def test_generate_recommendation_no_cards_raises(
+async def test_generate_recommendation_no_cards_returns_empty_response(
     orchestrator: RecommendationOrchestrator,
     user_card_service: AsyncMock,
 ):
@@ -165,8 +171,10 @@ async def test_generate_recommendation_no_cards_raises(
         merchant_name="dominos",
         amount=Decimal("1000"),
     )
-    with pytest.raises(NoCardsError):
-        await orchestrator.generate_recommendation(uuid4(), req)
+    res = await orchestrator.generate_recommendation(uuid4(), req)
+    
+    assert res.best_card is None
+    assert len(res.ranked_cards) == 0
 
 
 @pytest.mark.asyncio

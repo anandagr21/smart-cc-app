@@ -34,15 +34,21 @@ class MockCardDetails:
 
 
 class MockUserCard:
-    def __init__(self, card_id: str, card_name: str, annual_spend: str = "0.00", annual_fee: str = "1000.00", waiver_threshold: str = "100000.00") -> None:
-        self.card_id = card_id
-        self.id = card_id
-        self.card_catalog_id = card_id
-        self.card_name = card_name
-        self.nickname = card_name
+    def __init__(self, card_id, name, annual_spend="0.00", fee_waiver_threshold="0.00", annual_fee="0.00"):
+        self.id = UUID(card_id)
+        self.card_catalog_id = UUID(card_id)
+        self.nickname = name
         self.annual_spend = Decimal(annual_spend)
+        self.card_status = "ACTIVE"
         self.fee_cycle_start_date = None
-        self.card_details = MockCardDetails(card_name, annual_fee, waiver_threshold)
+        self.user_override_annual_fee = None
+        self.effective_annual_fee = Decimal(annual_fee)
+        self.card_catalog = type("MockCatalog", (), {
+            "card_name": name,
+            "bank_name": "Bank",
+            "fee_waiver_spend_threshold": Decimal(fee_waiver_threshold) if fee_waiver_threshold else None,
+            "annual_fee": Decimal(annual_fee)
+        })
 
 
 class MockRewardRule:

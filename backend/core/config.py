@@ -68,6 +68,11 @@ class Settings(BaseSettings):
     # ---- API ----
     api_v1_prefix: str = "/api/v1"
 
+    # ---- AI Narrative Synthesis ----
+    openai_api_key: str = ""
+    ai_narrative_model: str = "gpt-4o"
+    ai_narrative_enabled: bool = True
+
     # ---- Convenience Properties ----
     @property
     def is_production(self) -> bool:

@@ -1,5 +1,5 @@
 import { useColorScheme } from 'nativewind';
-import { lightTheme, darkTheme } from '../../../theme/colors';
+import { lightTheme, darkTheme } from '@/theme/colors';
 import { useThemeStore } from '../store/themeStore';
 import { useEffect, useMemo } from 'react';
 import { Appearance } from 'react-native';

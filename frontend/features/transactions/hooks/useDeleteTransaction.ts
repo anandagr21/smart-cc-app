@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '../services/transactionService';
-import { QueryKeys } from '../../core/api/queryKeys';
-import { invalidateTransactionsAndWallet } from '../../core/api/queryUtils';
+import { QueryKeys } from '@/features/core/api/queryKeys';
+import { invalidateTransactionsAndWallet } from '@/features/core/api/queryUtils';
 
 export function useDeleteTransaction() {
   const queryClient = useQueryClient();

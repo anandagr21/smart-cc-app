@@ -7,12 +7,12 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Search, ChevronRight } from 'lucide-react-native';
-import { Input } from '../../../components/ui/Input';
+import { Input } from '@/components/ui/Input';
 import { CardCatalogResponse } from '../types/api';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { getNetworkGradient } from '../../../theme/colors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { getNetworkGradient } from '@/theme/colors';
+import { tokens } from '@/theme/tokens';
 
 interface CardCatalogListProps {
   catalog: CardCatalogResponse[];

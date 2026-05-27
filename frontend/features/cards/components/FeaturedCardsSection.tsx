@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Sparkles, ChevronRight } from 'lucide-react-native';
-import { UserCardResponse } from '../../cards/types/api';
+import { UserCardResponse } from '@/features/cards/types/api';
 import { FeaturedWalletCard } from './FeaturedWalletCard';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
-import { useSpendInsights } from '../../insights/hooks/useSpendInsights';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
+import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
 
 interface FeaturedCardsSectionProps {
   cards: UserCardResponse[];
@@ -19,12 +19,12 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
   // Derive the top featured cards based on insights
   const featuredCards = useMemo(() => {
     if (!cards || cards.length === 0) return [];
-    
+
     // Get all cards that have a specific high/medium priority insight
-    const cardsWithInsights = cards.filter(c => 
+    const cardsWithInsights = cards.filter(c =>
       insights.some(i => i.related_card_id === c.id && (i.priority === 'HIGH' || i.priority === 'MEDIUM' || i.priority === 'URGENT'))
     );
-    
+
     // If not enough insights, fallback to highest spend / active cards
     if (cardsWithInsights.length < 3) {
       const activeCards = cards.filter(c => c.is_active && !cardsWithInsights.some(ci => ci.id === c.id));
@@ -45,28 +45,23 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
           <Sparkles size={16} color={colors.primary} />
           <Text style={[styles.titleText, { color: colors.textSecondary }]}>FEATURED FOR YOU</Text>
         </View>
-        <View style={styles.viewAllWrap}>
-          <Text style={[styles.viewAllText, { color: colors.primary }]}>View all</Text>
-          {/* @ts-ignore */}
-          <ChevronRight size={14} color={colors.primary} />
-        </View>
       </View>
 
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         decelerationRate="fast"
-        snapToInterval={220 + 16} // card width + margin
+        snapToInterval={240 + 22} // updated card width + gap
       >
         {featuredCards.map(card => {
           const insight = insights.find(i => i.related_card_id === card.id);
           return (
-            <FeaturedWalletCard 
-              key={card.id} 
-              card={card} 
+            <FeaturedWalletCard
+              key={card.id}
+              card={card}
               insight={insight}
-              onPress={() => onSelectCard(card)} 
+              onPress={() => onSelectCard(card)}
             />
           );
         })}
@@ -84,7 +79,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    marginBottom: 16,
+    marginBottom: 8, // Reduced to balance the new paddingTop
   },
   titleWrap: {
     flexDirection: 'row',
@@ -96,17 +91,10 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
   },
-  viewAllWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  viewAllText: {
-    fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.medium,
-  },
   scrollContent: {
     paddingHorizontal: 24,
     paddingBottom: 24,
+    paddingTop: 16, // Added to prevent ambientGlow clipping at the top
+    gap: 22,
   },
 });

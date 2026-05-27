@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addUserCard } from '../api/cardsApi';
 import { UserCardCreate } from '../types/api';
-import { invalidateWalletIntelligence } from '../../core/api/queryUtils';
+import { invalidateWalletIntelligence } from '@/features/core/api/queryUtils';
 
 export const useAddCard = () => {
   const queryClient = useQueryClient();

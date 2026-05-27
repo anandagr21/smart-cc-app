@@ -45,6 +45,7 @@ async def get_transaction_service(
         spend_aggregator=spend_aggregator
     )
 
+from behavioral_memory.engine import BehavioralMemoryEngine
 
 @router.post(
     "",
@@ -57,10 +58,27 @@ async def create_transaction(
     current_user: UserResponse = Depends(get_current_user),
     service: TransactionService = Depends(get_transaction_service),
     enrichment_service: TransactionEnrichmentService = Depends(get_transaction_enrichment_service),
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     try:
         result = await service.create_transaction(current_user.id, request)
         enriched = await enrichment_service.enrich_transactions(current_user.id, [result])
+        
+        # Phase 3: Record behavioral memory
+        memory_engine = BehavioralMemoryEngine(session=db)
+        # Note: override_delta_value requires computing difference between selected and recommended.
+        # We can extract that from enriched[0].missed_savings if it was not followed.
+        delta_value = enriched[0].missed_savings if request.recommended_card_id and request.user_card_id != request.recommended_card_id else None
+        
+        await memory_engine.record_behavior(
+            user_id=current_user.id,
+            transaction_id=result.id,
+            selected_card_id=request.user_card_id,
+            recommended_card_id=request.recommended_card_id,
+            override_delta_value=delta_value,
+            override_reason=request.override_reason
+        )
+        
         return {"data": enriched[0]}
     except InvalidTransactionError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

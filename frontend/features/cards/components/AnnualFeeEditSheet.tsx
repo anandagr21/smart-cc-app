@@ -11,14 +11,14 @@ import {
 } from 'react-native';
 import { X, ShieldCheck } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { tokens } from '../../../theme/tokens';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { tokens } from '@/theme/tokens';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import { useUpdateCard } from '../hooks/useUpdateCard';
 import { UserCardResponse } from '../types/api';
-import { formatCurrencyIN } from '../../../utils/currency';
+import { formatCurrencyIN } from '@/utils/currency';
 
 interface AnnualFeeEditSheetProps {
   visible: boolean;

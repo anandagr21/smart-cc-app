@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { X, Fingerprint, Lock, Smartphone, ChevronRight } from 'lucide-react-native';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { tokens } from '../../theme/tokens';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 export default function SecurityModal() {

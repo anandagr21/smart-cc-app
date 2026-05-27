@@ -14,13 +14,13 @@ import { X, Calendar, CreditCard, ShoppingBag, Edit2, Trash2 } from 'lucide-reac
 import { TransactionResponse } from '../types/transaction.types';
 import { format } from 'date-fns';
 import { getCategoryAccent } from '../utils/categoryAccents';
-import { useCards } from '../../cards/hooks/useCards';
+import { useCards } from '@/features/cards/hooks/useCards';
 import { useDeleteTransaction } from '../hooks/useDeleteTransaction';
 import * as Icons from 'lucide-react-native';
 import { TransactionInsightCard } from './TransactionInsightCard';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { tokens } from '@/theme/tokens';
 
 interface TransactionDetailSheetProps {
   transaction: TransactionResponse | null;

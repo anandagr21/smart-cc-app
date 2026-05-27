@@ -14,36 +14,46 @@ import { BlurView } from 'expo-blur';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Store, X, Search, Info } from 'lucide-react-native';
+import { Store, X, Search, Info, Sparkles } from 'lucide-react-native';
+import Animated, { FadeIn, FadeInUp, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { TransactionResponse } from '../types/transaction.types';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { useCards } from '../../cards/hooks/useCards';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { useCards } from '@/features/cards/hooks/useCards';
 import { useCreateTransaction } from '../hooks/useTransactions';
 import { useUpdateTransaction } from '../hooks/useUpdateTransaction';
-import { useRecommendation } from '../../recommendations/hooks/useRecommendation';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { tokens } from '../../../theme/tokens';
-import { useDebounce } from '../../../hooks/useDebounce';
-import { useFuseSearch } from '../../../shared/search/useFuseSearch';
+import { useRecommendation } from '@/features/recommendations/hooks/useRecommendation';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { tokens } from '@/theme/tokens';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useFuseSearch } from '@/shared/search/useFuseSearch';
 import { WalletListRow } from './WalletListRow';
 import { HeroRecommendationCard } from './HeroRecommendationCard';
 import { SecondaryRecommendationCard } from './SecondaryRecommendationCard';
 import { RecommendationExplainabilitySheet } from './RecommendationExplainabilitySheet';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { FeatureFlags } from '../../../config/features';
+import { FeatureFlags } from '@/config/features';
 
 const formSchema = z.object({
   merchant_name: z.string().min(1, 'Merchant name is required').transform((v) => v.trim()),
   amount: z.coerce.number().positive('Amount must be positive'),
   user_card_id: z.string().min(1, 'Please select a card'),
   payment_mode: z.enum(['ONLINE', 'OFFLINE', 'INTERNATIONAL']).default('ONLINE'),
+  override_reason: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+const OVERRIDE_REASONS = [
+  { label: 'Personal preference', value: 'Personal preference' },
+  { label: 'Building milestone', value: 'Building milestone' },
+  { label: 'Simplifying wallet', value: 'Simplifying wallet' },
+  { label: 'Avoiding annual fee', value: 'Avoiding annual fee' },
+  { label: 'Temporary choice', value: 'Temporary choice' }
+];
 
 interface TransactionFormSheetProps {
   visible: boolean;
@@ -98,6 +108,9 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   
   // Explainability Sheet
   const [showExplainability, setShowExplainability] = useState(false);
+
+  // Accordion state
+  const [showAlternatives, setShowAlternatives] = useState(false);
 
   // Fetch recommendations
   useEffect(() => {
@@ -159,6 +172,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           ...data,
           payment_mode: data.payment_mode.toLowerCase() as any,
           transaction_date: new Date().toISOString().split('T')[0],
+          recommended_card_id: recommendedCardId,
         });
       }
       onClose();
@@ -170,16 +184,36 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   // --- Hybrid Picker Logic ---
   const rankedCards = getRecommendation.data?.ranked_cards || [];
   
-  // Top 3 Recommended
-  const topRanked = rankedCards.slice(0, 3);
-  const recommendedWalletCards = useMemo(() => {
-    return topRanked.map(rc => {
-      return {
-        card: cardsData?.find(c => c.card_details?.card_name === rc.card_name || c.nickname === rc.card_name),
-        recommendation: rc
-      };
-    }).filter(r => r.card) as { card: NonNullable<typeof cardsData>[0], recommendation: typeof topRanked[0] }[];
-  }, [topRanked, cardsData]);
+  // Find Unique Winners across objectives
+  const winningWalletCards = useMemo(() => {
+    if (!rankedCards) return [];
+    const winners = new Map<string, typeof rankedCards[0]>();
+    
+    // MAX_REWARD
+    const maxReward = rankedCards.find(rc => rc.objective_rankings?.['MAX_REWARD'] === 1);
+    if (maxReward) winners.set(maxReward.card_id, maxReward);
+    
+    // PORTFOLIO_OPTIMIZED
+    const longTerm = rankedCards.find(rc => rc.objective_rankings?.['PORTFOLIO_OPTIMIZED'] === 1);
+    if (longTerm) winners.set(longTerm.card_id, longTerm);
+    
+    // FEE_WAIVER
+    const waiver = rankedCards.find(rc => rc.objective_rankings?.['FEE_WAIVER'] === 1);
+    // Only include waiver if it actually has waiver value > 0
+    if (waiver && waiver.portfolio_score_breakdown?.waiver_value > 0) winners.set(waiver.card_id, waiver);
+    
+    // MILESTONE_ACCELERATION
+    const milestone = rankedCards.find(rc => rc.objective_rankings?.['MILESTONE_ACCELERATION'] === 1);
+    if (milestone && milestone.portfolio_score_breakdown?.milestone_value > 0) winners.set(milestone.card_id, milestone);
+    
+    return Array.from(winners.values()).map(rc => ({
+      card: cardsData?.find(c => c.card_details?.card_name === rc.card_name || c.nickname === rc.card_name),
+      recommendation: rc
+    })).filter(r => r.card) as { card: NonNullable<typeof cardsData>[0], recommendation: typeof rankedCards[0] }[];
+  }, [rankedCards, cardsData]);
+  
+  const recommendedCardId = winningWalletCards[0]?.card?.id;
+  const isOverride = !isEditing && recommendedCardId && selectedCardId && selectedCardId !== recommendedCardId;
 
   // Full Wallet
   const { results: filteredCards } = useFuseSearch({
@@ -194,13 +228,21 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
     threshold: 0.3,
   });
 
-  const groupedWallet = useMemo(() => {
-    return filteredCards.reduce((acc, card) => {
-      const bank = card.card_details?.bank_name || 'Other';
-      if (!acc[bank]) acc[bank] = [];
-      acc[bank].push(card);
-      return acc;
-    }, {} as Record<string, NonNullable<typeof cardsData>[0][]>);
+  const { groupedActive, inactiveCards } = useMemo(() => {
+    const grouped: Record<string, typeof filteredCards> = {};
+    const inactive: typeof filteredCards = [];
+    
+    filteredCards.forEach(card => {
+      if (card.card_status === 'ACTIVE') {
+        const bank = card.card_details?.bank_name || 'Other';
+        if (!grouped[bank]) grouped[bank] = [];
+        grouped[bank].push(card);
+      } else {
+        inactive.push(card);
+      }
+    });
+    
+    return { groupedActive: grouped, inactiveCards: inactive };
   }, [filteredCards]);
 
   return (
@@ -322,43 +364,69 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
             </View>
 
             {/* SECTION 1: SMART RECOMMENDED CARDS */}
-            {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && recommendedWalletCards.length > 0 && (
+            {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && (
               <View style={styles.recommendationSection}>
                 <View style={styles.recommendationHeader}>
-                  <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ BEST FOR THIS TRANSACTION</Text>
-                  <TouchableOpacity style={styles.infoWrap} onPress={() => setShowExplainability(true)} activeOpacity={0.7}>
-                    <Text style={styles.infoText}>Why these?</Text>
-                    {/* @ts-ignore */}
-                    <Info size={14} color="rgba(255,255,255,0.4)" style={{ marginLeft: 4 }} />
-                  </TouchableOpacity>
+                  <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ SMARTEST FINANCIAL CHOICE</Text>
                 </View>
 
-                {/* Hero #1 Card */}
-                <HeroRecommendationCard
-                  card={recommendedWalletCards[0].card}
-                  recommendation={recommendedWalletCards[0].recommendation}
-                  delta={
-                    recommendedWalletCards.length > 1 
-                      ? Number(recommendedWalletCards[0].recommendation.effective_reward_value) - Number(recommendedWalletCards[1].recommendation.effective_reward_value) 
-                      : null
-                  }
-                  isActive={selectedCardId === recommendedWalletCards[0].card.id}
-                  onPress={() => setValue('user_card_id', recommendedWalletCards[0].card.id)}
-                />
+                {(!debouncedMerchant || debouncedMerchant.length < 3) && !getRecommendation.isPending && (
+                  <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.emptyState}>
+                    <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
+                      Start typing a merchant to get smart recommendations
+                    </Text>
+                  </Animated.View>
+                )}
 
-                {/* Secondary Cards */}
-                {recommendedWalletCards.length > 1 && (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.secondaryScroll}>
-                    {recommendedWalletCards.slice(1).map(({ card, recommendation }) => (
-                      <SecondaryRecommendationCard
-                        key={card.id}
-                        card={card}
-                        recommendation={recommendation}
-                        isActive={selectedCardId === card.id}
-                        onPress={() => setValue('user_card_id', card.id)}
-                      />
-                    ))}
-                  </ScrollView>
+                {getRecommendation.isPending && debouncedMerchant?.length >= 3 && (
+                  <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.thinkingState, { backgroundColor: colors.surface }]}>
+                    {/* @ts-ignore */}
+                    <Sparkles size={16} color={colors.primary} style={styles.pulseIcon} />
+                    <Text style={[styles.thinkingStateText, { color: colors.textPrimary }]}>
+                      Analyzing your portfolio...
+                    </Text>
+                  </Animated.View>
+                )}
+
+                {!getRecommendation.isPending && winningWalletCards.length > 0 && (
+                  <Animated.View entering={FadeInUp.springify().damping(20).stiffness(150)} layout={LinearTransition.springify().damping(20).stiffness(150)}>
+                    {/* HERO RECOMMENDATION */}
+                    <HeroRecommendationCard
+                      card={winningWalletCards[0].card}
+                      recommendation={winningWalletCards[0].recommendation}
+                      onSelect={() => setValue('user_card_id', winningWalletCards[0].card.id)}
+                      onInfoPress={() => {
+                        // Pass specific recommendation to explainability sheet
+                        setShowExplainability(true);
+                      }}
+                    />
+
+                    {/* ALTERNATIVE STRATEGIES (HORIZONTAL) */}
+                    {winningWalletCards.length > 1 && (
+                      <View style={styles.alternativesWrap}>
+                        <Text style={[styles.alternativesTitle, { color: colors.textMuted }]}>
+                          OTHER STRATEGIC OPTIONS
+                        </Text>
+                        <ScrollView 
+                          horizontal 
+                          showsHorizontalScrollIndicator={false}
+                          contentContainerStyle={styles.alternativesScrollContent}
+                        >
+                          <Animated.View style={styles.alternativesInnerRow} entering={FadeInUp.springify().damping(20).stiffness(150)} layout={LinearTransition.springify().damping(20).stiffness(150)}>
+                            {winningWalletCards.slice(1).map(({ card, recommendation }) => (
+                              <SecondaryRecommendationCard
+                                key={card.id}
+                                card={card}
+                                recommendation={recommendation}
+                                isActive={selectedCardId === card.id}
+                                onPress={() => setValue('user_card_id', card.id)}
+                              />
+                            ))}
+                          </Animated.View>
+                        </ScrollView>
+                      </View>
+                    )}
+                  </Animated.View>
                 )}
               </View>
             )}
@@ -387,7 +455,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
               </View>
 
               <View style={styles.walletList}>
-                {Object.entries(groupedWallet).map(([bank, cards]) => (
+                {Object.entries(groupedActive).map(([bank, cards]) => (
                   <View key={bank} style={styles.bankGroup}>
                     <Text style={[styles.bankGroupTitle, { color: colors.textMuted }]}>{bank}</Text>
                     {cards.map(card => {
@@ -404,11 +472,63 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                     })}
                   </View>
                 ))}
-                {Object.keys(groupedWallet).length === 0 && (
+                
+                {inactiveCards.length > 0 && (
+                  <View style={styles.bankGroup}>
+                    <Text style={[styles.bankGroupTitle, { color: colors.textMuted, marginTop: 8 }]}>UNAVAILABLE CARDS</Text>
+                    {inactiveCards.map(card => (
+                      <WalletListRow
+                        key={card.id}
+                        card={card}
+                        isActive={selectedCardId === card.id}
+                        onPress={() => {
+                          console.log('This card is inactive and unavailable for recommendations.');
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
+
+                {Object.keys(groupedActive).length === 0 && inactiveCards.length === 0 && (
                   <Text style={[styles.emptySearch, { color: colors.textMuted }]}>No cards found.</Text>
                 )}
               </View>
             </View>
+
+            {/* OVERRIDE REASON UX */}
+            {isOverride && (
+              <Animated.View entering={FadeInUp.springify()} exiting={FadeOut} style={styles.overrideSection}>
+                <Text style={[styles.overrideTitle, { color: colors.textMuted }]}>Optional context for this selection</Text>
+                <Controller
+                  control={control}
+                  name="override_reason"
+                  render={({ field: { onChange, value } }) => (
+                    <View style={styles.overrideChipWrap}>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.overrideScroll}>
+                        {OVERRIDE_REASONS.map(reason => {
+                          const isActive = value === reason.value;
+                          return (
+                            <TouchableOpacity
+                              key={reason.value}
+                              onPress={() => onChange(isActive ? undefined : reason.value)}
+                              style={[
+                                styles.overrideChip,
+                                { backgroundColor: isActive ? colors.surfaceElevated : colors.background },
+                                isActive && { borderColor: colors.primary, borderWidth: 1 }
+                              ]}
+                            >
+                              <Text style={[styles.overrideChipText, { color: isActive ? colors.primary : colors.textSecondary }]}>
+                                {reason.label}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+                  )}
+                />
+              </Animated.View>
+            )}
 
             {/* CTA */}
             <LinearGradient
@@ -424,7 +544,16 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                 activeOpacity={0.8}
               >
                 <Text style={styles.ctaText}>
-                  {isSubmitting || addTx.isPending || updateTx.isPending ? 'Processing...' : (isEditing ? 'Save Changes' : 'Add Transaction')}
+                  {isSubmitting || addTx.isPending || updateTx.isPending 
+                    ? 'Processing...' 
+                    : (isEditing 
+                        ? 'Save Changes' 
+                        : (selectedCardId 
+                            ? `Use ${cardsData?.find(c => c.id === selectedCardId)?.nickname || cardsData?.find(c => c.id === selectedCardId)?.card_details?.card_name || 'Card'}`
+                            : 'Add Transaction'
+                          )
+                      )
+                  }
                 </Text>
               </TouchableOpacity>
             </LinearGradient>
@@ -436,7 +565,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
       <RecommendationExplainabilitySheet
         visible={showExplainability}
         onClose={() => setShowExplainability(false)}
-        recommendedCards={recommendedWalletCards}
+        recommendedCards={winningWalletCards}
       />
     </Modal>
   );
@@ -627,5 +756,71 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
+  },
+  emptyState: {
+    paddingVertical: 32,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: tokens.fontSize.body,
+    fontStyle: 'italic',
+  },
+  thinkingState: {
+    paddingVertical: 32,
+    alignItems: 'center',
+    borderRadius: tokens.radius.xl,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  thinkingStateText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  pulseIcon: {
+    opacity: 0.8,
+  },
+  alternativesWrap: {
+    marginTop: 20,
+  },
+  alternativesTitle: {
+    fontSize: tokens.fontSize.micro,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: tokens.letterSpacing.widest,
+    marginBottom: 12,
+  },
+  alternativesScrollContent: {
+    paddingBottom: 8,
+  },
+  alternativesInnerRow: {
+    flexDirection: 'row',
+  },
+  overrideSection: {
+    marginBottom: 24,
+    marginTop: -8,
+  },
+  overrideTitle: {
+    fontSize: tokens.fontSize.micro,
+    fontWeight: tokens.fontWeight.medium,
+    marginBottom: 8,
+    marginLeft: 2,
+  },
+  overrideChipWrap: {
+    marginHorizontal: -24,
+  },
+  overrideScroll: {
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  overrideChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: tokens.radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'transparent',
+  },
+  overrideChipText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
   },
 });

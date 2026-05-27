@@ -7,7 +7,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 
 interface SkeletonBoxProps {
   height: number;

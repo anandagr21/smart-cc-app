@@ -1,4 +1,4 @@
-import { apiClient } from '../../../services/api/client';
+import { apiClient } from '@/services/api/client';
 import { RecommendationRequest, RecommendationResponse, SingleResponse } from '../types/api';
 
 export const recommendationService = {

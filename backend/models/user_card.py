@@ -84,6 +84,13 @@ class UserCard(SQLModel, table=True):
         ge=Decimal("0.00"),
         description="User-calibrated override for the annual fee.",
     )
+    user_override_fee_waiver_threshold: Decimal | None = Field(
+        default=None,
+        max_digits=14,
+        decimal_places=2,
+        ge=Decimal("0.00"),
+        description="User-calibrated override for the fee waiver threshold.",
+    )
     fee_override_updated_at: datetime | None = Field(
         default=None,
         description="UTC timestamp when the user last calibrated the fee.",
@@ -93,7 +100,11 @@ class UserCard(SQLModel, table=True):
         max_length=50,
         description="Source of the override (e.g., 'USER', 'ISSUER_PROMO').",
     )
-    is_active: bool = Field(default=True)
+    card_status: str = Field(
+        default="ACTIVE",
+        max_length=20,
+        description="Status of the card (e.g. ACTIVE, INACTIVE, LOCKED, CLOSED, EXPIRED)"
+    )
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(
         default_factory=datetime.utcnow,

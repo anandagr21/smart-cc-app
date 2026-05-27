@@ -222,10 +222,16 @@ class UserCardUpdate(BaseModel):
         ge=1,
         le=31,
     )
-    is_active: bool | None = Field(default=None)
+    card_status: str | None = Field(default=None)
     user_override_annual_fee: Decimal | None = Field(
         default=None,
         max_digits=12,
+        decimal_places=2,
+        ge=Decimal("0.00"),
+    )
+    user_override_fee_waiver_threshold: Decimal | None = Field(
+        default=None,
+        max_digits=14,
         decimal_places=2,
         ge=Decimal("0.00"),
     )
@@ -251,7 +257,7 @@ class UserCardResponse(BaseModel):
     billing_date: int
     due_date: int
     fee_cycle_start_date: datetime | date | None = None
-    is_active: bool
+    card_status: str
     created_at: datetime
     updated_at: datetime
     card_details: CardCatalogResponse | None = None
@@ -264,6 +270,8 @@ class UserCardResponse(BaseModel):
 
     # Enriched intelligence fields (populated by service/intelligence layer)
     fee_waiver_threshold: Decimal | None = None
+    user_override_fee_waiver_threshold: Decimal | None = None
+    effective_fee_waiver_threshold: Decimal | None = None
     fee_waiver_progress_percent: float | None = None
     remaining_spend_for_waiver: Decimal | None = None
     waiver_achieved: bool | None = None

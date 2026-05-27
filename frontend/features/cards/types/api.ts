@@ -11,6 +11,8 @@ export interface CardCatalogResponse {
   updated_at: string;
 }
 
+export type CardStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'CLOSED' | 'EXPIRED';
+
 export interface UserCardResponse {
   id: string;
   user_id: string;
@@ -22,7 +24,7 @@ export interface UserCardResponse {
   billing_date: number;
   due_date: number;
   fee_cycle_start_date: string | null;
-  is_active: boolean;
+  card_status: CardStatus;
   created_at: string;
   updated_at: string;
   card_details?: CardCatalogResponse;
@@ -34,6 +36,8 @@ export interface UserCardResponse {
   fee_confidence?: 'HIGH' | 'USER_CALIBRATED' | 'ESTIMATED' | null;
 
   fee_waiver_threshold?: number | null;
+  user_override_fee_waiver_threshold?: number | null;
+  effective_fee_waiver_threshold?: number | null;
   fee_waiver_progress_percent?: number | null;
   remaining_spend_for_waiver?: number | null;
   waiver_achieved?: boolean | null;
@@ -42,7 +46,7 @@ export interface UserCardResponse {
 
 export interface UserCardUpdate {
   nickname?: string;
-  is_active?: boolean;
+  card_status?: CardStatus;
   credit_limit?: number;
   current_spend?: number;
   annual_spend?: number;
@@ -50,6 +54,7 @@ export interface UserCardUpdate {
   due_date?: number;
   fee_cycle_start_date?: string;
   user_override_annual_fee?: number;
+  user_override_fee_waiver_threshold?: number;
 }
 
 export interface UserCardCreate {

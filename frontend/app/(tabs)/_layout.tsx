@@ -9,9 +9,9 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { useThemeStore } from '../../features/theme/store/themeStore';
-import { tokens } from '../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { tokens } from '@/theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TABS = [

@@ -1,16 +1,12 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
-import { RecommendationForm } from '../../features/recommendations/components/RecommendationForm';
-import { RecommendationSkeleton } from '../../features/recommendations/components/RecommendationSkeleton';
-import { RecommendationCard } from '../../features/recommendations/components/RecommendationCard';
-import { useRecommendation } from '../../features/recommendations/hooks/useRecommendation';
-import { AlertCircle, Sparkles } from 'lucide-react-native';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { RecommendationRequest } from '../../features/recommendations/types/api';
-import { tokens } from '../../theme/tokens';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { Sparkles, Plus } from 'lucide-react-native';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 import { useRouter } from 'expo-router';
+import { TransactionFormSheet } from '@/features/transactions/components/TransactionFormSheet';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -19,24 +15,14 @@ function getGreeting() {
   return 'Good evening';
 }
 
-export default function RecommendationsScreen() {
-  const { mutate: evaluateTransaction, data, isPending, isError, error } = useRecommendation();
+export default function DashboardScreen() {
   const colors = useThemeColors();
-  const scrollRef = useRef<ScrollView>(null);
   const router = useRouter();
-
-  const handleSubmit = (formData: RecommendationRequest) => {
-    evaluateTransaction(formData, {
-      onSuccess: () => {
-        setTimeout(() => scrollRef.current?.scrollTo({ y: 200, animated: true }), 150);
-      },
-    });
-  };
+  const [isFormSheetVisible, setFormSheetVisible] = useState(false);
 
   return (
     <ScreenContainer>
       <ScrollView
-        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
       >
@@ -46,10 +32,10 @@ export default function RecommendationsScreen() {
             {getGreeting()} · Smart CC
           </Text>
           <Text style={[styles.heroText, { color: colors.textPrimary }]}>
-            Optimize
+            Dashboard
           </Text>
           <Text style={[styles.subText, { color: colors.textSecondary }]}>
-            Let our engine find the maximum reward value for your purchase.
+            Your proactive financial assistant.
           </Text>
           
           <TouchableOpacity 
@@ -57,6 +43,7 @@ export default function RecommendationsScreen() {
             activeOpacity={0.7}
             onPress={() => router.push('/monthly-intelligence')}
           >
+            {/* @ts-ignore */}
             <Sparkles size={14} color={colors.primary} />
             <Text style={[styles.intelligenceCtaText, { color: colors.textPrimary }]}>
               Your Monthly Intelligence
@@ -64,74 +51,35 @@ export default function RecommendationsScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Form */}
-        <RecommendationForm onSubmit={handleSubmit} isLoading={isPending} />
-
-        {/* Error */}
-        {isError && (
-          <Animated.View
-            entering={FadeInDown.delay(50).springify()}
-            style={[
-              styles.errorBox,
-              { backgroundColor: colors.dangerSoft, borderColor: colors.danger },
-            ]}
+        {/* Primary Action */}
+        <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.actionContainer}>
+          <TouchableOpacity 
+            style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
+            activeOpacity={0.8}
+            onPress={() => setFormSheetVisible(true)}
           >
             {/* @ts-ignore */}
-            <AlertCircle size={22} color={colors.danger} strokeWidth={2} />
-            <View style={styles.errorText}>
-              <Text style={[styles.errorTitle, { color: colors.danger }]}>Analysis Failed</Text>
-              <Text style={[styles.errorMsg, { color: colors.danger }]}>
-                {(error as any)?.response?.data?.detail ||
-                  'An unexpected error occurred. Please try again.'}
-              </Text>
-            </View>
-          </Animated.View>
-        )}
-
-        {/* Loading */}
-        {isPending && <RecommendationSkeleton />}
-
-        {/* Results */}
-        {!isPending && data && data.ranked_cards.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(50)} style={styles.resultsWrap}>
-            <View style={styles.resultsHeader}>
-              {/* @ts-ignore */}
-              <Sparkles size={18} color={colors.success} strokeWidth={2} />
-              <Text style={[styles.resultsTitle, { color: colors.textPrimary }]}>
-                Optimal Strategy
-              </Text>
-            </View>
-            {data.ranked_cards.map((card, index) => (
-              <RecommendationCard key={card.card_id} card={card} index={index} />
-            ))}
-          </Animated.View>
-        )}
-
-        {/* Empty result */}
-        {!isPending && data && data.ranked_cards.length === 0 && (
-          <Animated.View
-            entering={FadeInDown.delay(50).springify()}
-            style={[
-              styles.emptyResult,
-              { backgroundColor: colors.surface, borderColor: colors.border },
-            ]}
-          >
-            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
-              No Matching Cards
-            </Text>
-            <Text style={[styles.emptyMsg, { color: colors.textSecondary }]}>
-              We couldn't find any cards in your wallet that yield rewards for this transaction.
-            </Text>
-          </Animated.View>
-        )}
+            <Plus size={24} color="#FFF" strokeWidth={2.5} />
+            <Text style={styles.primaryActionText}>Add Transaction</Text>
+          </TouchableOpacity>
+          <Text style={[styles.actionHint, { color: colors.textSecondary }]}>
+            Get instant, live recommendations based on your portfolio.
+          </Text>
+        </Animated.View>
       </ScrollView>
+
+      <TransactionFormSheet
+        visible={isFormSheetVisible}
+        onClose={() => setFormSheetVisible(false)}
+        initialData={null}
+      />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 120 },
-  header: { marginTop: 16, marginBottom: 28 },
+  header: { marginTop: 16, marginBottom: 40 },
   greeting: {
     fontSize: tokens.fontSize.label,
     fontWeight: tokens.fontWeight.medium,
@@ -167,55 +115,40 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: tokens.letterSpacing.wide,
   },
-  errorBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    padding: 16,
+  actionContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    padding: 32,
     borderRadius: tokens.radius.card,
+    backgroundColor: 'rgba(139, 92, 246, 0.05)',
     borderWidth: 1,
-    marginBottom: 20,
+    borderColor: 'rgba(139, 92, 246, 0.15)',
   },
-  errorText: { flex: 1 },
-  errorTitle: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.bold,
-    marginBottom: 3,
-  },
-  errorMsg: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.medium,
-    lineHeight: tokens.fontSize.body * 1.5,
-    opacity: 0.85,
-  },
-  resultsWrap: { marginTop: 8 },
-  resultsHeader: {
+  primaryActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+    borderRadius: tokens.radius.full,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+    width: '100%',
   },
-  resultsTitle: {
+  primaryActionText: {
+    color: '#FFF',
     fontSize: tokens.fontSize.headline,
     fontWeight: tokens.fontWeight.bold,
-    letterSpacing: tokens.letterSpacing.tight,
+    letterSpacing: 0.5,
   },
-  emptyResult: {
-    padding: 28,
-    borderRadius: tokens.radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  emptyTitle: {
-    fontSize: tokens.fontSize.title,
-    fontWeight: tokens.fontWeight.bold,
-    marginBottom: 8,
-    letterSpacing: tokens.letterSpacing.tight,
-  },
-  emptyMsg: {
+  actionHint: {
+    marginTop: 16,
     fontSize: tokens.fontSize.body,
-    lineHeight: tokens.fontSize.body * 1.55,
     textAlign: 'center',
+    lineHeight: 22,
   },
 });

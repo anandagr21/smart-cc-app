@@ -1,23 +1,27 @@
 import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import { Plus, Search, SlidersHorizontal } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
-import { Badge } from '../../components/ui/Badge';
-import { useCards } from '../../features/cards/hooks/useCards';
-import { EmptyWalletState } from '../../features/cards/components/EmptyWalletState';
-import { WalletCardSkeleton } from '../../features/cards/components/WalletCardSkeleton';
-import { AddCardSheet } from '../../features/cards/components/AddCardSheet';
-import { CardDetailSheet } from '../../features/cards/components/CardDetailSheet';
-import { FeaturedCardsSection } from '../../features/cards/components/FeaturedCardsSection';
-import { SmartWalletInventory } from '../../features/cards/components/SmartWalletInventory';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { tokens } from '../../theme/tokens';
-import { useFuseSearch } from '../../shared/search/useFuseSearch';
-import { useDebounce } from '../../hooks/useDebounce';
-import { UserCardResponse } from '../../features/cards/types/api';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { Badge } from '@/components/ui/Badge';
+import { useCards } from '@/features/cards/hooks/useCards';
+import { EmptyWalletState } from '@/features/cards/components/EmptyWalletState';
+import { WalletCardSkeleton } from '@/features/cards/components/WalletCardSkeleton';
+import { AddCardSheet } from '@/features/cards/components/AddCardSheet';
+import { CardDetailSheet } from '@/features/cards/components/CardDetailSheet';
+import { FeaturedCardsSection } from '@/features/cards/components/FeaturedCardsSection';
+import { SmartWalletInventory } from '@/features/cards/components/SmartWalletInventory';
+import { PortfolioLens } from '@/features/personality/components/PortfolioLens';
+import { BehavioralSignalsSurface } from '@/features/personality/components/BehavioralSignalsSurface';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
+import { useFuseSearch } from '@/shared/search/useFuseSearch';
+import { useDebounce } from '@/hooks/useDebounce';
+import { UserCardResponse } from '@/features/cards/types/api';
 
 export default function CardsScreen() {
+  const router = useRouter();
   const { data: cards, isLoading } = useCards();
   const [isSheetVisible, setSheetVisible] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -60,8 +64,6 @@ export default function CardsScreen() {
               autoCorrect={false}
               autoCapitalize="none"
             />
-            {/* @ts-ignore */}
-            <SlidersHorizontal size={18} color={colors.textMuted} />
           </View>
           
           <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 24, marginBottom: -8, marginLeft: 24 }]}>
@@ -110,6 +112,20 @@ export default function CardsScreen() {
           </TouchableOpacity>
         )}
       </Animated.View>
+
+      <PortfolioLens />
+      <BehavioralSignalsSurface />
+      
+      <View style={{ paddingHorizontal: 24, marginTop: 4, marginBottom: 16 }}>
+        <TouchableOpacity 
+          onPress={() => router.push('/intelligence')}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+        >
+          <Text style={{ fontSize: tokens.fontSize.sm, color: colors.primary }}>
+            Financial Intelligence
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {isLoading ? (
         <WalletCardSkeleton />
