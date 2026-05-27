@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../services/api/client';
-import { QueryKeys } from '../../core/api/queryKeys';
+import { apiClient } from '@/services/api/client';
+import { QueryKeys } from '@/features/core/api/queryKeys';
 import { MonthlySummaryResponse } from '../types/monthly_intelligence.types';
 
 export function useMonthlyIntelligence(year: number, month: number) {

@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 import { usePortfolioEvolution } from '../api/evolutionApi';
 import { ActivityIndicator } from 'react-native';
 import { Layers, Activity, Maximize, Zap, Sparkles } from 'lucide-react-native';
@@ -28,11 +28,11 @@ export function PortfolioEvolutionSurface() {
             <Icon size={16} color={colors.primary} strokeWidth={2} />
           </View>
           <View>
-            <Text style={[styles.metricLabel, { color: colors.text }]}>{label}</Text>
+            <Text style={[styles.metricLabel, { color: colors.textPrimary }]}>{label}</Text>
             <Text style={[styles.metricDesc, { color: colors.textMuted }]}>{desc}</Text>
           </View>
         </View>
-        <Text style={[styles.metricScore, { color: colors.text }]}>{score.toFixed(1)}</Text>
+        <Text style={[styles.metricScore, { color: colors.textPrimary }]}>{score.toFixed(1)}</Text>
       </View>
     );
   };
@@ -43,7 +43,7 @@ export function PortfolioEvolutionSurface() {
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       <Animated.View entering={FadeInDown.duration(800).delay(100)} style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Portfolio Cognition</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Portfolio Cognition</Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
           Longitudinal analysis of your wallet's strategic evolution.
         </Text>
@@ -55,7 +55,7 @@ export function PortfolioEvolutionSurface() {
           style={[styles.narrativeCard, { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder }]}
         >
           <Sparkles size={18} color={colors.primary} style={styles.narrativeIcon} strokeWidth={2} />
-          <Text style={[styles.narrativeText, { color: colors.text }]}>
+          <Text style={[styles.narrativeText, { color: colors.textPrimary }]}>
             {data.primary_narrative}
           </Text>
         </Animated.View>
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: tokens.fontSize.sm,
+    fontSize: tokens.fontSize.body,
     lineHeight: 20,
     maxWidth: '85%',
   },
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   narrativeText: {
-    fontSize: tokens.fontSize.md,
+    fontSize: tokens.fontSize.bodyLg,
     lineHeight: 26,
     letterSpacing: -0.2,
   },
@@ -133,15 +133,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   metricLabel: {
-    fontSize: tokens.fontSize.md,
+    fontSize: tokens.fontSize.bodyLg,
     fontWeight: tokens.fontWeight.medium,
     marginBottom: 2,
   },
   metricDesc: {
-    fontSize: tokens.fontSize.xs,
+    fontSize: tokens.fontSize.caption,
   },
   metricScore: {
-    fontSize: tokens.fontSize.lg,
+    fontSize: tokens.fontSize.title,
     fontWeight: tokens.fontWeight.medium,
     letterSpacing: -0.5,
   },

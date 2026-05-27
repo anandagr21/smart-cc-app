@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, ViewProps, StyleSheet } from 'react-native';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { useThemeStore } from '../../features/theme/store/themeStore';
-import { tokens } from '../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { tokens } from '@/theme/tokens';
 
 interface CardProps extends ViewProps {
   children: React.ReactNode;

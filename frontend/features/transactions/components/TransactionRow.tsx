@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { TransactionResponse } from '../types/transaction.types';
 import { getCategoryAccent } from '../utils/categoryAccents';
-import { useCards } from '../../cards/hooks/useCards';
+import { useCards } from '@/features/cards/hooks/useCards';
 import * as Icons from 'lucide-react-native';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { RewardInsightPill } from './RewardInsightPill';
-import { tokens } from '../../../theme/tokens';
-import { getNetworkGradient } from '../../../theme/colors';
-import { useThemeStore } from '../../theme/store/themeStore';
+import { tokens } from '@/theme/tokens';
+import { getNetworkGradient } from '@/theme/colors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
 
 interface TransactionRowProps {
   transaction: TransactionResponse;

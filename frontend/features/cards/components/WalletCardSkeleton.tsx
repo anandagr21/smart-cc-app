@@ -9,7 +9,7 @@ import Animated, {
   FadeIn,
   FadeOut
 } from 'react-native-reanimated';
-import { colors } from '../../../theme/colors';
+import { colors } from '@/theme/colors';
 
 const SkeletonItem = ({ height, width, className, style }: any) => {
   const opacity = useSharedValue(0.3);

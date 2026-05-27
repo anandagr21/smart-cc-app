@@ -4,8 +4,8 @@ import { Trophy, TrendingUp } from 'lucide-react-native';
 import Animated, { FadeInDown, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import { TextInput } from 'react-native';
 import { TransactionResponse } from '../types/transaction.types';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const AnimatedText = Animated.createAnimatedComponent(TextInput);

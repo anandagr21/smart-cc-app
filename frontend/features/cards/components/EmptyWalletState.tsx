@@ -8,8 +8,8 @@ import Animated, {
   withTiming,
   FadeIn,
 } from 'react-native-reanimated';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 
 const Pulse: React.FC<{ delay: number }> = ({ delay }) => {
   const colors = useThemeColors();
@@ -53,7 +53,7 @@ const Pulse: React.FC<{ delay: number }> = ({ delay }) => {
 
 import { Text, TouchableOpacity } from 'react-native';
 import { CreditCard } from 'lucide-react-native';
-import { Button } from '../../../components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 interface EmptyWalletStateProps {
   onAddCard: () => void;

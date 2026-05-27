@@ -16,12 +16,12 @@ import { CardCatalogResponse } from '../types/api';
 import { useCardCatalog } from '../hooks/useCardCatalog';
 import { useAddCard } from '../hooks/useAddCard';
 import { CardCatalogList } from './CardCatalogList';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { getNetworkGradient } from '../../../theme/colors';
-import { tokens } from '../../../theme/tokens';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { getNetworkGradient } from '@/theme/colors';
+import { tokens } from '@/theme/tokens';
 
 interface AddCardSheetProps {
   visible: boolean;

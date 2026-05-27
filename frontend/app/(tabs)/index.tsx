@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Sparkles, Plus } from 'lucide-react-native';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { tokens } from '../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 import { useRouter } from 'expo-router';
-import { TransactionFormSheet } from '../../features/transactions/components/TransactionFormSheet';
+import { TransactionFormSheet } from '@/features/transactions/components/TransactionFormSheet';
 
 function getGreeting() {
   const h = new Date().getHours();

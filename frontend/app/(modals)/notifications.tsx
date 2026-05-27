@@ -2,9 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { X, Bell, ShieldAlert, Zap } from 'lucide-react-native';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { tokens } from '../../theme/tokens';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 export default function NotificationsModal() {

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 import { usePersonalityProfile, OptimizationPersonality } from '../api/personalityApi';
 import { PersonalitySelectionSheet } from './PersonalitySelectionSheet';
 import { Focus } from 'lucide-react-native';

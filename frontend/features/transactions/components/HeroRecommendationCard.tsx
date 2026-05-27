@@ -3,13 +3,13 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Info } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { UserCardResponse } from '../../cards/types/api';
-import { RankedCardResponse } from '../../recommendations/types/api';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
-import { getNetworkGradient } from '../../../theme/colors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { formatCurrencyIN } from '../../../utils/currency';
+import { UserCardResponse } from '@/features/cards/types/api';
+import { RankedCardResponse } from '@/features/recommendations/types/api';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
+import { getNetworkGradient } from '@/theme/colors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { formatCurrencyIN } from '@/utils/currency';
 
 interface HeroRecommendationCardProps {
   card: UserCardResponse;

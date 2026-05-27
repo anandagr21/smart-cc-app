@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 import { usePersonalityProfile } from '../api/personalityApi';
 import { Sparkles } from 'lucide-react-native';
 

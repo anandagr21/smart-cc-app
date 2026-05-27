@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Sparkles, ChevronRight } from 'lucide-react-native';
-import { UserCardResponse } from '../../cards/types/api';
+import { UserCardResponse } from '@/features/cards/types/api';
 import { FeaturedWalletCard } from './FeaturedWalletCard';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
-import { useSpendInsights } from '../../insights/hooks/useSpendInsights';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
+import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
 
 interface FeaturedCardsSectionProps {
   cards: UserCardResponse[];

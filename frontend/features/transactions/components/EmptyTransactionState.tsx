@@ -9,9 +9,9 @@ import Animated, {
   withTiming,
   FadeIn,
 } from 'react-native-reanimated';
-import { Button } from '../../../components/ui/Button';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
+import { Button } from '@/components/ui/Button';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 
 const Pulse: React.FC<{ delay: number }> = ({ delay }) => {
   const colors = useThemeColors();

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useThemeColors } from '../../features/theme/hooks/useThemeColors';
-import { tokens } from '../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 
 type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'primary' | 'muted';
 

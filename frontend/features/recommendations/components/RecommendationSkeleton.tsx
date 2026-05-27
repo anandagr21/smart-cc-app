@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { SkeletonBox } from '../../../components/ui/SkeletonBox';
-import { tokens } from '../../../theme/tokens';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
+import { SkeletonBox } from '@/components/ui/SkeletonBox';
+import { tokens } from '@/theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 
 export const RecommendationSkeleton: React.FC = () => {
   const colors = useThemeColors();

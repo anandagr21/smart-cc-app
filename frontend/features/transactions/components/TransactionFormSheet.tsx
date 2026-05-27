@@ -18,24 +18,24 @@ import { Store, X, Search, Info, Sparkles } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInUp, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { TransactionResponse } from '../types/transaction.types';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { useCards } from '../../cards/hooks/useCards';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { useCards } from '@/features/cards/hooks/useCards';
 import { useCreateTransaction } from '../hooks/useTransactions';
 import { useUpdateTransaction } from '../hooks/useUpdateTransaction';
-import { useRecommendation } from '../../recommendations/hooks/useRecommendation';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { tokens } from '../../../theme/tokens';
-import { useDebounce } from '../../../hooks/useDebounce';
-import { useFuseSearch } from '../../../shared/search/useFuseSearch';
+import { useRecommendation } from '@/features/recommendations/hooks/useRecommendation';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { tokens } from '@/theme/tokens';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useFuseSearch } from '@/shared/search/useFuseSearch';
 import { WalletListRow } from './WalletListRow';
 import { HeroRecommendationCard } from './HeroRecommendationCard';
 import { SecondaryRecommendationCard } from './SecondaryRecommendationCard';
 import { RecommendationExplainabilitySheet } from './RecommendationExplainabilitySheet';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { FeatureFlags } from '../../../config/features';
+import { FeatureFlags } from '@/config/features';
 
 const formSchema = z.object({
   merchant_name: z.string().min(1, 'Merchant name is required').transform((v) => v.trim()),

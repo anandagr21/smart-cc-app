@@ -4,17 +4,17 @@ import { Stack, useRouter as useExpoRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useThemeColors } from '../features/theme/hooks/useThemeColors';
-import { tokens } from '../theme/tokens';
-import { useMonthlyIntelligence } from '../features/monthly_intelligence/hooks/useMonthlyIntelligence';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
+import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/useMonthlyIntelligence';
 
-import { HeroNarrative } from '../features/monthly_intelligence/components/HeroNarrative';
-import { BehavioralHighlights } from '../features/monthly_intelligence/components/BehavioralHighlights';
-import { OptimizationTimeline } from '../features/monthly_intelligence/components/OptimizationTimeline';
-import { ForecastingSurface } from '../features/monthly_intelligence/components/ForecastingSurface';
-import { ExplainabilitySheet } from '../features/monthly_intelligence/components/ExplainabilitySheet';
-import { AnticipatoryState } from '../features/monthly_intelligence/components/AnticipatoryState';
-import { Narrative, Forecast, Streak } from '../features/monthly_intelligence/types/monthly_intelligence.types';
+import { HeroNarrative } from '@/features/monthly_intelligence/components/HeroNarrative';
+import { BehavioralHighlights } from '@/features/monthly_intelligence/components/BehavioralHighlights';
+import { OptimizationTimeline } from '@/features/monthly_intelligence/components/OptimizationTimeline';
+import { ForecastingSurface } from '@/features/monthly_intelligence/components/ForecastingSurface';
+import { ExplainabilitySheet } from '@/features/monthly_intelligence/components/ExplainabilitySheet';
+import { AnticipatoryState } from '@/features/monthly_intelligence/components/AnticipatoryState';
+import { Narrative, Forecast, Streak } from '@/features/monthly_intelligence/types/monthly_intelligence.types';
 
 export default function MonthlyIntelligenceScreen() {
   const router = useExpoRouter();

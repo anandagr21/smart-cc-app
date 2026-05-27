@@ -15,16 +15,16 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
 import { UserCardResponse } from '../types/api';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { getNetworkGradient } from '../../../theme/colors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { getNetworkGradient } from '@/theme/colors';
+import { tokens } from '@/theme/tokens';
 import { ComingSoonSheet } from './ComingSoonSheet';
 import { useUpdateCard } from '../hooks/useUpdateCard';
 import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
 import { AnnualFeeEditSheet } from './AnnualFeeEditSheet';
 import { AnnualSpendEditSheet } from './AnnualSpendEditSheet';
-import { formatCurrencyIN } from '../../../utils/currency';
+import { formatCurrencyIN } from '@/utils/currency';
 
 interface CardDetailSheetProps {
   card: UserCardResponse | null;

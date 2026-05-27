@@ -2,11 +2,11 @@ import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useAuthStore } from '../features/auth/store/authStore';
-import { useThemeStore } from '../features/theme/store/themeStore';
-import { useThemeColors } from '../features/theme/hooks/useThemeColors';
+import { useAuthStore } from '@/features/auth/store/authStore';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { StatusBar } from 'expo-status-bar';
-import '../global.css';
+import '@/global.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

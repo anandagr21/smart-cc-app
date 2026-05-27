@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { UserCardResponse } from '../../cards/types/api';
+import { UserCardResponse } from '@/features/cards/types/api';
 import { WalletInventoryRow } from './WalletInventoryRow';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
-import { FeatureFlags } from '../../../config/features';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
+import { FeatureFlags } from '@/config/features';
 
 interface SmartWalletInventoryProps {
   cards: UserCardResponse[];

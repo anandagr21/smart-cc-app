@@ -30,7 +30,7 @@ export const apiClient = axios.create({
   },
 });
 
-import { useAuthStore } from '../../features/auth/store/authStore';
+import { useAuthStore } from '@/features/auth/store/authStore';
 
 apiClient.interceptors.request.use(
   (config) => {

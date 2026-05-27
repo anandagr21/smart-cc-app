@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { X, Sparkles, Plane, ShieldAlert, Scale, LayoutList } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { tokens } from '@/theme/tokens';
 import { OptimizationPersonality, useUpdatePersonality } from '../api/personalityApi';
 
 interface PersonalitySelectionSheetProps {

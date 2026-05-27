@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
-import { colors } from '../../theme/colors';
+import { colors } from '@/theme/colors';
 
 interface LoadingSpinnerProps {
   message?: string;

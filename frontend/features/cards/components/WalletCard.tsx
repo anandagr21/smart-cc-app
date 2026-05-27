@@ -4,10 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2, Wifi } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { UserCardResponse } from '../types/api';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { useThemeStore } from '../../theme/store/themeStore';
-import { getNetworkGradient } from '../../../theme/colors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { useThemeStore } from '@/features/theme/store/themeStore';
+import { getNetworkGradient } from '@/theme/colors';
+import { tokens } from '@/theme/tokens';
 
 const CARD_WIDTH = Dimensions.get('window').width - tokens.layout.screenPadding * 2;
 const CARD_HEIGHT = CARD_WIDTH / 1.586; // Standard credit card ratio

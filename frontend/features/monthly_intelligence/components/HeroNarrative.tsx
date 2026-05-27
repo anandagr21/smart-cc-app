@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Narrative, ConfidenceLevel } from '../types/monthly_intelligence.types';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
 import { Info } from 'lucide-react-native';
 
 interface HeroNarrativeProps {

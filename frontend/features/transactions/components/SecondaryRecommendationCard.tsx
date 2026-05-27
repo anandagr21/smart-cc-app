@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { UserCardResponse } from '../../cards/types/api';
-import { RankedCardResponse } from '../../recommendations/types/api';
-import { useThemeColors } from '../../theme/hooks/useThemeColors';
-import { tokens } from '../../../theme/tokens';
-import { formatCurrencyIN } from '../../../utils/currency';
+import { UserCardResponse } from '@/features/cards/types/api';
+import { RankedCardResponse } from '@/features/recommendations/types/api';
+import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { tokens } from '@/theme/tokens';
+import { formatCurrencyIN } from '@/utils/currency';
 
 interface SecondaryRecommendationCardProps {
   card: UserCardResponse;

@@ -1,5 +1,5 @@
-import { UserCardResponse } from '../../cards/types/api';
-import { TransactionResponse } from '../../transactions/types/transaction.types';
+import { UserCardResponse } from '@/features/cards/types/api';
+import { TransactionResponse } from '@/features/transactions/types/transaction.types';
 
 export type InsightPriority = 'URGENT' | 'HIGH' | 'MEDIUM' | 'INFORMATIONAL';
 

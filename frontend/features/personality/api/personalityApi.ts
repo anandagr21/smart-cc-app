@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../../../services/api/client';
+import { apiClient } from '@/services/api/client';
 
 export enum OptimizationPersonality {
   MAXIMIZE_REWARDS = "MAXIMIZE_REWARDS",

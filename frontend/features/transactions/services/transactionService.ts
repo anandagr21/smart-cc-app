@@ -1,5 +1,5 @@
-import { apiClient } from '../../../services/api/client';
-import { PaginatedResponse, SingleResponse } from '../../cards/types/api';
+import { apiClient } from '@/services/api/client';
+import { PaginatedResponse, SingleResponse } from '@/features/cards/types/api';
 import { TransactionCreate, TransactionResponse, TransactionUpdate } from '../types/transaction.types';
 
 class TransactionService {
