@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from uuid import UUID, uuid4
 from sqlmodel import Field, SQLModel, Relationship
+from sqlalchemy import Column, JSON
 
 class PortfolioEvolutionSnapshot(SQLModel, table=True):
     """
@@ -25,5 +26,10 @@ class PortfolioEvolutionSnapshot(SQLModel, table=True):
     
     # A JSON string or field to store the generated narrative or top observation
     primary_narrative: str | None = Field(default=None)
+
+    # Structured Narrative Primitives
+    strategy_reflections: list[dict] = Field(default=[], sa_column=Column(JSON))
+    evolution_observations: list[dict] = Field(default=[], sa_column=Column(JSON))
+    topology_insights: list[dict] = Field(default=[], sa_column=Column(JSON))
 
     created_at: datetime = Field(default_factory=datetime.utcnow)

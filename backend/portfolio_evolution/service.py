@@ -9,7 +9,7 @@ from behavioral_memory.models import RecommendationBehaviorRecord
 from portfolio_evolution.models import PortfolioEvolutionSnapshot
 from portfolio_evolution.health import PortfolioHealthEngine
 from portfolio_evolution.value_density import PortfolioValueDensityEngine
-from portfolio_evolution.narrative import PortfolioNarrativeEngine
+from portfolio_evolution.interpreters import NarrativeOrchestrator
 
 class PortfolioEvolutionService:
     @staticmethod
@@ -45,12 +45,13 @@ class PortfolioEvolutionService:
         # Strategic alignment is high if burden is low
         alignment = max(10.0 - burden, 0.0)
 
-        # Generate Narrative
-        narrative = PortfolioNarrativeEngine.generate_narrative(
+        # Generate Orchestrated Narratives
+        orchestrated = NarrativeOrchestrator.synthesize(
             complexity=complexity,
             redundancy=redundancy,
             density=value_density,
-            burden=burden
+            burden=burden,
+            alignment=alignment
         )
 
         today = date.today()
@@ -77,7 +78,11 @@ class PortfolioEvolutionService:
         snapshot.redundancy_score = redundancy
         snapshot.fee_efficiency_score = fee_efficiency
         snapshot.strategic_alignment_score = alignment
-        snapshot.primary_narrative = narrative
+        
+        snapshot.primary_narrative = orchestrated["primary_narrative"]
+        snapshot.topology_insights = orchestrated["topology_insights"]
+        snapshot.strategy_reflections = orchestrated["strategy_reflections"]
+        snapshot.evolution_observations = orchestrated["evolution_observations"]
 
         await db.commit()
         await db.refresh(snapshot)

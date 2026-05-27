@@ -1,15 +1,20 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Animated, { FadeInDown, FadeIn, Layout, FadeOut } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { usePortfolioEvolution } from '../api/evolutionApi';
 import { ActivityIndicator } from 'react-native';
-import { Layers, Activity, Maximize, Zap, Sparkles } from 'lucide-react-native';
+import { Layers, Activity, Maximize, Zap, ChevronDown, ChevronUp } from 'lucide-react-native';
+
+import { PortfolioEvolutionTimeline } from './PortfolioEvolutionTimeline';
+import { PortfolioTopologySurface } from './PortfolioTopologySurface';
+import { StrategyReflectionSurface } from './StrategyReflectionSurface';
 
 export function PortfolioEvolutionSurface() {
   const colors = useThemeColors();
   const { data, isLoading } = usePortfolioEvolution();
+  const [showMetrics, setShowMetrics] = useState(false);
 
   if (isLoading || !data) {
     return (
@@ -38,9 +43,11 @@ export function PortfolioEvolutionSurface() {
   };
 
   return (
-    <Animated.View 
+    <Animated.ScrollView 
       entering={FadeIn.duration(600)}
       style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={{ paddingBottom: 100 }}
+      showsVerticalScrollIndicator={false}
     >
       <Animated.View entering={FadeInDown.duration(800).delay(100)} style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Portfolio Cognition</Text>
@@ -49,25 +56,50 @@ export function PortfolioEvolutionSurface() {
         </Text>
       </Animated.View>
 
+      {/* Hero Narrative */}
       {data.primary_narrative && (
-        <Animated.View 
-          entering={FadeInDown.duration(800).delay(300)} 
-          style={[styles.narrativeCard, { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder }]}
-        >
-          <Sparkles size={18} color={colors.primary} style={styles.narrativeIcon} strokeWidth={2} />
-          <Text style={[styles.narrativeText, { color: colors.textPrimary }]}>
+        <Animated.View entering={FadeInDown.duration(800).delay(300)} style={styles.heroSection}>
+          <Text style={[styles.heroNarrative, { color: colors.textPrimary }]}>
             {data.primary_narrative}
           </Text>
         </Animated.View>
       )}
 
-      <Animated.View entering={FadeInDown.duration(800).delay(500)} style={styles.metricsContainer}>
-        {renderMetric(Layers, "Cognitive Complexity", data.complexity_score, "Fragmentation of optimization paths")}
-        {renderMetric(Maximize, "Portfolio Redundancy", data.redundancy_score, "Overlap in strategic category coverage")}
-        {renderMetric(Zap, "Value Density", data.value_density, "Realized value vs. annual fee burden")}
-        {renderMetric(Activity, "Strategic Alignment", data.strategic_alignment_score, "Alignment with longitudinal goals")}
+      {/* Composed Intelligence Surfaces */}
+      <PortfolioEvolutionTimeline observations={data.evolution_observations || []} />
+      <PortfolioTopologySurface insights={data.topology_insights || []} />
+      <StrategyReflectionSurface reflections={data.strategy_reflections || []} />
+
+      {/* Progressive Disclosure for Raw Metrics */}
+      <Animated.View layout={Layout.springify().damping(20)} style={styles.metricsDisclosure}>
+        <TouchableOpacity 
+          onPress={() => setShowMetrics(!showMetrics)}
+          style={[styles.disclosureButton, { borderTopColor: colors.border }]}
+        >
+          <Text style={[styles.disclosureText, { color: colors.textMuted }]}>
+            {showMetrics ? "Hide Strategic Metrics" : "View Strategic Metrics"}
+          </Text>
+          {showMetrics ? 
+            <ChevronUp size={16} color={colors.textMuted} /> : 
+            <ChevronDown size={16} color={colors.textMuted} />
+          }
+        </TouchableOpacity>
+
+        {showMetrics && (
+          <Animated.View 
+            entering={FadeInDown.duration(400)} 
+            exiting={FadeOut.duration(300)}
+            style={styles.metricsContainer}
+          >
+            {renderMetric(Layers, "Cognitive Complexity", data.complexity_score, "Fragmentation of optimization paths")}
+            {renderMetric(Maximize, "Portfolio Redundancy", data.redundancy_score, "Overlap in strategic category coverage")}
+            {renderMetric(Zap, "Value Density", data.value_density, "Realized value vs. annual fee burden")}
+            {renderMetric(Activity, "Strategic Alignment", data.strategic_alignment_score, "Alignment with longitudinal goals")}
+          </Animated.View>
+        )}
       </Animated.View>
-    </Animated.View>
+
+    </Animated.ScrollView>
   );
 }
 
@@ -80,13 +112,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingTop: 16, // Reduced from 40 for more immersive feel from header
   },
   header: {
     marginBottom: 40,
   },
   title: {
-    fontSize: 28,
+    fontSize: tokens.fontSize.headline,
+    fontWeight: tokens.fontWeight.semibold,
     letterSpacing: -0.5,
     marginBottom: 8,
   },
@@ -95,22 +128,33 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     maxWidth: '85%',
   },
-  narrativeCard: {
-    padding: 24,
-    borderRadius: tokens.radius.xl,
-    borderWidth: 1,
-    marginBottom: 48,
+  heroSection: {
+    marginBottom: 56,
   },
-  narrativeIcon: {
-    marginBottom: 16,
+  heroNarrative: {
+    fontSize: 26,
+    lineHeight: 34,
+    fontWeight: tokens.fontWeight.regular,
+    letterSpacing: -0.5,
   },
-  narrativeText: {
-    fontSize: tokens.fontSize.bodyLg,
-    lineHeight: 26,
-    letterSpacing: -0.2,
+  metricsDisclosure: {
+    marginTop: 24,
+  },
+  disclosureButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 8,
+  },
+  disclosureText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.medium,
   },
   metricsContainer: {
     gap: 0,
+    paddingBottom: 24,
   },
   metricRow: {
     flexDirection: 'row',
