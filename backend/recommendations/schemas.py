@@ -18,6 +18,8 @@ from reward_engine.constants import PaymentMode, RewardType
 from schemas.common import SingleResponse
 
 
+from reward_engine.transaction_optimizer.schemas import OptimizationIntent, OptimizerRankedCard
+
 class RecommendationRequest(BaseModel):
     """Input parameters for a recommendation request."""
 
@@ -32,46 +34,9 @@ class RecommendationRequest(BaseModel):
     mcc_code: str | None = Field(
         default=None, description="Optional MCC code if known."
     )
-
-
-class RankedCardResponse(BaseModel):
-    """A single card in the ranked output list."""
-
-    card_id: str = Field(..., description="Unique card identifier.")
-    card_name: str = Field(..., description="Human-readable card name.")
-    rank: int = Field(..., ge=1, description="1-based rank position.")
-
-    effective_reward_value: Decimal = Field(..., description="Effective INR value of rewards.")
-    cashback_amount: Decimal | None = Field(default=None, description="Cashback earned (if applicable).")
-    reward_points: int | None = Field(default=None, description="Points earned (if applicable).")
-    reward_type: RewardType = Field(..., description="Type of reward.")
-
-    recommendation_reason: str = Field(..., description="Primary reason for ranking.")
-    warnings: list[str] = Field(default_factory=list, description="Warnings related to this card.")
-
-    # ---- Phase 2: Explainability & Intelligence ----
-    # Core Engine Metrics
-    portfolio_score: float = Field(..., description="Master portfolio optimization score.")
-    immediate_reward_value: float = Field(..., description="Value of immediate rewards.")
-    long_term_portfolio_value: float = Field(..., description="Value of long-term optimization.")
-    waiver_acceleration: float = Field(..., description="Value of fee waiver progress.")
-    milestone_acceleration: float = Field(..., description="Value of milestone progress.")
-    
-    # Explainability & Breakdown
-    portfolio_score_breakdown: dict[str, float] = Field(..., description="Score contributions by factor.")
-    objective_rankings: dict[str, int] = Field(..., description="Ranking of this card for each objective.")
-    reason_codes: list[str] = Field(default_factory=list, description="Structured reason codes for why this was recommended.")
-    explanation: str = Field(..., description="Human-readable explanation of the recommendation.")
-    
-    # Structured Metadata for UI
-    reason_title: str = Field(default="", description="High-level title for the recommendation reason.")
-    reason_description: str = Field(default="", description="Detailed explanation of strategic value.")
-    strategic_value: float = Field(default=0.0, description="INR value of long-term strategic benefits.")
-    total_projected_value: float = Field(default=0.0, description="Total projected INR value (immediate + strategic).")
-    confidence_score: float = Field(default=0.0, description="Engine confidence score (0-1).")
-    primary_strategy: str = Field(default="", description="The main strategic goal achieved.")
-    supporting_factors: list[str] = Field(default_factory=list, description="List of secondary benefits.")
-    recommendation_strength: str = Field(default="", description="E.g., 'Strong', 'Moderate'.")
+    intent: OptimizationIntent = Field(
+        default=OptimizationIntent.BALANCED, description="The user's optimization intent."
+    )
 
 class RecommendationResponse(BaseModel):
     """Full response for a recommendation request."""
@@ -82,11 +47,20 @@ class RecommendationResponse(BaseModel):
     category: str | None = Field(
         default=None, description="Inferred or matched transaction category."
     )
-    best_card: str | None = Field(
-        default=None, description="Name of the #1 ranked card."
+    best_cashback_card: OptimizerRankedCard | None = Field(
+        default=None, description="Card with highest immediate reward."
     )
-    ranked_cards: list[RankedCardResponse] = Field(
-        ..., description="Ordered list of evaluated cards."
+    best_fee_waiver_card: OptimizerRankedCard | None = Field(
+        default=None, description="Card that best preserves fee waiver."
+    )
+    best_balanced_card: OptimizerRankedCard | None = Field(
+        default=None, description="Card with highest blended balanced score."
+    )
+    best_simplify_card: OptimizerRankedCard | None = Field(
+        default=None, description="Card that best simplifies the wallet."
+    )
+    all_ranked_cards: list[OptimizerRankedCard] = Field(
+        ..., description="All cards ranked by selected intent's blended score."
     )
     explanations: list[str] = Field(
         default_factory=list, description="Top-level aggregate explanations."
