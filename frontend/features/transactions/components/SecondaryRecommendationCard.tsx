@@ -6,12 +6,14 @@ import { OptimizerRankedCard } from '@/features/recommendations/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
+import { Info } from 'lucide-react-native';
 
 interface SecondaryRecommendationCardProps {
   card: UserCardResponse;
   recommendation: OptimizerRankedCard;
   isActive: boolean;
   onPress: () => void;
+  onInfoPress?: () => void;
 }
 
 export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardProps> = ({
@@ -19,6 +21,7 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
   recommendation,
   isActive,
   onPress,
+  onInfoPress,
 }) => {
   const colors = useThemeColors();
 
@@ -43,6 +46,12 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
             <Text style={[styles.strategyText, { color: isActive ? '#10B981' : colors.textMuted }]} numberOfLines={1}>
               {recommendation.confidence_label?.toUpperCase() || 'ALTERNATIVE'}
             </Text>
+            {onInfoPress && (
+              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress}>
+                {/* @ts-ignore */}
+                <Info size={14} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
           </View>
           
           {/* Card Name */}
@@ -82,6 +91,9 @@ const styles = StyleSheet.create({
   },
   strategyRow: {
     marginBottom: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   strategyText: {
     fontSize: tokens.fontSize.micro - 1,

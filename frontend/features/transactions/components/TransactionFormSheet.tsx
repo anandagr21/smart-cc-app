@@ -116,8 +116,8 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   // Search Query for Wallet
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Explainability Sheet
-  const [showExplainability, setShowExplainability] = useState(false);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [explainCardId, setExplainCardId] = useState<string | null>(null);
 
   // Accordion state
   const [showAlternatives, setShowAlternatives] = useState(false);
@@ -272,7 +272,8 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   }, [filteredCards]);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <>
+      <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
           <BlurView
@@ -461,10 +462,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                       card={winningWalletCards[0].card}
                       recommendation={winningWalletCards[0].recommendation}
                       onSelect={() => setValue('user_card_id', winningWalletCards[0].card.id)}
-                      onInfoPress={() => {
-                        // Pass specific recommendation to explainability sheet
-                        setShowExplainability(true);
-                      }}
+                      onInfoPress={() => setExplainCardId(winningWalletCards[0].card.id)}
                     />
 
                     {/* ALTERNATIVE STRATEGIES (HORIZONTAL) */}
@@ -486,6 +484,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                                 recommendation={recommendation}
                                 isActive={selectedCardId === card.id}
                                 onPress={() => setValue('user_card_id', card.id)}
+                                onInfoPress={() => setExplainCardId(card.id)}
                               />
                             ))}
                           </Animated.View>
@@ -627,13 +626,14 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
+      </Modal>
 
       <RecommendationExplainabilitySheet
-        visible={showExplainability}
-        onClose={() => setShowExplainability(false)}
-        recommendedCards={winningWalletCards}
+        visible={!!explainCardId}
+        onClose={() => setExplainCardId(null)}
+        item={explainCardId ? winningWalletCards.find(c => c.card.id === explainCardId) || null : null}
       />
-    </Modal>
+    </>
   );
 };
 
