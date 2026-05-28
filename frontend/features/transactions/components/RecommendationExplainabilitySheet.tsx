@@ -6,7 +6,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { UserCardResponse } from '@/features/cards/types/api';
-import { RankedCardResponse } from '@/features/recommendations/types/api';
+import { OptimizerRankedCard } from '@/features/recommendations/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
@@ -15,7 +15,7 @@ import { formatCurrencyIN } from '@/utils/currency';
 interface RecommendationExplainabilitySheetProps {
   visible: boolean;
   onClose: () => void;
-  recommendedCards: { card: UserCardResponse; recommendation: RankedCardResponse }[];
+  recommendedCards: { card: UserCardResponse; recommendation: OptimizerRankedCard }[];
 }
 
 export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainabilitySheetProps> = ({
@@ -32,16 +32,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
   const top = recommendedCards[0];
   const topCardName = top.card.nickname || top.card.card_details?.card_name || 'Card';
   
-  const strategyLabelMap: Record<string, string> = {
-    'MAX_REWARD': 'Maximum Immediate Return',
-    'FEE_WAIVER_PRESERVATION': 'Fee Waiver Optimized',
-    'MILESTONE_ACCELERATION': 'Milestone Acceleration',
-    'PORTFOLIO_OPTIMIZED': 'Long-Term Value',
-  };
-
-  const humanStrategy = top.recommendation.primary_strategy 
-    ? (strategyLabelMap[top.recommendation.primary_strategy] || top.recommendation.primary_strategy)
-    : 'Strategic Choice';
+  const humanStrategy = top.recommendation.confidence_label || 'OPTIMAL';
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -87,7 +78,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                 </Text>
                 
                 <Text style={[styles.narrativeText, { color: colors.textPrimary }]}>
-                  {top.recommendation.explanation || top.recommendation.reason_description || 'This card provides the highest long-term projected value for your portfolio.'}
+                  {top.recommendation.explanation || 'This card provides the highest blended value for your selected intent.'}
                 </Text>
 
                 <LinearGradient
@@ -96,19 +87,6 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                   pointerEvents="none"
                 />
               </View>
-
-              {/* SUPPORTING FACTORS */}
-              {top.recommendation.supporting_factors && top.recommendation.supporting_factors.length > 0 && (
-                <View style={styles.factorsSection}>
-                  {top.recommendation.supporting_factors.map((factor, idx) => (
-                    <View key={idx} style={styles.factorRow}>
-                      {/* @ts-ignore */}
-                      <CheckCircle2 size={16} color={colors.success} style={styles.factorIcon} />
-                      <Text style={[styles.factorText, { color: colors.textSecondary }]}>{factor}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
 
               {/* MATHEMATICAL BREAKDOWN */}
               <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 32 }]}>
@@ -119,23 +97,23 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                 <View style={styles.breakdownRow}>
                   <Text style={[styles.breakdownName, { color: colors.textSecondary }]}>Cashback Now</Text>
                   <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>
-                    {formatCurrencyIN(top.recommendation.cashback_value || 0)}
+                    {formatCurrencyIN(top.recommendation.immediate_reward_value || 0)}
                   </Text>
                 </View>
 
-                {top.recommendation.strategic_value > 0 && (
+                {top.recommendation.fee_waiver_progress_impact > 0 && (
                   <View style={styles.breakdownRow}>
-                    <Text style={[styles.breakdownName, { color: colors.textSecondary }]}>Strategic Value</Text>
+                    <Text style={[styles.breakdownName, { color: colors.textSecondary }]}>Fee Waiver Impact</Text>
                     <Text style={[styles.breakdownValue, { color: '#A78BFA' }]}>
-                      {formatCurrencyIN(top.recommendation.strategic_value)}
+                      {formatCurrencyIN(top.recommendation.fee_waiver_progress_impact)}
                     </Text>
                   </View>
                 )}
 
                 <View style={[styles.breakdownRow, { borderBottomWidth: 0, marginTop: 8, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.1)' }]}>
-                  <Text style={[styles.breakdownName, { color: colors.textPrimary, fontWeight: tokens.fontWeight.bold }]}>Total Projected Value</Text>
+                  <Text style={[styles.breakdownName, { color: colors.textPrimary, fontWeight: tokens.fontWeight.bold }]}>Estimated Value</Text>
                   <Text style={[styles.breakdownValue, { color: '#10B981', fontSize: tokens.fontSize.title }]}>
-                    {formatCurrencyIN(top.recommendation.total_projected_value || top.recommendation.portfolio_score)}
+                    {formatCurrencyIN(top.recommendation.immediate_reward_value + top.recommendation.fee_waiver_progress_impact)}
                   </Text>
                 </View>
               </View>

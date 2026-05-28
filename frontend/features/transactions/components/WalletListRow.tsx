@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { CheckCircle2, Sparkles } from 'lucide-react-native';
 import Animated, { FadeIn, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { UserCardResponse } from '@/features/cards/types/api';
-import { RankedCardResponse } from '@/features/recommendations/types/api';
+import { OptimizerRankedCard } from '@/features/recommendations/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
@@ -13,7 +13,7 @@ interface WalletListRowProps {
   card: UserCardResponse;
   isActive: boolean;
   onPress: (id: string) => void;
-  recommendation?: RankedCardResponse;
+  recommendation?: OptimizerRankedCard;
 }
 
 export const WalletListRow: React.FC<WalletListRowProps> = ({
@@ -29,20 +29,10 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   
-  const strategyLabelMap: Record<string, string> = {
-    'MAX_REWARD': 'Max Reward',
-    'FEE_WAIVER_PRESERVATION': 'Waiver Optimized',
-    'MILESTONE_ACCELERATION': 'Milestone Boost',
-    'PORTFOLIO_OPTIMIZED': 'Long-Term Value',
-  };
-
   const getBadgeText = () => {
     if (!recommendation) return '';
-    const strategyName = recommendation.primary_strategy 
-      ? (strategyLabelMap[recommendation.primary_strategy] || recommendation.primary_strategy)
-      : recommendation.reason_title;
-    
-    const value = formatCurrencyIN(recommendation.total_projected_value || recommendation.portfolio_score || 0);
+    const strategyName = recommendation.confidence_label || 'OPTIMAL';
+    const value = formatCurrencyIN(recommendation.immediate_reward_value + recommendation.fee_waiver_progress_impact);
     return `${strategyName} · ${value}`;
   };
   
