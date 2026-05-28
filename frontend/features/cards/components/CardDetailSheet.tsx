@@ -53,11 +53,16 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const gradient = getNetworkGradient(network, isDark) as [string, string];
 
   // Logic: Fee Waiver
-  const waiver = deriveFeeWaiverProgress(card);
-  const hasWaiver = waiver.hasWaiver;
-  const waiverPercent = waiver.percentComplete;
-  const remainingSpend = waiver.remainingAmount;
-  const waiverMilestone = waiver.milestone;
+  const hasWaiver = card.effective_fee_waiver_threshold != null && card.effective_fee_waiver_threshold > 0;
+  const waiverPercent = card.fee_waiver_progress_percent || 0;
+  const remainingSpend = card.remaining_spend_for_waiver || 0;
+  const waiverTarget = card.effective_fee_waiver_threshold || 0;
+  const waiverMilestone = card.waiver_achieved ? 'Waiver Achieved' : (
+    card.comfort_state === 'SAFELY_ON_TRACK' ? 'Safely On Track' :
+    card.comfort_state === 'MONITOR_PROGRESS' ? 'Monitor Progress' :
+    card.comfort_state === 'REQUIRES_ATTENTION' ? 'Requires Attention' :
+    card.comfort_state === 'UNLIKELY_NATURALLY' ? 'Unlikely Naturally' : 'Tracking Progress'
+  );
 
   // Logic: Intelligence Heuristics (Max 3-5)
   const intelligenceChips = [];
@@ -172,10 +177,10 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
 
                 <View style={styles.waiverNumbersRow}>
                   <Text style={[styles.waiverCurrent, { color: colors.success }]}>
-                    ₹{card.current_spend.toLocaleString('en-IN')}
+                    ₹{card.annual_spend.toLocaleString('en-IN')}
                   </Text>
                   <Text style={[styles.waiverTarget, { color: colors.textMuted }]}>
-                    {' / '}₹{waiver.target.toLocaleString('en-IN')}
+                    {' / '}₹{waiverTarget.toLocaleString('en-IN')}
                   </Text>
                   <Text style={[styles.waiverPercent, { color: colors.success }]}>
                     {Math.min(waiverPercent, 100).toFixed(0)}%
@@ -227,9 +232,9 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 {/* @ts-ignore */}
                 <Sparkles size={14} color="#8B5CF6" />
               </View>
-              {hasWaiver && waiverPercent < 100 ? (
+              {hasWaiver && card.explanation_text ? (
                 <Text style={[styles.feeIntelligenceSource, { color: colors.textPrimary, lineHeight: 20 }]}>
-                  Best used for large purchases to accelerate your fee waiver. You are ₹{remainingSpend.toLocaleString('en-IN')} away from preserving your portfolio health.
+                  {card.explanation_text}
                 </Text>
               ) : (
                 <Text style={[styles.feeIntelligenceSource, { color: colors.textPrimary, lineHeight: 20 }]}>

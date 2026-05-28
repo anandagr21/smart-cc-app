@@ -96,6 +96,26 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
           <Text style={styles.bankName} numberOfLines={1}>
             {bankName}
           </Text>
+          
+          {/* Ambient Fee Waiver Intelligence */}
+          {isActive && (
+            <View style={styles.waiverAmbient}>
+              {card.waiver_achieved ? (
+                <Text style={styles.waiverAmbientText}>Annual fee waived</Text>
+              ) : card.effective_fee_waiver_threshold ? (
+                <>
+                  <Text style={styles.waiverAmbientText}>
+                    ₹{card.remaining_spend_for_waiver?.toLocaleString('en-IN')} left for waiver
+                  </Text>
+                  {card.days_until_renewal !== undefined && card.days_until_renewal !== null && (
+                    <Text style={styles.waiverAmbientSubtext}>
+                      {card.days_until_renewal} days remaining
+                    </Text>
+                  )}
+                </>
+              ) : null}
+            </View>
+          )}
         </View>
 
         {/* ── Card Bottom Row ── */}
@@ -258,5 +278,20 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: tokens.letterSpacing.wider,
     textTransform: 'uppercase',
+  },
+  waiverAmbient: {
+    marginTop: 8,
+  },
+  waiverAmbientText: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+    letterSpacing: 0.2,
+  },
+  waiverAmbientSubtext: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: tokens.fontSize.micro,
+    marginTop: 2,
+    letterSpacing: 0.3,
   },
 });
