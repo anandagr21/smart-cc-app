@@ -1,22 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api/client';
-import { UserCardResponse } from '../types/api';
+import { UserCardResponse, UserCardUpdate } from '../types/api';
 import { QueryKeys } from '@/features/core/api/queryKeys';
-
-interface UpdateCardPayload {
-  nickname?: string;
-  card_status?: string;
-  credit_limit?: number;
-  billing_date?: number;
-  due_date?: number;
-  user_override_annual_fee?: number;
-}
 
 export const useUpdateCard = (cardId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: UpdateCardPayload) => {
+    mutationFn: async (payload: UserCardUpdate) => {
       const { data } = await apiClient.patch<{ data: UserCardResponse }>(`/cards/${cardId}`, payload);
       return data.data;
     },

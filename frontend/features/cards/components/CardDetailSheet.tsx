@@ -22,8 +22,9 @@ import { tokens } from '@/theme/tokens';
 import { ComingSoonSheet } from './ComingSoonSheet';
 import { useUpdateCard } from '../hooks/useUpdateCard';
 import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
-import { AnnualFeeEditSheet } from './AnnualFeeEditSheet';
-import { AnnualSpendEditSheet } from './AnnualSpendEditSheet';
+import { EditAnnualFeeSheet } from './EditAnnualFeeSheet';
+import { EditSpendSheet } from './EditSpendSheet';
+import { EditFeeCycleSheet } from './EditFeeCycleSheet';
 import { formatCurrencyIN } from '@/utils/currency';
 
 interface CardDetailSheetProps {
@@ -39,7 +40,8 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
 
   const [mockActionTitle, setMockActionTitle] = useState<string | null>(null);
   const [isAnnualFeeEditVisible, setIsAnnualFeeEditVisible] = useState(false);
-  const [isAnnualSpendEditVisible, setIsAnnualSpendEditVisible] = useState(false);
+  const [isSpendEditVisible, setIsSpendEditVisible] = useState(false);
+  const [isFeeCycleEditVisible, setIsFeeCycleEditVisible] = useState(false);
 
   const { mutate: updateCard } = useUpdateCard(card?.id || '');
 
@@ -57,11 +59,11 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const waiverPercent = card.fee_waiver_progress_percent || 0;
   const remainingSpend = card.remaining_spend_for_waiver || 0;
   const waiverTarget = card.effective_fee_waiver_threshold || 0;
-  const waiverMilestone = card.waiver_achieved ? 'Waiver Achieved' : (
-    card.comfort_state === 'SAFELY_ON_TRACK' ? 'Safely On Track' :
-    card.comfort_state === 'MONITOR_PROGRESS' ? 'Monitor Progress' :
-    card.comfort_state === 'REQUIRES_ATTENTION' ? 'Requires Attention' :
-    card.comfort_state === 'UNLIKELY_NATURALLY' ? 'Unlikely Naturally' : 'Tracking Progress'
+  const waiverMilestone = card.waiver_achieved ? 'Waiver achieved for next year' : (
+    card.comfort_state === 'SAFELY_ON_TRACK' ? 'Safely on track' :
+    card.comfort_state === 'MONITOR_PROGRESS' ? 'Monitor progress' :
+    card.comfort_state === 'REQUIRES_ATTENTION' ? 'Requires attention' :
+    card.comfort_state === 'UNLIKELY_NATURALLY' ? 'Unlikely naturally' : 'Tracking progress'
   );
 
   // Logic: Intelligence Heuristics (Max 3-5)
@@ -170,9 +172,14 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
             {hasWaiver && (
               <Animated.View entering={FadeInUp.duration(400).delay(150)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
                 <View style={styles.sectionTitleRow}>
-                  <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>FEE WAIVER PROGRESS</Text>
-                  {/* @ts-ignore */}
-                  <Sparkles size={14} color={colors.primary} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginRight: 8 }]}>FEE WAIVER PROGRESS</Text>
+                    {/* @ts-ignore */}
+                    <Sparkles size={14} color={colors.primary} />
+                  </View>
+                  <TouchableOpacity onPress={() => setIsSpendEditVisible(true)} style={styles.sectionEditBtn}>
+                    <Text style={[styles.sectionEditText, { color: colors.textSecondary }]}>Edit</Text>
+                  </TouchableOpacity>
                 </View>
 
                 <View style={styles.waiverNumbersRow}>
@@ -193,7 +200,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
 
                 <View style={styles.waiverFooter}>
                   <Text style={[styles.waiverRemaining, { color: colors.textSecondary }]}>
-                    {waiverPercent >= 100 ? 'Waiver achieved for next year' : `₹${remainingSpend.toLocaleString('en-IN')} more to achieve fee waiver`}
+                    {card.waiver_achieved ? 'Waiver achieved' : `₹${remainingSpend.toLocaleString('en-IN')} more to achieve fee waiver`}
                   </Text>
                   <View style={[styles.milestonePill, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
                     <Text style={[styles.milestoneText, { color: colors.textPrimary }]}>{waiverMilestone}</Text>
@@ -202,10 +209,13 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
               </Animated.View>
             )}
 
-            {/* Section 2.5: Annual Fee Intelligence */}
+            {/* Section 2.5: Annual Fee */}
             <Animated.View entering={FadeInUp.duration(400).delay(200)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
               <View style={styles.sectionTitleRow}>
-                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>ANNUAL FEE INTELLIGENCE</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>ANNUAL FEE</Text>
+                <TouchableOpacity onPress={() => setIsAnnualFeeEditVisible(true)} style={styles.sectionEditBtn}>
+                  <Text style={[styles.sectionEditText, { color: colors.textSecondary }]}>Edit</Text>
+                </TouchableOpacity>
               </View>
               <View style={styles.feeIntelligenceRow}>
                 <View style={styles.feeIntelligenceInfo}>
@@ -213,15 +223,31 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                     {card.effective_annual_fee ? `${formatCurrencyIN(card.effective_annual_fee)}` : 'Free'}
                   </Text>
                   <Text style={[styles.feeIntelligenceSource, { color: colors.textSecondary }]}>
-                    {card.fee_confidence === 'USER_CALIBRATED' ? 'Custom fee applied' : 'Estimated from card catalog'}
+                    {card.fee_confidence === 'USER_CALIBRATED' ? 'Custom fee applied' : 'Estimated from catalog'}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  style={[styles.editFeeBtn, { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder }]}
-                  onPress={() => setIsAnnualFeeEditVisible(true)}
-                >
-                  <Text style={[styles.editFeeBtnText, { color: colors.textPrimary }]}>Edit</Text>
+              </View>
+            </Animated.View>
+
+            {/* Section 2.6: Fee Cycle */}
+            <Animated.View entering={FadeInUp.duration(400).delay(210)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+              <View style={styles.sectionTitleRow}>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>FEE CYCLE</Text>
+                <TouchableOpacity onPress={() => setIsFeeCycleEditVisible(true)} style={styles.sectionEditBtn}>
+                  <Text style={[styles.sectionEditText, { color: colors.textSecondary }]}>Edit</Text>
                 </TouchableOpacity>
+              </View>
+              <View style={styles.feeIntelligenceRow}>
+                <View style={styles.feeIntelligenceInfo}>
+                  <Text style={[styles.feeIntelligenceValue, { color: colors.textPrimary, fontSize: tokens.fontSize.body }]}>
+                    {card.annual_fee_debit_date ? 
+                      card.annual_fee_debit_date.split('-').reverse().join('/') 
+                      : 'Not set'}
+                  </Text>
+                  <Text style={[styles.feeIntelligenceSource, { color: colors.textSecondary }]}>
+                    {card.days_until_renewal !== null && card.days_until_renewal !== undefined ? `Debits in ${card.days_until_renewal} days` : 'Set a date for accurate projections'}
+                  </Text>
+                </View>
               </View>
             </Animated.View>
 
@@ -307,7 +333,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
 
                 {/* Update Spend (Real Action) */}
-                <TouchableOpacity style={styles.actionRow} onPress={() => setIsAnnualSpendEditVisible(true)}>
+                <TouchableOpacity style={styles.actionRow} onPress={() => setIsSpendEditVisible(true)}>
                   <View style={styles.actionIconWrap}>
                     {/* @ts-ignore */}
                     <SlidersHorizontal size={18} color={colors.textPrimary} />
@@ -344,14 +370,19 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
         title={mockActionTitle || "Coming Soon"}
       />
 
-      <AnnualFeeEditSheet
+      <EditAnnualFeeSheet
         visible={isAnnualFeeEditVisible}
         onClose={() => setIsAnnualFeeEditVisible(false)}
         card={card}
       />
-      <AnnualSpendEditSheet
-        visible={isAnnualSpendEditVisible}
-        onClose={() => setIsAnnualSpendEditVisible(false)}
+      <EditSpendSheet
+        visible={isSpendEditVisible}
+        onClose={() => setIsSpendEditVisible(false)}
+        card={card}
+      />
+      <EditFeeCycleSheet
+        visible={isFeeCycleEditVisible}
+        onClose={() => setIsFeeCycleEditVisible(false)}
         card={card}
       />
     </Modal>
@@ -597,6 +628,16 @@ const styles = StyleSheet.create({
   },
   editFeeBtnText: {
     fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  sectionEditBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  sectionEditText: {
+    fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.medium,
   },
 });

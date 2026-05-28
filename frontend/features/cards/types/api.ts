@@ -24,6 +24,7 @@ export interface UserCardResponse {
   billing_date: number;
   due_date: number;
   fee_cycle_start_date: string | null;
+  annual_fee_debit_date: string | null;
   card_status: CardStatus;
   created_at: string;
   updated_at: string;
@@ -61,6 +62,11 @@ export interface UserCardUpdate {
   fee_cycle_start_date?: string;
   user_override_annual_fee?: number;
   user_override_fee_waiver_threshold?: number;
+  
+  annual_fee?: number | null;
+  fee_waiver_target?: number | null;
+  current_cycle_spend?: number | null;
+  annual_fee_debit_date?: string | null;
 }
 
 export interface UserCardCreate {
