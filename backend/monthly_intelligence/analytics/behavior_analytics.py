@@ -55,11 +55,11 @@ class BehaviorAnalyticsEngine:
             )
             eval = await self.recommendation_service.evaluate(user_id, req)
             
-            if not eval or not eval.ranked_cards:
+            if not eval or not eval.all_ranked_cards:
                 continue
                 
-            best_eval = eval.ranked_cards[0]
-            actual_eval = next((e for e in eval.ranked_cards if str(e.card_id) == str(tx.user_card_id)), None)
+            best_eval = eval.all_ranked_cards[0]
+            actual_eval = next((e for e in eval.all_ranked_cards if str(e.card_id) == str(tx.user_card_id)), None)
             
             actual_reward = float(actual_eval.effective_reward_value) if actual_eval else 0.0
             best_reward = float(best_eval.effective_reward_value)

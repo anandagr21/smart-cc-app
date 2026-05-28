@@ -152,6 +152,14 @@ class UserCardService:
 
         update_data = schema.model_dump(exclude_unset=True)
         
+        # Map frontend abstract fields to internal DB schema fields
+        if "annual_fee" in update_data:
+            update_data["user_override_annual_fee"] = update_data.pop("annual_fee")
+        if "fee_waiver_target" in update_data:
+            update_data["user_override_fee_waiver_threshold"] = update_data.pop("fee_waiver_target")
+        if "current_cycle_spend" in update_data:
+            update_data["annual_spend"] = update_data.pop("current_cycle_spend")
+        
         # If user is overriding annual fee, set tracking metadata
         if "user_override_annual_fee" in update_data:
             from datetime import datetime

@@ -235,6 +235,11 @@ class UserCardUpdate(BaseModel):
         decimal_places=2,
         ge=Decimal("0.00"),
     )
+    # Frontend aliases for progressive editing
+    annual_fee: Decimal | None = Field(default=None, max_digits=12, decimal_places=2, ge=Decimal("0.00"))
+    fee_waiver_target: Decimal | None = Field(default=None, max_digits=14, decimal_places=2, ge=Decimal("0.00"))
+    current_cycle_spend: Decimal | None = Field(default=None, max_digits=14, decimal_places=2, ge=Decimal("0.00"))
+    annual_fee_debit_date: date | None = Field(default=None)
 
     model_config = ConfigDict(extra="forbid")
 
@@ -257,6 +262,7 @@ class UserCardResponse(BaseModel):
     billing_date: int
     due_date: int
     fee_cycle_start_date: datetime | date | None = None
+    annual_fee_debit_date: date | None = None
     card_status: str
     created_at: datetime
     updated_at: datetime

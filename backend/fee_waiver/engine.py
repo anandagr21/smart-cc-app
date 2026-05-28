@@ -34,15 +34,17 @@ class FeeWaiverEngine:
             
         current_spend = getattr(user_card, "annual_spend", Decimal("0.00"))
         remaining_spend = getattr(user_card, "remaining_waiver_spend", getattr(user_card, "remaining_spend_for_waiver", None))
-        days_remaining = getattr(user_card, "days_until_renewal", None)
+        days_remaining = getattr(user_card, "days_until_fee_debit", getattr(user_card, "days_until_renewal", None))
         progress = getattr(user_card, "waiver_progress_percentage", getattr(user_card, "fee_waiver_progress_percent", None))
         
         is_achieved = remaining_spend is not None and remaining_spend <= 0
         
         # Calculate days elapsed (365 - days_remaining approx)
-        days_elapsed = 0
-        if days_remaining is not None:
+        days_elapsed = getattr(user_card, "fee_cycle_elapsed_days", None)
+        if days_elapsed is None and days_remaining is not None:
             days_elapsed = max(1, 365 - days_remaining)
+        elif days_elapsed is None:
+            days_elapsed = 0
             
         # 1. Projections
         probability = WaiverProjections.project_completion_probability(
