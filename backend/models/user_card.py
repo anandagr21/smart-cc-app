@@ -116,9 +116,58 @@ class UserCard(SQLModel, table=True):
         """Returns the user-calibrated fee if it exists, otherwise falls back to the catalog fee."""
         if self.user_override_annual_fee is not None:
             return self.user_override_annual_fee
-        if self.card_catalog is not None:
+        if getattr(self, "card_catalog", None) is not None:
             return self.card_catalog.annual_fee
         return Decimal("0.00")
+
+    @property
+    def effective_fee_waiver_threshold(self) -> Decimal | None:
+        """Returns the effective waiver threshold."""
+        if self.user_override_fee_waiver_threshold is not None:
+            return self.user_override_fee_waiver_threshold
+        if getattr(self, "card_catalog", None) is not None:
+            return self.card_catalog.fee_waiver_spend_threshold
+        return None
+
+    @property
+    def days_until_renewal(self) -> int | None:
+        """Calculates days remaining until the fee renewal date."""
+        if not self.fee_cycle_start_date:
+            return None
+        
+        today = date.today()
+        # Find next anniversary
+        try:
+            next_renewal = date(today.year, self.fee_cycle_start_date.month, self.fee_cycle_start_date.day)
+            if next_renewal <= today:
+                next_renewal = date(today.year + 1, self.fee_cycle_start_date.month, self.fee_cycle_start_date.day)
+            return (next_renewal - today).days
+        except ValueError:
+            # Handle leap year edge case (Feb 29)
+            next_renewal = date(today.year, 3, 1)
+            if next_renewal <= today:
+                next_renewal = date(today.year + 1, 3, 1)
+            return (next_renewal - today).days
+
+    @property
+    def remaining_waiver_spend(self) -> Decimal | None:
+        """Amount left to spend to hit the waiver."""
+        threshold = self.effective_fee_waiver_threshold
+        if not threshold or threshold <= Decimal("0"):
+            return None
+            
+        remaining = threshold - (self.annual_spend or Decimal("0"))
+        return max(Decimal("0.00"), remaining)
+
+    @property
+    def waiver_progress_percentage(self) -> float | None:
+        """Percentage of waiver achieved."""
+        threshold = self.effective_fee_waiver_threshold
+        if not threshold or threshold <= Decimal("0"):
+            return None
+            
+        progress = float((self.annual_spend or Decimal("0")) / threshold) * 100.0
+        return min(100.0, max(0.0, progress))
 
     # ---- Relationships ----
     card_catalog: "CardCatalog" = Relationship(

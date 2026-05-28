@@ -14,7 +14,7 @@ class TradeoffExplainer:
         if fee_waiver_impact > immediate_reward * 2 and fee_waiver_impact > 10.0:
             if intent == OptimizationIntent.SAVE_FEE_WAIVER:
                 return "Preserves your annual fee waiver progress efficiently."
-            return "Moves you significantly closer to an annual fee waiver."
+            return "Improves the likelihood of preserving your annual fee waiver, prioritizing long-term portfolio value over immediate rewards."
             
         # High immediate reward
         if immediate_reward > fee_waiver_impact * 2 and immediate_reward > 10.0:

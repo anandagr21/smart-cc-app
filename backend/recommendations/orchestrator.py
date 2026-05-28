@@ -110,10 +110,11 @@ class RecommendationOrchestrator:
             eval_result: EvaluationResult = engine_evaluate(txn_context, normalized_rules)
             
             # Phase 2: Compute fee waiver intelligence and portfolio optimization
-            fee_waiver_data = get_waiver_progress(user_card, catalog_card) if catalog_card else {}
+            from fee_waiver.service import FeeWaiverService
+            fee_waiver_state = FeeWaiverService.get_waiver_state_for_card(user_card)
             
             opt_result = portfolio_engine.evaluate_portfolio_impact(
-                eval_result, user_card, catalog_card, fee_waiver_data, request.amount
+                eval_result, user_card, catalog_card, fee_waiver_state, request.amount
             )
             optimization_results.append(opt_result)
 

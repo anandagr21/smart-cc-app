@@ -275,6 +275,13 @@ class UserCardResponse(BaseModel):
     fee_waiver_progress_percent: float | None = None
     remaining_spend_for_waiver: Decimal | None = None
     waiver_achieved: bool | None = None
-    projected_waiver_status: str | None = None
+    
+    # New Fee Waiver Intelligence Engine Output
+    days_until_renewal: int | None = None
+    projected_completion_probability: float | None = None
+    waiver_value_at_risk: float | None = None
+    urgency_level: str | None = None
+    comfort_state: str | None = None
+    explanation_text: str | None = None
 
     model_config = ConfigDict(from_attributes=True, extra="forbid")

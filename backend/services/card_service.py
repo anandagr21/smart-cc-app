@@ -198,13 +198,22 @@ class UserCardService:
                 response.fee_confidence = "ESTIMATED"
             
             # Enrich with fee waiver intelligence
-            waiver_data = get_waiver_progress(entity, entity.card_catalog)
-            response.fee_waiver_threshold = waiver_data.get("fee_waiver_threshold")
-            response.user_override_fee_waiver_threshold = waiver_data.get("user_override_fee_waiver_threshold")
-            response.effective_fee_waiver_threshold = waiver_data.get("effective_fee_waiver_threshold")
-            response.fee_waiver_progress_percent = waiver_data.get("fee_waiver_progress_percent")
-            response.remaining_spend_for_waiver = waiver_data.get("remaining_spend_for_waiver")
-            response.waiver_achieved = waiver_data.get("waiver_achieved")
-            response.projected_waiver_status = waiver_data.get("projected_waiver_status")
+            from fee_waiver.service import FeeWaiverService
+            waiver_state = FeeWaiverService.get_waiver_state_for_card(entity)
+            if waiver_state:
+                response.fee_waiver_threshold = waiver_state.waiver_target
+                response.user_override_fee_waiver_threshold = entity.user_override_fee_waiver_threshold
+                response.effective_fee_waiver_threshold = waiver_state.waiver_target
+                response.fee_waiver_progress_percent = waiver_state.waiver_progress_percentage
+                response.remaining_spend_for_waiver = waiver_state.remaining_spend
+                response.waiver_achieved = waiver_state.is_achieved
+                
+                # New Intelligence Engine Output
+                response.days_until_renewal = waiver_state.days_remaining
+                response.projected_completion_probability = waiver_state.projected_completion_probability
+                response.waiver_value_at_risk = waiver_state.waiver_value_at_risk
+                response.urgency_level = waiver_state.urgency_level.value if waiver_state.urgency_level else None
+                response.comfort_state = waiver_state.comfort_state.value if waiver_state.comfort_state else None
+                response.explanation_text = waiver_state.explanation_text
 
         return response
