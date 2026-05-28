@@ -18,6 +18,7 @@ import { Store, X, Search, Info, Sparkles } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInUp, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { TransactionResponse } from '../types/transaction.types';
+import { OptimizationIntent } from '@/features/recommendations/types/api';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useCards } from '@/features/cards/hooks/useCards';
@@ -43,9 +44,17 @@ const formSchema = z.object({
   user_card_id: z.string().min(1, 'Please select a card'),
   payment_mode: z.enum(['ONLINE', 'OFFLINE', 'INTERNATIONAL']).default('ONLINE'),
   override_reason: z.string().optional(),
+  intent: z.enum(['MAX_REWARDS', 'SAVE_FEE_WAIVER', 'BALANCED', 'SIMPLIFY_DECISIONS']).default('BALANCED'),
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+const INTENT_OPTIONS = [
+  { label: 'Max Rewards', value: 'MAX_REWARDS' },
+  { label: 'Save Fee', value: 'SAVE_FEE_WAIVER' },
+  { label: 'Balanced', value: 'BALANCED' },
+  { label: 'Simplify', value: 'SIMPLIFY_DECISIONS' }
+];
 
 const OVERRIDE_REASONS = [
   { label: 'Personal preference', value: 'Personal preference' },
@@ -92,13 +101,14 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
     formState: { errors, isSubmitting },
   } = useForm<any>({
     resolver: zodResolver(formSchema),
-    defaultValues: { merchant_name: '', user_card_id: '', payment_mode: 'ONLINE' },
+    defaultValues: { merchant_name: '', user_card_id: '', payment_mode: 'ONLINE', intent: 'BALANCED' },
   });
 
   const merchantName = watch('merchant_name');
   const amount = watch('amount');
   const paymentMode = watch('payment_mode');
   const selectedCardId = watch('user_card_id');
+  const intentValue = watch('intent');
 
   const debouncedMerchant = useDebounce(merchantName, 350);
   const debouncedAmount = useDebounce(amount, 500);
@@ -106,8 +116,8 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   // Search Query for Wallet
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Explainability Sheet
-  const [showExplainability, setShowExplainability] = useState(false);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [explainCardId, setExplainCardId] = useState<string | null>(null);
 
   // Accordion state
   const [showAlternatives, setShowAlternatives] = useState(false);
@@ -122,10 +132,13 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
         merchant_name: debouncedMerchant,
         amount: fetchAmount,
         payment_mode: (paymentMode || 'ONLINE').toLowerCase() as any,
+        intent: intentValue,
       }, {
         onSuccess: (res) => {
-          if (res.best_card) {
-            const bestCardInWallet = cardsData?.find(c => c.card_details?.card_name === res.best_card || c.nickname === res.best_card);
+          // The new response structure gives us best cards per intent
+          const heroCardName = res.all_ranked_cards?.[0]?.card_name;
+          if (heroCardName) {
+            const bestCardInWallet = cardsData?.find(c => c.card_details?.card_name === heroCardName || c.nickname === heroCardName);
             if (bestCardInWallet) {
               setValue('user_card_id', bestCardInWallet.id);
             }
@@ -133,7 +146,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
         }
       });
     }
-  }, [debouncedMerchant, debouncedAmount, paymentMode, visible]);
+  }, [debouncedMerchant, debouncedAmount, paymentMode, intentValue, visible]);
 
   useEffect(() => {
     if (visible && initialData) {
@@ -182,35 +195,48 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   };
 
   // --- Hybrid Picker Logic ---
-  const rankedCards = getRecommendation.data?.ranked_cards || [];
-  
+  const rankedCards = getRecommendation.data?.all_ranked_cards || [];
   // Find Unique Winners across objectives
   const winningWalletCards = useMemo(() => {
-    if (!rankedCards) return [];
-    const winners = new Map<string, typeof rankedCards[0]>();
+    const res = getRecommendation.data;
+    if (!res) return [];
     
-    // MAX_REWARD
-    const maxReward = rankedCards.find(rc => rc.objective_rankings?.['MAX_REWARD'] === 1);
-    if (maxReward) winners.set(maxReward.card_id, maxReward);
+    const winners = new Map<string, any>();
     
-    // PORTFOLIO_OPTIMIZED
-    const longTerm = rankedCards.find(rc => rc.objective_rankings?.['PORTFOLIO_OPTIMIZED'] === 1);
-    if (longTerm) winners.set(longTerm.card_id, longTerm);
+    // The Hero is always the top ranked card for the selected intent
+    const heroCard = res.all_ranked_cards?.[0];
+    if (heroCard) {
+      winners.set(heroCard.card_id, heroCard);
+    }
     
-    // FEE_WAIVER
-    const waiver = rankedCards.find(rc => rc.objective_rankings?.['FEE_WAIVER'] === 1);
-    // Only include waiver if it actually has waiver value > 0
-    if (waiver && waiver.portfolio_score_breakdown?.waiver_value > 0) winners.set(waiver.card_id, waiver);
+    // Add alternatives based on other categories, to show tradeoffs
+    if (res.best_cashback_card && !winners.has(res.best_cashback_card.card_id)) {
+      winners.set(res.best_cashback_card.card_id, res.best_cashback_card);
+    }
     
-    // MILESTONE_ACCELERATION
-    const milestone = rankedCards.find(rc => rc.objective_rankings?.['MILESTONE_ACCELERATION'] === 1);
-    if (milestone && milestone.portfolio_score_breakdown?.milestone_value > 0) winners.set(milestone.card_id, milestone);
+    if (res.best_fee_waiver_card && !winners.has(res.best_fee_waiver_card.card_id) && res.best_fee_waiver_card.fee_waiver_progress_impact > 0) {
+      winners.set(res.best_fee_waiver_card.card_id, res.best_fee_waiver_card);
+    }
+    
+    if (res.best_balanced_card && !winners.has(res.best_balanced_card.card_id)) {
+      winners.set(res.best_balanced_card.card_id, res.best_balanced_card);
+    }
+    
+    // Fallback: just add the next best cards if we don't have enough alternatives
+    if (res.all_ranked_cards) {
+      for (const card of res.all_ranked_cards) {
+        if (winners.size >= 3) break;
+        if (!winners.has(card.card_id)) {
+          winners.set(card.card_id, card);
+        }
+      }
+    }
     
     return Array.from(winners.values()).map(rc => ({
       card: cardsData?.find(c => c.card_details?.card_name === rc.card_name || c.nickname === rc.card_name),
       recommendation: rc
-    })).filter(r => r.card) as { card: NonNullable<typeof cardsData>[0], recommendation: typeof rankedCards[0] }[];
-  }, [rankedCards, cardsData]);
+    })).filter(r => r.card) as { card: NonNullable<typeof cardsData>[0], recommendation: typeof res.all_ranked_cards[0] }[];
+  }, [getRecommendation.data, cardsData]);
   
   const recommendedCardId = winningWalletCards[0]?.card?.id;
   const isOverride = !isEditing && recommendedCardId && selectedCardId && selectedCardId !== recommendedCardId;
@@ -246,7 +272,8 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   }, [filteredCards]);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <>
+      <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
           <BlurView
@@ -363,6 +390,46 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
               />
             </View>
 
+            {/* INTENT SELECTOR */}
+            {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && (
+              <View style={styles.sectionWrap}>
+                <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>OPTIMIZATION INTENT</Text>
+                <Controller
+                  control={control}
+                  name="intent"
+                  render={({ field: { onChange, value } }) => (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                      {INTENT_OPTIONS.map((option) => {
+                        const isActive = value === option.value;
+                        return (
+                          <TouchableOpacity
+                            key={option.value}
+                            onPress={() => onChange(option.value)}
+                            activeOpacity={0.7}
+                            style={[
+                              styles.segmentBtn,
+                              { paddingHorizontal: 16, backgroundColor: colors.background, borderColor: colors.border },
+                              isActive && { backgroundColor: colors.surfaceElevated, borderColor: colors.primary, borderWidth: 1 }
+                            ]}
+                          >
+                            <Text style={[
+                              styles.segmentText,
+                              { 
+                                color: isActive ? colors.primary : colors.textMuted,
+                                fontWeight: isActive ? tokens.fontWeight.bold : tokens.fontWeight.medium
+                              }
+                            ]}>
+                              {option.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  )}
+                />
+              </View>
+            )}
+
             {/* SECTION 1: SMART RECOMMENDED CARDS */}
             {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && (
               <View style={styles.recommendationSection}>
@@ -395,10 +462,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                       card={winningWalletCards[0].card}
                       recommendation={winningWalletCards[0].recommendation}
                       onSelect={() => setValue('user_card_id', winningWalletCards[0].card.id)}
-                      onInfoPress={() => {
-                        // Pass specific recommendation to explainability sheet
-                        setShowExplainability(true);
-                      }}
+                      onInfoPress={() => setExplainCardId(winningWalletCards[0].card.id)}
                     />
 
                     {/* ALTERNATIVE STRATEGIES (HORIZONTAL) */}
@@ -420,6 +484,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                                 recommendation={recommendation}
                                 isActive={selectedCardId === card.id}
                                 onPress={() => setValue('user_card_id', card.id)}
+                                onInfoPress={() => setExplainCardId(card.id)}
                               />
                             ))}
                           </Animated.View>
@@ -561,13 +626,14 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
+      </Modal>
 
       <RecommendationExplainabilitySheet
-        visible={showExplainability}
-        onClose={() => setShowExplainability(false)}
-        recommendedCards={winningWalletCards}
+        visible={!!explainCardId}
+        onClose={() => setExplainCardId(null)}
+        item={explainCardId ? winningWalletCards.find(c => c.card.id === explainCardId) || null : null}
       />
-    </Modal>
+    </>
   );
 };
 

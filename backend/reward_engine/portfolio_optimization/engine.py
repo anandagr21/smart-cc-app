@@ -18,7 +18,7 @@ class PortfolioOptimizationEngine:
         eval_result: EvaluationResult,
         user_card: Any,
         catalog_card: Any,
-        fee_waiver_data: dict[str, Any],
+        fee_waiver_state: Any,
         txn_amount: Decimal,
     ) -> OptimizationResult:
         """
@@ -33,24 +33,33 @@ class PortfolioOptimizationEngine:
         reason_codes = []
 
         # 1. Fee Waiver Preservation Value
-        if fee_waiver_data.get("effective_fee_waiver_threshold") and not fee_waiver_data.get("waiver_achieved"):
-            remaining = float(fee_waiver_data.get("remaining_spend_for_waiver", 0) or 0)
-            annual_fee = float(fee_waiver_data.get("effective_annual_fee", 0) or 0)
+        if fee_waiver_state and not fee_waiver_state.is_achieved:
+            remaining = float(fee_waiver_state.remaining_spend or 0)
             
-            # If annual fee is unknown/0, use a nominal fallback of 1000 so the algorithm still ranks the waiver correctly
-            effective_fee_value = annual_fee if annual_fee > 0 else 1000.0
+            # Value at risk computed by the intelligence engine
+            value_at_risk = fee_waiver_state.waiver_value_at_risk
+            
+            # If value_at_risk is 0 but there is a fee, fallback so the algorithm still ranks the waiver
+            effective_fee_value = value_at_risk if value_at_risk > 0 else 1000.0
             
             if remaining > 0:
                 contribution = min(txn_amount_float, remaining)
                 # Value = Prorated annual fee savings based on contribution relative to remaining spend
                 # This ensures that as you get closer to the waiver (lower remaining),
                 # the value of each rupee spent towards it increases.
-                waiver_value = (contribution / remaining) * effective_fee_value
+                # Urgency modifier: if highly urgent, multiply the value
+                urgency_multiplier = 1.0
+                if fee_waiver_state.urgency_level == "HIGH":
+                    urgency_multiplier = 2.0
+                elif fee_waiver_state.urgency_level == "ELEVATED":
+                    urgency_multiplier = 1.5
+                    
+                waiver_value = (contribution / remaining) * effective_fee_value * urgency_multiplier
                 reason_codes.append("FEE_WAIVER_PRESERVATION")
                 
                 if remaining <= txn_amount_float:
                     # The transaction triggers the waiver unlock!
-                    waiver_value = effective_fee_value
+                    waiver_value = effective_fee_value * urgency_multiplier
                     reason_codes.append("FEE_WAIVER_ACHIEVED")
 
         # 2. Milestone Acceleration Value

@@ -42,24 +42,24 @@ class MissedRewardsGenerator(InsightGenerator):
             import uuid
             resp = await self.recommendation_service.evaluate(uuid.UUID(user_id), req)
             
-            if not resp.ranked_cards or len(resp.ranked_cards) < 2:
+            if not resp.all_ranked_cards or len(resp.all_ranked_cards) < 2:
                 continue
                 
-            optimal_card = resp.ranked_cards[0]
+            optimal_card = resp.all_ranked_cards[0]
             
             # Find the card they actually used in the ranking
-            used_card_result = next((c for c in resp.ranked_cards if c.card_id == tx.card_id), None)
+            used_card_result = next((c for c in resp.all_ranked_cards if str(c.card_id) == str(tx.card_id)), None)
             
             if not used_card_result:
                 continue
 
             # If the optimal card is not the one they used, and the delta is meaningful
-            optimal_value = optimal_card.effective_reward_value
-            used_value = used_card_result.effective_reward_value
+            optimal_value = optimal_card.immediate_reward_value + optimal_card.fee_waiver_progress_impact
+            used_value = used_card_result.immediate_reward_value + used_card_result.fee_waiver_progress_impact
             delta = optimal_value - used_value
             
             # Require at least ₹50 delta to warrant an insight
-            if optimal_card.card_id != tx.card_id and delta > 50:
+            if str(optimal_card.card_id) != str(tx.card_id) and delta > 50:
                 priority = InsightPriority.HIGH if delta > 500 else InsightPriority.MEDIUM
                 
                 hash_str = f"MISSED_REWARD_{tx.id}_{optimal_card.card_id}"
@@ -78,7 +78,7 @@ class MissedRewardsGenerator(InsightGenerator):
                     reasoning=f"You earned ₹{used_value} with {used_name}, but {optimal_card.card_name} would have earned ₹{optimal_value}.",
                     badge_label="MISSED REWARD",
                     badge_color="#EF4444", # Red
-                    related_card_id=optimal_card.card_id,
+                    related_card_id=str(optimal_card.card_id),
                     monetary_value=float(delta),
                     source_transactions=[str(tx.id)],
                     actionability_score=80,

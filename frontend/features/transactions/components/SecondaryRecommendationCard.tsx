@@ -2,16 +2,18 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { UserCardResponse } from '@/features/cards/types/api';
-import { RankedCardResponse } from '@/features/recommendations/types/api';
+import { OptimizerRankedCard } from '@/features/recommendations/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
+import { Info } from 'lucide-react-native';
 
 interface SecondaryRecommendationCardProps {
   card: UserCardResponse;
-  recommendation: RankedCardResponse;
+  recommendation: OptimizerRankedCard;
   isActive: boolean;
   onPress: () => void;
+  onInfoPress?: () => void;
 }
 
 export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardProps> = ({
@@ -19,11 +21,12 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
   recommendation,
   isActive,
   onPress,
+  onInfoPress,
 }) => {
   const colors = useThemeColors();
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
-  const estimatedRewardValue = recommendation.total_projected_value || recommendation.portfolio_score;
+  const estimatedRewardValue = recommendation.immediate_reward_value + recommendation.fee_waiver_progress_impact;
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -41,8 +44,14 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
           {/* Strategy Tag */}
           <View style={styles.strategyRow}>
             <Text style={[styles.strategyText, { color: isActive ? '#10B981' : colors.textMuted }]} numberOfLines={1}>
-              {recommendation.primary_strategy?.toUpperCase() || 'ALTERNATIVE'}
+              {recommendation.confidence_label?.toUpperCase() || 'ALTERNATIVE'}
             </Text>
+            {onInfoPress && (
+              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress}>
+                {/* @ts-ignore */}
+                <Info size={14} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
           </View>
           
           {/* Card Name */}
@@ -82,6 +91,9 @@ const styles = StyleSheet.create({
   },
   strategyRow: {
     marginBottom: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   strategyText: {
     fontSize: tokens.fontSize.micro - 1,

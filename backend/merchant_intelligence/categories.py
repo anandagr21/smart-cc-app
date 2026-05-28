@@ -1,0 +1,12 @@
+class MerchantCategory:
+    """Standardized spend categories for portfolio cognition and merchant matching."""
+    ONLINE_SHOPPING = "ONLINE_SHOPPING"
+    DINING = "DINING"
+    GROCERY = "GROCERY"
+    FUEL = "FUEL"
+    TRAVEL = "TRAVEL"
+    UTILITIES = "UTILITIES"
+    ENTERTAINMENT = "ENTERTAINMENT"
+    PHARMACY = "PHARMACY"
+    ELECTRONICS = "ELECTRONICS"
+    GENERAL_SPEND = "GENERAL_SPEND"

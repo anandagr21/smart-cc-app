@@ -1,47 +1,40 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { X, Sparkles, CheckCircle2, TrendingUp } from 'lucide-react-native';
+import { X, Sparkles, CheckCircle2, TrendingUp, Info } from 'lucide-react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { UserCardResponse } from '@/features/cards/types/api';
-import { RankedCardResponse } from '@/features/recommendations/types/api';
+import { OptimizerRankedCard } from '@/features/recommendations/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
+import { GlossarySheet } from './GlossarySheet';
 
 interface RecommendationExplainabilitySheetProps {
   visible: boolean;
   onClose: () => void;
-  recommendedCards: { card: UserCardResponse; recommendation: RankedCardResponse }[];
+  item: { card: UserCardResponse; recommendation: OptimizerRankedCard } | null;
 }
 
 export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainabilitySheetProps> = ({
   visible,
   onClose,
-  recommendedCards,
+  item,
 }) => {
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
+  const [showFeeExplanation, setShowFeeExplanation] = React.useState(false);
+  const [showGlossary, setShowGlossary] = React.useState(false);
 
-  if (!visible || recommendedCards.length === 0) return null;
+  if (!visible || !item) return null;
 
-  const top = recommendedCards[0];
-  const topCardName = top.card.nickname || top.card.card_details?.card_name || 'Card';
+  const topCardName = item.card.nickname || item.card.card_details?.card_name || 'Card';
   
-  const strategyLabelMap: Record<string, string> = {
-    'MAX_REWARD': 'Maximum Immediate Return',
-    'FEE_WAIVER_PRESERVATION': 'Fee Waiver Optimized',
-    'MILESTONE_ACCELERATION': 'Milestone Acceleration',
-    'PORTFOLIO_OPTIMIZED': 'Long-Term Value',
-  };
-
-  const humanStrategy = top.recommendation.primary_strategy 
-    ? (strategyLabelMap[top.recommendation.primary_strategy] || top.recommendation.primary_strategy)
-    : 'Strategic Choice';
+  const humanStrategy = item.recommendation.confidence_label || 'OPTIMAL';
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -87,7 +80,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                 </Text>
                 
                 <Text style={[styles.narrativeText, { color: colors.textPrimary }]}>
-                  {top.recommendation.explanation || top.recommendation.reason_description || 'This card provides the highest long-term projected value for your portfolio.'}
+                  {item.recommendation.explanation || 'This card provides the highest blended value for your selected intent.'}
                 </Text>
 
                 <LinearGradient
@@ -96,19 +89,6 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                   pointerEvents="none"
                 />
               </View>
-
-              {/* SUPPORTING FACTORS */}
-              {top.recommendation.supporting_factors && top.recommendation.supporting_factors.length > 0 && (
-                <View style={styles.factorsSection}>
-                  {top.recommendation.supporting_factors.map((factor, idx) => (
-                    <View key={idx} style={styles.factorRow}>
-                      {/* @ts-ignore */}
-                      <CheckCircle2 size={16} color={colors.success} style={styles.factorIcon} />
-                      <Text style={[styles.factorText, { color: colors.textSecondary }]}>{factor}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
 
               {/* MATHEMATICAL BREAKDOWN */}
               <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 32 }]}>
@@ -119,23 +99,70 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                 <View style={styles.breakdownRow}>
                   <Text style={[styles.breakdownName, { color: colors.textSecondary }]}>Cashback Now</Text>
                   <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>
-                    {formatCurrencyIN(top.recommendation.cashback_value || 0)}
+                    {formatCurrencyIN(item.recommendation.immediate_reward_value || 0)}
                   </Text>
                 </View>
 
-                {top.recommendation.strategic_value > 0 && (
-                  <View style={styles.breakdownRow}>
-                    <Text style={[styles.breakdownName, { color: colors.textSecondary }]}>Strategic Value</Text>
-                    <Text style={[styles.breakdownValue, { color: '#A78BFA' }]}>
-                      {formatCurrencyIN(top.recommendation.strategic_value)}
-                    </Text>
-                  </View>
+                {item.recommendation.fee_waiver_progress_impact > 0 && (
+                  <>
+                    <View style={styles.breakdownRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={[styles.breakdownName, { color: colors.textSecondary }]}>Fee Waiver Impact</Text>
+                        <TouchableOpacity 
+                          onPress={() => setShowFeeExplanation(!showFeeExplanation)}
+                          hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                          style={{ marginLeft: 6 }}
+                        >
+                          {/* @ts-ignore */}
+                          <Info size={14} color={colors.textSecondary} />
+                        </TouchableOpacity>
+                      </View>
+                      <Text style={[styles.breakdownValue, { color: '#A78BFA' }]}>
+                        {formatCurrencyIN(item.recommendation.fee_waiver_progress_impact)}
+                      </Text>
+                    </View>
+                    
+                    {showFeeExplanation && (
+                      <Animated.View entering={FadeInUp} style={[styles.explanationBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                        <Text style={[styles.explanationText, { color: colors.textSecondary }]}>
+                          The system assigns financial value to transactions that help secure your annual fee waiver.
+                        </Text>
+                        <View style={styles.explanationMathRow}>
+                          <TouchableOpacity onPress={() => setShowGlossary(true)} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                            <Text style={[styles.explanationMathText, { color: colors.textPrimary, marginRight: 4 }]}>
+                              Value at Risk:
+                            </Text>
+                            {/* @ts-ignore */}
+                            <Info size={12} color={colors.primary} />
+                          </TouchableOpacity>
+                          <Text style={[styles.explanationMathValue, { color: colors.textPrimary }]}>
+                            {formatCurrencyIN(item.card.waiver_value_at_risk || 0)}
+                          </Text>
+                        </View>
+                        <View style={styles.explanationMathRow}>
+                          <TouchableOpacity onPress={() => setShowGlossary(true)} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                            <Text style={[styles.explanationMathText, { color: colors.textPrimary, marginRight: 4 }]}>
+                              Urgency Multiplier:
+                            </Text>
+                            {/* @ts-ignore */}
+                            <Info size={12} color={colors.primary} />
+                          </TouchableOpacity>
+                          <Text style={[styles.explanationMathValue, { color: colors.textPrimary }]}>
+                            {item.card.urgency_level === 'HIGH' ? '2.0x' : item.card.urgency_level === 'MEDIUM' ? '1.5x' : '1.0x'}
+                          </Text>
+                        </View>
+                        <Text style={[styles.explanationFootnote, { color: colors.textMuted }]}>
+                          Because this transaction contributes to your remaining spend target, the engine unlocks the urgency-adjusted value of the fee waiver proportionally.
+                        </Text>
+                      </Animated.View>
+                    )}
+                  </>
                 )}
 
                 <View style={[styles.breakdownRow, { borderBottomWidth: 0, marginTop: 8, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.1)' }]}>
-                  <Text style={[styles.breakdownName, { color: colors.textPrimary, fontWeight: tokens.fontWeight.bold }]}>Total Projected Value</Text>
+                  <Text style={[styles.breakdownName, { color: colors.textPrimary, fontWeight: tokens.fontWeight.bold }]}>Estimated Value</Text>
                   <Text style={[styles.breakdownValue, { color: '#10B981', fontSize: tokens.fontSize.title }]}>
-                    {formatCurrencyIN(top.recommendation.total_projected_value || top.recommendation.portfolio_score)}
+                    {formatCurrencyIN(item.recommendation.immediate_reward_value + item.recommendation.fee_waiver_progress_impact)}
                   </Text>
                 </View>
               </View>
@@ -145,6 +172,8 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
           </ScrollView>
         </View>
       </View>
+      
+      <GlossarySheet visible={showGlossary} onClose={() => setShowGlossary(false)} />
     </Modal>
   );
 };
@@ -247,5 +276,36 @@ const styles = StyleSheet.create({
   breakdownValue: {
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
+  },
+  explanationBox: {
+    padding: 16,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  explanationText: {
+    fontSize: tokens.fontSize.caption,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  explanationMathRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  explanationMathText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  explanationMathValue: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.bold,
+  },
+  explanationFootnote: {
+    fontSize: tokens.fontSize.micro,
+    fontStyle: 'italic',
+    marginTop: 8,
+    lineHeight: 16,
   },
 });

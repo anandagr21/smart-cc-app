@@ -4,7 +4,7 @@ import { Info } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { UserCardResponse } from '@/features/cards/types/api';
-import { RankedCardResponse } from '@/features/recommendations/types/api';
+import { OptimizerRankedCard } from '@/features/recommendations/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { getNetworkGradient } from '@/theme/colors';
@@ -13,7 +13,7 @@ import { formatCurrencyIN } from '@/utils/currency';
 
 interface HeroRecommendationCardProps {
   card: UserCardResponse;
-  recommendation: RankedCardResponse;
+  recommendation: OptimizerRankedCard;
   onSelect: () => void;
   onInfoPress: () => void;
 }
@@ -50,7 +50,7 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
           <View style={styles.editorialRow}>
             <View style={styles.strategyTagWrap}>
               <Text style={styles.strategyTagText}>
-                {recommendation.primary_strategy?.toUpperCase() || 'BEST OVERALL VALUE'}
+                {recommendation.confidence_label?.toUpperCase() || 'OPTIMAL'}
               </Text>
             </View>
             <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress}>
@@ -75,7 +75,7 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
           {/* CONCISE RATIONALE */}
           <View style={styles.rationaleWrap}>
             <Text style={styles.rationaleText}>
-              {recommendation.reason_title || 'Optimal choice for this transaction.'}
+              {recommendation.explanation || 'Optimal choice for this transaction.'}
             </Text>
           </View>
 
@@ -83,7 +83,7 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
           <View style={styles.financialsRow}>
             <View style={styles.financialItemRight}>
               <Text style={styles.financialTotalAmount}>
-                {formatCurrencyIN(recommendation.total_projected_value || recommendation.portfolio_score)}
+                {formatCurrencyIN(recommendation.immediate_reward_value + recommendation.fee_waiver_progress_impact)}
               </Text>
               <Text style={styles.financialLabel}>ESTIMATED TOTAL VALUE</Text>
             </View>

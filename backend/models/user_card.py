@@ -77,6 +77,10 @@ class UserCard(SQLModel, table=True):
         default=None,
         description="The start date of the annual fee cycle (used to calculate waiver period).",
     )
+    annual_fee_debit_date: date | None = Field(
+        default=None,
+        description="User-facing anchor for when the fee debits.",
+    )
     user_override_annual_fee: Decimal | None = Field(
         default=None,
         max_digits=12,
@@ -116,9 +120,76 @@ class UserCard(SQLModel, table=True):
         """Returns the user-calibrated fee if it exists, otherwise falls back to the catalog fee."""
         if self.user_override_annual_fee is not None:
             return self.user_override_annual_fee
-        if self.card_catalog is not None:
+        if getattr(self, "card_catalog", None) is not None:
             return self.card_catalog.annual_fee
         return Decimal("0.00")
+
+    @property
+    def effective_fee_waiver_threshold(self) -> Decimal | None:
+        """Returns the effective waiver threshold."""
+        if self.user_override_fee_waiver_threshold is not None:
+            return self.user_override_fee_waiver_threshold
+        if getattr(self, "card_catalog", None) is not None:
+            return self.card_catalog.fee_waiver_spend_threshold
+        return None
+
+    @property
+    def days_until_fee_debit(self) -> int | None:
+        """Calculates days remaining until the fee debit date, with recurring yearly normalization."""
+        if not self.annual_fee_debit_date:
+            # Fallback to the old logic if we only have fee_cycle_start_date
+            if not self.fee_cycle_start_date:
+                return None
+            target_date = self.fee_cycle_start_date
+        else:
+            target_date = self.annual_fee_debit_date
+            
+        today = date.today()
+        # Find next anniversary
+        try:
+            next_renewal = date(today.year, target_date.month, target_date.day)
+            if next_renewal < today:
+                next_renewal = date(today.year + 1, target_date.month, target_date.day)
+            return (next_renewal - today).days
+        except ValueError:
+            # Handle leap year edge case (Feb 29)
+            next_renewal = date(today.year, 3, 1)
+            if next_renewal < today:
+                next_renewal = date(today.year + 1, 3, 1)
+            return (next_renewal - today).days
+
+    @property
+    def days_until_renewal(self) -> int | None:
+        """Alias for days_until_fee_debit to preserve backward compatibility."""
+        return self.days_until_fee_debit
+
+    @property
+    def fee_cycle_elapsed_days(self) -> int | None:
+        """Difference between today and the cycle start (inferred from debit date)."""
+        days = self.days_until_fee_debit
+        if days is None:
+            return None
+        return max(0, 365 - days)
+
+    @property
+    def remaining_waiver_spend(self) -> Decimal | None:
+        """Amount left to spend to hit the waiver."""
+        threshold = self.effective_fee_waiver_threshold
+        if not threshold or threshold <= Decimal("0"):
+            return None
+            
+        remaining = threshold - (self.annual_spend or Decimal("0"))
+        return max(Decimal("0.00"), remaining)
+
+    @property
+    def waiver_progress_percentage(self) -> float | None:
+        """Percentage of waiver achieved."""
+        threshold = self.effective_fee_waiver_threshold
+        if not threshold or threshold <= Decimal("0"):
+            return None
+            
+        progress = float((self.annual_spend or Decimal("0")) / threshold) * 100.0
+        return min(100.0, max(0.0, progress))
 
     # ---- Relationships ----
     card_catalog: "CardCatalog" = Relationship(

@@ -24,6 +24,7 @@ export interface UserCardResponse {
   billing_date: number;
   due_date: number;
   fee_cycle_start_date: string | null;
+  annual_fee_debit_date: string | null;
   card_status: CardStatus;
   created_at: string;
   updated_at: string;
@@ -41,7 +42,13 @@ export interface UserCardResponse {
   fee_waiver_progress_percent?: number | null;
   remaining_spend_for_waiver?: number | null;
   waiver_achieved?: boolean | null;
-  projected_waiver_status?: string | null;
+  
+  days_until_renewal?: number | null;
+  projected_completion_probability?: number | null;
+  waiver_value_at_risk?: number | null;
+  urgency_level?: string | null;
+  comfort_state?: string | null;
+  explanation_text?: string | null;
 }
 
 export interface UserCardUpdate {
@@ -55,6 +62,11 @@ export interface UserCardUpdate {
   fee_cycle_start_date?: string;
   user_override_annual_fee?: number;
   user_override_fee_waiver_threshold?: number;
+  
+  annual_fee?: number | null;
+  fee_waiver_target?: number | null;
+  current_cycle_spend?: number | null;
+  annual_fee_debit_date?: string | null;
 }
 
 export interface UserCardCreate {

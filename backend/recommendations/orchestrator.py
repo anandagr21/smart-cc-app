@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 from merchants.service import MerchantService
 from recommendations.exceptions import NoCardsError
 from recommendations.explainers import aggregate_explanations
-from recommendations.schemas import RankedCardResponse, RecommendationRequest, RecommendationResponse
+from recommendations.schemas import OptimizerRankedCard, RecommendationRequest, RecommendationResponse
 from recommendations.utils import build_transaction_context, get_catalog_card, get_card_name
 from reward_engine.evaluator import evaluate as engine_evaluate
 from reward_engine.ranking import rank_cards
@@ -110,98 +110,38 @@ class RecommendationOrchestrator:
             eval_result: EvaluationResult = engine_evaluate(txn_context, normalized_rules)
             
             # Phase 2: Compute fee waiver intelligence and portfolio optimization
-            fee_waiver_data = get_waiver_progress(user_card, catalog_card) if catalog_card else {}
+            from fee_waiver.service import FeeWaiverService
+            fee_waiver_state = FeeWaiverService.get_waiver_state_for_card(user_card)
             
             opt_result = portfolio_engine.evaluate_portfolio_impact(
-                eval_result, user_card, catalog_card, fee_waiver_data, request.amount
+                eval_result, user_card, catalog_card, fee_waiver_state, request.amount
             )
             optimization_results.append(opt_result)
 
-        # 6. Rank cards using PortfolioOptimizationEngine
-        ranked_optimization_results = portfolio_engine.rank_universe(optimization_results)
-
-        # Generate legacy RankingResult for aggregate explanations (if needed)
-        # We can map back to CardEvaluationInput for the legacy `rank_cards` if `aggregate_explanations` needs it, 
-        # or we just build explanations directly.
-        # MVP: Build a dummy RankingResult to keep aggregate_explanations working
-        for r in ranked_optimization_results:
-            eval_inputs.append(
-                CardEvaluationInput(
-                    card_id=r.card_id,
-                    card_name=r.card_name,
-                    evaluation=r.evaluation,
-                    annual_fee=0,
-                )
-            )
-        legacy_ranking_result = rank_cards(eval_inputs)
-
-        # 7. Format response
-        explanations, warnings = aggregate_explanations(normalize_res, legacy_ranking_result)
-
-        ranked_cards_response = []
-        for i, opt_res in enumerate(ranked_optimization_results):
-            # Find the legacy eval warnings
-            legacy_eval = next((e for e in legacy_ranking_result.ranked if e.card_id == opt_res.card_id), None)
-            card_warnings = legacy_eval.warnings if legacy_eval else []
-
-            ranked_cards_response.append(
-                RankedCardResponse(
-                    card_id=opt_res.card_id,
-                    card_name=opt_res.card_name,
-                    rank=i + 1,  # Master portfolio rank
-                    
-                    effective_reward_value=round_inr(Decimal(str(opt_res.portfolio_score_breakdown.immediate_reward))),
-                    cashback_amount=opt_res.evaluation.cashback_amount,
-                    reward_points=opt_res.evaluation.reward_points,
-                    reward_type=opt_res.evaluation.reward_type,
-                    
-                    recommendation_reason=opt_res.explanation, # Fallback
-                    warnings=card_warnings,
-                    
-                    # New engine fields
-                    portfolio_score=opt_res.portfolio_score,
-                    immediate_reward_value=opt_res.portfolio_score_breakdown.immediate_reward,
-                    long_term_portfolio_value=opt_res.portfolio_score_breakdown.portfolio_health,
-                    waiver_acceleration=opt_res.portfolio_score_breakdown.waiver_value,
-                    milestone_acceleration=opt_res.portfolio_score_breakdown.milestone_value,
-                    
-                    portfolio_score_breakdown=opt_res.portfolio_score_breakdown.model_dump(),
-                    objective_rankings={k.value: v for k, v in opt_res.objective_rankings.items()},
-                    reason_codes=opt_res.reason_codes,
-                    explanation=opt_res.explanation,
-                    
-                    # Structured UI Metadata
-                    reason_title=opt_res.reason_title,
-                    reason_description=opt_res.reason_description,
-                    strategic_value=opt_res.strategic_value,
-                    total_projected_value=opt_res.total_projected_value,
-                    confidence_score=opt_res.confidence_score,
-                    primary_strategy=opt_res.primary_strategy,
-                    supporting_factors=opt_res.supporting_factors,
-                    recommendation_strength=opt_res.recommendation_strength,
-                )
-            )
-
-        best_card = legacy_ranking_result.top_card_id
-        if ranked_cards_response:
-            best_card = ranked_cards_response[0].card_name
+        # 6 & 7. Delegate to Transaction Optimizer
+        from reward_engine.transaction_optimizer.engine import TransactionOptimizer
+        
+        opt_response = TransactionOptimizer.optimize(
+            raw_merchant_name=request.merchant_name,
+            results=optimization_results,
+            intent=request.intent
+        )
 
         end_time = time.perf_counter()
         total_ms = (end_time - start_time) * 1000
-        enrich_ms = (enrichment_time - start_time) * 1000
-        rank_ms = (end_time - enrichment_time) * 1000
         
         logger.info(
-            f"Orchestration complete | Total: {total_ms:.2f}ms "
-            f"| Enrichment: {enrich_ms:.2f}ms | Eval/Rank: {rank_ms:.2f}ms "
-            f"| Cards: {len(user_cards)}"
+            f"Orchestration complete | Total: {total_ms:.2f}ms | Cards: {len(user_cards)}"
         )
-
+        
         return RecommendationResponse(
-            normalized_merchant=canonical_merchant,
-            category=category,
-            best_card=best_card,
-            ranked_cards=ranked_cards_response,
-            explanations=explanations,
-            warnings=warnings,
+            normalized_merchant=opt_response.normalized_merchant,
+            category=opt_response.category,
+            best_cashback_card=opt_response.best_cashback_card,
+            best_fee_waiver_card=opt_response.best_fee_waiver_card,
+            best_balanced_card=opt_response.best_balanced_card,
+            best_simplify_card=opt_response.best_simplify_card,
+            all_ranked_cards=opt_response.all_ranked_cards,
+            explanations=["Optimizer evaluated all scenarios."],
+            warnings=[]
         )
