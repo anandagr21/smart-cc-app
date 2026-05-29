@@ -104,6 +104,12 @@ class CardCatalogUpdate(BaseModel):
         decimal_places=2,
         ge=Decimal("0.00"),
     )
+    fee_waiver_spend_threshold: Decimal | None = Field(
+        default=None,
+        max_digits=12,
+        decimal_places=2,
+        ge=Decimal("0.00"),
+    )
     is_active: bool | None = Field(default=None)
 
     model_config = ConfigDict(extra="forbid")
