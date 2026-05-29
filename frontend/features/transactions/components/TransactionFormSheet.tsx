@@ -20,7 +20,6 @@ import Animated, { FadeIn, FadeInUp, FadeOut, LinearTransition } from 'react-nat
 import { TransactionResponse } from '../types/transaction.types';
 import { OptimizationIntent } from '@/features/recommendations/types/api';
 import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
 import { useCards } from '@/features/cards/hooks/useCards';
 import { useCreateTransaction } from '../hooks/useTransactions';
 import { useUpdateTransaction } from '../hooks/useUpdateTransaction';
@@ -116,12 +115,10 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   // Search Query for Wallet
   const [searchQuery, setSearchQuery] = useState('');
   
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [explainCardId, setExplainCardId] = useState<string | null>(null);
+    const [explainCardId, setExplainCardId] = useState<string | null>(null);
 
   // Accordion state
-  const [showAlternatives, setShowAlternatives] = useState(false);
-
+  
   // Fetch recommendations
   useEffect(() => {
     if (visible && debouncedMerchant?.length >= 3 && FeatureFlags.ENABLE_SMART_RECOMMENDATIONS) {

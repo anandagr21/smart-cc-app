@@ -24,8 +24,7 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
 }) => {
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
-  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
-
+  
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   

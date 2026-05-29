@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   title: {
-    fontSize: tokens.fontSize.h3,
+    fontSize: tokens.fontSize.headline,
     fontWeight: tokens.fontWeight.bold,
   },
   closeBtn: {

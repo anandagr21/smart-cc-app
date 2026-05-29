@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
-import { Plus, Search, SlidersHorizontal } from 'lucide-react-native';
+import { Plus, Search } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Badge } from '@/components/ui/Badge';
@@ -18,7 +18,7 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useFuseSearch } from '@/shared/search/useFuseSearch';
 import { useDebounce } from '@/hooks/useDebounce';
-import { UserCardResponse } from '@/features/cards/types/api';
+
 
 export default function CardsScreen() {
   const router = useRouter();
@@ -121,7 +121,7 @@ export default function CardsScreen() {
           onPress={() => router.push('/intelligence')}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
         >
-          <Text style={{ fontSize: tokens.fontSize.sm, color: colors.primary }}>
+          <Text style={{ fontSize: tokens.fontSize.body, color: colors.primary }}>
             Financial Intelligence
           </Text>
         </TouchableOpacity>

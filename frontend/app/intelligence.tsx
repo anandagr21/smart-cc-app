@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
-import { tokens } from '@/theme/tokens';
 import { PortfolioEvolutionSurface } from '@/features/portfolio_evolution/components/PortfolioEvolutionSurface';
 
 export default function IntelligenceScreen() {
