@@ -1,22 +1,30 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, SafeAreaView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, SafeAreaView, Platform, TextInput } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useCardCatalog } from '@/features/cards/hooks/useCardCatalog';
 import { ArrowLeft, CreditCard, Network, IndianRupee, ShieldAlert, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCardRules } from '@/features/cards/hooks/useCardRules';
+import { useCandidates } from '@/features/card_intelligence/api/cardIntelligenceApi';
+import { useUpdateCatalogCard } from '@/features/cards/hooks/useUpdateCatalogCard';
+import { Check, Lightbulb } from 'lucide-react-native';
+import { CardSidebar } from '@/features/card_intelligence/components/CardSidebar';
+import { formatCurrencyIN } from '@/utils/currency';
 
 export default function MasterCatalogScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const { data: catalog, isLoading } = useCardCatalog();
 
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   const formatCurrency = (amount: number | string | undefined | null) => {
     if (amount === undefined || amount === null) return 'N/A';
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return `₹${num.toLocaleString('en-IN')}`;
+    return formatCurrencyIN(num);
   };
 
   return (
@@ -31,36 +39,81 @@ export default function MasterCatalogScreen() {
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Master Card Catalog</Text>
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        <View style={styles.headerBox}>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            This view displays the global catalog of credit cards populated by the Card Intelligence (RAG) pipeline.
-            Changes approved in the Review Queue will automatically update these values.
-          </Text>
+      <View style={styles.main}>
+        <CardSidebar
+          catalog={catalog || []}
+          selectedCardId={selectedCardId}
+          onSelectCard={setSelectedCardId}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
+        
+        <View style={styles.contentArea}>
+          {isLoading ? (
+            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+          ) : !selectedCardId ? (
+            <View style={styles.emptyState}>
+              <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>Select a card from the sidebar to view catalog details.</Text>
+            </View>
+          ) : (
+            <ScrollView style={styles.detailsScroll} contentContainerStyle={styles.contentContainer}>
+              <CatalogCard 
+                key={`${selectedCardId}-${catalog?.find(c => c.id === selectedCardId)?.updated_at}`}
+                card={catalog?.find(c => c.id === selectedCardId)} 
+                colors={colors} 
+                formatCurrency={formatCurrency} 
+              />
+            </ScrollView>
+          )}
         </View>
-
-        {isLoading ? (
-          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
-        ) : catalog?.length === 0 ? (
-          <View style={[styles.emptyBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No cards found in the master catalog.</Text>
-          </View>
-        ) : (
-          <View style={styles.grid}>
-            {catalog?.map((card) => (
-              <CatalogCard key={card.id} card={card} colors={colors} formatCurrency={formatCurrency} />
-            ))}
-          </View>
-        )}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 
 function CatalogCard({ card, colors, formatCurrency }: { card: any, colors: any, formatCurrency: any }) {
-  const [expanded, setExpanded] = useState(false);
-  const { data: rules, isLoading: rulesLoading } = useCardRules(expanded ? card.id : undefined);
+  // Always expanded in the right pane view
+  const expanded = true;
+  
+  // State for form
+  const [joiningFee, setJoiningFee] = useState(card?.joining_fee?.toString() || '0');
+  const [annualFee, setAnnualFee] = useState(card?.annual_fee?.toString() || '0');
+  const [waiverTarget, setWaiverTarget] = useState(card?.fee_waiver_spend_threshold?.toString() || '');
+
+  // Sync state if card updates in place
+  useEffect(() => {
+    setJoiningFee(card?.joining_fee?.toString() || '0');
+    setAnnualFee(card?.annual_fee?.toString() || '0');
+    setWaiverTarget(card?.fee_waiver_spend_threshold?.toString() || '');
+  }, [card?.joining_fee, card?.annual_fee, card?.fee_waiver_spend_threshold]);
+
+  // Fetch candidates and update mutation
+  const { data: candidates, isLoading: candidatesLoading } = useCandidates(expanded ? card?.id : null);
+  const updateMutation = useUpdateCatalogCard();
+
+  const handleSave = () => {
+    updateMutation.mutate({
+      cardId: card.id,
+      data: {
+        joining_fee: parseFloat(joiningFee) || 0,
+        annual_fee: parseFloat(annualFee) || 0,
+        fee_waiver_spend_threshold: waiverTarget ? parseFloat(waiverTarget) : null,
+      }
+    });
+  };
+
+  const getCandidateHint = (fieldName: string) => {
+    if (!candidates) return null;
+    const candidate = candidates.find(c => c.field_name === fieldName);
+    if (!candidate) return null;
+    const val = candidate.proposed_value?.value;
+    return val !== undefined ? formatCurrency(val) : null;
+  };
+
+  const joiningHint = getCandidateHint('joining_fee');
+  const annualHint = getCandidateHint('annual_fee');
+  const waiverHint = getCandidateHint('fee_waiver_spend_threshold');
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
@@ -131,40 +184,81 @@ function CatalogCard({ card, colors, formatCurrency }: { card: any, colors: any,
             <Text style={[styles.statusText, { color: colors.textMuted }]}>Inactive</Text>
           </>
         )}
-        <View style={{ flex: 1 }} />
-        <TouchableOpacity 
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-          onPress={() => setExpanded(!expanded)}
-        >
-          <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '600' }}>
-            {expanded ? 'Hide Rules' : 'Show Rules'}
-          </Text>
-          {/* @ts-ignore */}
-          {expanded ? <ChevronUp size={16} color={colors.primary} /> : <ChevronDown size={16} color={colors.primary} />}
-        </TouchableOpacity>
       </View>
 
       {expanded && (
-        <View style={[styles.rulesContainer, { borderTopColor: colors.border }]}>
-          {rulesLoading ? (
-            <ActivityIndicator size="small" color={colors.primary} style={{ margin: 20 }} />
-          ) : rules?.length === 0 ? (
-            <Text style={[styles.emptyRules, { color: colors.textMuted }]}>No rules or milestones extracted yet.</Text>
-          ) : (
-            rules?.map((rule, idx) => (
-              <View key={rule.id || idx} style={[styles.ruleItem, { borderBottomColor: idx === rules.length - 1 ? 'transparent' : colors.border }]}>
-                <View style={styles.ruleHeader}>
-                  <View style={[styles.ruleBadge, { backgroundColor: colors.primary + '15' }]}>
-                    <Text style={[styles.ruleBadgeText, { color: colors.primary }]}>{rule.rule_type.toUpperCase()}</Text>
-                  </View>
-                  <Text style={[styles.ruleName, { color: colors.textPrimary }]}>{rule.rule_name}</Text>
-                </View>
-                <Text style={[styles.ruleConfig, { color: colors.textSecondary }]}>
-                  {JSON.stringify(rule.rule_config, null, 2)}
-                </Text>
+        <View style={[styles.rulesContainer, { borderTopColor: colors.border, padding: 16 }]}>
+          <Text style={[styles.ruleName, { color: colors.textPrimary, marginBottom: 16 }]}>Edit Fee & Waiver Targets</Text>
+          
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Joining Fee (₹)</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
+              value={joiningFee}
+              onChangeText={setJoiningFee}
+              keyboardType="numeric"
+            />
+            {joiningHint && (
+              <View style={styles.hintRow}>
+                {/* @ts-ignore */}
+                <Lightbulb size={12} color="#F59E0B" />
+                <Text style={styles.hintText}>AI Suggestion: {joiningHint}</Text>
               </View>
-            ))
-          )}
+            )}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Annual Fee (₹)</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
+              value={annualFee}
+              onChangeText={setAnnualFee}
+              keyboardType="numeric"
+            />
+            {annualHint && (
+              <View style={styles.hintRow}>
+                {/* @ts-ignore */}
+                <Lightbulb size={12} color="#F59E0B" />
+                <Text style={styles.hintText}>AI Suggestion: {annualHint}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Fee Waiver Target (₹)</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
+              value={waiverTarget}
+              onChangeText={setWaiverTarget}
+              keyboardType="numeric"
+              placeholder="E.g., 100000"
+              placeholderTextColor={colors.textMuted}
+            />
+            {waiverHint && (
+              <View style={styles.hintRow}>
+                {/* @ts-ignore */}
+                <Lightbulb size={12} color="#F59E0B" />
+                <Text style={styles.hintText}>AI Suggestion: {waiverHint}</Text>
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.saveBtn, { opacity: updateMutation.isPending ? 0.7 : 1 }]} 
+            onPress={handleSave}
+            disabled={updateMutation.isPending}
+          >
+            {/* @ts-ignore */}
+            {updateMutation.isPending ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <>
+                {/* @ts-ignore */}
+                <Check size={16} color="#FFF" />
+                <Text style={styles.saveBtnText}>Save Changes</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -195,31 +289,34 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.headline,
     fontWeight: '700',
   },
-  content: {
+  main: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  contentArea: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  detailsScroll: {
     flex: 1,
   },
   contentContainer: {
     padding: tokens.spacing.xl,
     paddingBottom: tokens.spacing['3xl'],
-    maxWidth: 1200,
+    maxWidth: 900,
     width: '100%',
     alignSelf: 'center',
   },
-  headerBox: {
-    marginBottom: tokens.spacing.xl,
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  subtitle: {
+  emptyStateText: {
     fontSize: tokens.fontSize.body,
-    lineHeight: 22,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.spacing.lg,
   },
   card: {
-    width: Platform.OS === 'web' ? ('32%' as any) : '100%',
-    minWidth: 300,
+    width: '100%',
     borderWidth: 1,
     borderRadius: tokens.radius.card,
     overflow: 'hidden',
@@ -337,7 +434,49 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   ruleConfig: {
-    fontSize: 12,
+    fontSize: tokens.fontSize.body,
+    lineHeight: 20,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: tokens.radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: tokens.fontSize.body,
+  },
+  hintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#F59E0B',
+    fontWeight: '500',
+  },
+  saveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10B981',
+    borderRadius: tokens.radius.md,
+    paddingVertical: 12,
+    marginTop: 8,
+    gap: 8,
+  },
+  saveBtnText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
   }
 });
