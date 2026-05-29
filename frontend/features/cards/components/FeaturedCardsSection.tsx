@@ -27,7 +27,7 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
 
     // If not enough insights, fallback to highest spend / active cards
     if (cardsWithInsights.length < 3) {
-      const activeCards = cards.filter(c => c.is_active && !cardsWithInsights.some(ci => ci.id === c.id));
+      const activeCards = cards.filter(c => c.card_status === 'ACTIVE' && !cardsWithInsights.some(ci => ci.id === c.id));
       const sortedBySpend = [...activeCards].sort((a, b) => b.annual_spend - a.annual_spend);
       cardsWithInsights.push(...sortedBySpend.slice(0, 3 - cardsWithInsights.length));
     }
