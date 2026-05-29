@@ -22,6 +22,14 @@ export const fetchUserCards = async (): Promise<UserCardResponse[]> => {
   return response.data.data;
 };
 
+export const updateCardCatalog = async (
+  cardId: string,
+  data: Partial<CardCatalogResponse>
+): Promise<CardCatalogResponse> => {
+  const response = await apiClient.patch<SingleResponse<CardCatalogResponse>>(`/cards/catalog/${cardId}`, data);
+  return response.data.data;
+};
+
 export const addUserCard = async (data: UserCardCreate): Promise<UserCardResponse> => {
   const response = await apiClient.post<SingleResponse<UserCardResponse>>('/cards', data);
   return response.data.data;
