@@ -48,7 +48,7 @@ class MissedRewardsGenerator(InsightGenerator):
             optimal_card = resp.all_ranked_cards[0]
             
             # Find the card they actually used in the ranking
-            used_card_result = next((c for c in resp.all_ranked_cards if str(c.card_id) == str(tx.card_id)), None)
+            used_card_result = next((c for c in resp.all_ranked_cards if str(c.card_id) == tx.card_id), None)
             
             if not used_card_result:
                 continue
@@ -59,7 +59,7 @@ class MissedRewardsGenerator(InsightGenerator):
             delta = optimal_value - used_value
             
             # Require at least ₹50 delta to warrant an insight
-            if str(optimal_card.card_id) != str(tx.card_id) and delta > 50:
+            if str(optimal_card.card_id) != tx.card_id and delta > 50:
                 priority = InsightPriority.HIGH if delta > 500 else InsightPriority.MEDIUM
                 
                 hash_str = f"MISSED_REWARD_{tx.id}_{optimal_card.card_id}"
@@ -74,13 +74,13 @@ class MissedRewardsGenerator(InsightGenerator):
                     priority=priority,
                     confidence=ConfidenceLevel.HIGH, # Backed by deterministic engine
                     title="Missed Reward Opportunity",
-                    summary=f"Using {optimal_card.card_name} for {tx.normalized_merchant_name} could improve returns by ~{((float(delta) / tx.amount) * 100):.1f}%.",
+                    summary=f"Using {optimal_card.card_name} for {tx.normalized_merchant_name} could improve returns by ~{((delta / tx.amount) * 100):.1f}%.",
                     reasoning=f"You earned ₹{used_value} with {used_name}, but {optimal_card.card_name} would have earned ₹{optimal_value}.",
                     badge_label="MISSED REWARD",
                     badge_color="#EF4444", # Red
                     related_card_id=str(optimal_card.card_id),
-                    monetary_value=float(delta),
-                    source_transactions=[str(tx.id)],
+                    monetary_value=delta,
+                    source_transactions=[tx.id],
                     actionability_score=80,
                     insight_hash=insight_hash,
                     cooldown_period_hours=24 * 3 # 3 day cooldown
@@ -96,4 +96,4 @@ class MissedRewardsGenerator(InsightGenerator):
         self, user_id: str, cards: List[UserCard], transactions: List[EnrichedTransaction]
     ) -> List[InsightResponse]:
         # Implementation moved to generate_async since recommendation_service.evaluate is async
-        pass
+        return []

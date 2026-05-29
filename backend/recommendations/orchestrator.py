@@ -69,8 +69,7 @@ class RecommendationOrchestrator:
             return RecommendationResponse(
                 normalized_merchant=canonical_merchant,
                 category=category,
-                best_card=None,
-                ranked_cards=[],
+                all_ranked_cards=[],
                 explanations=["Add credit cards to your wallet to unlock optimization intelligence."],
                 warnings=["No active cards found in wallet."],
             )

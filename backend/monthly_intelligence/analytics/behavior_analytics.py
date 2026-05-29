@@ -61,8 +61,8 @@ class BehaviorAnalyticsEngine:
             best_eval = eval.all_ranked_cards[0]
             actual_eval = next((e for e in eval.all_ranked_cards if str(e.card_id) == str(tx.user_card_id)), None)
             
-            actual_reward = float(actual_eval.effective_reward_value) if actual_eval else 0.0
-            best_reward = float(best_eval.effective_reward_value)
+            actual_reward = actual_eval.blended_total_value if actual_eval else 0.0
+            best_reward = best_eval.blended_total_value
             
             total_rewards_optimized += actual_reward
             category_rewards[tx.category] += actual_reward

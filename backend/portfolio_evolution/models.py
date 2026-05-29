@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Column, JSON
@@ -9,7 +9,7 @@ class PortfolioEvolutionSnapshot(SQLModel, table=True):
     Calculated periodically (e.g., monthly) or upon request to track
     how the user's wallet is evolving in terms of complexity, value, and redundancy.
     """
-    __tablename__ = "portfolio_evolution_snapshots"
+    __tablename__ = "portfolio_evolution_snapshots"  # type: ignore
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     user_id: UUID = Field(foreign_key="users.id", index=True)
@@ -42,4 +42,4 @@ class PortfolioEvolutionSnapshot(SQLModel, table=True):
     narrative_prompt_version: str | None = Field(default=None) # Prompt semver — triggers regen on upgrade
     narrative_generation_reason: str | None = Field(default=None)  # e.g. "cognition_drift", "initial_generation"
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

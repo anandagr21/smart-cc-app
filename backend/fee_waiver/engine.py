@@ -11,7 +11,7 @@ from .explainability import WaiverExplainability
 class FeeWaiverEngine:
     
     @staticmethod
-    def evaluate(user_card: UserCard) -> FeeWaiverState | None:
+    def evaluate(user_card: Any) -> FeeWaiverState | None:
         """
         Synthesizes the deterministic fee waiver state for a card.
         """
