@@ -1,9 +1,9 @@
 import logging
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .parser import DocumentParser
 from .llm import LangChainExtractor
@@ -43,14 +43,14 @@ class IngestionPipeline:
             logger.info(msg)
             if job.logs is None:
                 job.logs = []
-            job.logs.append(f"[{datetime.utcnow().isoformat()}] {msg}")
+            job.logs.append(f"[{datetime.now(timezone.utc).isoformat()}] {msg}")
             
         try:
             _log("Starting Phase 3A Extraction Pipeline")
             job.status = ProcessingStatus.PROCESSING
-            job.started_at = datetime.utcnow()
+            job.started_at = datetime.now(timezone.utc)
             source.processing_status = ProcessingStatus.PROCESSING
-            source.processing_started_at = datetime.utcnow()
+            source.processing_started_at = datetime.now(timezone.utc)
             self.db.add(job)
             self.db.add(source)
             await self.db.commit()
@@ -140,7 +140,7 @@ class IngestionPipeline:
             
             # Update run
             run.status = ProcessingStatus.COMPLETED
-            run.completed_at = datetime.utcnow()
+            run.completed_at = datetime.now(timezone.utc)
             run.tokens_used = metadata.get("tokens_used", 0)
             run.cost_estimate = metadata.get("cost_estimate", 0.0)
             self.db.add(run)
@@ -168,9 +168,9 @@ class IngestionPipeline:
 
             # 7. Complete Job
             job.status = ProcessingStatus.COMPLETED
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
             source.processing_status = ProcessingStatus.COMPLETED
-            source.processing_completed_at = datetime.utcnow()
+            source.processing_completed_at = datetime.now(timezone.utc)
             
             self.db.add(job)
             self.db.add(source)
@@ -180,7 +180,7 @@ class IngestionPipeline:
         except Exception as e:
             _log(f"Pipeline failed: {str(e)}")
             job.status = ProcessingStatus.FAILED
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
             source.processing_status = ProcessingStatus.FAILED
             source.processing_error = str(e)
             

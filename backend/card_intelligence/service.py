@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import UploadFile, HTTPException, BackgroundTasks
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, desc
 import logging
 from typing import List, Optional
@@ -248,7 +248,7 @@ class CardIntelligenceService:
         if payload.review_notes is not None:
             candidate.review_notes = payload.review_notes
             
-        candidate.reviewed_at = datetime.utcnow()
+        candidate.reviewed_at = datetime.now(timezone.utc)
         candidate.reviewed_by = user_id
         
         self.db.add(candidate)
@@ -289,7 +289,9 @@ class CardIntelligenceService:
         return preview
         
     async def publish_candidates(self, card_id: UUID, user_id: UUID) -> dict:
-        from .models import CardExtractionCandidate, CandidateStatus, CardIntelligenceVersion
+        from .models import CardExtractionCandidate, CandidateStatus, CardIntelligenceVersion, CandidateType
+        from models.card_catalog import CardCatalog
+        from rewards.models import RewardRule
         stmt = select(CardExtractionCandidate).where(
             CardExtractionCandidate.card_id == card_id,
             CardExtractionCandidate.status == CandidateStatus.APPROVED
@@ -300,20 +302,51 @@ class CardIntelligenceService:
         if not approved_candidates:
             raise HTTPException(status_code=400, detail="No approved candidates to publish")
             
-        # Here we would normally interact with RewardRule and CardCatalog to persist changes.
-        # For phase 2, we simulate this by marking them published and creating a version.
+        # Fetch the target CardCatalog
+        card = await self.db.get(CardCatalog, card_id)
+        if not card:
+            raise HTTPException(status_code=404, detail="Card catalog entry not found")
+
+        candidate_ids = []
+        for c in approved_candidates:
+            # 1. Persist to actual tables
+            if c.candidate_type == CandidateType.FEE_RULE:
+                if c.field_name == "annual_fee":
+                    card.annual_fee = c.proposed_value.get("value", card.annual_fee)
+                elif c.field_name == "joining_fee":
+                    card.joining_fee = c.proposed_value.get("value", card.joining_fee)
+            
+            elif c.candidate_type == CandidateType.CARD_FIELD:
+                if c.field_name == "fee_waiver_spend_threshold":
+                    card.fee_waiver_spend_threshold = c.proposed_value.get("value", card.fee_waiver_spend_threshold)
+            
+            elif c.candidate_type in (CandidateType.MILESTONE, CandidateType.REWARD_RULE, CandidateType.BENEFIT, CandidateType.EXCLUSION):
+                rule_type_map = {
+                    CandidateType.MILESTONE: "milestone",
+                    CandidateType.REWARD_RULE: "generic_reward",
+                    CandidateType.BENEFIT: "benefit",
+                    CandidateType.EXCLUSION: "exclusion",
+                }
+                rule = RewardRule(
+                    card_id=str(card_id),
+                    rule_name=c.entity_identifier,
+                    rule_type=rule_type_map.get(c.candidate_type, "generic_reward"),
+                    rule_config=c.proposed_value,
+                )
+                self.db.add(rule)
+
+            # 2. Mark candidate as published
+            c.status = CandidateStatus.PUBLISHED
+            self.db.add(c)
+            candidate_ids.append(str(c.id))
+            
+        self.db.add(card)
         
         # Determine next version number
         v_stmt = select(CardIntelligenceVersion).where(CardIntelligenceVersion.card_id == card_id).order_by(desc(CardIntelligenceVersion.version))
         v_result = await self.db.execute(v_stmt)
         latest_v = v_result.scalars().first()
         version_num = (latest_v.version + 1) if latest_v else 1
-        
-        candidate_ids = []
-        for c in approved_candidates:
-            c.status = CandidateStatus.PUBLISHED
-            self.db.add(c)
-            candidate_ids.append(str(c.id))
             
         version = CardIntelligenceVersion(
             card_id=card_id,

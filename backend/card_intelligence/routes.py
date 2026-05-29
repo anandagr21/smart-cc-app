@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Body, BackgroundTasks
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
@@ -101,7 +101,7 @@ async def process_source(
 @router.get("/cards/{card_id}/candidates", response_model=List[CardExtractionCandidateResponse])
 async def list_candidates(
     card_id: UUID,
-    status: str = None,
+    status: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

@@ -48,6 +48,12 @@ class RewardRuleType(StrEnum):
     SURCHARGE_WAIVER = "surcharge_waiver"
     """Fuel surcharge waiver rules."""
 
+    BENEFIT = "benefit"
+    """General card benefits and perks."""
+
+    GENERIC_REWARD = "generic_reward"
+    """Generic reward rules that don't fit other categories."""
+
 
 # Set of rule types that represent "bonus" (earn more) rather than "restriction" logic.
 BONUS_RULE_TYPES: frozenset[RewardRuleType] = frozenset({
@@ -57,6 +63,8 @@ BONUS_RULE_TYPES: frozenset[RewardRuleType] = frozenset({
     RewardRuleType.CATEGORY_BONUS,
     RewardRuleType.MILESTONE,
     RewardRuleType.SURCHARGE_WAIVER,
+    RewardRuleType.BENEFIT,
+    RewardRuleType.GENERIC_REWARD,
 })
 
 # Set of rule types that represent "restriction" logic (caps, exclusions).

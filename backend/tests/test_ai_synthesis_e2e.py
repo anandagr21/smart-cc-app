@@ -77,7 +77,7 @@ async def async_engine():
     _test_metadata.clear()
     for model in _test_tables:
         _test_metadata._add_table(
-            model.__tablename__, None, model.__table__
+            model.__tablename__, None, model.__table__  # type: ignore[attr-defined]
         )
 
     async with engine.begin() as conn:
