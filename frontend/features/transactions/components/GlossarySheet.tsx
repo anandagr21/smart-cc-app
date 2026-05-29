@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    fontSize: tokens.fontSize.h2,
+    fontSize: tokens.fontSize.headline,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: -0.5,
   },

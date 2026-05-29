@@ -37,7 +37,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
   const cardName = card.nickname || card.card_details?.card_name || 'Credit Card';
   const bankName = card.card_details?.bank_name || '';
   const networkLabel = getNetworkLabel(network);
-  const isActive = card.is_active;
+  const isActive = card.card_status === 'ACTIVE';
 
   return (
     <Animated.View

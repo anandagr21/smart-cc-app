@@ -34,3 +34,18 @@ export const updateUserCard = async (
   const response = await apiClient.patch<SingleResponse<UserCardResponse>>(`/cards/${cardId}`, data);
   return response.data.data;
 };
+
+export interface RewardRule {
+  id: string;
+  card_id: string;
+  rule_name: string;
+  rule_type: string;
+  rule_config: any;
+  priority: number;
+  is_active: boolean;
+}
+
+export const fetchCardRules = async (cardId: string): Promise<RewardRule[]> => {
+  const response = await apiClient.get<PaginatedResponse<RewardRule>>(`/reward-rules/card/${cardId}`);
+  return response.data.data;
+};

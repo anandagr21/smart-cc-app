@@ -31,8 +31,8 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   const network = card.card_details?.network || 'VISA';
 
   // Fallback values if no specific AI insight exists
-  const topTag = insight?.badge_label || (card.is_active ? 'ACTIVE CARD' : 'INACTIVE');
-  const topTagColor = insight?.badge_color || (card.is_active ? colors.success : colors.textSecondary);
+  const topTag = insight?.badge_label || (card.card_status === 'ACTIVE' ? 'ACTIVE CARD' : 'INACTIVE');
+  const topTagColor = insight?.badge_color || (card.card_status === 'ACTIVE' ? colors.success : colors.textSecondary);
 
   // Actionable Insight Rendering (Minimal UI for the bottom left)
   let actionableContent;
@@ -65,7 +65,7 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
     actionableContent = (
       <View style={styles.minimalInsight}>
         <Text style={styles.cognitionText} numberOfLines={2}>
-          {insight?.summary || (card.is_active ? 'Active and ready to use' : 'Currently inactive')}
+          {insight?.summary || (card.card_status === 'ACTIVE' ? 'Active and ready to use' : 'Currently inactive')}
         </Text>
       </View>
     );
