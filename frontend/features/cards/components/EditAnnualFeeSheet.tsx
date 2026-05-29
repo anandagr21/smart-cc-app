@@ -7,6 +7,7 @@ import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { useUpdateCard } from '../hooks/useUpdateCard';
 import { UserCardResponse } from '../types/api';
+import { formatCurrencyIN } from '@/utils/currency';
 
 interface EditAnnualFeeSheetProps {
   visible: boolean;
@@ -78,7 +79,8 @@ export const EditAnnualFeeSheet: React.FC<EditAnnualFeeSheetProps> = ({ visible,
                 { 
                   color: colors.textPrimary,
                   backgroundColor: colors.surfaceElevated,
-                  borderColor: colors.border
+                  borderColor: colors.border,
+                  marginBottom: (card?.user_override_annual_fee != null) ? 8 : 24
                 }
               ]}
               value={feeValue}
@@ -88,6 +90,13 @@ export const EditAnnualFeeSheet: React.FC<EditAnnualFeeSheetProps> = ({ visible,
               placeholderTextColor={colors.textMuted}
               autoFocus
             />
+            {card?.user_override_annual_fee != null && card.catalog_annual_fee != null && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
+                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>
+                  💡 Catalog Default: {formatCurrencyIN(card.catalog_annual_fee)}
+                </Text>
+              </View>
+            )}
 
             <TouchableOpacity 
               style={[

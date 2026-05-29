@@ -7,6 +7,7 @@ import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { useUpdateCard } from '../hooks/useUpdateCard';
 import { UserCardResponse } from '../types/api';
+import { formatCurrencyIN } from '@/utils/currency';
 
 interface EditSpendSheetProps {
   visible: boolean;
@@ -112,6 +113,13 @@ export const EditSpendSheet: React.FC<EditSpendSheetProps> = ({ visible, onClose
               placeholder="0.00"
               placeholderTextColor={colors.textMuted}
             />
+            {card?.user_override_fee_waiver_threshold != null && card.fee_waiver_threshold != null && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: -8, marginBottom: 16 }}>
+                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>
+                  💡 Catalog Default: {formatCurrencyIN(card.fee_waiver_threshold)}
+                </Text>
+              </View>
+            )}
 
             <TouchableOpacity 
               style={[
