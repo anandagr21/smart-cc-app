@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, SafeAreaView, Platform } from 'react-native';
-import { FileText, PlayCircle, CheckCircle, Clock, AlertCircle } from 'lucide-react-native';
+import { FileText, PlayCircle, CheckCircle, Clock, AlertCircle, Link } from 'lucide-react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { useCardCatalog } from '@/features/cards/hooks/useCardCatalog';
-import { useCardDocuments, useTriggerProcessing } from '../api/cardIntelligenceApi';
+import { useKnowledgeSources, useTriggerProcessing } from '../api/cardIntelligenceApi';
 import { DocumentUploadSheet } from '../components/DocumentUploadSheet';
-import { DocumentProcessingStatus } from '../types/api';
+import { ProcessingStatus } from '../types/api';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
+import { Picker } from '@react-native-picker/picker';
+import { CardIntelligenceReviewQueue } from './CardIntelligenceReviewQueue';
 
 export const CardIntelligenceDashboard: React.FC = () => {
   const colors = useThemeColors();
@@ -20,13 +22,14 @@ export const CardIntelligenceDashboard: React.FC = () => {
   const { data: catalog, isLoading: isCatalogLoading } = useCardCatalog();
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isUploadSheetVisible, setIsUploadSheetVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<'SOURCES' | 'REVIEW'>('SOURCES');
 
-  const { data: documents, isLoading: isDocsLoading } = useCardDocuments(selectedCardId);
+  const { data: sources, isLoading: isSourcesLoading } = useKnowledgeSources(selectedCardId);
   const processMutation = useTriggerProcessing(selectedCardId || '');
 
   const selectedCard = catalog?.find((c) => c.id === selectedCardId);
 
-  const renderStatusIcon = (status: DocumentProcessingStatus) => {
+  const renderStatusIcon = (status: ProcessingStatus) => {
     switch (status) {
       case 'COMPLETED':
         return <CheckCircle size={14} color={colors.success} />;
@@ -36,54 +39,67 @@ export const CardIntelligenceDashboard: React.FC = () => {
         return <Clock size={14} color={colors.warning} />;
       case 'FAILED':
         return <AlertCircle size={14} color={colors.danger} />;
+      case 'DISCOVERED':
+        return <AlertCircle size={14} color={colors.primary} />;
       default:
         return <FileText size={14} color={colors.textSecondary} />;
     }
+  };
+
+  const renderSourceIcon = (type: string) => {
+    if (type === 'URL' || type === 'HTML') return <Link size={14} color={colors.textSecondary} />;
+    return <FileText size={14} color={colors.textSecondary} />;
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Intelligence Operations</Text>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={[styles.backBtnText, { color: colors.textSecondary }]}>Close</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: tokens.spacing.md }}>
+          <TouchableOpacity 
+            style={[styles.globalUploadBtn, { backgroundColor: colors.primary }]}
+            onPress={() => setIsUploadSheetVisible(true)}
+          >
+            <Text style={styles.uploadBtnText}>Add Source</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Text style={[styles.backBtnText, { color: colors.textSecondary }]}>Close</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.main}>
-        {/* Sidebar */}
-        <View style={[styles.sidebar, { borderRightColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>CARD CATALOG</Text>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {isCatalogLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
-            ) : (
-              catalog?.map((card) => {
-                const isSelected = card.id === selectedCardId;
-                return (
-                  <TouchableOpacity
-                    key={card.id}
-                    style={[
-                      styles.cardItem,
-                      isSelected && { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }
-                    ]}
-                    onPress={() => setSelectedCardId(card.id)}
-                  >
-                    <Text style={[styles.cardItemText, { color: isSelected ? colors.textPrimary : colors.textSecondary }]}>
-                      {card.bank_name} {card.card_name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })
-            )}
-          </ScrollView>
-        </View>
-
         {/* Content Area */}
         <View style={styles.contentArea}>
+          {/* Top Controls */}
+          <View style={styles.topControlsContainer}>
+            <View style={styles.targetCardSelector}>
+              <Text style={[styles.targetCardLabel, { color: colors.textSecondary }]}>SELECT CARD TO VIEW</Text>
+              <View style={[styles.pickerContainer, { borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}>
+                {/* @ts-ignore */}
+                <Picker
+                  selectedValue={selectedCardId}
+                  onValueChange={(itemValue: any) => setSelectedCardId(itemValue)}
+                  style={[styles.picker, { color: colors.textPrimary }]}
+                  dropdownIconColor={colors.textSecondary}
+                >
+                  <Picker.Item label="Select a card from the catalog..." value={null} color={colors.textSecondary} />
+                  {catalog?.map((card) => (
+                    <Picker.Item 
+                      key={card.id} 
+                      label={`${card.bank_name} ${card.card_name}`} 
+                      value={card.id} 
+                      color={isDark ? '#FFFFFF' : '#000000'}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+          </View>
+
           {!selectedCardId ? (
             <View style={styles.emptyState}>
-              <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>Select a card from the catalog</Text>
+              <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>Select a card above to view its sources and queue.</Text>
             </View>
           ) : (
             <View style={styles.docsContainer}>
@@ -92,84 +108,127 @@ export const CardIntelligenceDashboard: React.FC = () => {
                   <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
                     {selectedCard?.bank_name} {selectedCard?.card_name}
                   </Text>
-                  <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-                    Source Documents
-                  </Text>
+                  <View style={styles.topTabs}>
+                    <TouchableOpacity onPress={() => setActiveTab('SOURCES')}>
+                      <Text style={[styles.topTabBtn, { color: activeTab === 'SOURCES' ? colors.primary : colors.textSecondary }]}>Sources</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setActiveTab('REVIEW')}>
+                      <Text style={[styles.topTabBtn, { color: activeTab === 'REVIEW' ? colors.primary : colors.textSecondary }]}>Review Queue</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <TouchableOpacity 
-                  style={[styles.uploadBtn, { backgroundColor: colors.primary }]}
-                  onPress={() => setIsUploadSheetVisible(true)}
-                >
-                  <Text style={styles.uploadBtnText}>Upload Document</Text>
-                </TouchableOpacity>
               </View>
 
-              <ScrollView style={styles.docsList}>
-                {isDocsLoading ? (
-                  <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
-                ) : documents?.length === 0 ? (
-                  <View style={[styles.noDocsBox, { borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}>
-                    <Text style={[styles.noDocsText, { color: colors.textSecondary }]}>No documents uploaded yet.</Text>
-                  </View>
-                ) : (
-                  documents?.map((doc) => (
-                    <View key={doc.id} style={[styles.docRow, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                      <View style={styles.docInfo}>
-                        <View style={styles.docTypeRow}>
-                          <Text style={[styles.docType, { color: colors.textPrimary }]}>{doc.document_type.replace(/_/g, ' ')}</Text>
-                          {!doc.is_latest_version && (
-                            <View style={[styles.badge, { backgroundColor: colors.border }]}>
-                              <Text style={[styles.badgeText, { color: colors.textSecondary }]}>v{doc.document_version}</Text>
+              {activeTab === 'SOURCES' ? (
+                <ScrollView style={styles.docsList}>
+                  {isSourcesLoading ? (
+                    <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+                  ) : sources?.length === 0 ? (
+                    <View style={[styles.noDocsBox, { borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}>
+                      <Text style={[styles.noDocsText, { color: colors.textSecondary }]}>No sources added yet.</Text>
+                    </View>
+                  ) : (
+                    sources?.map((doc) => (
+                      <View key={doc.id} style={[styles.docRow, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                        <View style={styles.docRowMain}>
+                          <View style={styles.docInfo}>
+                            <View style={styles.docTypeRow}>
+                              {renderSourceIcon(doc.source_type)}
+                              <Text style={[styles.docType, { color: colors.textPrimary }]}>{doc.source_type}</Text>
+                              {!doc.is_latest_version && (
+                                <View style={[styles.badge, { backgroundColor: colors.border }]}>
+                                  <Text style={[styles.badgeText, { color: colors.textSecondary }]}>v{doc.document_version}</Text>
+                                </View>
+                              )}
+                              {doc.is_latest_version && (
+                                <View style={[styles.badge, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+                                  <Text style={[styles.badgeText, { color: colors.success }]}>Latest (v{doc.document_version})</Text>
+                                </View>
+                              )}
                             </View>
-                          )}
-                          {doc.is_latest_version && (
-                            <View style={[styles.badge, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-                              <Text style={[styles.badgeText, { color: colors.success }]}>Latest (v{doc.document_version})</Text>
+                            <Text style={[styles.docFile, { color: colors.textPrimary }]}>{doc.source_title || 'Untitled Source'}</Text>
+                            <Text style={[styles.docDate, { color: colors.textSecondary }]} numberOfLines={1}>
+                              {doc.source_type === 'URL' ? doc.source_url : doc.file_name}
+                            </Text>
+                            <Text style={[styles.docDate, { color: colors.textMuted }]}>
+                              Added {format(new Date(doc.uploaded_at), 'MMM d, yyyy')}
+                            </Text>
+                          </View>
+                          
+                          <View style={styles.docActions}>
+                            <View style={[styles.statusBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
+                              {renderStatusIcon(doc.processing_status)}
+                              <Text style={[styles.statusText, { color: colors.textSecondary }]}>
+                                {doc.processing_status}
+                              </Text>
                             </View>
-                          )}
+                            
+                            {(doc.processing_status === 'UPLOADED' || doc.processing_status === 'FAILED' || doc.processing_status === 'IMPORTED' || doc.processing_status === 'DISCOVERED') && doc.is_latest_version && (
+                              <TouchableOpacity 
+                                style={[styles.processBtn, { borderColor: colors.border }]}
+                                onPress={() => processMutation.mutate(doc.id)}
+                                disabled={processMutation.isPending}
+                              >
+                                {/* @ts-ignore */}
+                                <PlayCircle size={16} color={colors.textPrimary} />
+                                <Text style={[styles.processBtnText, { color: colors.textPrimary }]}>
+                                  {doc.processing_status === 'DISCOVERED' ? 'Import & Process' : 'Process'}
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
                         </View>
-                        <Text style={[styles.docFile, { color: colors.textSecondary }]}>{doc.file_name}</Text>
-                        <Text style={[styles.docDate, { color: colors.textMuted }]}>
-                          Uploaded {format(new Date(doc.uploaded_at), 'MMM d, yyyy')}
-                        </Text>
-                      </View>
-                      
-                      <View style={styles.docActions}>
-                        <View style={[styles.statusBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                          {renderStatusIcon(doc.processing_status)}
-                          <Text style={[styles.statusText, { color: colors.textSecondary }]}>
-                            {doc.processing_status}
-                          </Text>
-                        </View>
-                        
-                        {(doc.processing_status === 'UPLOADED' || doc.processing_status === 'FAILED') && doc.is_latest_version && (
-                          <TouchableOpacity 
-                            style={[styles.processBtn, { borderColor: colors.border }]}
-                            onPress={() => processMutation.mutate(doc.id)}
-                            disabled={processMutation.isPending}
-                          >
+
+                        {/* Progress Bar */}
+                        {(doc.processing_status === 'QUEUED' || doc.processing_status === 'PROCESSING') && (
+                          <View style={styles.progressContainer}>
+                            <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
+                              <View 
+                                style={[
+                                  styles.progressBarFill, 
+                                  { 
+                                    backgroundColor: colors.primary, 
+                                    width: doc.processing_status === 'QUEUED' ? '30%' : '80%' 
+                                  }
+                                ]} 
+                              />
+                            </View>
+                            <Text style={[styles.progressText, { color: colors.primary }]}>
+                              {doc.processing_status === 'QUEUED' ? 'Waiting in queue...' : 'Extracting intelligence...'}
+                            </Text>
+                          </View>
+                        )}
+
+                        {/* Error Message */}
+                        {doc.processing_status === 'FAILED' && doc.processing_error && (
+                          <View style={[styles.errorBox, { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: colors.danger }]}>
                             {/* @ts-ignore */}
-                            <PlayCircle size={16} color={colors.textPrimary} />
-                            <Text style={[styles.processBtnText, { color: colors.textPrimary }]}>Process Document</Text>
-                          </TouchableOpacity>
+                            <AlertCircle size={16} color={colors.danger} />
+                            <Text style={[styles.errorText, { color: colors.danger }]}>{doc.processing_error}</Text>
+                          </View>
                         )}
                       </View>
-                    </View>
-                  ))
-                )}
-              </ScrollView>
+                    ))
+                  )}
+                </ScrollView>
+              ) : (
+                <CardIntelligenceReviewQueue cardId={selectedCardId} />
+              )}
             </View>
           )}
         </View>
       </View>
 
-      {selectedCardId && (
-        <DocumentUploadSheet 
-          visible={isUploadSheetVisible} 
-          onClose={() => setIsUploadSheetVisible(false)} 
-          cardId={selectedCardId} 
-        />
-      )}
+      <DocumentUploadSheet 
+        visible={isUploadSheetVisible} 
+        onClose={() => setIsUploadSheetVisible(false)} 
+        cardId={selectedCardId}
+        onSuccess={(cardId) => {
+          setIsUploadSheetVisible(false);
+          setSelectedCardId(cardId);
+          setActiveTab('SOURCES');
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -228,6 +287,30 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: tokens.spacing.xl,
   },
+  topControlsContainer: {
+    marginBottom: tokens.spacing.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  targetCardSelector: {
+    width: 300,
+  },
+  targetCardLabel: {
+    fontSize: tokens.fontSize.label,
+    fontFamily: 'Inter-Medium',
+    letterSpacing: 1.2,
+    marginBottom: tokens.spacing.sm,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderRadius: tokens.radius.md,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 40,
+    width: '100%',
+  },
   emptyState: {
     flex: 1,
     alignItems: 'center',
@@ -257,8 +340,22 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Medium',
     marginTop: 4,
   },
+  topTabs: {
+    flexDirection: 'row',
+    marginTop: tokens.spacing.md,
+    gap: tokens.spacing.lg,
+  },
+  topTabBtn: {
+    fontSize: tokens.fontSize.body,
+    fontFamily: 'Inter-SemiBold',
+  },
   uploadBtn: {
     paddingHorizontal: tokens.spacing.lg,
+    paddingVertical: tokens.spacing.md,
+    borderRadius: tokens.radius.full,
+  },
+  globalUploadBtn: {
+    paddingHorizontal: tokens.spacing.xl,
     paddingVertical: tokens.spacing.md,
     borderRadius: tokens.radius.full,
   },
@@ -282,13 +379,17 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Medium',
   },
   docRow: {
-    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
-    justifyContent: 'space-between',
-    alignItems: Platform.OS === 'web' ? 'center' : 'flex-start',
+    flexDirection: 'column',
     padding: tokens.spacing.xl,
     borderRadius: tokens.radius.xl,
     borderWidth: 1,
     marginBottom: tokens.spacing.lg,
+  },
+  docRowMain: {
+    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+    justifyContent: 'space-between',
+    alignItems: Platform.OS === 'web' ? 'center' : 'flex-start',
+    width: '100%',
   },
   docInfo: {
     flex: 1,
@@ -298,11 +399,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 6,
+    gap: 6,
   },
   docType: {
-    fontSize: tokens.fontSize.body,
+    fontSize: 12,
     fontFamily: 'Inter-SemiBold',
-    marginRight: tokens.spacing.sm,
   },
   badge: {
     paddingHorizontal: 8,
@@ -315,12 +416,13 @@ const styles = StyleSheet.create({
   },
   docFile: {
     fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Inter-SemiBold',
     marginBottom: 4,
   },
   docDate: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
+    marginTop: 4,
   },
   docActions: {
     flexDirection: 'row',
@@ -351,5 +453,39 @@ const styles = StyleSheet.create({
   processBtnText: {
     fontSize: 12,
     fontFamily: 'Inter-SemiBold',
+  },
+  progressContainer: {
+    marginTop: tokens.spacing.lg,
+    width: '100%',
+  },
+  progressBarBg: {
+    height: 6,
+    width: '100%',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    marginTop: 6,
+    alignSelf: 'flex-end',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: tokens.spacing.lg,
+    padding: tokens.spacing.md,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    gap: tokens.spacing.sm,
+  },
+  errorText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    flex: 1,
   },
 });

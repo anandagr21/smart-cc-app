@@ -47,6 +47,7 @@ class CardCatalog(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     card_name: str = Field(max_length=200, index=True)
     bank_name: str = Field(max_length=200, index=True)
+    normalized_card_key: str | None = Field(default=None, max_length=255, index=True, unique=True)
     network: str = Field(max_length=50)
     joining_fee: Decimal = Field(
         default=Decimal("0.00"),
