@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, SafeAreaView, Platform } from 'react-native';
-import { FileText, PlayCircle, CheckCircle, Clock, AlertCircle, Link } from 'lucide-react-native';
+import { FileText, PlayCircle, CheckCircle, Clock, AlertCircle, Link, CreditCard, UploadCloud } from 'lucide-react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useThemeStore } from '@/features/theme/store/themeStore';
@@ -10,8 +10,8 @@ import { DocumentUploadSheet } from '../components/DocumentUploadSheet';
 import { ProcessingStatus } from '../types/api';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
-import { Picker } from '@react-native-picker/picker';
 import { CardIntelligenceReviewQueue } from './CardIntelligenceReviewQueue';
+import { CardSidebar } from '../components/CardSidebar';
 
 export const CardIntelligenceDashboard: React.FC = () => {
   const colors = useThemeColors();
@@ -19,10 +19,11 @@ export const CardIntelligenceDashboard: React.FC = () => {
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
   const router = useRouter();
 
-  const { data: catalog, isLoading: isCatalogLoading } = useCardCatalog();
+  const { data: catalog } = useCardCatalog();
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isUploadSheetVisible, setIsUploadSheetVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'SOURCES' | 'REVIEW'>('SOURCES');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const { data: sources, isLoading: isSourcesLoading } = useKnowledgeSources(selectedCardId);
   const processMutation = useTriggerProcessing(selectedCardId || '');
@@ -57,10 +58,20 @@ export const CardIntelligenceDashboard: React.FC = () => {
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Intelligence Operations</Text>
         <View style={{ flexDirection: 'row', gap: tokens.spacing.md }}>
           <TouchableOpacity 
+            style={[styles.globalUploadBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1 }]}
+            onPress={() => router.push('/admin/master-catalog')}
+          >
+            {/* @ts-ignore */}
+            <CreditCard size={18} color={colors.textPrimary} />
+            <Text style={[styles.uploadBtnText, { color: colors.textPrimary }]}>Master Catalog</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
             style={[styles.globalUploadBtn, { backgroundColor: colors.primary }]}
             onPress={() => setIsUploadSheetVisible(true)}
           >
-            <Text style={styles.uploadBtnText}>Add Source</Text>
+            {/* @ts-ignore */}
+            <UploadCloud size={18} color="#FFFFFF" />
+            <Text style={[styles.uploadBtnText, { color: '#FFFFFF' }]}>Add Source</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Text style={[styles.backBtnText, { color: colors.textSecondary }]}>Close</Text>
@@ -69,33 +80,16 @@ export const CardIntelligenceDashboard: React.FC = () => {
       </View>
 
       <View style={styles.main}>
+        <CardSidebar
+          catalog={catalog || []}
+          selectedCardId={selectedCardId}
+          onSelectCard={setSelectedCardId}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
+        
         {/* Content Area */}
         <View style={styles.contentArea}>
-          {/* Top Controls */}
-          <View style={styles.topControlsContainer}>
-            <View style={styles.targetCardSelector}>
-              <Text style={[styles.targetCardLabel, { color: colors.textSecondary }]}>SELECT CARD TO VIEW</Text>
-              <View style={[styles.pickerContainer, { borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}>
-                {/* @ts-ignore */}
-                <Picker
-                  selectedValue={selectedCardId}
-                  onValueChange={(itemValue: any) => setSelectedCardId(itemValue)}
-                  style={[styles.picker, { color: colors.textPrimary }]}
-                  dropdownIconColor={colors.textSecondary}
-                >
-                  <Picker.Item label="Select a card from the catalog..." value={null} color={colors.textSecondary} />
-                  {catalog?.map((card) => (
-                    <Picker.Item 
-                      key={card.id} 
-                      label={`${card.bank_name} ${card.card_name}`} 
-                      value={card.id} 
-                      color={isDark ? '#FFFFFF' : '#000000'}
-                    />
-                  ))}
-                </Picker>
-              </View>
-            </View>
-          </View>
 
           {!selectedCardId ? (
             <View style={styles.emptyState}>
@@ -287,30 +281,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: tokens.spacing.xl,
   },
-  topControlsContainer: {
-    marginBottom: tokens.spacing.xl,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  targetCardSelector: {
-    width: 300,
-  },
-  targetCardLabel: {
-    fontSize: tokens.fontSize.label,
-    fontFamily: 'Inter-Medium',
-    letterSpacing: 1.2,
-    marginBottom: tokens.spacing.sm,
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderRadius: tokens.radius.md,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 40,
-    width: '100%',
-  },
+
   emptyState: {
     flex: 1,
     alignItems: 'center',
