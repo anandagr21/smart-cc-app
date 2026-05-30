@@ -19,6 +19,7 @@ from card_intelligence.models import (
     CandidateStatus,
     ProcessingStatus
 )
+from models.card_catalog import CardCatalog
 
 logger = logging.getLogger(__name__)
 
@@ -43,20 +44,18 @@ class IngestionPipeline:
             logger.info(msg)
             if job.logs is None:
                 job.logs = []
-            job.logs.append(f"[{datetime.now(timezone.utc).isoformat()}] {msg}")
+            job.logs.append(f"[{datetime.utcnow().isoformat()}] {msg}")
             
         try:
             _log("Starting Phase 3A Extraction Pipeline")
             job.status = ProcessingStatus.PROCESSING
-            job.started_at = datetime.now(timezone.utc)
+            job.started_at = datetime.utcnow()
             source.processing_status = ProcessingStatus.PROCESSING
-            source.processing_started_at = datetime.now(timezone.utc)
+            source.processing_started_at = datetime.utcnow()
             self.db.add(job)
             self.db.add(source)
             await self.db.commit()
 
-            # 0. Fetch Target Card
-            from models.card_catalog import CardCatalog
             target_card = await self.db.get(CardCatalog, source.card_id)
             if not target_card:
                 raise ValueError(f"Target CardCatalog {source.card_id} not found.")
@@ -140,7 +139,7 @@ class IngestionPipeline:
             
             # Update run
             run.status = ProcessingStatus.COMPLETED
-            run.completed_at = datetime.now(timezone.utc)
+            run.completed_at = datetime.utcnow()
             run.tokens_used = metadata.get("tokens_used", 0)
             run.cost_estimate = metadata.get("cost_estimate", 0.0)
             self.db.add(run)
@@ -168,9 +167,9 @@ class IngestionPipeline:
 
             # 7. Complete Job
             job.status = ProcessingStatus.COMPLETED
-            job.completed_at = datetime.now(timezone.utc)
+            job.completed_at = datetime.utcnow()
             source.processing_status = ProcessingStatus.COMPLETED
-            source.processing_completed_at = datetime.now(timezone.utc)
+            source.processing_completed_at = datetime.utcnow()
             
             self.db.add(job)
             self.db.add(source)
@@ -180,7 +179,7 @@ class IngestionPipeline:
         except Exception as e:
             _log(f"Pipeline failed: {str(e)}")
             job.status = ProcessingStatus.FAILED
-            job.completed_at = datetime.now(timezone.utc)
+            job.completed_at = datetime.utcnow()
             source.processing_status = ProcessingStatus.FAILED
             source.processing_error = str(e)
             

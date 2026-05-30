@@ -70,6 +70,7 @@ class Settings(BaseSettings):
 
     # ---- AI Narrative Synthesis ----
     openai_api_key: str = ""
+    openai_base_url: str = ""  # Useful for DeepSeek or other OpenAI-compatible APIs
     ai_narrative_model: str = "gpt-4o"
     ai_narrative_enabled: bool = True
 

@@ -248,7 +248,7 @@ class CardIntelligenceService:
         if payload.review_notes is not None:
             candidate.review_notes = payload.review_notes
             
-        candidate.reviewed_at = datetime.now(timezone.utc)
+        candidate.reviewed_at = datetime.utcnow()
         candidate.reviewed_by = user_id
         
         self.db.add(candidate)

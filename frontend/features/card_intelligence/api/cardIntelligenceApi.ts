@@ -155,6 +155,7 @@ export const useUpdateCandidate = (cardId: string) => {
     mutationFn: (params: { candidateId: string; payload: CandidateUpdatePayload }) => updateCandidate(params.candidateId, params.payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['card-candidates', cardId] });
+      queryClient.invalidateQueries({ queryKey: ['card-publish-preview', cardId] });
     },
   });
 };

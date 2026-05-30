@@ -10,6 +10,7 @@ Architectural Boundaries:
 """
 
 import logging
+import os
 from typing import Optional
 
 from core.config import get_settings
@@ -34,7 +35,11 @@ class OpenAIClient:
         if self._client is None:
             try:
                 from openai import AsyncOpenAI
-                self._client = AsyncOpenAI(api_key=self._settings.openai_api_key)
+                kwargs = {"api_key": self._settings.openai_api_key}
+                base_url = self._settings.openai_base_url or os.getenv("OPENAI_BASE_URL")
+                if base_url:
+                    kwargs["base_url"] = base_url
+                self._client = AsyncOpenAI(**kwargs)
             except ImportError:
                 logger.error("openai package not installed")
                 return None

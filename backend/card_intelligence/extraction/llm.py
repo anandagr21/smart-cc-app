@@ -36,13 +36,19 @@ class LangChainExtractor:
                 max_retries=2
             )
         elif self.provider == "openai" or self.provider == "deepseek":
-            # For DeepSeek, we'd use ChatOpenAI but override base_url in env.
-            # Assuming standard OpenAI setup.
-            return ChatOpenAI(
-                model=self.model_name,
-                temperature=0.0,
-                max_retries=2
-            )
+            from core.config import get_settings
+            settings = get_settings()
+            
+            kwargs = {
+                "model": self.model_name,
+                "temperature": 0,
+                "api_key": settings.openai_api_key or os.getenv("OPENAI_API_KEY")
+            }
+            base_url = settings.openai_base_url or os.getenv("OPENAI_BASE_URL")
+            if base_url:
+                kwargs["base_url"] = base_url
+                
+            return ChatOpenAI(**kwargs)
         else:
             raise ValueError(f"Unsupported LLM provider: {self.provider}")
 
@@ -74,23 +80,22 @@ class LangChainExtractor:
             
         prompt = ChatPromptTemplate.from_template(prompt_text)
         
-        # We need the raw output for the snapshot, but `with_structured_output` 
-        # returns the parsed object directly. To get both, we could invoke it,
-        # serialize the result back to JSON, or use an intermediate step.
-        # Since we just want the raw LLM response for debugging, serializing the 
-        # parsed object is a perfectly acceptable proxy of what it returned.
-        
-        extractor_chain = prompt | self.llm.with_structured_output(CardIntelligenceExtraction)
-        
         logger.info(f"Invoking extraction chain with {self.model_name} for card: {target.card_name}...")
         
         try:
-            result: CardIntelligenceExtraction = extractor_chain.invoke({
-                "document_text": document_text,
-                "bank_name": target.bank_name,
-                "card_name": target.card_name,
-                "network": target.network or "N/A"
-            })
+            # DeepSeek does not support response_format / json_schema structured output.
+            # For deepseek, we use plain JSON mode: ask for raw text, then parse manually.
+            if self.provider == "deepseek":
+                result = self._extract_via_json_prompt(prompt, document_text, target)
+            else:
+                # Gemini + OpenAI support with_structured_output natively
+                extractor_chain = prompt | self.llm.with_structured_output(CardIntelligenceExtraction)
+                result = extractor_chain.invoke({
+                    "document_text": document_text,
+                    "bank_name": target.bank_name,
+                    "card_name": target.card_name,
+                    "network": target.network or "N/A"
+                })
             
             # Post-extraction validation
             extracted_name = result.extracted_card_name.lower().strip()
@@ -103,9 +108,6 @@ class LangChainExtractor:
             
             raw_response = result.model_dump()
             
-            # TODO: Track actual tokens_used if available in the response metadata.
-            # Langchain's with_structured_output hides the raw AI message metadata sometimes,
-            # but for now we'll just return 0.
             metadata = {
                 "tokens_used": 0, 
                 "cost_estimate": 0.0,
@@ -118,3 +120,44 @@ class LangChainExtractor:
         except Exception as e:
             logger.error(f"LLM Extraction failed: {e}")
             raise
+
+    def _extract_via_json_prompt(
+        self,
+        prompt: ChatPromptTemplate,
+        document_text: str,
+        target: ExtractionTarget,
+    ) -> CardIntelligenceExtraction:
+        """
+        Fallback extraction for models that don't support structured output (e.g. DeepSeek).
+        Appends a JSON schema instruction to the prompt and parses the raw text response.
+        """
+        schema_json = json.dumps(CardIntelligenceExtraction.model_json_schema(), indent=2)
+        json_instruction = (
+            f"\n\nYou MUST respond with a single valid JSON object that strictly follows this schema. "
+            f"Do NOT include any markdown fences, explanation, or extra text — only the raw JSON object.\n\nSchema:\n{schema_json}"
+        )
+        
+        # Build the full prompt text by appending the JSON instruction
+        chain = prompt | self.llm
+        raw_response = chain.invoke({
+            "document_text": document_text + json_instruction,
+            "bank_name": target.bank_name,
+            "card_name": target.card_name,
+            "network": target.network or "N/A"
+        })
+        
+        # Extract text content from AIMessage
+        raw_text = raw_response.content if hasattr(raw_response, "content") else str(raw_response)
+        
+        # Strip markdown fences if present
+        raw_text = raw_text.strip()
+        if raw_text.startswith("```"):
+            raw_text = raw_text.split("```")[1]
+            if raw_text.startswith("json"):
+                raw_text = raw_text[4:]
+            raw_text = raw_text.strip()
+        
+        logger.debug(f"Raw DeepSeek response (first 500 chars): {raw_text[:500]}")
+        
+        parsed = json.loads(raw_text)
+        return CardIntelligenceExtraction(**parsed)
