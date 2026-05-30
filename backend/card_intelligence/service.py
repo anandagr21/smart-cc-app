@@ -323,7 +323,7 @@ class CardIntelligenceService:
             elif c.candidate_type in (CandidateType.MILESTONE, CandidateType.REWARD_RULE, CandidateType.BENEFIT, CandidateType.EXCLUSION):
                 rule_type_map = {
                     CandidateType.MILESTONE: "milestone",
-                    CandidateType.REWARD_RULE: "generic_reward",
+                    CandidateType.REWARD_RULE: "cashback",
                     CandidateType.BENEFIT: "benefit",
                     CandidateType.EXCLUSION: "exclusion",
                 }

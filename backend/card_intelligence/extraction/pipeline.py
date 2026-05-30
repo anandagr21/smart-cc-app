@@ -237,14 +237,23 @@ class IngestionPipeline:
                 confidence_score=0.95
             ))
 
-        # Reward Rules
+        # Reward Rules — store with engine-compatible keys so the reward
+        # engine's matcher.py can read reward_rate and category directly.
         for r in ext.reward_rules:
+            # Build engine-compatible config
+            rule_config: dict = {
+                "reward_type": "cashback",
+                "reward_rate": r.rate,
+                "category": r.category.lower().strip(),
+            }
+            if r.cap is not None:
+                rule_config["max_reward"] = r.cap
             candidates.append(CardExtractionCandidate(
                 card_id=source.card_id,
                 candidate_type=CandidateType.REWARD_RULE,
                 entity_identifier=r.category.upper().replace(" ", "_"),
                 field_name="reward_rate",
-                proposed_value={"rate": r.rate, "cap": r.cap},
+                proposed_value=rule_config,
                 source_id=source.id,
                 source_page=r.page,
                 source_text=r.source_chunk,
