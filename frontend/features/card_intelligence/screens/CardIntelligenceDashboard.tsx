@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, SafeAreaView, Platform } from 'react-native';
-import { FileText, PlayCircle, CheckCircle, Clock, AlertCircle, Link, CreditCard, UploadCloud } from 'lucide-react-native';
+import { FileText, PlayCircle, CheckCircle, Clock, AlertCircle, Link, CreditCard, UploadCloud, BrainCircuit } from 'lucide-react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useThemeStore } from '@/features/theme/store/themeStore';
@@ -64,6 +64,14 @@ export const CardIntelligenceDashboard: React.FC = () => {
             {/* @ts-ignore */}
             <CreditCard size={18} color={colors.textPrimary} />
             <Text style={[styles.uploadBtnText, { color: colors.textPrimary }]}>Master Catalog</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.globalUploadBtn, { backgroundColor: colors.surfaceElevated, borderColor: tokens.colors.primary[500] + '66', borderWidth: 1 }]}
+            onPress={() => router.push('/admin/card-rules')}
+          >
+            {/* @ts-ignore */}
+            <BrainCircuit size={18} color={tokens.colors.primary[500]} />
+            <Text style={[styles.uploadBtnText, { color: tokens.colors.primary[500] }]}>View Rules</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.globalUploadBtn, { backgroundColor: colors.primary }]}
