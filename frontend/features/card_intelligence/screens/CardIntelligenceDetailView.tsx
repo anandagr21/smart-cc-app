@@ -278,10 +278,10 @@ export function CardIntelligenceDetailView({ cardId, cardName, bankName }: Props
             style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
             onPress={() => setActiveTab(tab)}
           >
-            <Text style={[styles.tabBtnText, { color: activeTab === tab ? tokens.colors.primary[500] : colors.textSecondary }]}>
+            <Text style={[styles.tabBtnText, { color: activeTab === tab ? colors.primary : colors.textSecondary }]}>
               {tab}
             </Text>
-            {activeTab === tab && <View style={[styles.tabIndicator, { backgroundColor: tokens.colors.primary[500] }]} />}
+            {activeTab === tab && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
           </TouchableOpacity>
         ))}
       </View>
@@ -289,7 +289,7 @@ export function CardIntelligenceDetailView({ cardId, cardName, bankName }: Props
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={tokens.colors.primary[500]} />}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         {/* ---- RULES TAB ---- */}
         {activeTab === 'Rules' && (
@@ -311,8 +311,8 @@ export function CardIntelligenceDetailView({ cardId, cardName, bankName }: Props
                 <Switch
                   value={showInactive}
                   onValueChange={setShowInactive}
-                  trackColor={{ false: colors.border, true: tokens.colors.primary[500] + '88' }}
-                  thumbColor={showInactive ? tokens.colors.primary[500] : colors.textSecondary}
+                  trackColor={{ false: colors.border, true: colors.primary + '88' }}
+                  thumbColor={showInactive ? colors.primary : colors.textSecondary}
                   style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                 />
               </View>
@@ -321,7 +321,7 @@ export function CardIntelligenceDetailView({ cardId, cardName, bankName }: Props
             {/* Type filter pills */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
               {FILTER_TYPES.map(type => {
-                const meta = type === 'All' ? { color: tokens.colors.primary[500] } : getRuleTypeMeta(type);
+                const meta = type === 'All' ? { color: colors.primary } : getRuleTypeMeta(type);
                 const active = filterType === type;
                 return (
                   <TouchableOpacity
@@ -346,7 +346,7 @@ export function CardIntelligenceDetailView({ cardId, cardName, bankName }: Props
             </Text>
 
             {rulesLoading ? (
-              <ActivityIndicator size="large" color={tokens.colors.primary[500]} style={{ marginTop: 40 }} />
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
             ) : filteredRules.length === 0 ? (
               <EmptyState
                 icon={<Database size={32} color={colors.textSecondary} />}
@@ -377,7 +377,7 @@ export function CardIntelligenceDetailView({ cardId, cardName, bankName }: Props
               {sources.length} knowledge source{sources.length !== 1 ? 's' : ''}
             </Text>
             {sourcesLoading ? (
-              <ActivityIndicator size="large" color={tokens.colors.primary[500]} style={{ marginTop: 40 }} />
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
             ) : sources.length === 0 ? (
               <EmptyState
                 icon={<Info size={32} color={colors.textSecondary} />}
@@ -436,7 +436,7 @@ function SourceCard({ source, colors }: { source: any; colors: any }) {
             {source.source_type} • {source.source_url ? 'URL' : 'File'}
           </Text>
           {source.source_url && (
-            <Text style={[styles.sourceUrl, { color: tokens.colors.primary[400] }]} numberOfLines={1}>
+            <Text style={[styles.sourceUrl, { color: colors.primary }]} numberOfLines={1}>
               {source.source_url}
             </Text>
           )}

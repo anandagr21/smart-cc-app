@@ -39,7 +39,7 @@ export default function CardIntelligenceDetailScreen() {
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <BrainCircuit size={18} color={tokens.colors.primary[500]} />
+        <BrainCircuit size={18} color={colors.primary} />
         <View style={{ flex: 1 }}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Card Intelligence</Text>
           {selectedCard && (
@@ -53,7 +53,7 @@ export default function CardIntelligenceDetailScreen() {
       {/* Body */}
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={tokens.colors.primary[500]} />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading catalog…</Text>
         </View>
       ) : (

@@ -66,12 +66,12 @@ export const CardIntelligenceDashboard: React.FC = () => {
             <Text style={[styles.uploadBtnText, { color: colors.textPrimary }]}>Master Catalog</Text>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={[styles.globalUploadBtn, { backgroundColor: colors.surfaceElevated, borderColor: tokens.colors.primary[500] + '66', borderWidth: 1 }]}
+            style={[styles.globalUploadBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.primary + '66', borderWidth: 1 }]}
             onPress={() => router.push('/admin/card-rules')}
           >
             {/* @ts-ignore */}
-            <BrainCircuit size={18} color={tokens.colors.primary[500]} />
-            <Text style={[styles.uploadBtnText, { color: tokens.colors.primary[500] }]}>View Rules</Text>
+            <BrainCircuit size={18} color={colors.primary} />
+            <Text style={[styles.uploadBtnText, { color: colors.primary }]}>View Rules</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.globalUploadBtn, { backgroundColor: colors.primary }]}
