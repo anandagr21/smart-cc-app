@@ -38,6 +38,8 @@ class CardExtractionCandidateResponse(BaseModel):
     field_name: str
     current_value: Optional[dict]
     proposed_value: dict
+    change_type: str
+    published_rule_id: Optional[str] = None
     confidence_score: float
     source_id: UUID
     source_page: Optional[int]
@@ -58,6 +60,7 @@ class CandidateUpdatePayload(BaseModel):
 class PublishPreviewResponse(BaseModel):
     reward_rules_added: int
     reward_rules_updated: int
+    reward_rules_removed: int
     benefits_added: int
     fees_updated: int
     total_candidates: int

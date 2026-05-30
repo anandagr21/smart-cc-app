@@ -17,6 +17,9 @@ Rules for Extraction:
 7. For exclusions, extract all categories explicitly mentioned as not earning rewards (e.g. "fuel", "wallet loads", "EMI transactions").
 8. The `rate` for reward rules should be a decimal (e.g., 5% is 0.05).
 9. Set `extracted_card_name` to the exact name of the card you are extracting for.
+10. IMPORTANT FOR REWARDS: Differentiate between a `merchants` list (specific brands or companies like Amazon, Swiggy, Zomato, Cleartrip) and a `category` (a broad spend type like Dining, Grocery, Online Spends, All Spends). 
+    - If a rule targets specific brands, extract the brand names into the `merchants` list and leave `category` null. 
+    - If a rule targets broad types of spend, extract into the `category` field and leave `merchants` null.
 
 Here is the document text:
 --------------------------------------------------

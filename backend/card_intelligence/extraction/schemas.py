@@ -12,7 +12,8 @@ class FeeWaiverRule(BaseExtraction):
     spend_threshold: float = Field(description="The annual spend required to waive the fee")
 
 class RewardRule(BaseExtraction):
-    category: str = Field(description="The spend category (e.g., 'Dining', 'Grocery', 'All Spends')")
+    category: Optional[str] = Field(default=None, description="The broad spend category (e.g., 'Dining', 'Grocery', 'All Spends', 'Online'). Only use if the rule applies broadly and NOT to a specific merchant.")
+    merchants: Optional[List[str]] = Field(default=None, description="A list of specific merchant names (e.g., ['Amazon', 'Swiggy', 'Zomato', 'Cleartrip']). ONLY populate this if the rule explicitly targets specific companies or brands.")
     rate: float = Field(description="The reward rate as a decimal (e.g., 0.05 for 5%)")
     cap: Optional[float] = Field(default=None, description="The maximum rewards that can be earned in this category per cycle, if any")
 

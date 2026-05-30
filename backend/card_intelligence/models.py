@@ -142,6 +142,9 @@ class CardExtractionCandidate(SQLModel, table=True):
     current_value: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     proposed_value: dict = Field(default_factory=dict, sa_column=Column(JSON))
     
+    change_type: str = Field(default="ADD", max_length=50)
+    published_rule_id: Optional[str] = Field(default=None, max_length=255)
+    
     confidence_score: float = Field(default=0.0)
     
     source_id: uuid.UUID = Field(foreign_key="card_knowledge_sources.id")

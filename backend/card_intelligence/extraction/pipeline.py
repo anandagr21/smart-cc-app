@@ -159,7 +159,17 @@ class IngestionPipeline:
             _log(f"Stored ExtractionSnapshot (id: {snapshot.id})")
 
             # 6. Generate Candidates
-            candidates = self._generate_candidates(extraction_result, source)
+            from sqlmodel import select
+            from rewards.models import RewardRule
+            
+            stmt = select(RewardRule).where(
+                RewardRule.card_id == str(target_card.id),
+                RewardRule.is_active == True
+            )
+            result = await self.db.execute(stmt)
+            existing_rules = result.scalars().all()
+            
+            candidates = self._generate_candidates(extraction_result, source, target_card, existing_rules)
             for c in candidates:
                 self.db.add(c)
                 
@@ -190,116 +200,132 @@ class IngestionPipeline:
 
     def _generate_candidates(
         self, 
-        ext: CardIntelligenceExtraction, 
-        source: CardKnowledgeSource
-    ) -> List[CardExtractionCandidate]:
+        ext, 
+        source,
+        target_card,
+        existing_rules
+    ):
+        from card_intelligence.models import CardExtractionCandidate, CandidateType
         candidates = []
         
-        # Annual Fee
-        if ext.annual_fee:
-            candidates.append(CardExtractionCandidate(
-                card_id=source.card_id,
-                candidate_type=CandidateType.FEE_RULE,
-                entity_identifier="ANNUAL_FEE",
-                field_name="annual_fee",
-                proposed_value={"value": ext.annual_fee.amount},
-                source_id=source.id,
-                source_page=ext.annual_fee.page,
-                source_text=ext.annual_fee.source_chunk,
-                confidence_score=0.95
-            ))
+        def generate_diff(candidate_type, entity_identifier, field_name, proposed_value, source_page, source_text, confidence):
+            current_value = None
+            published_rule_id = None
             
-        # Joining Fee
-        if ext.joining_fee:
-            candidates.append(CardExtractionCandidate(
-                card_id=source.card_id,
-                candidate_type=CandidateType.FEE_RULE,
-                entity_identifier="JOINING_FEE",
-                field_name="joining_fee",
-                proposed_value={"value": ext.joining_fee.amount},
-                source_id=source.id,
-                source_page=ext.joining_fee.page,
-                source_text=ext.joining_fee.source_chunk,
-                confidence_score=0.95
-            ))
+            if candidate_type == CandidateType.FEE_RULE:
+                if field_name == "annual_fee":
+                    current_value = {"value": target_card.annual_fee} if getattr(target_card, "annual_fee", None) is not None else None
+                elif field_name == "joining_fee":
+                    current_value = {"value": target_card.joining_fee} if getattr(target_card, "joining_fee", None) is not None else None
+            elif candidate_type == CandidateType.CARD_FIELD:
+                if field_name == "fee_waiver_spend_threshold":
+                    current_value = {"value": target_card.fee_waiver_spend_threshold} if getattr(target_card, "fee_waiver_spend_threshold", None) is not None else None
+            else:
+                for r in existing_rules:
+                    if getattr(r, "rule_name", None) == entity_identifier:
+                        current_value = r.rule_config
+                        published_rule_id = str(r.id)
+                        break
             
-        # Fee Waiver
-        if ext.fee_waiver:
-            candidates.append(CardExtractionCandidate(
+            if current_value == proposed_value:
+                return None
+                
+            change_type = "UPDATE" if current_value is not None else "ADD"
+            
+            return CardExtractionCandidate(
                 card_id=source.card_id,
-                candidate_type=CandidateType.CARD_FIELD,
-                entity_identifier="FEE_WAIVER",
-                field_name="fee_waiver_spend_threshold",
-                proposed_value={"value": ext.fee_waiver.spend_threshold},
+                candidate_type=candidate_type,
+                entity_identifier=entity_identifier,
+                field_name=field_name,
+                current_value=current_value,
+                proposed_value=proposed_value,
+                change_type=change_type,
+                published_rule_id=published_rule_id,
                 source_id=source.id,
-                source_page=ext.fee_waiver.page,
-                source_text=ext.fee_waiver.source_chunk,
-                confidence_score=0.95
-            ))
+                source_page=source_page,
+                source_text=source_text,
+                confidence_score=confidence
+            )
 
-        # Reward Rules — store with engine-compatible keys so the reward
-        # engine's matcher.py can read reward_rate and category directly.
-        for r in ext.reward_rules:
-            # Build engine-compatible config
-            rule_config: dict = {
-                "reward_type": "cashback",
-                "reward_rate": r.rate,
-                "category": r.category.lower().strip(),
-            }
-            if r.cap is not None:
-                rule_config["max_reward"] = r.cap
-            candidates.append(CardExtractionCandidate(
-                card_id=source.card_id,
-                candidate_type=CandidateType.REWARD_RULE,
-                entity_identifier=r.category.upper().replace(" ", "_"),
-                field_name="reward_rate",
-                proposed_value=rule_config,
-                source_id=source.id,
-                source_page=r.page,
-                source_text=r.source_chunk,
-                confidence_score=0.90
-            ))
+        extracted_entities = set()
 
-        # Exclusions
-        for e in ext.exclusions:
-            candidates.append(CardExtractionCandidate(
-                card_id=source.card_id,
-                candidate_type=CandidateType.EXCLUSION,
-                entity_identifier=e.category.upper().replace(" ", "_"),
-                field_name="exclusion",
-                proposed_value={"category": e.category},
-                source_id=source.id,
-                source_page=e.page,
-                source_text=e.source_chunk,
-                confidence_score=0.90
-            ))
+        if getattr(ext, "annual_fee", None):
+            c = generate_diff(CandidateType.FEE_RULE, "ANNUAL_FEE", "annual_fee", {"value": ext.annual_fee.amount}, ext.annual_fee.page, ext.annual_fee.source_chunk, 0.95)
+            if c: candidates.append(c)
+            
+        if getattr(ext, "joining_fee", None):
+            c = generate_diff(CandidateType.FEE_RULE, "JOINING_FEE", "joining_fee", {"value": ext.joining_fee.amount}, ext.joining_fee.page, ext.joining_fee.source_chunk, 0.95)
+            if c: candidates.append(c)
+            
+        if getattr(ext, "fee_waiver", None):
+            c = generate_diff(CandidateType.CARD_FIELD, "FEE_WAIVER", "fee_waiver_spend_threshold", {"value": ext.fee_waiver.spend_threshold}, ext.fee_waiver.page, ext.fee_waiver.source_chunk, 0.95)
+            if c: candidates.append(c)
 
-        # Benefits
-        for b in ext.benefits:
-            candidates.append(CardExtractionCandidate(
-                card_id=source.card_id,
-                candidate_type=CandidateType.BENEFIT,
-                entity_identifier=b.benefit_type.upper().replace(" ", "_"),
-                field_name="benefit",
-                proposed_value={"description": b.description, "uses_per_year": b.uses_per_year},
-                source_id=source.id,
-                source_page=b.page,
-                source_text=b.source_chunk,
-                confidence_score=0.85
-            ))
+        for r in getattr(ext, "reward_rules", []):
+            base_config = {"reward_type": "cashback", "reward_rate": r.rate}
+            if getattr(r, "category", None):
+                base_config["category"] = r.category.lower().strip()
+            if getattr(r, "cap", None) is not None:
+                base_config["max_reward"] = r.cap
+                
+            merchants = getattr(r, "merchants", [])
+            if merchants:
+                for merchant_name in merchants:
+                    rule_config = base_config.copy()
+                    m_name = merchant_name.lower().strip()
+                    rule_config["merchant"] = m_name
+                    entity_identifier = f"REWARD_MERCHANT_{m_name.upper().replace(' ', '_')}"
+                    extracted_entities.add(entity_identifier)
+                    
+                    c = generate_diff(CandidateType.REWARD_RULE, entity_identifier, "reward_rule", rule_config, getattr(r, "page", None), getattr(r, "source_chunk", ""), 0.90)
+                    if c: candidates.append(c)
+            else:
+                cat = getattr(r, "category", "GENERAL")
+                entity_identifier = f"REWARD_CATEGORY_{cat.upper().replace(' ', '_')}"
+                extracted_entities.add(entity_identifier)
+                c = generate_diff(CandidateType.REWARD_RULE, entity_identifier, "reward_rule", base_config, getattr(r, "page", None), getattr(r, "source_chunk", ""), 0.90)
+                if c: candidates.append(c)
 
-        # Milestones
-        for m in ext.milestones:
-            candidates.append(CardExtractionCandidate(
-                card_id=source.card_id,
-                candidate_type=CandidateType.MILESTONE,
-                entity_identifier=f"MILESTONE_{int(m.spend_threshold)}",
-                field_name="milestone",
-                proposed_value={"spend_threshold": m.spend_threshold, "reward_description": m.reward_description},
-                source_id=source.id,
-                source_page=m.page,
-                source_text=m.source_chunk,
-                confidence_score=0.85
-            ))
+        for e in getattr(ext, "exclusions", []):
+            entity_identifier = f"EXCLUSION_{e.category.upper().replace(' ', '_')}"
+            extracted_entities.add(entity_identifier)
+            c = generate_diff(CandidateType.EXCLUSION, entity_identifier, "exclusion", {"category": e.category}, getattr(e, "page", None), getattr(e, "source_chunk", ""), 0.90)
+            if c: candidates.append(c)
+
+        for b in getattr(ext, "benefits", []):
+            entity_identifier = f"BENEFIT_{b.benefit_type.upper().replace(' ', '_')}"
+            extracted_entities.add(entity_identifier)
+            c = generate_diff(CandidateType.BENEFIT, entity_identifier, "benefit", {"description": b.description, "uses_per_year": getattr(b, "uses_per_year", None)}, getattr(b, "page", None), getattr(b, "source_chunk", ""), 0.85)
+            if c: candidates.append(c)
+
+        for m in getattr(ext, "milestones", []):
+            entity_identifier = f"MILESTONE_{int(m.spend_threshold)}"
+            extracted_entities.add(entity_identifier)
+            c = generate_diff(CandidateType.MILESTONE, entity_identifier, "milestone", {"spend_threshold": m.spend_threshold, "reward_description": m.reward_description}, getattr(m, "page", None), getattr(m, "source_chunk", ""), 0.85)
+            if c: candidates.append(c)
+
+        for r in existing_rules:
+            if getattr(r, "rule_name", None) not in extracted_entities:
+                type_map = {
+                    "cashback": CandidateType.REWARD_RULE,
+                    "exclusion": CandidateType.EXCLUSION,
+                    "benefit": CandidateType.BENEFIT,
+                    "milestone": CandidateType.MILESTONE
+                }
+                c_type = type_map.get(getattr(r, "rule_type", ""), CandidateType.REWARD_RULE)
+                
+                candidates.append(CardExtractionCandidate(
+                    card_id=source.card_id,
+                    candidate_type=c_type,
+                    entity_identifier=getattr(r, "rule_name", "UNKNOWN"),
+                    field_name=c_type.value.lower(),
+                    current_value=getattr(r, "rule_config", {}),
+                    proposed_value={},
+                    change_type="STALE",
+                    published_rule_id=str(r.id),
+                    source_id=source.id,
+                    source_text="Rule present in database but not found in latest extraction.",
+                    confidence_score=1.0
+                ))
             
         return candidates
