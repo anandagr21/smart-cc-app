@@ -1,50 +1,43 @@
+import sys
+import os
+import json
+import uuid
+from decimal import Decimal
+
+# Add backend dir to path
+sys.path.append("/Users/anandagrawal/work/smart-cc-app/backend")
+
+from core.database import engine
+from sqlmodel.ext.asyncio.session import AsyncSession
 import asyncio
-from httpx import AsyncClient
 
 async def main():
-    async with AsyncClient(base_url="http://localhost:8000") as client:
-        # Login
-        r = await client.post("/api/v1/auth/login", json={
-            "email": "test_history@example.com",
-            "password": "password123"
-        })
-        token = r.json().get("data", {}).get("access_token")
-        headers = {"Authorization": f"Bearer {token}"}
+    async with AsyncSession(engine) as session:
+        # Fetch rules for SimplyCLICK (card id: 5c2ea97a-8e5a-4fe4-bdf8-f814e8d73d42)
+        card_id_str = '5c2ea97a-8e5a-4fe4-bdf8-f814e8d73d42'
+        result = await session.execute(select(RewardRule).where(RewardRule.card_id == card_id_str, RewardRule.is_active == True))
+        rules = result.scalars().all()
         
-        # Get cards
-        r_cards = await client.get("/api/v1/cards", headers=headers)
-        cards = r_cards.json().get("data", [])
-        if not cards:
-            r_catalog = await client.get("/api/v1/cards/catalog", headers=headers)
-            cat_id = [c["id"] for c in r_catalog.json().get("data", []) if "Cashback SBI" in c["card_name"]][0]
-            r_add = await client.post("/api/v1/cards", headers=headers, json={
-                "card_catalog_id": cat_id,
-                "nickname": "My SBI"
-            })
-            cards = [r_add.json()["data"]]
-            
-        card_id = cards[0]["id"]
-        
-        # Add txn
-        await client.post("/api/v1/transactions", headers=headers, json={
-            "user_card_id": card_id,
-            "merchant_name": "AMAZON IN",
-            "amount": 1000,
-            "transaction_date": "2026-05-22",
-            "payment_mode": "online"
-        })
-        
-        # Fetch again
-        r_list = await client.get("/api/v1/transactions", headers=headers)
-        txns = r_list.json().get("data", [])
-        for txn in txns:
-            print(f"Merchant: {txn.get('merchant_name')}")
-            print(f"Norm Merchant: {txn.get('normalized_merchant')}")
-            print(f"Category: {txn.get('category')}")
-            print(f"Reward: {txn.get('reward_earned')} {txn.get('reward_type')}")
-            print(f"Best Card: {txn.get('best_possible_card')}")
-            print(f"Missed: {txn.get('missed_savings')}")
-            print("-" * 20)
+        normalized_rules = [
+            NormalizedRuleConfig(
+                rule_name=r.rule_name,
+                rule_type=r.rule_type,
+                priority=r.priority,
+                config=r.rule_config,
+            )
+            for r in rules
+        ]
 
-if __name__ == "__main__":
-    asyncio.run(main())
+        context = TransactionContext(
+            merchant_name="swiggy",
+            category="food delivery",
+            amount=Decimal("1000.00"),
+            intent="online",
+            is_international=False
+        )
+        
+        result = evaluate(context, normalized_rules)
+        print("--- SWIGGY 1000 ONLINE ---")
+        print(json.dumps(result.model_dump(), indent=2, default=str))
+
+asyncio.run(main())
