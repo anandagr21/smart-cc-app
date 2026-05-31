@@ -390,3 +390,64 @@ class CardIntelligenceService:
             "published_at": version.published_at,
             "change_summary": version.change_summary
         }
+
+    async def list_global_candidates(self, status_filter: Optional[str] = None, type_filter: Optional[str] = None, limit: int = 200) -> List[dict]:
+        from .models import CardExtractionCandidate, CandidateStatus, CandidateType
+        stmt = select(CardExtractionCandidate)
+        if status_filter:
+            try:
+                stmt = stmt.where(CardExtractionCandidate.status == CandidateStatus(status_filter))
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid status filter")
+        if type_filter:
+            try:
+                stmt = stmt.where(CardExtractionCandidate.candidate_type == CandidateType(type_filter))
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid type filter")
+        stmt = stmt.order_by(desc(CardExtractionCandidate.confidence_score)).limit(limit)
+        result = await self.db.execute(stmt)
+        candidates = result.scalars().all()
+        return [c.model_dump() for c in candidates]
+
+    async def get_coverage_summary(self) -> List[dict]:
+        from rewards.models import RewardRule
+        cards_result = await self.db.execute(select(CardCatalog))
+        cards = cards_result.scalars().all()
+
+        rules_result = await self.db.execute(
+            select(RewardRule).where(RewardRule.is_active == True)
+        )
+        all_rules = rules_result.scalars().all()
+
+        rule_counts: dict = {}
+        for rule in all_rules:
+            cid = str(rule.card_id)
+            rule_counts[cid] = rule_counts.get(cid, 0) + 1
+
+        from .models import CardExtractionCandidate, CandidateStatus
+        pending_result = await self.db.execute(
+            select(CardExtractionCandidate).where(
+                CardExtractionCandidate.status == CandidateStatus.PENDING_REVIEW
+            )
+        )
+        pending_candidates = pending_result.scalars().all()
+        pending_counts: dict = {}
+        for c in pending_candidates:
+            cid = str(c.card_id)
+            pending_counts[cid] = pending_counts.get(cid, 0) + 1
+
+        summary = []
+        for card in cards:
+            cid = str(card.id)
+            active_rules = rule_counts.get(cid, 0)
+            pending = pending_counts.get(cid, 0)
+            coverage_pct = min(100, int((active_rules / 10) * 100))
+            summary.append({
+                "card_id": cid,
+                "bank_name": card.bank_name,
+                "card_name": card.card_name,
+                "active_rules": active_rules,
+                "pending_candidates": pending,
+                "coverage_pct": coverage_pct,
+            })
+        return summary

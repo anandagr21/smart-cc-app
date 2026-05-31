@@ -26,19 +26,35 @@ export const CardIntelligenceReviewQueue: React.FC<Props> = ({ cardId }) => {
   const [activeTab, setActiveTab] = useState<CandidateStatus>('PENDING_REVIEW');
   const [selectedCandidate, setSelectedCandidate] = useState<CardExtractionCandidateResponse | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
+  const [editedValue, setEditedValue] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
 
   const { data: candidates, isLoading } = useCandidates(cardId, activeTab);
   const { data: publishPreview } = usePublishPreview(cardId);
   const updateMutation = useUpdateCandidate(cardId);
   const publishMutation = usePublishChanges(cardId);
 
+  const handleSelectCandidate = (candidate: CardExtractionCandidateResponse) => {
+    setSelectedCandidate(candidate);
+    setEditedValue(JSON.stringify(candidate.proposed_value, null, 2));
+    setEditError(null);
+  };
+
   const handleUpdateStatus = (candidate: CardExtractionCandidateResponse, newStatus: CandidateStatus) => {
+    let parsedValue: Record<string, any> | undefined;
+    try {
+      parsedValue = JSON.parse(editedValue);
+    } catch {
+      setEditError('Invalid JSON — fix the value before approving.');
+      return;
+    }
     updateMutation.mutate({
       candidateId: candidate.id,
-      payload: { status: newStatus, review_notes: reviewNotes || undefined }
+      payload: { status: newStatus, proposed_value: parsedValue, review_notes: reviewNotes || undefined }
     });
     setSelectedCandidate(null);
     setReviewNotes('');
+    setEditedValue('');
   };
 
   const handlePublish = () => {
@@ -125,7 +141,7 @@ export const CardIntelligenceReviewQueue: React.FC<Props> = ({ cardId }) => {
                   </View>
                   
                   <View style={{ width: 120, flexDirection: 'row', justifyContent: 'center', gap: 12 }}>
-                    <TouchableOpacity onPress={() => setSelectedCandidate(candidate)} style={styles.actionBtn}>
+                    <TouchableOpacity onPress={() => handleSelectCandidate(candidate)} style={styles.actionBtn}>
                       {/* @ts-ignore */}
                       <Eye size={18} color={colors.textSecondary} />
                     </TouchableOpacity>
@@ -162,10 +178,40 @@ export const CardIntelligenceReviewQueue: React.FC<Props> = ({ cardId }) => {
                     Page {selectedCandidate.source_page || 'N/A'}
                   </Text>
                 </View>
-                <Text style={[styles.sourceText, { color: colors.textPrimary }]}>"{selectedCandidate.source_text}"</Text>
+                <Text style={[styles.sourceText, { color: colors.textPrimary }]}>"{ selectedCandidate.source_text}"</Text>
               </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24, marginBottom: 8 }}>
+                <Text style={[styles.panelTitle, { color: colors.textPrimary, marginBottom: 0 }]}>Proposed Value</Text>
+                {/* @ts-ignore */}
+                <Edit2 size={14} color={colors.textMuted} />
+              </View>
+              {editError && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  {/* @ts-ignore */}
+                  <AlertCircle size={13} color={colors.danger} />
+                  <Text style={{ color: colors.danger, fontSize: 12, fontFamily: 'Inter-Regular' }}>{editError}</Text>
+                </View>
+              )}
+              <TextInput
+                style={[styles.notesInput, { 
+                  backgroundColor: colors.surfaceElevated, 
+                  color: colors.primary, 
+                  borderColor: editError ? colors.danger : colors.border,
+                  fontFamily: 'Inter-Medium',
+                  fontSize: 12,
+                  height: 120,
+                }]}
+                multiline
+                placeholder="{}"
+                placeholderTextColor={colors.textMuted}
+                value={editedValue}
+                onChangeText={(t) => { setEditedValue(t); setEditError(null); }}
+                autoCorrect={false}
+                autoCapitalize="none"
+              />
               
-              <Text style={[styles.panelTitle, { color: colors.textPrimary, marginTop: 24 }]}>Review Notes</Text>
+              <Text style={[styles.panelTitle, { color: colors.textPrimary, marginTop: 16 }]}>Review Notes</Text>
               <TextInput
                 style={[styles.notesInput, { backgroundColor: colors.surfaceElevated, color: colors.textPrimary, borderColor: colors.border }]}
                 multiline

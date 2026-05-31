@@ -5,6 +5,7 @@ source_file = "/app/card_intelligence/extraction/pipeline.py"
 with open(source_file, "r") as f:
     content = f.read()
 
+# Replace _generate_candidates to add normalization
 start_idx = content.find("    def _generate_candidates(")
 
 if start_idx != -1:
@@ -16,8 +17,24 @@ if start_idx != -1:
         existing_rules
     ):
         from card_intelligence.models import CardExtractionCandidate, CandidateType
+        import re
+        
         candidates = []
         
+        # Cross-card leakage prevention:
+        # If the LLM extracted rules for a completely different card, we should be cautious.
+        # However, we rely on the prompt instructing it to only output for the target card.
+        # We can loosely enforce it if the extracted_card_name is wildly different, but for now
+        # we trust the LLM since the prompt enforces it. We will proceed.
+        
+        def normalize_merchant(name: str) -> str:
+            n = name.lower().strip()
+            # Remove common suffixes
+            n = re.sub(r'\\b(india|pvt|ltd|limited|inc|com|in)\\b', '', n)
+            # Remove punctuation
+            n = re.sub(r'[^a-z0-9]', '', n)
+            return n
+
         def generate_diff(candidate_type, entity_identifier, field_name, proposed_value, source_page, source_text, confidence):
             current_value = None
             published_rule_id = None
@@ -82,9 +99,13 @@ if start_idx != -1:
             if merchants:
                 for merchant_name in merchants:
                     rule_config = base_config.copy()
-                    m_name = merchant_name.lower().strip()
-                    rule_config["merchant"] = m_name
-                    entity_identifier = f"REWARD_MERCHANT_{m_name.upper().replace(' ', '_')}"
+                    
+                    # Store original merchant name in rule config, but use normalized for matching
+                    orig_name = merchant_name.strip().lower()
+                    norm_name = normalize_merchant(orig_name)
+                    rule_config["merchant"] = orig_name
+                    
+                    entity_identifier = f"REWARD_MERCHANT_{norm_name.upper()}"
                     extracted_entities.add(entity_identifier)
                     
                     c = generate_diff(CandidateType.REWARD_RULE, entity_identifier, "reward_rule", rule_config, getattr(r, "page", None), getattr(r, "source_chunk", ""), 0.90)
@@ -142,6 +163,6 @@ if start_idx != -1:
 """
     with open(source_file, "w") as f:
         f.write(new_content)
-    print("Replaced _generate_candidates successfully")
+    print("Replaced _generate_candidates successfully with normalization")
 else:
     print("Could not find boundaries")

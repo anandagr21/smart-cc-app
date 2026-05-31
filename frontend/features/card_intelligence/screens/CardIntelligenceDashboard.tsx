@@ -11,6 +11,7 @@ import { ProcessingStatus } from '../types/api';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { CardIntelligenceReviewQueue } from './CardIntelligenceReviewQueue';
+import { GlobalReviewQueue } from './GlobalReviewQueue';
 import { CardSidebar } from '../components/CardSidebar';
 
 export const CardIntelligenceDashboard: React.FC = () => {
@@ -100,15 +101,16 @@ export const CardIntelligenceDashboard: React.FC = () => {
         <View style={styles.contentArea}>
 
           {!selectedCardId ? (
-            <View style={styles.emptyState}>
-              <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>Select a card above to view its sources and queue.</Text>
-            </View>
+            <GlobalReviewQueue catalog={catalog || []} />
           ) : (
             <View style={styles.docsContainer}>
               <View style={styles.docsHeader}>
                 <View>
                   <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
                     {selectedCard?.bank_name} {selectedCard?.card_name}
+                  </Text>
+                  <Text style={{ fontSize: 13, fontFamily: 'Inter-Medium', color: colors.textSecondary, marginTop: 4 }}>
+                    Base Point Value: ₹{selectedCard?.base_point_value || '1.00'}
                   </Text>
                   <View style={styles.topTabs}>
                     <TouchableOpacity onPress={() => setActiveTab('SOURCES')}>

@@ -178,3 +178,62 @@ export const usePublishChanges = (cardId: string) => {
     },
   });
 };
+
+// ── Global Review Queue ─────────────────────────────────────────────────────
+
+export interface CoverageSummaryItem {
+  card_id: string;
+  bank_name: string;
+  card_name: string;
+  active_rules: number;
+  pending_candidates: number;
+  coverage_pct: number;
+}
+
+export const fetchGlobalCandidates = async (status?: string, candidateType?: string): Promise<CardExtractionCandidateResponse[]> => {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (candidateType) params.set('candidate_type', candidateType);
+  const { data } = await apiClient.get<CardExtractionCandidateResponse[]>(`/card-intelligence/candidates/global?${params.toString()}`);
+  return data;
+};
+
+export const fetchCoverageSummary = async (): Promise<CoverageSummaryItem[]> => {
+  const { data } = await apiClient.get<CoverageSummaryItem[]>('/card-intelligence/coverage-summary');
+  return data;
+};
+
+export const useGlobalCandidates = (status?: string, candidateType?: string) => {
+  return useQuery({
+    queryKey: ['global-candidates', status, candidateType],
+    queryFn: () => fetchGlobalCandidates(status, candidateType),
+    refetchInterval: 5000,
+  });
+};
+
+export const useCoverageSummary = () => {
+  return useQuery({
+    queryKey: ['coverage-summary'],
+    queryFn: fetchCoverageSummary,
+    refetchInterval: 15000,
+  });
+};
+
+export const useBatchUpdateCandidates = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { candidates: CardExtractionCandidateResponse[]; status: string; }) => {
+      const { candidates, status } = params;
+      return Promise.all(
+        candidates.map(c =>
+          updateCandidate(c.id, { status: status as any, proposed_value: c.proposed_value })
+        )
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['global-candidates'] });
+      queryClient.invalidateQueries({ queryKey: ['card-candidates'] });
+      queryClient.invalidateQueries({ queryKey: ['coverage-summary'] });
+    },
+  });
+};

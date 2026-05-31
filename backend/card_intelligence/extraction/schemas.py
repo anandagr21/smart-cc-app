@@ -11,10 +11,15 @@ class FeeRule(BaseExtraction):
 class FeeWaiverRule(BaseExtraction):
     spend_threshold: float = Field(description="The annual spend required to waive the fee")
 
+class PointValuation(BaseExtraction):
+    point_value_inr: float = Field(description="The monetary value of 1 point in INR (e.g., 0.25 if 1 point = Rs 0.25). If not specified, default to 1.0.")
+
 class RewardRule(BaseExtraction):
     category: Optional[str] = Field(default=None, description="The broad spend category (e.g., 'Dining', 'Grocery', 'All Spends', 'Online'). Only use if the rule applies broadly and NOT to a specific merchant.")
     merchants: Optional[List[str]] = Field(default=None, description="A list of specific merchant names (e.g., ['Amazon', 'Swiggy', 'Zomato', 'Cleartrip']). ONLY populate this if the rule explicitly targets specific companies or brands.")
-    rate: float = Field(description="The reward rate as a decimal (e.g., 0.05 for 5%)")
+    reward_unit: str = Field(description="Either 'cashback', 'points', or 'miles'")
+    reward_value: float = Field(description="The number of points or cashback percentage explicitly stated (e.g., 5 for '5 points', 0.05 for '5% cashback')")
+    spend_denominator: float = Field(default=100.0, description="The spend amount required to earn the reward_value (e.g., 100 for '5 points per Rs 100'). For percentage cashback, this is usually 1.0.")
     cap: Optional[float] = Field(default=None, description="The maximum rewards that can be earned in this category per cycle, if any")
 
 class ExclusionRule(BaseExtraction):
@@ -37,6 +42,8 @@ class ExtractionTarget(BaseModel):
 
 class CardIntelligenceExtraction(BaseModel):
     extracted_card_name: str = Field(description="The specific credit card name that these extracted rules apply to. If the document covers multiple cards, this MUST match the target card name.")
+    
+    point_valuation: Optional[PointValuation] = Field(default=None)
     
     annual_fee: Optional[FeeRule] = Field(default=None)
     joining_fee: Optional[FeeRule] = Field(default=None)

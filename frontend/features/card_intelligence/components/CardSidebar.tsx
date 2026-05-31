@@ -4,6 +4,7 @@ import { Search, Filter, ChevronLeft, ChevronRight, CreditCard } from 'lucide-re
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { CardCatalogResponse } from '@/features/cards/types/api';
+import { useCoverageSummary } from '../api/cardIntelligenceApi';
 
 interface CardSidebarProps {
   catalog: CardCatalogResponse[];
@@ -24,6 +25,17 @@ export const CardSidebar: React.FC<CardSidebarProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBanks, setSelectedBanks] = useState<Set<string>>(new Set());
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
+  const { data: coverageData } = useCoverageSummary();
+  const coverageMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    if (coverageData) {
+      coverageData.forEach(c => {
+        map[c.card_id] = c.coverage_pct;
+      });
+    }
+    return map;
+  }, [coverageData]);
 
   // Extract unique banks
   const availableBanks = useMemo(() => {
@@ -170,6 +182,20 @@ export const CardSidebar: React.FC<CardSidebarProps> = ({
                   <Text style={[styles.cardItemName, { color: isSelected ? colors.primary : colors.textPrimary }]}>
                     {card.card_name}
                   </Text>
+                  
+                  {/* Coverage Bar */}
+                  <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <View style={{ flex: 1, height: 4, backgroundColor: colors.border, borderRadius: 2, overflow: 'hidden' }}>
+                      <View style={{ 
+                        height: '100%', 
+                        width: `${coverageMap[card.id] || 0}%`, 
+                        backgroundColor: (coverageMap[card.id] || 0) > 80 ? colors.success : (coverageMap[card.id] || 0) > 0 ? colors.warning : colors.danger 
+                      }} />
+                    </View>
+                    <Text style={{ fontSize: 10, fontFamily: 'Inter-SemiBold', color: colors.textSecondary, width: 30, textAlign: 'right' }}>
+                      {coverageMap[card.id] || 0}%
+                    </Text>
+                  </View>
                 </View>
               </TouchableOpacity>
             );

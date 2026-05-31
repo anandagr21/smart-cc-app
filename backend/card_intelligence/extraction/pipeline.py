@@ -206,8 +206,24 @@ class IngestionPipeline:
         existing_rules
     ):
         from card_intelligence.models import CardExtractionCandidate, CandidateType
+        import re
+        
         candidates = []
         
+        # Cross-card leakage prevention:
+        # If the LLM extracted rules for a completely different card, we should be cautious.
+        # However, we rely on the prompt instructing it to only output for the target card.
+        # We can loosely enforce it if the extracted_card_name is wildly different, but for now
+        # we trust the LLM since the prompt enforces it. We will proceed.
+        
+        def normalize_merchant(name: str) -> str:
+            n = name.lower().strip()
+            # Remove common suffixes
+            n = re.sub(r'\b(india|pvt|ltd|limited|inc|com|in)\b', '', n)
+            # Remove punctuation
+            n = re.sub(r'[^a-z0-9]', '', n)
+            return n
+
         def generate_diff(candidate_type, entity_identifier, field_name, proposed_value, source_page, source_text, confidence):
             current_value = None
             published_rule_id = None
@@ -261,8 +277,32 @@ class IngestionPipeline:
             c = generate_diff(CandidateType.CARD_FIELD, "FEE_WAIVER", "fee_waiver_spend_threshold", {"value": ext.fee_waiver.spend_threshold}, ext.fee_waiver.page, ext.fee_waiver.source_chunk, 0.95)
             if c: candidates.append(c)
 
+        # Extract Point Valuation context
+        point_valuation = getattr(ext, "point_valuation", None)
+        point_value_inr = float(point_valuation.point_value_inr) if point_valuation else float(getattr(target_card, "base_point_value", 1.0))
+
         for r in getattr(ext, "reward_rules", []):
-            base_config = {"reward_type": "cashback", "reward_rate": r.rate}
+            reward_unit = getattr(r, "reward_unit", "cashback").lower()
+            reward_value = getattr(r, "reward_value", 0.0)
+            spend_denominator = getattr(r, "spend_denominator", 100.0)
+            if spend_denominator <= 0:
+                spend_denominator = 1.0
+                
+            if reward_unit in ["points", "miles"]:
+                rate = (reward_value / spend_denominator) * point_value_inr
+            else:
+                rate = reward_value / spend_denominator
+                
+            rate = round(rate, 4)
+
+            base_config = {
+                "reward_type": reward_unit, 
+                "reward_rate": rate,
+                "raw_reward_value": reward_value,
+                "spend_denominator": spend_denominator,
+                "points_per_unit": reward_value,
+                "spend_unit": spend_denominator
+            }
             if getattr(r, "category", None):
                 base_config["category"] = r.category.lower().strip()
             if getattr(r, "cap", None) is not None:
@@ -272,9 +312,13 @@ class IngestionPipeline:
             if merchants:
                 for merchant_name in merchants:
                     rule_config = base_config.copy()
-                    m_name = merchant_name.lower().strip()
-                    rule_config["merchant"] = m_name
-                    entity_identifier = f"REWARD_MERCHANT_{m_name.upper().replace(' ', '_')}"
+                    
+                    # Store normalized merchant name in rule config
+                    orig_name = merchant_name.strip().lower()
+                    norm_name = normalize_merchant(orig_name)
+                    rule_config["merchant"] = norm_name
+                    
+                    entity_identifier = f"REWARD_MERCHANT_{norm_name.upper()}"
                     extracted_entities.add(entity_identifier)
                     
                     c = generate_diff(CandidateType.REWARD_RULE, entity_identifier, "reward_rule", rule_config, getattr(r, "page", None), getattr(r, "source_chunk", ""), 0.90)

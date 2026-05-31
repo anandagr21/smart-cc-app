@@ -15,11 +15,14 @@ Rules for Extraction:
 5. For EVERY extracted fact, you MUST provide the `source_chunk` (an EXACT, verbatim quote from the text that proves your extraction) and the `page` number where it was found.
 6. If a field (like annual fee or fee waiver) is not mentioned in the text for this card, omit it or set it to null.
 7. For exclusions, extract all categories explicitly mentioned as not earning rewards (e.g. "fuel", "wallet loads", "EMI transactions").
-8. The `rate` for reward rules should be a decimal (e.g., 5% is 0.05).
+8. IMPORTANT FOR REWARDS: Do not calculate the final INR cashback percentage yourself. Extract exactly what the text says using the following rules:
+   - If the reward is in Points/Miles: set `reward_unit` to 'points' or 'miles', `reward_value` to the number of points (e.g., 5 for '5X points' or '5 points'), and `spend_denominator` to the spend amount required (e.g., 100 for 'per Rs 100').
+   - If the reward is Cashback: set `reward_unit` to 'cashback', `reward_value` to the decimal percentage (e.g., 0.05 for 5%), and `spend_denominator` to 1.0.
 9. Set `extracted_card_name` to the exact name of the card you are extracting for.
 10. IMPORTANT FOR REWARDS: Differentiate between a `merchants` list (specific brands or companies like Amazon, Swiggy, Zomato, Cleartrip) and a `category` (a broad spend type like Dining, Grocery, Online Spends, All Spends). 
     - If a rule targets specific brands, extract the brand names into the `merchants` list and leave `category` null. 
     - If a rule targets broad types of spend, extract into the `category` field and leave `merchants` null.
+11. POINT VALUATION: Look for any text explaining the monetary value of a single reward point (e.g., "1 Reward Point = Rs 0.25" or "4 Reward points = Rs. 1"). Extract this into the `point_valuation` object as `point_value_inr` (e.g., 0.25).
 
 Here is the document text:
 --------------------------------------------------

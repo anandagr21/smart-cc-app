@@ -139,3 +139,24 @@ async def publish_candidates(
     """Publishes approved candidates to the production tables."""
     service = CardIntelligenceService(db)
     return await service.publish_candidates(card_id, current_user.id)
+
+@router.get("/candidates/global", response_model=List[CardExtractionCandidateResponse])
+async def list_global_candidates(
+    status: Optional[str] = None,
+    candidate_type: Optional[str] = None,
+    limit: int = 200,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Lists all extraction candidates across ALL cards, optionally filtered by status."""
+    service = CardIntelligenceService(db)
+    return await service.list_global_candidates(status, candidate_type, limit)
+
+@router.get("/coverage-summary")
+async def get_coverage_summary(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Returns a per-card summary of active rule counts for coverage health display."""
+    service = CardIntelligenceService(db)
+    return await service.get_coverage_summary()
