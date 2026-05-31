@@ -22,6 +22,7 @@ class OptimizerRankedCard(BaseModel):
     reward_type: str = "CASHBACK"
     cashback_amount: Optional[float] = None
     reward_points: Optional[float] = None
+    engine_explanations: List[str] = []
 
 class OptimizationResponse(BaseModel):
     normalized_merchant: Optional[str] = None

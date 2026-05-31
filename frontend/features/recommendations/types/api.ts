@@ -24,6 +24,7 @@ export interface OptimizerRankedCard {
   reward_type: string;
   cashback_amount: number | null;
   reward_points: number | null;
+  engine_explanations?: string[];
 }
 
 export interface RecommendationResponse {

@@ -248,9 +248,21 @@ def evaluate(
         if cashback_amount is not None:
             explanations.append(f"Cashback: ₹{cashback_amount} on ₹{txn.amount}")
         if points_result is not None and points_result.earned_points > 0:
+            points_per_unit = to_decimal(match.config.get("points_per_unit", 1))
+            spend_unit = to_decimal(match.config.get("spend_unit", 100))
+            multiplier = to_decimal(match.config.get("points_multiplier", 1))
+            
+            effective_pts_per_unit = points_per_unit * multiplier
+            
+            # Format cleanly to remove trailing .0
+            clean_pts = f"{effective_pts_per_unit}".rstrip('0').rstrip('.') if '.' in f"{effective_pts_per_unit}" else f"{effective_pts_per_unit}"
+            clean_spend = f"{spend_unit}".rstrip('0').rstrip('.') if '.' in f"{spend_unit}" else f"{spend_unit}"
+            
+            rate_text = f"{clean_pts}X pts per ₹{clean_spend}"
+            
             explanations.append(
                 f"Points: {points_result.earned_points} pts"
-                + f" (₹{points_result.rupee_value} @ ₹{points_result.rupee_value_per_point}/pt)"
+                f" ({rate_text}, = ₹{points_result.rupee_value} @ ₹{points_result.rupee_value_per_point}/pt)"
             )
     else:
         explanations.append("No reward earned on this transaction.")

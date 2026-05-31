@@ -53,7 +53,8 @@ class TransactionOptimizer:
                 confidence_label="High",
                 reward_type=r.evaluation.reward_type or "CASHBACK",
                 cashback_amount=float(r.evaluation.cashback_amount) if r.evaluation.cashback_amount is not None else None,
-                reward_points=float(r.evaluation.reward_points) if r.evaluation.reward_points is not None else None
+                reward_points=float(r.evaluation.reward_points) if r.evaluation.reward_points is not None else None,
+                engine_explanations=r.evaluation.explanations
             )
             ranked_cards.append(card)
             

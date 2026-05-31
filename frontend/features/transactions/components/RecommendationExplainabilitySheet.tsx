@@ -98,9 +98,20 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
               <View style={styles.breakdownBox}>
                 <View style={styles.breakdownRow}>
                   <Text style={[styles.breakdownName, { color: colors.textSecondary }]}>Cashback Now</Text>
-                  <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>
-                    {formatCurrencyIN(item.recommendation.immediate_reward_value || 0)}
-                  </Text>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>
+                      {formatCurrencyIN(item.recommendation.immediate_reward_value || 0)}
+                    </Text>
+                    {item.recommendation.engine_explanations && item.recommendation.engine_explanations.length > 0 && (
+                      <View style={{ marginTop: 4, alignItems: 'flex-end' }}>
+                        {item.recommendation.engine_explanations.map((exp, idx) => (
+                          <Text key={idx} style={[styles.engineExplanationText, { color: colors.textMuted }]}>
+                            {exp}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
+                  </View>
                 </View>
 
                 {item.recommendation.fee_waiver_progress_impact > 0 && (
@@ -307,5 +318,11 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 8,
     lineHeight: 16,
+  },
+  engineExplanationText: {
+    fontSize: tokens.fontSize.micro,
+    fontStyle: 'italic',
+    marginTop: 2,
+    textAlign: 'right',
   },
 });
