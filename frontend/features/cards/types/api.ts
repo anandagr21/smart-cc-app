@@ -6,6 +6,7 @@ export interface CardCatalogResponse {
   joining_fee: number;
   annual_fee: number;
   fee_waiver_spend_threshold: number | null;
+  base_point_value: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;

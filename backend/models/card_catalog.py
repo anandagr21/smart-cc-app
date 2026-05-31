@@ -65,6 +65,12 @@ class CardCatalog(SQLModel, table=True):
         decimal_places=2,
         description="Amount of annual spend required to waive the annual fee.",
     )
+    base_point_value: Decimal = Field(
+        default=Decimal("1.00"),
+        max_digits=6,
+        decimal_places=4,
+        description="Default monetary value (INR) of a single reward point for this card."
+    )
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(

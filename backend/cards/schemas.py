@@ -73,6 +73,12 @@ class CardCatalogCreate(BaseModel):
         default=True,
         description="Whether this card is currently offered.",
     )
+    base_point_value: Decimal = Field(
+        default=Decimal("1.00"),
+        max_digits=6,
+        decimal_places=4,
+        description="Default monetary value (INR) of a single reward point for this card."
+    )
 
     model_config = ConfigDict(extra="forbid")
 
@@ -110,6 +116,11 @@ class CardCatalogUpdate(BaseModel):
         decimal_places=2,
         ge=Decimal("0.00"),
     )
+    base_point_value: Decimal | None = Field(
+        default=None,
+        max_digits=6,
+        decimal_places=4,
+    )
     is_active: bool | None = Field(default=None)
 
     model_config = ConfigDict(extra="forbid")
@@ -125,6 +136,7 @@ class CardCatalogResponse(BaseModel):
     joining_fee: Decimal
     annual_fee: Decimal
     fee_waiver_spend_threshold: Decimal | None
+    base_point_value: Decimal
     is_active: bool
     created_at: datetime
     updated_at: datetime
