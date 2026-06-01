@@ -13,9 +13,12 @@ from .schemas import (
     CardExtractionCandidateResponse,
     CandidateUpdatePayload,
     PublishPreviewResponse,
-    PublishResponse
+    PublishResponse,
+    CardWorkspaceAggregate,
+    WorkspaceHealthSummary
 )
 from .service import CardIntelligenceService
+from .workspace_services import WorkspaceAggregationService
 
 router = APIRouter(prefix="/card-intelligence", tags=["Card Intelligence"])
 
@@ -173,3 +176,23 @@ async def get_card_coverage(
     if not stats:
         raise HTTPException(status_code=404, detail="Card not found")
     return stats
+
+@router.get("/cards/{card_id}/workspace/health", response_model=WorkspaceHealthSummary)
+async def get_card_workspace_health(
+    card_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Returns a lightweight health summary of the workspace."""
+    service = WorkspaceAggregationService(db)
+    return await service.get_health(card_id)
+
+@router.get("/cards/{card_id}/workspace", response_model=CardWorkspaceAggregate)
+async def get_card_workspace(
+    card_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Returns the pre-computed Card Intelligence Workspace aggregation."""
+    service = WorkspaceAggregationService(db)
+    return await service.get_workspace(card_id)
