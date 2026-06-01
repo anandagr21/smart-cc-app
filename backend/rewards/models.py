@@ -111,6 +111,11 @@ class RewardRule(SQLModel, table=True):
         sa_column=Column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=dict),
         description="Flexible JSON configuration for this rule.",
     )
+    conditions: list = Field(
+        default_factory=list,
+        sa_column=Column(JSON().with_variant(JSONB, "postgresql"), nullable=False, server_default='[]'),
+        description="Structured conditions applying to this rule.",
+    )
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         description="UTC timestamp of creation.",

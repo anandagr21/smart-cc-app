@@ -155,7 +155,7 @@ async def list_global_candidates(
     service = CardIntelligenceService(db)
     return await service.list_global_candidates(status, candidate_type, limit)
 
-@router.get("/coverage")
+@router.get("/coverage-summary")
 async def get_coverage_summary(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -196,3 +196,13 @@ async def get_card_workspace(
     """Returns the pre-computed Card Intelligence Workspace aggregation."""
     service = WorkspaceAggregationService(db)
     return await service.get_workspace(card_id)
+
+@router.post("/cards/{card_id}/workspace/publish")
+async def publish_workspace(
+    card_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Publishes the workspace understanding into actual RewardRules."""
+    service = WorkspaceAggregationService(db)
+    return await service.publish_workspace(card_id, current_user.id)

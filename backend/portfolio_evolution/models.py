@@ -42,4 +42,4 @@ class PortfolioEvolutionSnapshot(SQLModel, table=True):
     narrative_prompt_version: str | None = Field(default=None) # Prompt semver — triggers regen on upgrade
     narrative_generation_reason: str | None = Field(default=None)  # e.g. "cognition_drift", "initial_generation"
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

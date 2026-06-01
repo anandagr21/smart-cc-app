@@ -17,6 +17,7 @@ from .schemas import (
     WorkspaceHealthSummary,
 )
 from .models import CardKnowledgeSource, CardExtractionCandidate
+from models.card_catalog import CardCatalog
 
 READINESS_WEIGHTS = {
     "fees": 20,
@@ -39,6 +40,7 @@ class CardWorkspaceFacts(BaseModel):
     has_aliases: bool
     has_benefits: bool
     has_milestones: bool
+    has_rewards: bool
     confidence_score: int
     merchant_alias_coverage: float
 
@@ -81,6 +83,7 @@ class CardWorkspaceFacts(BaseModel):
             has_aliases=has_aliases,
             has_benefits=has_benefits,
             has_milestones=has_milestones,
+            has_rewards=has_rewards,
             confidence_score=confidence_score,
             merchant_alias_coverage=merchant_alias_coverage
         )
@@ -301,13 +304,17 @@ class WorkspaceAggregationService:
         )
 
     async def get_workspace(self, card_id: UUID) -> CardWorkspaceAggregate:
+        card_stmt = select(CardCatalog).where(CardCatalog.id == card_id)
+        card_result = await self.db.execute(card_stmt)
+        card_obj = card_result.scalar_one_or_none()
+        
         sources_stmt = select(CardKnowledgeSource).where(CardKnowledgeSource.card_id == card_id)
-        sources_result = await self.db.exec(sources_stmt)
-        sources = sources_result.all()
+        sources_result = await self.db.execute(sources_stmt)
+        sources = sources_result.scalars().all()
 
         candidates_stmt = select(CardExtractionCandidate).where(CardExtractionCandidate.card_id == card_id)
-        candidates_result = await self.db.exec(candidates_stmt)
-        candidates = candidates_result.all()
+        candidates_result = await self.db.execute(candidates_stmt)
+        candidates = candidates_result.scalars().all()
         
         # Check Cache
         latest_source_update = max((s.uploaded_at for s in sources), default=None)
@@ -349,7 +356,7 @@ class WorkspaceAggregationService:
             workspace_version=2,
             generated_from_sources=source_ids,
             card_id=card_id,
-            card_name="SBI SimplyCLICK SBI Card", # Mocked for now
+            card_name=card_obj.card_name if card_obj else "Unknown Card",
             status=status,
             status_reason=status_reason,
             source_trust=trust,
@@ -366,6 +373,49 @@ class WorkspaceAggregationService:
             publish_preview=None,
             production_impact=[]
         )
-        
         self._cache[cache_key] = aggregate
         return aggregate
+
+    async def publish_workspace(self, card_id: UUID, user_id: UUID) -> dict:
+        from fastapi import HTTPException
+        from .models import CandidateStatus
+        from .service import CardIntelligenceService
+
+        aggregate = await self.get_workspace(card_id)
+
+        # Validate no blockers
+        blockers = [a for a in aggregate.required_actions if a.severity == "BLOCKER"]
+        if blockers:
+            raise HTTPException(status_code=400, detail="Cannot publish: workspace has blocking required actions.")
+
+        # Map candidates and auto-approve them
+        # We find existing candidates and attach conditions if any are parsed.
+        candidates_stmt = select(CardExtractionCandidate).where(
+            CardExtractionCandidate.card_id == card_id,
+            CardExtractionCandidate.status.in_([CandidateStatus.PENDING, CandidateStatus.APPROVED])
+        )
+        candidates_result = await self.db.execute(candidates_stmt)
+        pending_candidates = candidates_result.scalars().all()
+
+        for c in pending_candidates:
+            c.status = CandidateStatus.APPROVED
+            
+            # If this is a reward candidate, append the mock conditions from our aggregation
+            if c.candidate_type == 'reward' and c.proposed_value:
+                doc_text = c.source_text or str(c.proposed_value)
+                conditions = []
+                if "prime" in doc_text.lower():
+                    conditions.append({"type": "UNSTRUCTURED", "text": "Prime Membership Required"})
+                elif "online" in doc_text.lower():
+                    conditions.append({"type": "UNSTRUCTURED", "text": "Online Purchase Required"})
+                
+                if conditions:
+                    c.proposed_value["conditions"] = conditions
+
+            self.db.add(c)
+            
+        await self.db.commit()
+
+        # Invoke the legacy publish_candidates flow to process approvals into RewardRules
+        service = CardIntelligenceService(self.db)
+        return await service.publish_candidates(card_id, user_id)

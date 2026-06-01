@@ -407,11 +407,14 @@ class CardIntelligenceService:
                         self.db.add(c)
                         continue
 
+                    conditions = config.pop("conditions", []) if "conditions" in config else []
+
                     rule = RewardRule(
                         card_id=str(card_id),
                         rule_name=c.entity_identifier,
                         rule_type=db_rule_type,
-                        rule_config=c.proposed_value,
+                        rule_config=config,
+                        conditions=conditions,
                         priority=priority
                     )
                     self.db.add(rule)

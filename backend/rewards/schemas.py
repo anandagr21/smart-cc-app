@@ -56,6 +56,10 @@ class _RewardRuleBase(BaseModel):
         default_factory=dict,
         description="Flexible JSONB configuration for this rule (rates, caps, merchants, etc.).",
     )
+    conditions: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Structured conditions applying to this rule.",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -105,6 +109,10 @@ class RewardRuleUpdate(BaseModel):
     rule_config: dict[str, Any] | None = Field(
         default=None,
         description="Updated JSONB configuration (replaces entire config).",
+    )
+    conditions: list[dict[str, Any]] | None = Field(
+        default=None,
+        description="Updated structured conditions.",
     )
 
 

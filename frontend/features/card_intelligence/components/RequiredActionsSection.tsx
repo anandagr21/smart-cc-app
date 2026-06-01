@@ -66,9 +66,9 @@ export const RequiredActionsSection: React.FC<Props> = ({ actions }) => {
                 </View>
                 <TouchableOpacity 
                   style={[styles.actionBtn, { backgroundColor: colors.primary }]}
-                  onPress={() => handleActionClick(action.actionType)}
+                  onPress={() => handleActionClick(action.action_type)}
                 >
-                  <Text style={styles.actionBtnText}>{action.actionText}</Text>
+                  <Text style={styles.actionBtnText}>{action.action_text}</Text>
                 </TouchableOpacity>
               </View>
             </View>

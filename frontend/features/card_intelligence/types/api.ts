@@ -98,7 +98,7 @@ export interface SourceTrustMatrix {
 }
 
 export interface PublishReadiness {
-  overallScore: number;
+  overall_score: number;
   categories: Record<string, number>; // e.g. { Fees: 100, Exclusions: 0 }
 }
 
@@ -164,8 +164,8 @@ export interface RequiredAction {
   id: string;
   title: string;
   description: string;
-  actionText: string;
-  actionType: string;
+  action_text: string;
+  action_type: string;
   severity: ActionSeverity;
 }
 
@@ -181,23 +181,23 @@ export interface ProductionImpactSimulation {
 }
 
 export interface CardWorkspaceData {
-  workspaceVersion: number;
-  generatedFromSources: string[];
-  cardId: string;
-  cardName: string;
+  workspace_version: number;
+  generated_from_sources: string[];
+  card_id: string;
+  card_name: string;
   status: WorkspaceStatus;
-  statusReason?: string;
-  sourceTrust: SourceTrustMatrix;
-  publishReadiness: PublishReadiness;
-  publishRisk: PublishRisk;
-  requiredActions: RequiredAction[];
-  publishBlockers: PublishBlocker[];
+  status_reason?: string;
+  source_trust: SourceTrustMatrix;
+  publish_readiness: PublishReadiness;
+  publish_risk: PublishRisk;
+  required_actions: RequiredAction[];
+  publish_blockers: PublishBlocker[];
   timeline: TimelineEvent[];
   fees: any[];
   rewards: WorkspaceReward[];
-  merchantCoverage: MerchantCoverageItem[];
+  merchant_coverage: MerchantCoverageItem[];
   benefits: any[]; 
   milestones: any[]; 
-  publishPreview: any; 
-  productionImpact: ProductionImpactSimulation[];
+  publish_preview: any; 
+  production_impact: ProductionImpactSimulation[];
 }

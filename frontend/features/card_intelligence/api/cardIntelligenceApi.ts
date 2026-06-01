@@ -166,6 +166,11 @@ export const publishCandidates = async (cardId: string): Promise<PublishResponse
   return data;
 };
 
+export const publishWorkspace = async (cardId: string): Promise<PublishResponse> => {
+  const { data } = await apiClient.post<PublishResponse>(`/card-intelligence/cards/${cardId}/workspace/publish`);
+  return data;
+};
+
 export const useCandidates = (cardId: string | null, status?: string) => {
   return useQuery({
     queryKey: ['card-candidates', cardId, status],
@@ -201,6 +206,20 @@ export const usePublishChanges = (cardId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['card-candidates', cardId] });
       queryClient.invalidateQueries({ queryKey: ['card-publish-preview', cardId] });
+    },
+  });
+};
+
+export const usePublishWorkspace = (cardId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => publishWorkspace(cardId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['card-workspace', cardId] });
+      queryClient.invalidateQueries({ queryKey: ['card-workspace-health', cardId] });
+      queryClient.invalidateQueries({ queryKey: ['card-candidates', cardId] });
+      queryClient.invalidateQueries({ queryKey: ['card-publish-preview', cardId] });
+      queryClient.invalidateQueries({ queryKey: ['coverage-summary'] });
     },
   });
 };
