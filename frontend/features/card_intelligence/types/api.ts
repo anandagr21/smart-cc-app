@@ -80,3 +80,124 @@ export interface PublishResponse {
   published_at: string;
   change_summary: Record<string, any>;
 }
+
+// --- V2 WORKSPACE TYPES --- //
+
+export type WorkspaceStatus = 'DRAFT' | 'EXTRACTED' | 'REVIEWING' | 'READY_TO_PUBLISH' | 'PUBLISHED' | 'STALE';
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface TrustFactor {
+  factor: string;
+  isPositive: boolean;
+}
+
+export interface SourceTrustMatrix {
+  overallScore: number;
+  sources: Record<string, number>;
+  trustFactors: TrustFactor[];
+}
+
+export interface PublishReadiness {
+  overallScore: number;
+  categories: Record<string, number>; // e.g. { Fees: 100, Exclusions: 0 }
+}
+
+export interface PublishRisk {
+  level: RiskLevel;
+  reasons: string[];
+}
+
+export interface TimelineEvent {
+  date: string;
+  eventType: string;
+  description: string;
+}
+
+export interface RewardSimulation {
+  spendAmount: number;
+  pointsEarned: number;
+  pointValue: number;
+  effectiveReturnPercentage: number;
+}
+
+export interface RewardTranslation {
+  documentText: string;
+  systemInterpretation: string;
+  pointValueKnown: boolean;
+  pointValue?: number;
+  effectiveReward?: string;
+  simulators: RewardSimulation[];
+  conditions: string[];
+  confidenceScore: number;
+  confidenceLevel: string;
+  confidenceReason: string;
+}
+
+export interface WorkspaceReward {
+  category: string;
+  title: string;
+  merchants: string[];
+  translation: RewardTranslation;
+  status: string;
+  statusReason?: string;
+  sourceDocuments: string[];
+}
+
+export interface MerchantCoverageItem {
+  name: string;
+  coverageType: string;
+  aliases: string[];
+  transactionsSeen: number;
+  status: string;
+}
+
+export interface WorkspaceHealthSummary {
+  status: WorkspaceStatus;
+  readiness: number;
+  risk: string;
+  blockers: number;
+}
+
+export type ActionSeverity = 'BLOCKER' | 'WARNING' | 'INFO';
+
+export interface RequiredAction {
+  id: string;
+  title: string;
+  description: string;
+  actionText: string;
+  actionType: string;
+  severity: ActionSeverity;
+}
+
+export interface PublishBlocker {
+  message: string;
+  impact: string;
+}
+
+export interface ProductionImpactSimulation {
+  scenarioName: string;
+  beforeReward: string;
+  afterReward: string;
+}
+
+export interface CardWorkspaceData {
+  workspaceVersion: number;
+  generatedFromSources: string[];
+  cardId: string;
+  cardName: string;
+  status: WorkspaceStatus;
+  statusReason?: string;
+  sourceTrust: SourceTrustMatrix;
+  publishReadiness: PublishReadiness;
+  publishRisk: PublishRisk;
+  requiredActions: RequiredAction[];
+  publishBlockers: PublishBlocker[];
+  timeline: TimelineEvent[];
+  fees: any[];
+  rewards: WorkspaceReward[];
+  merchantCoverage: MerchantCoverageItem[];
+  benefits: any[]; 
+  milestones: any[]; 
+  publishPreview: any; 
+  productionImpact: ProductionImpactSimulation[];
+}
