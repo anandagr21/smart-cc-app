@@ -152,11 +152,24 @@ async def list_global_candidates(
     service = CardIntelligenceService(db)
     return await service.list_global_candidates(status, candidate_type, limit)
 
-@router.get("/coverage-summary")
+@router.get("/coverage")
 async def get_coverage_summary(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Returns a per-card summary of active rule counts for coverage health display."""
+    """Returns a per-card summary of active rule counts and coverage score."""
     service = CardIntelligenceService(db)
     return await service.get_coverage_summary()
+
+@router.get("/coverage/{card_id}")
+async def get_card_coverage(
+    card_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Returns detailed coverage stats for a single card."""
+    service = CardIntelligenceService(db)
+    stats = await service.get_card_coverage_stats(card_id)
+    if not stats:
+        raise HTTPException(status_code=404, detail="Card not found")
+    return stats

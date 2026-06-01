@@ -5,6 +5,11 @@ from sqlmodel import select, desc
 import logging
 from typing import List, Optional
 from datetime import datetime, timezone
+from pydantic import BaseModel
+
+class ValidationResult(BaseModel):
+    valid: bool
+    reason: Optional[str] = None
 
 from .models import CardKnowledgeSource, KnowledgeIngestionJob, KnowledgeSourceType, ProcessingStatus
 from .storage import LocalKnowledgeStorage
@@ -336,25 +341,76 @@ class CardIntelligenceService:
                             rule.rule_config = c.proposed_value
                             self.db.add(rule)
                 else: # ADD
+                    # Business Logic Priority & Type Resolution
                     rule_type_map = {
                         CandidateType.MILESTONE: "milestone",
-                        CandidateType.REWARD_RULE: "cashback",
                         CandidateType.BENEFIT: "benefit",
                         CandidateType.EXCLUSION: "exclusion",
                     }
                     priority = 50
+                    db_rule_type = rule_type_map.get(c.candidate_type, "generic_reward")
+                    
                     if c.candidate_type == CandidateType.REWARD_RULE:
-                        eid = c.entity_identifier or ""
-                        if eid.startswith("REWARD_MERCHANT_"): priority = 10
-                        elif eid.startswith("REWARD_CATEGORY_"): priority = 20
-                        elif eid.startswith("REWARD_PLATFORM_"): priority = 25
-                        elif "ONLINE" in eid: priority = 30
-                        elif "ALL" in eid or "GENERAL" in eid: priority = 40
+                        config = c.proposed_value or {}
                         
+                        # Priority Ladder
+                        cat = str(config.get("category", "")).lower()
+                        if "merchant" in config:
+                            priority = 10
+                            db_rule_type = "merchant_bonus"
+                        elif "online" in cat:
+                            priority = 20
+                            db_rule_type = "category_bonus"
+                            config["payment_mode"] = "online"
+                            if config.get("category", "").lower() == "online":
+                                del config["category"]
+                        elif "offline" in cat:
+                            priority = 30
+                            db_rule_type = "category_bonus"
+                            config["payment_mode"] = "offline"
+                            if config.get("category", "").lower() == "offline":
+                                del config["category"]
+                        elif "category" in config and config["category"].lower() not in ("all spends", "all"):
+                            priority = 25
+                            db_rule_type = "category_bonus"
+                        else:
+                            priority = 40
+                            if "category" in config:
+                                del config["category"]
+                            reward_type = config.get("reward_type", "cashback")
+                            db_rule_type = "reward_points" if reward_type in ("points", "reward_points") else "cashback"
+
+                    # Validation Gate
+                    valid = True
+                    reason = None
+                    config = c.proposed_value or {}
+                    
+                    if c.candidate_type == CandidateType.REWARD_RULE:
+                        if db_rule_type == "merchant_bonus" and "merchant" not in config:
+                            valid, reason = False, "merchant rule missing merchant field"
+                        elif db_rule_type == "category_bonus" and "category" not in config and "payment_mode" not in config:
+                            valid, reason = False, "category rule missing category or payment_mode field"
+                        elif config.get("reward_type") == "cashback":
+                            rate = config.get("reward_rate", 0)
+                            if rate <= 0 or rate > 1.0:
+                                valid, reason = False, f"invalid cashback rate: {rate}"
+                        elif config.get("reward_type") in ("points", "reward_points"):
+                            ppu = config.get("points_per_unit")
+                            sd = config.get("spend_denominator")
+                            if not ppu or ppu <= 0 or not sd or sd <= 0:
+                                valid, reason = False, "points rule missing valid points_per_unit or spend_denominator"
+                                
+                    if not valid:
+                        logger.warning(f"Rejecting candidate {c.id}: {reason}")
+                        c.status = CandidateStatus.REJECTED
+                        c.review_notes = reason
+                        self.db.add(c)
+                        continue
+
                     rule = RewardRule(
                         card_id=str(card_id),
                         rule_name=c.entity_identifier,
-                        rule_type=rule_type_map.get(c.candidate_type, "generic_reward"),
+                        rule_type=db_rule_type,
                         rule_config=c.proposed_value,
                         priority=priority
                     )
@@ -365,6 +421,19 @@ class CardIntelligenceService:
             c.status = CandidateStatus.PUBLISHED
             self.db.add(c)
             candidate_ids.append(str(c.id))
+            
+        # --- Card Completeness Audit ---
+        from .audit import CardCompletenessAuditor, CardCompletenessError
+        
+        from rewards.models import RewardRule
+        rules_res = await self.db.execute(select(RewardRule).where(RewardRule.card_id == str(card_id), RewardRule.is_active == True))
+        new_rules = rules_res.scalars().all()
+        
+        audit_result = await CardCompletenessAuditor.audit_async(card.card_name, new_rules, self.db)
+        if not audit_result.passed:
+            await self.db.rollback()
+            print("Audit failures:", audit_result.failures)
+            raise ValueError(f"Card Completeness Audit Failed:\n" + "\n".join(audit_result.failures))
             
         self.db.add(card)
         
@@ -391,6 +460,61 @@ class CardIntelligenceService:
             "change_summary": version.change_summary
         }
 
+    async def get_card_coverage_stats(self, card_id: UUID) -> dict:
+        from models.card_catalog import CardCatalog
+        from rewards.models import RewardRule
+        from sqlmodel import select
+        
+        card = await self.db.get(CardCatalog, card_id)
+        if not card:
+            return None
+            
+        rules = (await self.db.execute(select(RewardRule).where(RewardRule.card_id == str(card_id), RewardRule.is_active == True))).scalars().all()
+        
+        merchant_rules = [r for r in rules if r.rule_type == "merchant_bonus"]
+        category_rules = [r for r in rules if r.rule_type == "category_bonus"]
+        fallback_rules = [r for r in rules if r.priority in (40, 50) and r.rule_name == "ALL_SPENDS"]
+        exclusion_rules = [r for r in rules if r.rule_type == "exclusion"]
+        
+        score = 0
+        missing = []
+        
+        if len(fallback_rules) > 0: score += 20
+        else: missing.append("fallback_rules")
+        
+        if len(merchant_rules) > 0: score += 20
+        else: missing.append("merchant_rules")
+        
+        if len(category_rules) > 0: score += 15
+        else: missing.append("category_rules")
+        
+        if len(exclusion_rules) > 0: score += 10
+        else: missing.append("exclusion_rules")
+        
+        if getattr(card, 'fee_waiver_spend_threshold', None) is not None: score += 10
+        else: missing.append("fee_waiver")
+        
+        if getattr(card, 'annual_fee', None) is not None: score += 5
+        else: missing.append("annual_fee")
+        
+        # Reward valuation is assumed 10 if there is a point value defined.
+        # But we'll just check if there's any points rule with a value, or it's a cashback card.
+        has_valuation = any(r.rule_config.get("points_per_unit") is not None for r in rules) or any(r.rule_config.get("reward_type") == "cashback" for r in rules)
+        if has_valuation: score += 10
+        else: missing.append("reward_valuation")
+        
+        # Benefits and Milestones (mocked missing for now since we don't have tables for them yet)
+        missing.extend(["benefits", "milestones"])
+        
+        return {
+            "card": card.card_name,
+            "merchant_rules": len(merchant_rules),
+            "category_rules": len(category_rules),
+            "fallback_rules": len(fallback_rules),
+            "missing": missing,
+            "coverage_score": score
+        }
+
     async def list_global_candidates(self, status_filter: Optional[str] = None, type_filter: Optional[str] = None, limit: int = 200) -> List[dict]:
         from .models import CardExtractionCandidate, CandidateStatus, CandidateType
         stmt = select(CardExtractionCandidate)
@@ -410,44 +534,22 @@ class CardIntelligenceService:
         return [c.model_dump() for c in candidates]
 
     async def get_coverage_summary(self) -> List[dict]:
-        from rewards.models import RewardRule
+        from models.card_catalog import CardCatalog
+        from sqlmodel import select
         cards_result = await self.db.execute(select(CardCatalog))
         cards = cards_result.scalars().all()
 
-        rules_result = await self.db.execute(
-            select(RewardRule).where(RewardRule.is_active == True)
-        )
-        all_rules = rules_result.scalars().all()
-
-        rule_counts: dict = {}
-        for rule in all_rules:
-            cid = str(rule.card_id)
-            rule_counts[cid] = rule_counts.get(cid, 0) + 1
-
-        from .models import CardExtractionCandidate, CandidateStatus
-        pending_result = await self.db.execute(
-            select(CardExtractionCandidate).where(
-                CardExtractionCandidate.status == CandidateStatus.PENDING_REVIEW
-            )
-        )
-        pending_candidates = pending_result.scalars().all()
-        pending_counts: dict = {}
-        for c in pending_candidates:
-            cid = str(c.card_id)
-            pending_counts[cid] = pending_counts.get(cid, 0) + 1
-
         summary = []
         for card in cards:
-            cid = str(card.id)
-            active_rules = rule_counts.get(cid, 0)
-            pending = pending_counts.get(cid, 0)
-            coverage_pct = min(100, int((active_rules / 10) * 100))
-            summary.append({
-                "card_id": cid,
-                "bank_name": card.bank_name,
-                "card_name": card.card_name,
-                "active_rules": active_rules,
-                "pending_candidates": pending,
-                "coverage_pct": coverage_pct,
-            })
+            stats = await self.get_card_coverage_stats(card.id)
+            if stats:
+                summary.append({
+                    "card_id": str(card.id),
+                    "bank_name": card.bank_name,
+                    "card_name": card.card_name,
+                    "coverage_pct": stats["coverage_score"],
+                    "merchant_rules": stats["merchant_rules"],
+                    "category_rules": stats["category_rules"],
+                    "fallback_rules": stats["fallback_rules"],
+                })
         return summary
