@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import Column, Index, String, UniqueConstraint
+from sqlalchemy.types import JSON
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -67,14 +68,14 @@ class Merchant(SQLModel, table=True):
         index=True,
         description="Merchant category (food, grocery, fuel, etc.)",
     )
-    normalized_tokens: list[str] = Field(
+    normalized_tokens: list = Field(
         default_factory=list,
-        sa_column=Column(JSONB, nullable=False, default=list),
-        description="JSONB array of unique normalized tokens",
+        sa_column=Column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list),
+        description="JSON array of unique tokens for this canonical merchant",
     )
     aliases_list: list[str] = Field(
         default_factory=list,
-        sa_column=Column(JSONB, nullable=False, default=list),
+        sa_column=Column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list),
         description="JSONB denormalized alias list for fast lookups",
     )
     is_active: bool = Field(default=True)
@@ -142,8 +143,8 @@ class MerchantAlias(SQLModel, table=True):
     )
     normalized_tokens: list[str] = Field(
         default_factory=list,
-        sa_column=Column(JSONB, nullable=False, default=list),
-        description="JSONB array of normalized tokens",
+        sa_column=Column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list),
+        description="JSON array of unique tokens for matching",
     )
     source: str = Field(
         max_length=50,

@@ -16,6 +16,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, Index
+from sqlalchemy.types import JSON
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlmodel import Field, SQLModel
 
@@ -106,8 +107,8 @@ class RewardRule(SQLModel, table=True):
     )
     rule_config: dict = Field(
         default_factory=dict,
-        sa_column=Column(JSONB, nullable=False, default=dict),
-        description="Flexible JSONB configuration for this rule.",
+        sa_column=Column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=dict),
+        description="Flexible JSON configuration for this rule.",
     )
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
