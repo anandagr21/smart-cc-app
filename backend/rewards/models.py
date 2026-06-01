@@ -13,8 +13,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from pydantic import model_validator
 from sqlalchemy import Column, Index
 from sqlalchemy.types import JSON
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
@@ -141,3 +142,13 @@ class RewardRule(SQLModel, table=True):
             postgresql_using="gin",
         ),
     )
+
+    @model_validator(mode="after")
+    def validate_points_config(self) -> "RewardRule":
+        config = self.rule_config or {}
+        if config.get("reward_type") in ("points", "reward_points"):
+            ppu = config.get("points_per_unit")
+            sd = config.get("spend_denominator")
+            if not ppu or ppu <= 0 or not sd or sd <= 0:
+                raise ValueError("Points rules must include positive 'points_per_unit' and 'spend_denominator'")
+        return self

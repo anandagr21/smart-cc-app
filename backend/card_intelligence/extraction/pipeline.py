@@ -301,7 +301,8 @@ class IngestionPipeline:
                 "raw_reward_value": reward_value,
                 "spend_denominator": spend_denominator,
                 "points_per_unit": reward_value,
-                "spend_unit": spend_denominator
+                "spend_unit": spend_denominator,
+                "point_value": point_value_inr
             }
             if getattr(r, "category", None):
                 base_config["category"] = r.category.lower().strip()
