@@ -28,6 +28,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
   const { themeMode } = useThemeStore();
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
   const [showFeeExplanation, setShowFeeExplanation] = React.useState(false);
+  const [showCalcSteps, setShowCalcSteps] = React.useState(false);
   const [showGlossary, setShowGlossary] = React.useState(false);
 
   if (!visible || !item) return null;
@@ -88,51 +89,56 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                 />
               </View>
 
-              {/* HOW IT'S CALCULATED */}
-              {hasCalcSteps && (
-                <>
-                  <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
-                    HOW IT'S CALCULATED
-                  </Text>
-
-                  <View style={[styles.calcBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                    {engineExplanations.map((exp, idx) => (
-                      <Animated.View
-                        key={idx}
-                        entering={FadeInUp.delay(idx * 80).duration(300)}
-                        style={[
-                          styles.calcStep,
-                          idx < engineExplanations.length - 1 && styles.calcStepBorder,
-                          { borderColor: colors.border },
-                        ]}
-                      >
-                        <View style={[styles.calcDot, { backgroundColor: colors.primary }]}>
-                          <Text style={styles.calcDotNumber}>{idx + 1}</Text>
-                        </View>
-                        <Text style={[styles.calcStepText, { color: colors.textPrimary }]}>
-                          {exp}
-                        </Text>
-                      </Animated.View>
-                    ))}
-                  </View>
-                </>
-              )}
-
               {/* VALUE BREAKDOWN */}
               <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 28 }]}>
                 VALUE BREAKDOWN
               </Text>
 
               <View style={[styles.breakdownCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                {/* Reward row */}
+                {/* Reward row — ⓘ toggles calculation accordion */}
                 <View style={[styles.breakdownRow, { borderColor: colors.border }]}>
-                  <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>
-                    {item.recommendation.reward_type === 'points' ? 'Reward Points Value' : 'Cashback'}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>
+                      {item.recommendation.reward_type === 'points' ? 'Reward Points Value' : 'Cashback'}
+                    </Text>
+                    {hasCalcSteps && (
+                      <TouchableOpacity
+                        onPress={() => setShowCalcSteps(!showCalcSteps)}
+                        hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                        style={{ marginLeft: 6 }}
+                      >
+                        {/* @ts-ignore */}
+                        <Info size={13} color={colors.textMuted} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                   <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>
                     {formatCurrencyIN(item.recommendation.immediate_reward_value || 0)}
                   </Text>
                 </View>
+
+                {/* Calculation accordion */}
+                {showCalcSteps && hasCalcSteps && (
+                  <Animated.View
+                    entering={FadeInUp}
+                    style={[styles.expandedBox, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  >
+                    {engineExplanations.map((exp, idx) => (
+                      <View
+                        key={idx}
+                        style={[
+                          styles.calcStep,
+                          idx < engineExplanations.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.border },
+                        ]}
+                      >
+                        <View style={[styles.calcDot, { backgroundColor: colors.primary }]}>
+                          <Text style={styles.calcDotNumber}>{idx + 1}</Text>
+                        </View>
+                        <Text style={[styles.calcStepText, { color: colors.textSecondary }]}>{exp}</Text>
+                      </View>
+                    ))}
+                  </Animated.View>
+                )}
 
                 {/* Fee waiver row */}
                 {item.recommendation.fee_waiver_progress_impact > 0 && (
@@ -285,21 +291,13 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     paddingHorizontal: 4,
   },
-  // Calculation steps
-  calcBox: {
-    borderRadius: tokens.radius.xl,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
+  // Calculation steps (accordion)
   calcStep: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     gap: 12,
-  },
-  calcStepBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   calcDot: {
     width: 22,
