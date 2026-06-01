@@ -11,6 +11,7 @@ import { ProcessingStatus } from '../types/api';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { CardIntelligenceReviewQueue } from './CardIntelligenceReviewQueue';
+import { CardIntelligenceWorkspaceV2 } from '../components/CardIntelligenceWorkspaceV2';
 import { GlobalReviewQueue } from './GlobalReviewQueue';
 import { CardSidebar } from '../components/CardSidebar';
 
@@ -23,7 +24,7 @@ export const CardIntelligenceDashboard: React.FC = () => {
   const { data: catalog } = useCardCatalog();
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isUploadSheetVisible, setIsUploadSheetVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState<'SOURCES' | 'REVIEW'>('SOURCES');
+  const [activeTab, setActiveTab] = useState<'SOURCES' | 'REVIEW' | 'SUMMARY'>('SOURCES');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const { data: sources, isLoading: isSourcesLoading } = useKnowledgeSources(selectedCardId);
@@ -58,7 +59,7 @@ export const CardIntelligenceDashboard: React.FC = () => {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Intelligence Operations</Text>
         <View style={{ flexDirection: 'row', gap: tokens.spacing.md }}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.globalUploadBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1 }]}
             onPress={() => router.push('/admin/master-catalog')}
           >
@@ -66,7 +67,7 @@ export const CardIntelligenceDashboard: React.FC = () => {
             <CreditCard size={18} color={colors.textPrimary} />
             <Text style={[styles.uploadBtnText, { color: colors.textPrimary }]}>Master Catalog</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.globalUploadBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.primary + '66', borderWidth: 1 }]}
             onPress={() => router.push('/admin/card-rules')}
           >
@@ -74,7 +75,7 @@ export const CardIntelligenceDashboard: React.FC = () => {
             <BrainCircuit size={18} color={colors.primary} />
             <Text style={[styles.uploadBtnText, { color: colors.primary }]}>View Rules</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.globalUploadBtn, { backgroundColor: colors.primary }]}
             onPress={() => setIsUploadSheetVisible(true)}
           >
@@ -96,7 +97,7 @@ export const CardIntelligenceDashboard: React.FC = () => {
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
-        
+
         {/* Content Area */}
         <View style={styles.contentArea}>
 
@@ -118,6 +119,9 @@ export const CardIntelligenceDashboard: React.FC = () => {
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setActiveTab('REVIEW')}>
                       <Text style={[styles.topTabBtn, { color: activeTab === 'REVIEW' ? colors.primary : colors.textSecondary }]}>Review Queue</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setActiveTab('SUMMARY')}>
+                      <Text style={[styles.topTabBtn, { color: activeTab === 'SUMMARY' ? colors.primary : colors.textSecondary }]}>Summary</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -158,7 +162,7 @@ export const CardIntelligenceDashboard: React.FC = () => {
                               Added {format(new Date(doc.uploaded_at), 'MMM d, yyyy')}
                             </Text>
                           </View>
-                          
+
                           <View style={styles.docActions}>
                             <View style={[styles.statusBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
                               {renderStatusIcon(doc.processing_status)}
@@ -166,9 +170,9 @@ export const CardIntelligenceDashboard: React.FC = () => {
                                 {doc.processing_status}
                               </Text>
                             </View>
-                            
+
                             {(doc.processing_status === 'UPLOADED' || doc.processing_status === 'FAILED' || doc.processing_status === 'IMPORTED' || doc.processing_status === 'DISCOVERED') && doc.is_latest_version && (
-                              <TouchableOpacity 
+                              <TouchableOpacity
                                 style={[styles.processBtn, { borderColor: colors.border }]}
                                 onPress={() => processMutation.mutate(doc.id)}
                                 disabled={processMutation.isPending}
@@ -187,14 +191,14 @@ export const CardIntelligenceDashboard: React.FC = () => {
                         {(doc.processing_status === 'QUEUED' || doc.processing_status === 'PROCESSING') && (
                           <View style={styles.progressContainer}>
                             <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
-                              <View 
+                              <View
                                 style={[
-                                  styles.progressBarFill, 
-                                  { 
-                                    backgroundColor: colors.primary, 
-                                    width: doc.processing_status === 'QUEUED' ? '30%' : '80%' 
+                                  styles.progressBarFill,
+                                  {
+                                    backgroundColor: colors.primary,
+                                    width: doc.processing_status === 'QUEUED' ? '30%' : '80%'
                                   }
-                                ]} 
+                                ]}
                               />
                             </View>
                             <Text style={[styles.progressText, { color: colors.primary }]}>
@@ -215,6 +219,8 @@ export const CardIntelligenceDashboard: React.FC = () => {
                     ))
                   )}
                 </ScrollView>
+              ) : activeTab === 'SUMMARY' ? (
+                <CardIntelligenceWorkspaceV2 cardId={selectedCardId} />
               ) : (
                 <CardIntelligenceReviewQueue cardId={selectedCardId} />
               )}
@@ -223,9 +229,9 @@ export const CardIntelligenceDashboard: React.FC = () => {
         </View>
       </View>
 
-      <DocumentUploadSheet 
-        visible={isUploadSheetVisible} 
-        onClose={() => setIsUploadSheetVisible(false)} 
+      <DocumentUploadSheet
+        visible={isUploadSheetVisible}
+        onClose={() => setIsUploadSheetVisible(false)}
         cardId={selectedCardId}
         onSuccess={(cardId) => {
           setIsUploadSheetVisible(false);

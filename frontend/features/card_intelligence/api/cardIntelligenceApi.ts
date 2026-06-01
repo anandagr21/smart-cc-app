@@ -115,7 +115,33 @@ export const useTriggerProcessing = (cardId: string) => {
   });
 };
 
-import { CardExtractionCandidateResponse, CandidateUpdatePayload, PublishPreviewResponse, PublishResponse } from '../types/api';
+import { CardExtractionCandidateResponse, CandidateUpdatePayload, PublishPreviewResponse, PublishResponse, CardWorkspaceData, WorkspaceHealthSummary } from '../types/api';
+
+export const fetchCardWorkspace = async (cardId: string): Promise<CardWorkspaceData> => {
+  const { data } = await apiClient.get<CardWorkspaceData>(`/card-intelligence/cards/${cardId}/workspace`);
+  return data;
+};
+
+export const fetchWorkspaceHealth = async (cardId: string): Promise<WorkspaceHealthSummary> => {
+  const { data } = await apiClient.get<WorkspaceHealthSummary>(`/card-intelligence/cards/${cardId}/workspace/health`);
+  return data;
+};
+
+export const useCardWorkspaceV2 = (cardId: string | null) => {
+  return useQuery({
+    queryKey: ['card-workspace', cardId],
+    queryFn: () => fetchCardWorkspace(cardId!),
+    enabled: !!cardId,
+  });
+};
+
+export const useWorkspaceHealth = (cardId: string | null) => {
+  return useQuery({
+    queryKey: ['card-workspace-health', cardId],
+    queryFn: () => fetchWorkspaceHealth(cardId!),
+    enabled: !!cardId,
+  });
+};
 
 export const fetchCandidates = async (cardId: string, status?: string): Promise<CardExtractionCandidateResponse[]> => {
   const url = status 
