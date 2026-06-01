@@ -121,7 +121,8 @@ class UserCard(SQLModel, table=True):
         if self.user_override_annual_fee is not None:
             return self.user_override_annual_fee
         if getattr(self, "card_catalog", None) is not None:
-            return self.card_catalog.annual_fee
+            fee = self.card_catalog.annual_fee
+            return Decimal(str(fee)) if fee is not None else Decimal("0.00")
         return Decimal("0.00")
 
     @property
@@ -130,7 +131,8 @@ class UserCard(SQLModel, table=True):
         if self.user_override_fee_waiver_threshold is not None:
             return self.user_override_fee_waiver_threshold
         if getattr(self, "card_catalog", None) is not None:
-            return self.card_catalog.fee_waiver_spend_threshold
+            threshold = self.card_catalog.fee_waiver_spend_threshold
+            return Decimal(str(threshold)) if threshold is not None else None
         return None
 
     @property
