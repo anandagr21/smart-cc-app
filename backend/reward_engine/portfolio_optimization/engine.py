@@ -39,22 +39,24 @@ class PortfolioOptimizationEngine:
             # Value at risk computed by the intelligence engine
             value_at_risk = fee_waiver_state.waiver_value_at_risk
             
-            # If value_at_risk is 0 but there is a fee, fallback so the algorithm still ranks the waiver
-            effective_fee_value = value_at_risk if value_at_risk > 0 else 1000.0
+            # Use actual value at risk without injecting theoretical fallback
+            effective_fee_value = value_at_risk if value_at_risk > 0 else 0.0
             
             if remaining > 0:
                 contribution = min(txn_amount_float, remaining)
-                # Value = Prorated annual fee savings based on contribution relative to remaining spend
-                # This ensures that as you get closer to the waiver (lower remaining),
-                # the value of each rupee spent towards it increases.
-                # Urgency modifier: if highly urgent, multiply the value
+                waiver_target = float(fee_waiver_state.waiver_target or 1)
+                if waiver_target <= 0:
+                    waiver_target = remaining
+                    
+                # Value = Prorated annual fee savings based on contribution relative to total target
+                # Urgency modifier: if highly urgent, multiply the value slightly
                 urgency_multiplier = 1.0
                 if fee_waiver_state.urgency_level == "HIGH":
-                    urgency_multiplier = 2.0
-                elif fee_waiver_state.urgency_level == "ELEVATED":
                     urgency_multiplier = 1.5
+                elif fee_waiver_state.urgency_level == "ELEVATED":
+                    urgency_multiplier = 1.2
                     
-                waiver_value = (contribution / remaining) * effective_fee_value * urgency_multiplier
+                waiver_value = (contribution / waiver_target) * effective_fee_value * urgency_multiplier
                 reason_codes.append("FEE_WAIVER_PRESERVATION")
                 
                 if remaining <= txn_amount_float:
