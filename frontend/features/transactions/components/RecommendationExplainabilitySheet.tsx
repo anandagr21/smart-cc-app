@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { X, Sparkles, CheckCircle2, TrendingUp, Info } from 'lucide-react-native';
+import { X, Sparkles, Info } from 'lucide-react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -33,8 +33,9 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
   if (!visible || !item) return null;
 
   const topCardName = item.card.nickname || item.card.card_details?.card_name || 'Card';
-  
   const humanStrategy = item.recommendation.confidence_label || 'OPTIMAL';
+  const engineExplanations = item.recommendation.engine_explanations ?? [];
+  const hasCalcSteps = engineExplanations.length > 0;
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -67,22 +68,19 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             <Animated.View entering={FadeInUp.duration(400)}>
-              
+
               <Text style={[styles.title, { color: colors.textPrimary }]}>Why {topCardName}?</Text>
-              
-              {/* NARRATIVE SECTION */}
+
+              {/* NARRATIVE */}
               <View style={[styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: 'rgba(139, 92, 246, 0.3)' }]}>
                 {/* @ts-ignore */}
                 <Sparkles size={18} color="#A78BFA" style={{ marginBottom: 16 }} />
-                
                 <Text style={[styles.strategyTitle, { color: '#A78BFA' }]}>
                   {humanStrategy.toUpperCase()}
                 </Text>
-                
                 <Text style={[styles.narrativeText, { color: colors.textPrimary }]}>
                   {item.recommendation.explanation || 'This card provides the highest blended value for your selected intent.'}
                 </Text>
-
                 <LinearGradient
                   colors={['rgba(139, 92, 246, 0.1)', 'transparent']}
                   style={StyleSheet.absoluteFill}
@@ -90,79 +88,113 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                 />
               </View>
 
-              {/* MATHEMATICAL BREAKDOWN */}
-              <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 32 }]}>
+              {/* HOW IT'S CALCULATED */}
+              {hasCalcSteps && (
+                <>
+                  <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
+                    HOW IT'S CALCULATED
+                  </Text>
+
+                  <View style={[styles.calcBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                    {engineExplanations.map((exp, idx) => (
+                      <Animated.View
+                        key={idx}
+                        entering={FadeInUp.delay(idx * 80).duration(300)}
+                        style={[
+                          styles.calcStep,
+                          idx < engineExplanations.length - 1 && styles.calcStepBorder,
+                          { borderColor: colors.border },
+                        ]}
+                      >
+                        <View style={[styles.calcDot, { backgroundColor: colors.primary }]}>
+                          <Text style={styles.calcDotNumber}>{idx + 1}</Text>
+                        </View>
+                        <Text style={[styles.calcStepText, { color: colors.textPrimary }]}>
+                          {exp}
+                        </Text>
+                      </Animated.View>
+                    ))}
+                  </View>
+                </>
+              )}
+
+              {/* VALUE BREAKDOWN */}
+              <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 28 }]}>
                 VALUE BREAKDOWN
               </Text>
-              
-              <View style={styles.breakdownBox}>
-                <View style={styles.breakdownRow}>
-                  <Text style={[styles.breakdownName, { color: colors.textSecondary }]}>Cashback Now</Text>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>
-                      {formatCurrencyIN(item.recommendation.immediate_reward_value || 0)}
-                    </Text>
-                    {item.recommendation.engine_explanations && item.recommendation.engine_explanations.length > 0 && (
-                      <View style={{ marginTop: 4, alignItems: 'flex-end' }}>
-                        {item.recommendation.engine_explanations.map((exp, idx) => (
-                          <Text key={idx} style={[styles.engineExplanationText, { color: colors.textMuted }]}>
-                            {exp}
-                          </Text>
-                        ))}
-                      </View>
-                    )}
-                  </View>
+
+              <View style={[styles.breakdownCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                {/* Reward row */}
+                <View style={[styles.breakdownRow, { borderColor: colors.border }]}>
+                  <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>
+                    {item.recommendation.reward_type === 'points' ? 'Reward Points Value' : 'Cashback'}
+                  </Text>
+                  <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>
+                    {formatCurrencyIN(item.recommendation.immediate_reward_value || 0)}
+                  </Text>
                 </View>
 
+                {/* Fee waiver row */}
                 {item.recommendation.fee_waiver_progress_impact > 0 && (
                   <>
-                    <View style={styles.breakdownRow}>
+                    <View style={[styles.breakdownRow, { borderColor: colors.border }]}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.breakdownName, { color: colors.textSecondary }]}>Fee Waiver Impact</Text>
-                        <TouchableOpacity 
+                        <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Fee Waiver Impact</Text>
+                        <TouchableOpacity
                           onPress={() => setShowFeeExplanation(!showFeeExplanation)}
                           hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
                           style={{ marginLeft: 6 }}
                         >
                           {/* @ts-ignore */}
-                          <Info size={14} color={colors.textSecondary} />
+                          <Info size={13} color={colors.textMuted} />
                         </TouchableOpacity>
                       </View>
                       <Text style={[styles.breakdownValue, { color: '#A78BFA' }]}>
                         {formatCurrencyIN(item.recommendation.fee_waiver_progress_impact)}
                       </Text>
                     </View>
-                    
+
                     {showFeeExplanation && (
-                      <Animated.View entering={FadeInUp} style={[styles.explanationBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                        <Text style={[styles.explanationText, { color: colors.textSecondary }]}>
+                      <Animated.View
+                        entering={FadeInUp}
+                        style={[styles.expandedBox, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                      >
+                        <Text style={[styles.expandedText, { color: colors.textSecondary }]}>
                           The system assigns financial value to transactions that help secure your annual fee waiver.
                         </Text>
-                        <View style={styles.explanationMathRow}>
-                          <TouchableOpacity onPress={() => setShowGlossary(true)} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-                            <Text style={[styles.explanationMathText, { color: colors.textPrimary, marginRight: 4 }]}>
+                        <View style={styles.expandedRow}>
+                          <TouchableOpacity
+                            onPress={() => setShowGlossary(true)}
+                            style={{ flexDirection: 'row', alignItems: 'center' }}
+                            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                          >
+                            <Text style={[styles.expandedKey, { color: colors.textPrimary, marginRight: 4 }]}>
                               Value at Risk:
                             </Text>
                             {/* @ts-ignore */}
-                            <Info size={12} color={colors.primary} />
+                            <Info size={11} color={colors.primary} />
                           </TouchableOpacity>
-                          <Text style={[styles.explanationMathValue, { color: colors.textPrimary }]}>
+                          <Text style={[styles.expandedVal, { color: colors.textPrimary }]}>
                             {formatCurrencyIN(item.card.waiver_value_at_risk || 0)}
                           </Text>
                         </View>
-                        <View style={styles.explanationMathRow}>
-                          <TouchableOpacity onPress={() => setShowGlossary(true)} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-                            <Text style={[styles.explanationMathText, { color: colors.textPrimary, marginRight: 4 }]}>
+                        <View style={styles.expandedRow}>
+                          <TouchableOpacity
+                            onPress={() => setShowGlossary(true)}
+                            style={{ flexDirection: 'row', alignItems: 'center' }}
+                            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                          >
+                            <Text style={[styles.expandedKey, { color: colors.textPrimary, marginRight: 4 }]}>
                               Urgency Multiplier:
                             </Text>
                             {/* @ts-ignore */}
-                            <Info size={12} color={colors.primary} />
+                            <Info size={11} color={colors.primary} />
                           </TouchableOpacity>
-                          <Text style={[styles.explanationMathValue, { color: colors.textPrimary }]}>
+                          <Text style={[styles.expandedVal, { color: colors.textPrimary }]}>
                             {item.card.urgency_level === 'HIGH' ? '2.0x' : item.card.urgency_level === 'MEDIUM' ? '1.5x' : '1.0x'}
                           </Text>
                         </View>
-                        <Text style={[styles.explanationFootnote, { color: colors.textMuted }]}>
+                        <Text style={[styles.expandedFootnote, { color: colors.textMuted }]}>
                           Because this transaction contributes to your remaining spend target, the engine unlocks the urgency-adjusted value of the fee waiver proportionally.
                         </Text>
                       </Animated.View>
@@ -170,9 +202,10 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                   </>
                 )}
 
-                <View style={[styles.breakdownRow, { borderBottomWidth: 0, marginTop: 8, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.1)' }]}>
-                  <Text style={[styles.breakdownName, { color: colors.textPrimary, fontWeight: tokens.fontWeight.bold }]}>Estimated Value</Text>
-                  <Text style={[styles.breakdownValue, { color: '#10B981', fontSize: tokens.fontSize.title }]}>
+                {/* Total */}
+                <View style={[styles.totalRow, { borderColor: 'rgba(16, 185, 129, 0.2)' }]}>
+                  <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Estimated Total Value</Text>
+                  <Text style={[styles.totalValue]}>
                     {formatCurrencyIN(item.recommendation.immediate_reward_value + item.recommendation.fee_waiver_progress_impact)}
                   </Text>
                 </View>
@@ -183,7 +216,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
           </ScrollView>
         </View>
       </View>
-      
+
       <GlossarySheet visible={showGlossary} onClose={() => setShowGlossary(false)} />
     </Modal>
   );
@@ -196,7 +229,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
-    height: '70%',
+    height: '78%',
     borderTopLeftRadius: tokens.radius.sheet,
     borderTopRightRadius: tokens.radius.sheet,
     overflow: 'hidden',
@@ -231,7 +264,7 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: tokens.radius.xl,
     borderWidth: 1,
-    marginBottom: 24,
+    marginBottom: 28,
     overflow: 'hidden',
   },
   strategyTitle: {
@@ -245,84 +278,118 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.medium,
     lineHeight: 24,
   },
-  factorsSection: {
-    marginBottom: 16,
-    paddingHorizontal: 8,
-  },
-  factorRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  factorIcon: {
-    marginRight: 12,
-    marginTop: 2,
-  },
-  factorText: {
-    flex: 1,
-    fontSize: tokens.fontSize.body,
-    lineHeight: 22,
-  },
-  sectionTitle: {
+  sectionLabel: {
     fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: tokens.letterSpacing.widest,
-    marginBottom: 16,
-    paddingHorizontal: 8,
+    marginBottom: 14,
+    paddingHorizontal: 4,
   },
-  breakdownBox: {
-    paddingHorizontal: 8,
+  // Calculation steps
+  calcBox: {
+    borderRadius: tokens.radius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  calcStep: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  calcStepBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  calcDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+    flexShrink: 0,
+  },
+  calcDotNumber: {
+    fontSize: 11,
+    fontWeight: tokens.fontWeight.bold,
+    color: '#fff',
+  },
+  calcStepText: {
+    flex: 1,
+    fontSize: tokens.fontSize.body,
+    lineHeight: 22,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  // Value breakdown
+  breakdownCard: {
+    borderRadius: tokens.radius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
   breakdownRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  breakdownName: {
+  breakdownLabel: {
     fontSize: tokens.fontSize.body,
   },
   breakdownValue: {
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
   },
-  explanationBox: {
-    padding: 16,
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  explanationText: {
-    fontSize: tokens.fontSize.caption,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  explanationMathRow: {
+  totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    backgroundColor: 'rgba(16, 185, 129, 0.06)',
   },
-  explanationMathText: {
+  totalLabel: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.bold,
+  },
+  totalValue: {
+    fontSize: tokens.fontSize.title,
+    fontWeight: tokens.fontWeight.heavy,
+    color: '#10B981',
+  },
+  // Fee waiver expand
+  expandedBox: {
+    marginHorizontal: 18,
+    marginBottom: 12,
+    padding: 14,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+  },
+  expandedText: {
+    fontSize: tokens.fontSize.caption,
+    lineHeight: 20,
+    marginBottom: 10,
+  },
+  expandedRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  expandedKey: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
   },
-  explanationMathValue: {
+  expandedVal: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
   },
-  explanationFootnote: {
+  expandedFootnote: {
     fontSize: tokens.fontSize.micro,
     fontStyle: 'italic',
-    marginTop: 8,
+    marginTop: 6,
     lineHeight: 16,
-  },
-  engineExplanationText: {
-    fontSize: tokens.fontSize.micro,
-    fontStyle: 'italic',
-    marginTop: 2,
-    textAlign: 'right',
   },
 });
