@@ -70,3 +70,96 @@ class PublishResponse(BaseModel):
     version: int
     published_at: datetime
     change_summary: dict
+
+# --- V2 WORKSPACE SCHEMA --- #
+
+class TrustFactor(BaseModel):
+    factor: str
+    is_positive: bool
+
+class SourceTrustMatrix(BaseModel):
+    overall_score: int
+    sources: dict
+    trust_factors: List[TrustFactor]
+
+class PublishReadiness(BaseModel):
+    overall_score: int
+    categories: dict
+
+class RequiredAction(BaseModel):
+    id: str
+    title: str
+    description: str
+    action_text: str
+    action_type: str # "SET_POINT_VALUE", "UPLOAD_MITC", "ADD_ALIAS", "CONFIRM_CONDITION"
+    severity: str # "BLOCKER", "WARNING", "INFO"
+
+class WorkspaceHealthSummary(BaseModel):
+    status: str
+    readiness: int
+    risk: str
+    blockers: int
+
+class IntelligenceTimelineEvent(BaseModel):
+    date: datetime
+    event_type: str 
+    description: str
+
+class RewardSimulation(BaseModel):
+    spend_amount: int
+    points_earned: int
+    point_value: float
+    effective_return_percentage: float
+
+class RewardTranslation(BaseModel):
+    document_text: str
+    system_interpretation: str
+    point_value_known: bool
+    point_value: Optional[float]
+    effective_reward: Optional[str]
+    conditions: List[str]
+    confidence_score: int
+    confidence_level: str
+    confidence_reason: str
+
+class AggregatedReward(BaseModel):
+    category: str
+    title: str
+    merchants: List[str]
+    translation: RewardTranslation
+    status: str # "READY", "BLOCKED", "INCOMPLETE"
+    status_reason: Optional[str]
+    source_documents: List[str] = None
+
+class MerchantCoverageItem(BaseModel):
+    name: str
+    coverage_type: str # "MERCHANT", "CATEGORY", "MCC"
+    aliases: List[str]
+    transactions_seen: int
+    status: str
+
+class ProductionImpactSimulation(BaseModel):
+    scenario_name: str
+    before_reward: str
+    after_reward: str
+
+class CardWorkspaceAggregate(BaseModel):
+    workspace_version: int
+    generated_from_sources: List[UUID]
+    card_id: UUID
+    card_name: str
+    status: str
+    status_reason: Optional[str] = None
+    source_trust: SourceTrustMatrix
+    publish_readiness: PublishReadiness
+    required_actions: List[RequiredAction]
+    publish_blockers: List[dict]
+    publish_risk: dict
+    timeline: List[IntelligenceTimelineEvent]
+    fees: list
+    rewards: List[AggregatedReward]
+    merchant_coverage: List[MerchantCoverageItem]
+    benefits: list
+    milestones: list
+    publish_preview: Optional[dict] = None
+    production_impact: List[ProductionImpactSimulation]
