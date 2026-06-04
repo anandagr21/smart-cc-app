@@ -53,6 +53,7 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
   const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
   const [sourceTitle, setSourceTitle] = useState('');
   const [url, setUrl] = useState('');
+  const [htmlSource, setHtmlSource] = useState('');
 
   const urlMutation = useSubmitUrlSource();
 
@@ -76,7 +77,13 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
     }
 
     urlMutation.mutate(
-      { bankName: bankName.trim(), cardName: cardName.trim(), url: url.trim(), sourceTitle: sourceTitle.trim() },
+      { 
+        bankName: bankName.trim(), 
+        cardName: cardName.trim(), 
+        url: url.trim(), 
+        sourceTitle: sourceTitle.trim(),
+        html_source: htmlSource.trim() || undefined 
+      },
       {
         onSuccess: (data) => {
           resetAndClose();
@@ -88,7 +95,10 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
             });
           }
         },
-        onError: () => Alert.alert('Submission Failed', 'There was an error fetching the URL.'),
+        onError: (error: any) => {
+          const errorMessage = error?.response?.data?.detail || error?.message || 'There was an error fetching the URL.';
+          Alert.alert('Submission Failed', errorMessage);
+        },
       }
     );
   };
@@ -211,7 +221,7 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
               onChangeText={setSourceTitle}
             />
 
-            <Text style={[styles.label, { color: colors.textSecondary, marginTop: tokens.spacing.xl }]}>OFFICIAL URL</Text>
+            <Text style={[styles.label, { color: colors.textSecondary, marginTop: tokens.spacing.xl }]}>OFFICIAL URL (Required for Tracking)</Text>
             <TextInput
               style={[styles.input, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}
               placeholder="https://..."
@@ -220,6 +230,17 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
               onChangeText={setUrl}
               autoCapitalize="none"
               keyboardType="url"
+            />
+
+            <Text style={[styles.label, { color: colors.textSecondary, marginTop: tokens.spacing.xl }]}>RAW HTML SOURCE (Optional fallback)</Text>
+            <TextInput
+              style={[styles.input, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surfaceElevated, minHeight: 64, maxHeight: 150 }]}
+              placeholder="Paste raw HTML here if the bank blocks our crawler..."
+              placeholderTextColor={colors.textSecondary}
+              value={htmlSource}
+              onChangeText={setHtmlSource}
+              autoCapitalize="none"
+              multiline={true}
             />
 
             {/* Submit */}

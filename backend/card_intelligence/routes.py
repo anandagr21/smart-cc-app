@@ -20,6 +20,7 @@ class RawIngestionRequest(BaseModel):
     bank_name: str
     card_name: str
     source_title: str
+    html_source: Optional[str] = None
 
 
 class AdminReviewActionPayload(BaseModel):
@@ -93,7 +94,10 @@ async def ingest_raw_bank_url(
 
     # 1. Fetch and scrub the website HTML text into readable markdown content
     try:
-        cleaned_markdown = fetch_and_clean_card_page(payload.url)
+        print(f"DEBUG: payload.html_source length = {len(payload.html_source) if payload.html_source else 0}")
+        source_data = payload.html_source if payload.html_source else payload.url
+        print(f"DEBUG: source_data begins with: {source_data[:50]}")
+        cleaned_markdown = fetch_and_clean_card_page(source_data)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Web Scraping Failed: {str(e)}")
 

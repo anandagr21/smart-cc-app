@@ -7,16 +7,21 @@ from uuid import UUID
 
 from .monitor_models import CardMonitoring
 
-def fetch_and_clean_card_page(url: str) -> str:
-    """Scrapes card HTML, completely strips out layouts, navbars, and headers, leaving only relevant structural text."""
-    headers = {"User-Agent": "SmartCC-Extraction-Bot/1.0"}
-    try:
-        response = requests.get(url, headers=headers, timeout=15)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        raise RuntimeError(f"Failed connection to bank website target: {e}")
+def fetch_and_clean_card_page(url_or_html: str) -> str:
+    """Scrapes card HTML, completely strips out layouts, navbars, and headers, leaving only relevant structural text. Can accept a URL or raw HTML string."""
+    if url_or_html.startswith("http://") or url_or_html.startswith("https://"):
+        headers = {"User-Agent": "SmartCC-Extraction-Bot/1.0"}
+        try:
+            response = requests.get(url_or_html, headers=headers, timeout=15)
+            response.raise_for_status()
+            html_content = response.text
+        except requests.RequestException as e:
+            raise RuntimeError(f"Failed connection to bank website target: {e}")
+    else:
+        # Assume it's raw HTML source text pasted directly
+        html_content = url_or_html
 
-    soup = BeautifulSoup(response.text, 'html.parser')
+    soup = BeautifulSoup(html_content, 'html.parser')
     
     # Strip unnecessary webpage noise components
     for element in soup(["script", "style", "nav", "footer", "header", "noscript", "sidebar"]):

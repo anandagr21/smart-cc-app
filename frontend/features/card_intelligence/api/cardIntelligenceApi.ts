@@ -6,13 +6,15 @@ export const submitUrlSource = async (
   bankName: string,
   cardName: string,
   url: string,
-  sourceTitle: string
+  sourceTitle: string,
+  htmlSource?: string
 ): Promise<any> => {
   const { data } = await apiClient.post<any>('/card-intelligence/ingest-raw', {
     bank_name: bankName,
     card_name: cardName,
     url,
-    source_title: sourceTitle
+    source_title: sourceTitle,
+    html_source: htmlSource,
   });
   return data;
 };
@@ -20,8 +22,8 @@ export const submitUrlSource = async (
 export const useSubmitUrlSource = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: { bankName: string; cardName: string; url: string; sourceTitle: string }) =>
-      submitUrlSource(params.bankName, params.cardName, params.url, params.sourceTitle),
+    mutationFn: (params: { bankName: string; cardName: string; url: string; sourceTitle: string; html_source?: string }) =>
+      submitUrlSource(params.bankName, params.cardName, params.url, params.sourceTitle, params.html_source),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QueryKeys.catalog.all });
     },
