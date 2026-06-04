@@ -10,6 +10,8 @@ export interface CardCatalogResponse {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  reward_rules_json?: any[];
+  milestones_json?: any[];
 }
 
 export type CardStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'CLOSED' | 'EXPIRED';
