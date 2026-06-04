@@ -1,23 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Switch } from 'react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
-import { AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react-native';
-import { useCardWorkspaceV2, usePublishWorkspace } from '../api/cardIntelligenceApi';
-import { RewardSection } from './RewardSection';
-import { MerchantCoverageSection } from './MerchantCoverageSection';
-import { RequiredActionsSection } from './RequiredActionsSection';
-
-const SECTIONS = [
-  'Overview',
-  'Required Actions',
-  'Rewards',
-  'Merchant Coverage',
-  'Benefits',
-  'Milestones',
-  'Timeline',
-  'Publish'
-];
+import { CheckCircle, AlertTriangle } from 'lucide-react-native';
+import { useCardReviewData, useSubmitReviewAction, SuggestedCardData, RewardRule } from '../api/cardIntelligenceApi';
+import { router } from 'expo-router';
 
 interface Props {
   cardId: string;
@@ -25,12 +12,19 @@ interface Props {
 
 export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
   const colors = useThemeColors();
-  const [activeSection, setActiveSection] = useState('Overview');
   
-  const { data, isLoading } = useCardWorkspaceV2(cardId);
-  const publishWorkspaceMutation = usePublishWorkspace(cardId || '');
+  const { data, isLoading } = useCardReviewData(cardId);
+  const submitReviewActionMutation = useSubmitReviewAction();
+  
+  const [editedJson, setEditedJson] = useState<SuggestedCardData | null>(null);
 
-  if (isLoading || !data) {
+  useEffect(() => {
+    if (data && data.suggested_database_json) {
+      setEditedJson(data.suggested_database_json);
+    }
+  }, [data]);
+
+  if (isLoading || !data || !editedJson) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -38,146 +32,190 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
     );
   }
 
-  const hasBlockers = data.required_actions.some((a: any) => a.severity === 'BLOCKER');
+  const handleApprove = () => {
+    submitReviewActionMutation.mutate({
+      card_id: cardId,
+      approve: true,
+      edited_json: editedJson
+    }, {
+      onSuccess: () => {
+        alert("Card Intelligence published successfully!");
+        router.back();
+      }
+    });
+  };
+
+  const handleReject = () => {
+    submitReviewActionMutation.mutate({
+      card_id: cardId,
+      approve: false,
+      edited_json: editedJson
+    }, {
+      onSuccess: () => {
+        alert("Changes discarded. Card flagged for re-scraping.");
+        router.back();
+      }
+    });
+  };
+
+  const updateRootField = (field: keyof SuggestedCardData, value: string | number) => {
+    setEditedJson(prev => prev ? { ...prev, [field]: value as never } : prev);
+  };
+
+  const updateRewardRule = (index: number, field: keyof RewardRule, value: string | number | boolean) => {
+    setEditedJson(prev => {
+      if (!prev) return prev;
+      const newRules = [...prev.reward_rules];
+      newRules[index] = { ...newRules[index], [field]: value };
+      return { ...prev, reward_rules: newRules };
+    });
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* LEFT SIDEBAR */}
+      {/* LEFT SIDEBAR: Source Markdown */}
       <View style={[styles.sidebar, { borderRightColor: colors.border, backgroundColor: colors.surface }]}>
         <View style={styles.sidebarHeader}>
-          <Text style={[styles.sidebarTitle, { color: colors.textSecondary }]}>PUBLISH READINESS</Text>
-          <Text style={[styles.readinessScore, { color: colors.textPrimary }]}>{data.publish_readiness.overall_score}%</Text>
-          
-          <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { backgroundColor: colors.primary, width: `${data.publish_readiness.overall_score}%` }]} />
-          </View>
-          
-          <View style={styles.breakdownContainer}>
-            {Object.entries(data.publish_readiness.categories).map(([category, score]) => (
-              <View key={category} style={styles.breakdownRow}>
-                <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>{category}</Text>
-                <Text style={[styles.breakdownValue, { color: (score as number) === 100 ? colors.success : colors.warning }]}>
-                  {score}%
-                </Text>
-              </View>
-            ))}
-          </View>
+          <Text style={[styles.sidebarTitle, { color: colors.textSecondary }]}>RAW SOURCE DOCUMENT</Text>
         </View>
-
-        <ScrollView style={styles.navLinks}>
-          {SECTIONS.map((section) => (
-            <TouchableOpacity 
-              key={section}
-              onPress={() => setActiveSection(section)}
-              style={[
-                styles.navLink,
-                activeSection === section && { backgroundColor: colors.primary + '1A', borderRightColor: colors.primary, borderRightWidth: 3 }
-              ]}
-            >
-              <Text style={[
-                styles.navLinkText, 
-                { color: activeSection === section ? colors.primary : colors.textSecondary },
-                activeSection === section && { fontFamily: 'Inter-SemiBold' }
-              ]}>
-                {section}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <ScrollView style={styles.sourceScroll}>
+          <Text style={[styles.sourceText, { color: colors.textPrimary }]}>{data.source_markdown}</Text>
         </ScrollView>
       </View>
 
-      {/* RIGHT CONTENT AREA */}
-      <ScrollView style={styles.contentArea}>
-        
-        {/* CARD HEALTH BANNER */}
-        <View style={[styles.healthBanner, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-          <View style={styles.healthHeaderRow}>
-            <View>
-              <Text style={[styles.healthCardTitle, { color: colors.textPrimary }]}>{data.card_name}</Text>
-              <View style={styles.statusRow}>
-                <View style={[styles.statusBadge, { backgroundColor: colors.warning + '20' }]}>
-                  <Text style={[styles.statusBadgeText, { color: colors.warning }]}>Status: {data.status}</Text>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: colors.primary + '20' }]}>
-                  <Text style={[styles.statusBadgeText, { color: colors.primary }]}>Source Trust: MEDIUM</Text>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: colors.danger + '20' }]}>
-                  <Text style={[styles.statusBadgeText, { color: colors.danger }]}>Publish Risk: {data.publish_risk.level}</Text>
-                </View>
-              </View>
+      {/* RIGHT CONTENT AREA: Structural Editor */}
+      <View style={styles.contentAreaWrapper}>
+        <ScrollView style={styles.contentArea}>
+          <View style={[styles.healthBanner, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+            <Text style={[styles.healthCardTitle, { color: colors.textPrimary }]}>Structured Database Verification</Text>
+            
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Card Name</Text>
+              <TextInput 
+                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                value={editedJson.card_name}
+                onChangeText={(val) => updateRootField('card_name', val)}
+              />
             </View>
-          </View>
 
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Bank Issuer</Text>
+              <TextInput 
+                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                value={editedJson.bank_issuer}
+                onChangeText={(val) => updateRootField('bank_issuer', val)}
+              />
+            </View>
 
-          <View style={styles.criticalItems}>
-            <Text style={[styles.criticalItemsTitle, { color: colors.danger }]}>Missing {data.required_actions.length} Critical Items</Text>
-            {data.required_actions.map((action: any) => (
-              <View key={action.id} style={styles.criticalItemRow}>
-                <AlertCircle size={16} color={colors.danger} />
-                <Text style={[styles.criticalItemText, { color: colors.textPrimary }]}>⚠ {action.title} Missing</Text>
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Base Reward Rate (per 100)</Text>
+              <TextInput 
+                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                value={editedJson.base_reward_rate_per_100.toString()}
+                keyboardType="numeric"
+                onChangeText={(val) => updateRootField('base_reward_rate_per_100', parseFloat(val) || 0)}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Joining Fee (₹)</Text>
+              <TextInput 
+                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                value={editedJson.joining_fee ? editedJson.joining_fee.toString() : '0'}
+                keyboardType="numeric"
+                onChangeText={(val) => updateRootField('joining_fee', parseFloat(val) || 0)}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Annual Fee (₹)</Text>
+              <TextInput 
+                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                value={editedJson.annual_fee ? editedJson.annual_fee.toString() : '0'}
+                keyboardType="numeric"
+                onChangeText={(val) => updateRootField('annual_fee', parseFloat(val) || 0)}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Fee Waiver Spend Threshold (₹)</Text>
+              <TextInput 
+                style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                value={editedJson.fee_waiver_spend_threshold ? editedJson.fee_waiver_spend_threshold.toString() : ''}
+                keyboardType="numeric"
+                placeholder="E.g., 100000"
+                placeholderTextColor={colors.textMuted}
+                onChangeText={(val) => updateRootField('fee_waiver_spend_threshold', val ? parseFloat(val) : null)}
+              />
+            </View>
+
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Reward Rules ({editedJson.reward_rules.length})</Text>
+            {editedJson.reward_rules.map((rule, idx) => (
+              <View key={idx} style={[styles.ruleCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                <View style={styles.ruleRow}>
+                  <View style={styles.formGroupFlex}>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>Category Name</Text>
+                    <TextInput 
+                      style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                      value={rule.category_name}
+                      onChangeText={(val) => updateRewardRule(idx, 'category_name', val)}
+                    />
+                  </View>
+                  <View style={styles.formGroupFlex}>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>Multiplier</Text>
+                    <TextInput 
+                      style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]}
+                      value={rule.multiplier.toString()}
+                      keyboardType="numeric"
+                      onChangeText={(val) => updateRewardRule(idx, 'multiplier', parseFloat(val) || 0)}
+                    />
+                  </View>
+                  <View style={styles.formGroupFlexSwitch}>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>Has Cap?</Text>
+                    <Switch
+                      value={rule.has_cap}
+                      onValueChange={(val) => updateRewardRule(idx, 'has_cap', val)}
+                      trackColor={{ false: colors.border, true: colors.primary }}
+                    />
+                  </View>
+                </View>
               </View>
             ))}
+
           </View>
-        </View>
-
-        {/* REQUIRED ACTIONS SECTION */}
-        <RequiredActionsSection actions={data.required_actions} />
-
-        {/* REAL REWARDS SECTION */}
-        <RewardSection rewards={data.rewards} />
-
-        {/* REAL MERCHANT COVERAGE SECTION */}
-        <MerchantCoverageSection coverage={data.merchant_coverage} />
-
-        {/* ADMIN DECISION BLOCK */}
-        <View style={[styles.decisionBlock, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-          <Text style={[styles.decisionTitle, { color: colors.textPrimary }]}>Admin Decision</Text>
-          <Text style={[styles.decisionDesc, { color: colors.textSecondary }]}>
-            Review the intelligence summary above. If everything looks correct, you can publish this card. This will automatically generate all necessary database rules.
-          </Text>
-          
+          <View style={{ height: 150 }} />
+        </ScrollView>
+        
+        {/* SUBMISSION FOOTER */}
+        <View style={[styles.decisionBlock, { backgroundColor: colors.surfaceElevated, borderTopColor: colors.border }]}>
           <View style={styles.decisionActions}>
             <TouchableOpacity 
-              style={[
-                styles.decisionBtn, 
-                styles.looksCorrectBtn, 
-                hasBlockers ? { backgroundColor: colors.border, opacity: 0.5 } : { backgroundColor: colors.success }
-              ]}
-              disabled={hasBlockers || publishWorkspaceMutation.isPending}
-              onPress={() => publishWorkspaceMutation.mutate()}
+              style={[styles.decisionBtn, styles.looksCorrectBtn, { backgroundColor: colors.success }]}
+              disabled={submitReviewActionMutation.isPending}
+              onPress={handleApprove}
             >
-              {publishWorkspaceMutation.isPending ? (
+              {submitReviewActionMutation.isPending ? (
                 <ActivityIndicator size="small" color="#FFF" />
               ) : (
                 <>
                   <CheckCircle size={20} color="#FFF" />
-                  <Text style={styles.looksCorrectBtnText}>Looks Correct (Publish)</Text>
+                  <Text style={styles.looksCorrectBtnText}>Approve & Save</Text>
                 </>
               )}
             </TouchableOpacity>
 
             <TouchableOpacity 
               style={[styles.decisionBtn, styles.needsCorrectionBtn, { borderColor: colors.border }]}
-              onPress={() => {
-                alert("Please resolve the required actions above.");
-              }}
+              onPress={handleReject}
             >
               <AlertTriangle size={20} color={colors.textSecondary} />
-              <Text style={[styles.needsCorrectionBtnText, { color: colors.textSecondary }]}>Needs Correction</Text>
+              <Text style={[styles.needsCorrectionBtnText, { color: colors.textSecondary }]}>Reject & Rescrape</Text>
             </TouchableOpacity>
           </View>
-
-          {hasBlockers && (
-            <Text style={[styles.blockerWarningText, { color: colors.warning }]}>
-              Cannot publish: You must resolve all BLOCKER actions first.
-            </Text>
-          )}
         </View>
-        
-        <View style={{ height: 100 }} />
-
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -193,63 +231,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sidebar: {
-    width: 260,
+    width: 400,
     borderRightWidth: 1,
     height: '100%',
   },
   sidebarHeader: {
     padding: tokens.spacing.xl,
-    paddingBottom: tokens.spacing.lg,
+    paddingBottom: tokens.spacing.md,
   },
   sidebarTitle: {
     fontSize: 12,
     fontFamily: 'Inter-SemiBold',
     letterSpacing: 1,
-    marginBottom: tokens.spacing.sm,
   },
-  readinessScore: {
-    fontSize: 32,
-    fontFamily: 'Inter-Bold',
-    marginBottom: tokens.spacing.sm,
-  },
-  progressBarBg: {
-    height: 8,
-    width: '100%',
-    backgroundColor: '#333',
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: tokens.spacing.lg,
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  breakdownContainer: {
-    gap: tokens.spacing.xs,
-  },
-  breakdownRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  breakdownLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
-  },
-  breakdownValue: {
-    fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
-  },
-  navLinks: {
+  sourceScroll: {
     flex: 1,
+    padding: tokens.spacing.xl,
   },
-  navLink: {
-    paddingVertical: tokens.spacing.md,
-    paddingHorizontal: tokens.spacing.xl,
+  sourceText: {
+    fontFamily: 'SF Mono',
+    fontSize: 12,
+    lineHeight: 18,
   },
-  navLinkText: {
-    fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-Medium',
+  contentAreaWrapper: {
+    flex: 1,
+    position: 'relative',
   },
   contentArea: {
     flex: 1,
@@ -261,125 +267,63 @@ const styles = StyleSheet.create({
     padding: tokens.spacing.xl,
     marginBottom: tokens.spacing['2xl'],
   },
-  healthHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   healthCardTitle: {
     fontSize: tokens.fontSize.title,
     fontFamily: 'Inter-Bold',
-    marginBottom: tokens.spacing.sm,
+    marginBottom: tokens.spacing.xl,
   },
-  statusRow: {
-    flexDirection: 'row',
-    gap: tokens.spacing.sm,
-  },
-  statusBadge: {
-    paddingHorizontal: tokens.spacing.sm,
-    paddingVertical: tokens.spacing.xs,
-    borderRadius: tokens.radius.sm,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
-  },
-  divider: {
-    height: 1,
-    marginVertical: tokens.spacing.lg,
-  },
-  criticalItems: {
-    gap: tokens.spacing.sm,
-  },
-  criticalItemsTitle: {
-    fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-SemiBold',
-    marginBottom: 4,
-  },
-  criticalItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing.sm,
-  },
-  criticalItemText: {
-    fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-Medium',
-  },
-  section: {
-    marginBottom: tokens.spacing['2xl'],
-  },
-  sectionTitle: {
-    fontSize: tokens.fontSize.title,
-    fontFamily: 'Inter-SemiBold',
+  formGroup: {
     marginBottom: tokens.spacing.lg,
   },
-  actionsList: {
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-  },
-  actionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: tokens.spacing.lg,
-  },
-  actionDivider: {
-    height: 1,
-    width: '100%',
-  },
-  actionInfo: {
+  formGroupFlex: {
     flex: 1,
-    paddingRight: tokens.spacing.xl,
+    marginRight: tokens.spacing.md,
   },
-  actionTitle: {
-    fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-SemiBold',
-    marginBottom: 4,
+  formGroupFlexSwitch: {
+    marginRight: tokens.spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  actionDesc: {
+  label: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    marginBottom: tokens.spacing.xs,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: tokens.radius.md,
+    padding: tokens.spacing.md,
     fontSize: tokens.fontSize.body,
     fontFamily: 'Inter-Regular',
   },
-  actionBtn: {
-    paddingHorizontal: tokens.spacing.lg,
-    paddingVertical: tokens.spacing.sm,
-    borderRadius: tokens.radius.md,
+  divider: {
+    height: 1,
+    marginVertical: tokens.spacing.xl,
   },
-  actionBtnText: {
-    color: '#FFF',
+  sectionTitle: {
     fontSize: tokens.fontSize.body,
     fontFamily: 'Inter-SemiBold',
+    marginBottom: tokens.spacing.lg,
   },
-  mockCard: {
+  ruleCard: {
     borderWidth: 1,
-    borderStyle: 'dashed',
     borderRadius: tokens.radius.lg,
-    padding: tokens.spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 120,
+    padding: tokens.spacing.lg,
+    marginBottom: tokens.spacing.md,
   },
-  mockCardText: {
-    fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-Medium',
+  ruleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
   },
   decisionBlock: {
-    marginTop: tokens.spacing['2xl'],
-    borderWidth: 1,
-    borderRadius: tokens.radius.xl,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: 1,
     padding: tokens.spacing.xl,
-    alignItems: 'center',
-  },
-  decisionTitle: {
-    fontSize: tokens.fontSize.title,
-    fontFamily: 'Inter-Bold',
-    marginBottom: tokens.spacing.sm,
-  },
-  decisionDesc: {
-    fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-Medium',
-    textAlign: 'center',
-    maxWidth: 600,
-    marginBottom: tokens.spacing.xl,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
   },
   decisionActions: {
     flexDirection: 'row',
@@ -408,10 +352,5 @@ const styles = StyleSheet.create({
   needsCorrectionBtnText: {
     fontSize: tokens.fontSize.body,
     fontFamily: 'Inter-SemiBold',
-  },
-  blockerWarningText: {
-    marginTop: tokens.spacing.md,
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
   },
 });

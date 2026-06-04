@@ -4,12 +4,12 @@ import {
   Alert, TextInput, ScrollView, Platform,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { X, FileText, UploadCloud, Link, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react-native';
+import { X, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
-import * as DocumentPicker from 'expo-document-picker';
-import { useUploadSource, useSubmitUrlSource } from '../api/cardIntelligenceApi';
+import { useSubmitUrlSource } from '../api/cardIntelligenceApi';
+import { router } from 'expo-router';
 
 // ── Top 20 Indian credit card issuing banks ────────────────────────────────
 const BANKS = [
@@ -51,29 +51,12 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
   const [bankName, setBankName] = useState('');
   const [cardName, setCardName] = useState('');
   const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
-  const [ingestionType, setIngestionType] = useState<'URL' | 'PDF'>('URL');
   const [sourceTitle, setSourceTitle] = useState('');
   const [url, setUrl] = useState('');
-  const [selectedFile, setSelectedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
 
-  const uploadMutation = useUploadSource();
   const urlMutation = useSubmitUrlSource();
 
   // ── Handlers ───────────────────────────────────────────────────────────
-  const handlePickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/pdf',
-        copyToCacheDirectory: true,
-      });
-      if (!result.canceled && result.assets?.length > 0) {
-        setSelectedFile(result.assets[0]);
-      }
-    } catch {
-      Alert.alert('Error', 'Failed to pick a document');
-    }
-  };
-
   const handleSubmit = () => {
     if (!bankName.trim()) {
       Alert.alert('Error', 'Please select a bank.');
@@ -87,45 +70,27 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
       Alert.alert('Error', 'Please provide a source title.');
       return;
     }
-
-    if (ingestionType === 'URL') {
-      if (!url.trim()) {
-        Alert.alert('Error', 'Please provide a valid URL.');
-        return;
-      }
-      urlMutation.mutate(
-        { bankName: bankName.trim(), cardName: cardName.trim(), url: url.trim(), sourceTitle: sourceTitle.trim() },
-        {
-          onSuccess: (data) => {
-            resetAndClose();
-            if (onSuccess && data?.card_id) onSuccess(data.card_id);
-          },
-          onError: () => Alert.alert('Submission Failed', 'There was an error fetching the URL.'),
-        }
-      );
-    } else {
-      if (!selectedFile) {
-        Alert.alert('Error', 'Please select a PDF document.');
-        return;
-      }
-      uploadMutation.mutate(
-        {
-          bankName: bankName.trim(),
-          cardName: cardName.trim(),
-          sourceTitle: sourceTitle.trim(),
-          fileUri: selectedFile.uri,
-          fileName: selectedFile.name,
-          mimeType: selectedFile.mimeType || 'application/pdf',
-        },
-        {
-          onSuccess: (data) => {
-            resetAndClose();
-            if (onSuccess && data?.card_id) onSuccess(data.card_id);
-          },
-          onError: () => Alert.alert('Upload Failed', 'There was an error uploading the document.'),
-        }
-      );
+    if (!url.trim()) {
+      Alert.alert('Error', 'Please provide a valid URL.');
+      return;
     }
+
+    urlMutation.mutate(
+      { bankName: bankName.trim(), cardName: cardName.trim(), url: url.trim(), sourceTitle: sourceTitle.trim() },
+      {
+        onSuccess: (data) => {
+          resetAndClose();
+          if (data?.card_id) {
+            if (onSuccess) onSuccess(data.card_id);
+            router.push({
+              pathname: '/admin/card-intelligence/review/[card_id]',
+              params: { card_id: data.card_id }
+            });
+          }
+        },
+        onError: () => Alert.alert('Submission Failed', 'There was an error fetching the URL.'),
+      }
+    );
   };
 
   const resetAndClose = () => {
@@ -133,13 +98,11 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
     setCardName('');
     setSourceTitle('');
     setUrl('');
-    setIngestionType('URL');
-    setSelectedFile(null);
     setIsBankDropdownOpen(false);
     onClose();
   };
 
-  const isPending = uploadMutation.isPending || urlMutation.isPending;
+  const isPending = urlMutation.isPending;
   const cardFullName = bankName && cardName ? `${bankName} ${cardName}` : null;
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -165,7 +128,7 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>Add Knowledge Source</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Fetch Live Bank Data</Text>
             <TouchableOpacity onPress={resetAndClose} style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}>
               {/* @ts-ignore */}
               <X size={18} color={colors.textSecondary} strokeWidth={2} />
@@ -236,27 +199,6 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
               </View>
             )}
 
-            {/* ── Ingestion Type ────────────────────────────────────── */}
-            <Text style={[styles.sectionHeader, { color: colors.textSecondary, marginTop: tokens.spacing['2xl'] }]}>SOURCE TYPE</Text>
-            <View style={styles.typeGrid}>
-              <TouchableOpacity
-                style={[styles.typePill, { backgroundColor: ingestionType === 'URL' ? 'rgba(139, 92, 246, 0.1)' : colors.surfaceElevated, borderColor: ingestionType === 'URL' ? colors.primary : colors.border }]}
-                onPress={() => setIngestionType('URL')}
-              >
-                {/* @ts-ignore */}
-                <Link size={16} color={ingestionType === 'URL' ? colors.primary : colors.textSecondary} />
-                <Text style={[styles.typeText, { color: ingestionType === 'URL' ? colors.primary : colors.textSecondary, marginLeft: 6 }]}>Crawl URL</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.typePill, { backgroundColor: ingestionType === 'PDF' ? 'rgba(139, 92, 246, 0.1)' : colors.surfaceElevated, borderColor: ingestionType === 'PDF' ? colors.primary : colors.border }]}
-                onPress={() => setIngestionType('PDF')}
-              >
-                {/* @ts-ignore */}
-                <FileText size={16} color={ingestionType === 'PDF' ? colors.primary : colors.textSecondary} />
-                <Text style={[styles.typeText, { color: ingestionType === 'PDF' ? colors.primary : colors.textSecondary, marginLeft: 6 }]}>Upload PDF</Text>
-              </TouchableOpacity>
-            </View>
-
             {/* ── Source Details ────────────────────────────────────── */}
             <Text style={[styles.sectionHeader, { color: colors.textSecondary, marginTop: tokens.spacing['2xl'] }]}>SOURCE DETAILS</Text>
 
@@ -269,47 +211,16 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
               onChangeText={setSourceTitle}
             />
 
-            {ingestionType === 'URL' ? (
-              <>
-                <Text style={[styles.label, { color: colors.textSecondary, marginTop: tokens.spacing.xl }]}>OFFICIAL URL</Text>
-                <TextInput
-                  style={[styles.input, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}
-                  placeholder="https://..."
-                  placeholderTextColor={colors.textSecondary}
-                  value={url}
-                  onChangeText={setUrl}
-                  autoCapitalize="none"
-                  keyboardType="url"
-                />
-              </>
-            ) : (
-              <>
-                <Text style={[styles.label, { color: colors.textSecondary, marginTop: tokens.spacing.xl }]}>PDF FILE</Text>
-                {!selectedFile ? (
-                  <TouchableOpacity
-                    style={[styles.uploadZone, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
-                    onPress={handlePickDocument}
-                  >
-                    {/* @ts-ignore */}
-                    <UploadCloud size={32} color={colors.primary} style={{ marginBottom: 12, opacity: 0.8 }} />
-                    <Text style={[styles.uploadZoneText, { color: colors.textPrimary }]}>Select PDF Document</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <View style={[styles.selectedFileBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                    <View style={styles.selectedFileRow}>
-                      {/* @ts-ignore */}
-                      <FileText size={20} color={colors.primary} />
-                      <Text style={[styles.selectedFileName, { color: colors.textPrimary }]} numberOfLines={1}>
-                        {selectedFile.name}
-                      </Text>
-                    </View>
-                    <TouchableOpacity onPress={() => setSelectedFile(null)} style={styles.removeBtn}>
-                      <Text style={[styles.removeBtnText, { color: colors.danger }]}>Remove</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </>
-            )}
+            <Text style={[styles.label, { color: colors.textSecondary, marginTop: tokens.spacing.xl }]}>OFFICIAL URL</Text>
+            <TextInput
+              style={[styles.input, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}
+              placeholder="https://..."
+              placeholderTextColor={colors.textSecondary}
+              value={url}
+              onChangeText={setUrl}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
 
             {/* Submit */}
             <TouchableOpacity
@@ -318,9 +229,12 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
               disabled={isPending}
             >
               {isPending ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <ActivityIndicator color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.saveBtnText}>Parsing HTML & Extracting Schema...</Text>
+                </View>
               ) : (
-                <Text style={styles.saveBtnText}>Submit Source</Text>
+                <Text style={styles.saveBtnText}>Extract Structured Schema</Text>
               )}
             </TouchableOpacity>
 
@@ -435,23 +349,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Inter-SemiBold',
   },
-  // ── Source Type Pills ──
-  typeGrid: {
-    flexDirection: 'row',
-    gap: tokens.spacing.sm,
-  },
-  typePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: tokens.spacing.lg,
-    paddingVertical: tokens.spacing.md,
-    borderRadius: tokens.radius.full,
-    borderWidth: 1,
-  },
-  typeText: {
-    fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-Medium',
-  },
+
   // ── Inputs ──
   input: {
     borderWidth: 1,
@@ -460,44 +358,6 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.spacing.lg,
     fontSize: tokens.fontSize.body,
     fontFamily: 'Inter-Regular',
-  },
-  uploadZone: {
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderRadius: tokens.radius.xl,
-    padding: tokens.spacing['2xl'],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  uploadZoneText: {
-    fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-SemiBold',
-    marginBottom: 4,
-  },
-  selectedFileBox: {
-    borderWidth: 1,
-    borderRadius: tokens.radius.xl,
-    padding: tokens.spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  selectedFileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: tokens.spacing.md,
-  },
-  selectedFileName: {
-    fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-Medium',
-    marginLeft: tokens.spacing.sm,
-    flexShrink: 1,
-  },
-  removeBtn: { padding: tokens.spacing.sm },
-  removeBtnText: {
-    fontSize: tokens.fontSize.body,
-    fontFamily: 'Inter-Medium',
   },
   // ── Submit ──
   saveBtn: {
