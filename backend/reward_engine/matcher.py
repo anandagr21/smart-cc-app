@@ -282,3 +282,65 @@ def filter_cap_rules(
         Only cap rules.
     """
     return [r for r in rules if r.rule_type == "cap"]
+from card_intelligence.extraction.schemas import RewardRule
+
+def match_transaction_to_rule(transaction: dict, reward_rules: list) -> dict | None:
+    import logging
+    import time
+    logger = logging.getLogger(__name__)
+    start_time = time.time()
+    logger.debug(f"Starting match_transaction_to_rule for {transaction.get('merchant_name')}")
+
+    try:
+        mcc = str(transaction.get('mcc', '')).strip().lower()
+        merchant_name = str(transaction.get('merchant_name', '')).strip().lower()
+        channel = str(transaction.get('channel', '')).strip().lower()
+
+        best_match = None
+        highest_priority = -1
+
+        for rule_data in reward_rules:
+            # Parse securely via Pydantic
+            try:
+                rule = RewardRule(**rule_data)
+            except Exception as e:
+                logger.error(f"Rule parsing error: {e}")
+                continue
+
+            # Hard Exclusion Scan
+            excluded = False
+            for excl in rule.merchant_exclusions:
+                if excl.strip().lower() in merchant_name:
+                    excluded = True
+                    break
+            if excluded:
+                continue
+            
+            cat_name = rule.category_name.lower()
+            current_priority = -1
+            
+            # Explicit Category Tag Check (Priority 2)
+            if merchant_name and merchant_name in cat_name:
+                current_priority = 2
+            elif mcc and mcc in cat_name:
+                current_priority = 2
+            
+            # Channel Multiplier Check (Priority 1)
+            elif ("online" in cat_name or "digital wallet" in cat_name) and channel == "online":
+                current_priority = 1
+            
+            # Catch-All Base Rate Layer (Priority 0)
+            elif "base rate" in cat_name or "catch-all" in cat_name or "other spends" in cat_name:
+                current_priority = 0
+
+            if current_priority > highest_priority:
+                highest_priority = current_priority
+                best_match = rule_data
+
+        duration = time.time() - start_time
+        logger.debug(f"Finished match_transaction_to_rule in {duration:.4f}s. Found match: {best_match is not None}")
+        return best_match
+        
+    except Exception as e:
+        logger.exception(f"Legacy fallback handler caught critical exception during transaction rule match: {e}")
+        return None

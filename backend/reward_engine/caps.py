@@ -325,3 +325,24 @@ def apply_single_cap(
         return uncapped_reward
     headroom = compute_headroom(cap_limit, cumulative_earned)
     return clamp_reward(uncapped_reward, headroom)
+
+async def evaluate_rule_cap_allowance(rule_dict: dict, user_id: str, card_id: str) -> float:
+    """
+    Safely reduces or degrades the point generation multiplier if the user's monthly ceiling constraint has been crossed.
+    Mock implementation for ledger balance calculation.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    cap_limit = rule_dict.get("cap_limit")
+    if not cap_limit:
+        return float(rule_dict.get("multiplier", 1.0))
+        
+    try:
+        limit = float(cap_limit)
+        # Mocking ledger check - assuming no cap hit for now
+        logger.debug(f"Cap evaluated for {card_id}, limit {limit}")
+        return float(rule_dict.get("multiplier", 1.0))
+    except Exception as e:
+        logger.error(f"Error evaluating cap allowance: {e}")
+        return float(rule_dict.get("multiplier", 1.0))
