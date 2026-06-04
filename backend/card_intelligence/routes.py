@@ -7,202 +7,130 @@ from pydantic import BaseModel
 from api.deps import get_db
 from auth.dependencies import get_current_user
 from models.user import User
-from .schemas import (
-    KnowledgeSourceResponse, 
-    JobResponse,
-    CardExtractionCandidateResponse,
-    CandidateUpdatePayload,
-    PublishPreviewResponse,
-    PublishResponse,
-    CardWorkspaceAggregate,
-    WorkspaceHealthSummary
-)
 from .service import CardIntelligenceService
-from .workspace_services import WorkspaceAggregationService
+from .extraction.structured_parser import StructuredParser
+from .monitor_models import CardMonitoring
+from models.card_catalog import CardCatalog
+from sqlmodel import select
 
 router = APIRouter(prefix="/card-intelligence", tags=["Card Intelligence"])
 
-@router.post("/sources/upload", response_model=KnowledgeSourceResponse)
-async def upload_source(
-    bank_name: str = Form(...),
-    card_name: str = Form(...),
-    source_title: str = Form(...),
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Uploads a PDF source-of-truth document for a specific card."""
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Only PDF documents are supported.")
-        
-    service = CardIntelligenceService(db)
-    
-    # Find or Create target card
-    card_id = await service.find_or_create_card(bank_name, card_name)
-    
-    doc = await service.upload_document(
-        card_id=card_id,
-        source_title=source_title,
-        file=file,
-        user_id=current_user.id
-    )
-    # The return requires is_latest_version, which is true right after upload
-    doc_dict = doc.model_dump()
-    doc_dict["is_latest_version"] = True
-    return doc_dict
-
-class UrlSourcePayload(BaseModel):
+class RawIngestionRequest(BaseModel):
+    url: str
     bank_name: str
     card_name: str
-    url: str
     source_title: str
 
-@router.post("/sources/url", response_model=KnowledgeSourceResponse)
-async def add_url_source(
-    payload: UrlSourcePayload,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Submits a URL to be fetched and stored as a knowledge source."""
-    service = CardIntelligenceService(db)
+
+class AdminReviewActionPayload(BaseModel):
+    card_id: str
+    edited_json: dict
+    approve: bool
+
+@router.get("/review/{card_id}")
+async def fetch_card_payload_for_review(card_id: UUID, db: AsyncSession = Depends(get_db)):
+    """Loads clean text side-by-side with recommended structural JSON schemas."""
+    stmt = select(CardMonitoring.stored_text).where(CardMonitoring.card_id == card_id)
+    result = await db.execute(stmt)
+    cleaned_markdown = result.scalar_one_or_none()
     
-    # Find or Create target card
-    card_id = await service.find_or_create_card(payload.bank_name, payload.card_name)
+    if not cleaned_markdown:
+        raise HTTPException(status_code=404, detail="No historical page snapshot found for this card ID")
+        
+    try:
+        parser = StructuredParser()
+        suggested_json_schema = await parser.extract_structured_card_data(cleaned_markdown)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"LLM Data Extraction Step Failed: {str(e)}")
+        
+    return {
+        "card_id": str(card_id),
+        "source_markdown": cleaned_markdown,
+        "suggested_database_json": suggested_json_schema.dict()
+    }
+
+@router.post("/review/action")
+async def commit_admin_review_decision(payload: AdminReviewActionPayload, db: AsyncSession = Depends(get_db)):
+    """Applies admin manual alterations directly to the live calculations database portfolio."""
+    if not payload.approve:
+        return {"status": "rejected", "message": "Changes discarded. Card flagged for re-scraping."}
+        
+    stmt = select(CardCatalog).where(CardCatalog.id == UUID(payload.card_id))
+    result = await db.execute(stmt)
+    card = result.scalar_one_or_none()
     
-    doc = await service.add_url_source(
-        card_id=card_id,
-        url=payload.url,
-        source_title=payload.source_title,
-        user_id=current_user.id
-    )
-    
-    doc_dict = doc.model_dump()
-    doc_dict["is_latest_version"] = True
-    return doc_dict
-
-@router.get("/cards/{card_id}/sources", response_model=List[KnowledgeSourceResponse])
-async def list_sources(
-    card_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Lists all knowledge sources for a card, including processing status."""
-    service = CardIntelligenceService(db)
-    return await service.list_sources(card_id)
-
-@router.post("/sources/{source_id}/process", response_model=JobResponse)
-async def process_source(
-    source_id: UUID,
-    background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Manually triggers the ingestion pipeline for a source."""
-    service = CardIntelligenceService(db)
-    return await service.trigger_processing(source_id, current_user.id, background_tasks)
-
-@router.get("/cards/{card_id}/candidates", response_model=List[CardExtractionCandidateResponse])
-async def list_candidates(
-    card_id: UUID,
-    status: Optional[str] = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Lists all extraction candidates for a card, optionally filtered by status."""
-    service = CardIntelligenceService(db)
-    return await service.list_candidates(card_id, status)
-
-@router.put("/candidates/{candidate_id}", response_model=CardExtractionCandidateResponse)
-async def update_candidate(
-    candidate_id: UUID,
-    payload: CandidateUpdatePayload,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Updates a candidate's status, proposed_value, or review_notes."""
-    service = CardIntelligenceService(db)
-    return await service.update_candidate(candidate_id, payload, current_user.id)
-
-@router.post("/cards/{card_id}/publish-preview", response_model=PublishPreviewResponse)
-async def publish_preview(
-    card_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Returns a dry-run summary of changes that would be published."""
-    service = CardIntelligenceService(db)
-    return await service.publish_preview(card_id)
-
-@router.post("/cards/{card_id}/publish", response_model=PublishResponse)
-async def publish_candidates(
-    card_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Publishes approved candidates to the production tables."""
-    service = CardIntelligenceService(db)
-    return await service.publish_candidates(card_id, current_user.id)
-
-@router.get("/candidates/global", response_model=List[CardExtractionCandidateResponse])
-async def list_global_candidates(
-    status: Optional[str] = None,
-    candidate_type: Optional[str] = None,
-    limit: int = 200,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Lists all extraction candidates across ALL cards, optionally filtered by status."""
-    service = CardIntelligenceService(db)
-    return await service.list_global_candidates(status, candidate_type, limit)
-
-@router.get("/coverage-summary")
-async def get_coverage_summary(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Returns a per-card summary of active rule counts and coverage score."""
-    service = CardIntelligenceService(db)
-    return await service.get_coverage_summary()
-
-@router.get("/coverage/{card_id}")
-async def get_card_coverage(
-    card_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Returns detailed coverage stats for a single card."""
-    service = CardIntelligenceService(db)
-    stats = await service.get_card_coverage_stats(card_id)
-    if not stats:
+    if not card:
         raise HTTPException(status_code=404, detail="Card not found")
-    return stats
+        
+    card.card_name = payload.edited_json.get("card_name", card.card_name)
+    card.bank_name = payload.edited_json.get("bank_issuer", card.bank_name)
+    card.annual_fee = payload.edited_json.get("annual_fee", card.annual_fee)
+    card.joining_fee = payload.edited_json.get("joining_fee", card.joining_fee)
+    card.fee_waiver_spend_threshold = payload.edited_json.get("fee_waiver_spend_threshold", card.fee_waiver_spend_threshold)
+    card.reward_rules_json = payload.edited_json.get("reward_rules", [])
+    card.milestones_json = payload.edited_json.get("milestones", [])
+    card.is_approved = True
+    
+    db.add(card)
+    await db.commit()
+    
+    return {"status": "success", "message": "Card updated in production schema"}
 
-@router.get("/cards/{card_id}/workspace/health", response_model=WorkspaceHealthSummary)
-async def get_card_workspace_health(
-    card_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+@router.post("/ingest-raw", status_code=201)
+async def ingest_raw_bank_url(
+    payload: RawIngestionRequest, 
+    session: AsyncSession = Depends(get_db)
 ):
-    """Returns a lightweight health summary of the workspace."""
-    service = WorkspaceAggregationService(db)
-    return await service.get_health(card_id)
+    """
+    Takes a live bank webpage URL, cleanly strips the layout noise, 
+    generates a unique tracking card_id, stores the initial baseline tracking data, 
+    and returns the card_id to the UI for instant workspace redirection.
+    """
+    from .monitor_service import fetch_and_clean_card_page
+    from .service import CardIntelligenceService
+    from sqlmodel import select
+    import hashlib
 
-@router.get("/cards/{card_id}/workspace", response_model=CardWorkspaceAggregate)
-async def get_card_workspace(
-    card_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Returns the pre-computed Card Intelligence Workspace aggregation."""
-    service = WorkspaceAggregationService(db)
-    return await service.get_workspace(card_id)
+    # 1. Fetch and scrub the website HTML text into readable markdown content
+    try:
+        cleaned_markdown = fetch_and_clean_card_page(payload.url)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Web Scraping Failed: {str(e)}")
 
-@router.post("/cards/{card_id}/workspace/publish")
-async def publish_workspace(
-    card_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Publishes the workspace understanding into actual RewardRules."""
-    service = WorkspaceAggregationService(db)
-    return await service.publish_workspace(card_id, current_user.id)
+    # 2. Derive a predictable MD5 baseline identifier token mapping to this page layout text
+    text_hash = hashlib.md5(cleaned_markdown.encode('utf-8')).hexdigest()
+    
+    # 3. Get or create the card catalog entry to ensure a valid foreign key UUID
+    service = CardIntelligenceService(session)
+    valid_card_id = await service.find_or_create_card(payload.bank_name, payload.card_name)
+
+    # 4. Save the baseline parameters directly to the CardMonitoring database table row state
+    from .monitor_models import CardMonitoring
+    
+    # Check if a monitor record already exists for this card to prevent PK conflicts
+    stmt = select(CardMonitoring).where(CardMonitoring.card_id == valid_card_id)
+    result = await session.execute(stmt)
+    existing_record = result.scalar_one_or_none()
+    
+    if existing_record:
+        existing_record.card_url = payload.url
+        existing_record.last_seen_hash = text_hash
+        existing_record.stored_text = cleaned_markdown
+        session.add(existing_record)
+    else:
+        new_monitor_record = CardMonitoring(
+            card_id=valid_card_id,
+            card_url=payload.url,
+            last_seen_hash=text_hash,
+            stored_text=cleaned_markdown
+        )
+        session.add(new_monitor_record)
+        
+    await session.commit()
+
+    # 5. Return the newly registered tracking token to the frontend UI
+    return {
+        "status": "success",
+        "card_id": str(valid_card_id),
+        "message": "Raw page layout parsed successfully. Redirecting to extraction dashboard..."
+    }

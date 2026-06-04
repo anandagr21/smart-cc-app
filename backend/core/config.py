@@ -74,6 +74,10 @@ class Settings(BaseSettings):
     ai_narrative_model: str = "gpt-4o"
     ai_narrative_enabled: bool = True
 
+    # ---- Card Intelligence Extraction ----
+    card_intelligence_provider: str = "gemini"
+    card_intelligence_model: str = "gemini-2.5-pro"
+
     # ---- Convenience Properties ----
     @property
     def is_production(self) -> bool:

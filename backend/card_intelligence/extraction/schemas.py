@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Literal
 from pydantic import BaseModel, Field
 
 class BaseExtraction(BaseModel):
@@ -14,13 +14,31 @@ class FeeWaiverRule(BaseExtraction):
 class PointValuation(BaseExtraction):
     point_value_inr: float = Field(description="The monetary value of 1 point in INR (e.g., 0.25 if 1 point = Rs 0.25). If not specified, default to 1.0.")
 
-class RewardRule(BaseExtraction):
-    category: Optional[str] = Field(default=None, description="The broad spend category (e.g., 'Dining', 'Grocery', 'All Spends', 'Online'). Only use if the rule applies broadly and NOT to a specific merchant.")
-    merchants: Optional[List[str]] = Field(default=None, description="A list of specific merchant names (e.g., ['Amazon', 'Swiggy', 'Zomato', 'Cleartrip']). ONLY populate this if the rule explicitly targets specific companies or brands.")
-    reward_unit: str = Field(description="Either 'cashback', 'points', or 'miles'")
-    reward_value: float = Field(description="The number of points or cashback percentage explicitly stated (e.g., 5 for '5 points', 0.05 for '5% cashback')")
-    spend_denominator: float = Field(default=100.0, description="The spend amount required to earn the reward_value (e.g., 100 for '5 points per Rs 100'). For percentage cashback, this is usually 1.0.")
-    cap: Optional[float] = Field(default=None, description="The maximum rewards that can be earned in this category per cycle, if any")
+# 1. Strict relational schema definition for the math engine
+class RewardRule(BaseModel):
+    category_name: str = Field(description="e.g., Dining, Fuel, Online Partners, Catch-all")
+    multiplier: float = Field(description="The point multiplier or direct cashback percentage value (e.g. 10.0 for 10x or 5.0 for 5%)")
+    reward_type: Literal["points", "cashback", "miles"]
+    has_cap: bool
+    cap_limit: Optional[float] = Field(None, description="Max spend or reward units allowed in this specific tier per cycle")
+    cap_cycle: Optional[Literal["monthly", "statement", "annual"]] = None
+    merchant_exclusions: List[str] = Field(default=[], description="Explicitly excluded vendors or categories from this rule mentioned in footnotes")
+
+class CardMilestone(BaseModel):
+    spend_target: float = Field(description="Total cumulative spend required to trigger the bonus reward")
+    reward_payout: str = Field(description="Description of the voucher or bonus, e.g., 'Rs. 2000 Amazon Voucher'")
+    cycle: Literal["monthly", "quarterly", "annual"]
+
+class StructuredCardData(BaseModel):
+    card_name: str
+    bank_issuer: str
+    currency: str = "INR"
+    base_reward_rate_per_100: float = Field(description="Standard baseline reward rate per 100 units spent when no categories apply")
+    annual_fee: Optional[float] = Field(default=None, description="The annual or renewal fee amount in INR. Null if lifetime free.")
+    joining_fee: Optional[float] = Field(default=None, description="The joining or issuance fee amount in INR")
+    fee_waiver_spend_threshold: Optional[float] = Field(default=None, description="The annual spend required to waive the annual fee")
+    reward_rules: List[RewardRule]
+    milestones: List[CardMilestone]
 
 class ExclusionRule(BaseExtraction):
     category: str = Field(description="The spend category excluded from rewards (e.g., 'Fuel', 'Wallet Load', 'Rent')")
