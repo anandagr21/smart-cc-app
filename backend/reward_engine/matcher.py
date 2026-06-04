@@ -197,7 +197,7 @@ def match_rules(
 
 def _match_sort_key(
     item: tuple[NormalizedRuleConfig, MatchType],
-) -> tuple[int, int, Decimal, str]:
+) -> tuple[int, int, Decimal, Decimal, str]:
     """Sort key: lowest priority first, then most specific match type.
     Ties broken by highest reward rate, then alphabetical rule name.
 
@@ -212,7 +212,8 @@ def _match_sort_key(
         MatchType.DEFAULT: 3,
     }
     reward_rate = Decimal(str(rule.config.get("reward_rate", 0)))
-    return (rule.priority, match_order.get(match_type, 99), -reward_rate, rule.rule_name)
+    points_multiplier = Decimal(str(rule.config.get("points_multiplier", 0)))
+    return (rule.priority, match_order.get(match_type, 99), -reward_rate, -points_multiplier, rule.rule_name)
 
 
 # -- Structural rule types that are NEVER bonus/generating rules --

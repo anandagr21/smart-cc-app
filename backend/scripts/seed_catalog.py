@@ -115,6 +115,7 @@ CARDS_TO_SEED = [
         network="Visa",
         joining_fee=Decimal("499.00"),
         annual_fee=Decimal("499.00"),
+        base_point_value=Decimal("0.25"),
         is_active=True
     ),
     CardCatalogCreate(

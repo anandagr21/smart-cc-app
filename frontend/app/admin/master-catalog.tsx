@@ -105,7 +105,14 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
   };
 
   const renderRewardRules = () => {
-    if (!card.reward_rules_json || card.reward_rules_json.length === 0) {
+    let rules = card.reward_rules_json;
+    if (rules && !Array.isArray(rules)) {
+      if (rules.rules) rules = rules.rules;
+      else if (rules.reward_rules) rules = rules.reward_rules;
+      else rules = [];
+    }
+
+    if (!rules || rules.length === 0) {
       return (
         <View style={styles.emptyRulesBox}>
           <Text style={[styles.emptyRulesText, { color: colors.textMuted }]}>No reward rules found in the catalog.</Text>
@@ -113,7 +120,7 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
       );
     }
 
-    return card.reward_rules_json.map((rule: any, idx: number) => (
+    return rules.map((rule: any, idx: number) => (
       <View key={idx} style={[styles.ruleCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.ruleHeader}>
           <Text style={[styles.ruleCategory, { color: colors.textPrimary }]}>{rule.category_name}</Text>
@@ -176,7 +183,7 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
               <IndianRupee size={14} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Base Value</Text>
             </View>
-            <Text style={[styles.detailValue, { color: colors.textPrimary }]}>₹{card.base_point_value} / pt</Text>
+            <Text style={[styles.detailValue, { color: colors.textPrimary }]}>₹{Number(card.base_point_value).toFixed(2)} / pt</Text>
           </View>
         </View>
 

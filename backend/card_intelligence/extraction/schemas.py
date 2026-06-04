@@ -21,7 +21,7 @@ class RewardRule(BaseModel):
     reward_type: Literal["points", "cashback", "miles"]
     has_cap: bool
     cap_limit: Optional[float] = Field(None, description="Max spend or reward units allowed in this specific tier per cycle")
-    cap_cycle: Optional[Literal["monthly", "statement", "annual"]] = None
+    cap_cycle: Optional[Literal["monthly", "quarterly", "statement", "annual"]] = None
     merchant_exclusions: List[str] = Field(default=[], description="Explicitly excluded vendors or categories from this rule mentioned in footnotes")
 
 class CardMilestone(BaseModel):

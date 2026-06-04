@@ -140,6 +140,8 @@ class CardCatalogResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    reward_rules_json: list[dict] | dict | None = None
+    milestones_json: list[dict] | dict | None = None
 
     model_config = ConfigDict(from_attributes=True, extra="forbid")
 
