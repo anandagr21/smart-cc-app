@@ -17,15 +17,7 @@ from .behavioral_profile import UserBehavioralProfile
 from .optimization_profile import OptimizationPersonalityProfile
 from behavioral_memory.models import RecommendationBehaviorRecord
 from portfolio_evolution.models import PortfolioEvolutionSnapshot
-from card_intelligence.models import (
-    CardKnowledgeSource, 
-    KnowledgeIngestionJob,
-    SourceTextArtifact,
-    ExtractionSnapshot,
-    ExtractionRun,
-    CardExtractionCandidate,
-    CardIntelligenceVersion
-)
+
 
 __all__ = [
     "CardCatalog",
@@ -39,11 +31,5 @@ __all__ = [
     "OptimizationPersonalityProfile",
     "RecommendationBehaviorRecord",
     "PortfolioEvolutionSnapshot",
-    "CardKnowledgeSource",
-    "KnowledgeIngestionJob",
-    "SourceTextArtifact",
-    "ExtractionSnapshot",
-    "ExtractionRun",
-    "CardExtractionCandidate",
-    "CardIntelligenceVersion",
+
 ]

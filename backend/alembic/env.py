@@ -33,6 +33,7 @@ if config.config_file_name is not None:
 # Import all SQLModel models here so autogenerate can detect them.
 from models import *  # noqa: F401, F403
 from rewards.models import RewardRule  # noqa: F401
+from card_intelligence.monitor_models import CardMonitoring  # noqa: F401
 
 # Target metadata for autogenerate — includes all SQLModel tables
 target_metadata = SQLModel.metadata

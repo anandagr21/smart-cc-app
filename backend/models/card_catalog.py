@@ -14,8 +14,9 @@ TODO:
 
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
 from uuid import UUID, uuid4
+from sqlalchemy import Column, JSON
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -77,6 +78,17 @@ class CardCatalog(SQLModel, table=True):
         default_factory=datetime.utcnow,
         sa_column_kwargs={"onupdate": datetime.utcnow},
     )
+    
+    # ---- New Pipeline Integration ----
+    reward_rules_json: dict[str, Any] = Field(
+        default_factory=dict,
+        sa_column=Column(JSON)
+    )
+    milestones_json: dict[str, Any] = Field(
+        default_factory=dict,
+        sa_column=Column(JSON)
+    )
+    is_approved: bool = Field(default=False)
 
     # ---- Relationships ----
     user_cards: list["UserCard"] = Relationship(
