@@ -5,10 +5,12 @@ export function formatCurrencyIN(value: number): string {
   
   if (value < 100000) {
     // Convert to k
-    let kValue = (value / 1000).toFixed(1);
-    // Remove trailing .0 if present
-    if (kValue.endsWith('.0')) {
-      kValue = kValue.slice(0, -2);
+    let kValue = (value / 1000).toFixed(2);
+    // Remove trailing .00 or 0 if present
+    if (kValue.endsWith('.00')) {
+      kValue = kValue.slice(0, -3);
+    } else if (kValue.endsWith('0')) {
+      kValue = kValue.slice(0, -1);
     }
     return `₹${kValue}k`;
   }
