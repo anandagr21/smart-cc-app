@@ -28,6 +28,7 @@ export interface OptimizerRankedCard {
 }
 
 export interface RecommendationResponse {
+  calculation_id?: string;
   normalized_merchant: string | null;
   category: string | null;
   best_cashback_card: OptimizerRankedCard | null;

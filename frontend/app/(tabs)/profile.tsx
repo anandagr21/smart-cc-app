@@ -142,6 +142,15 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
+        {/* Admin Tools */}
+        <Animated.View entering={FadeInDown.delay(175).springify()} style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Admin</Text>
+          <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <SettingsRow icon={Shield} label="Feedback Dashboard" onPress={() => router.push('/admin/feedback')} />
+            <SettingsRow icon={Monitor} label="Master Catalog" onPress={() => router.push('/admin/master-catalog')} />
+          </View>
+        </Animated.View>
+
         {/* Danger Zone */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.section}>
           <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>

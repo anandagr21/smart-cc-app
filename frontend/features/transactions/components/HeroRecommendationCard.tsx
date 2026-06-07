@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Info } from 'lucide-react-native';
+import { Info, MessageSquareWarning } from 'lucide-react-native';
+import { FeedbackModal } from '@/features/feedback/components/FeedbackModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { UserCardResponse } from '@/features/cards/types/api';
@@ -16,6 +17,9 @@ interface HeroRecommendationCardProps {
   recommendation: OptimizerRankedCard;
   onSelect: () => void;
   onInfoPress: () => void;
+  merchantName?: string;
+  amount?: number;
+  calculationId?: string;
 }
 
 export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
@@ -23,7 +27,11 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
   recommendation,
   onSelect,
   onInfoPress,
+  merchantName = '',
+  amount = 0,
+  calculationId,
 }) => {
+  const [isFeedbackVisible, setIsFeedbackVisible] = useState(false);
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
@@ -53,10 +61,16 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
                 {recommendation.confidence_label?.toUpperCase() || 'OPTIMAL'}
               </Text>
             </View>
-            <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress}>
-              {/* @ts-ignore */}
-              <Info size={16} color="rgba(255,255,255,0.4)" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={() => setIsFeedbackVisible(true)}>
+                {/* @ts-ignore */}
+                <MessageSquareWarning size={16} color="rgba(255,255,255,0.4)" />
+              </TouchableOpacity>
+              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress}>
+                {/* @ts-ignore */}
+                <Info size={16} color="rgba(255,255,255,0.4)" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* CARD IDENTITY */}
@@ -98,6 +112,23 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
 
         </LinearGradient>
       </TouchableOpacity>
+
+      <FeedbackModal
+        isVisible={isFeedbackVisible}
+        onClose={() => setIsFeedbackVisible(false)}
+        feedbackContext={{
+          merchant_name: merchantName,
+          transaction_amount: amount,
+          card_id: card.card_catalog_id,
+          calculated_reward: recommendation.immediate_reward_value,
+          rule_version: '2026.06.07',
+          calculation_id: calculationId,
+          calculation_context: {
+            confidence_label: recommendation.confidence_label,
+            engine_explanations: recommendation.engine_explanations,
+          }
+        }}
+      />
     </Animated.View>
   );
 };

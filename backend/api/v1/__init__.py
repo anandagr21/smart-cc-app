@@ -27,6 +27,7 @@ from .monthly_intelligence import router as monthly_intelligence_router
 from .personality import router as personality_router
 from .portfolio_evolution import router as portfolio_evolution_router
 from card_intelligence.routes import router as card_intelligence_router
+from .feedback import router as feedback_router
 from core.config import get_settings
 
 settings = get_settings()
@@ -47,3 +48,4 @@ api_router.include_router(monthly_intelligence_router)
 api_router.include_router(personality_router)
 api_router.include_router(portfolio_evolution_router)
 api_router.include_router(card_intelligence_router)
+api_router.include_router(feedback_router, prefix="/feedback", tags=["feedback"])

@@ -460,6 +460,9 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                       recommendation={winningWalletCards[0].recommendation}
                       onSelect={() => setValue('user_card_id', winningWalletCards[0].card.id)}
                       onInfoPress={() => setExplainCardId(winningWalletCards[0].card.id)}
+                      merchantName={debouncedMerchant}
+                      amount={Number(debouncedAmount) || 1000}
+                      calculationId={getRecommendation.data?.calculation_id}
                     />
 
                     {/* ALTERNATIVE STRATEGIES (HORIZONTAL) */}
