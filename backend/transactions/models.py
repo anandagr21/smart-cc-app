@@ -61,3 +61,7 @@ class Transaction(SQLModel, table=True):
     # Lifecycle
     status: TransactionStatus = Field(default=TransactionStatus.PENDING, index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
+    )

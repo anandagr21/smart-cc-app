@@ -72,6 +72,7 @@ export interface TransactionResponse extends TransactionBase {
   status: TransactionStatus;
   posted_date?: string;
   created_at: string;
+  updated_at: string;
   
   // Enrichment Insights
   reward_earned?: number | null;

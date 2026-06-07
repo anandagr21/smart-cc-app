@@ -51,7 +51,10 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
   // @ts-ignore
   const IconComponent = Icons[accent.iconName] || Icons.Receipt;
 
-  const formattedDate = format(new Date(transaction.transaction_date), 'MMMM d, yyyy • h:mm a');
+  const dateString = transaction.created_at 
+    ? (transaction.created_at.endsWith('Z') ? transaction.created_at : `${transaction.created_at}Z`)
+    : transaction.transaction_date;
+  const formattedDate = format(new Date(dateString), 'MMMM d, yyyy • h:mm a');
   
   const formattedAmount = new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -162,6 +165,19 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
                 </View>
                 <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{cardName}</Text>
               </View>
+
+              {transaction.updated_at && transaction.updated_at !== transaction.created_at && (
+                <View style={[styles.detailRow, { borderBottomWidth: 0, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border }]}>
+                  <View style={styles.detailLabelWrap}>
+                    {/* @ts-ignore */}
+                    <Calendar size={16} color={colors.textMuted} style={styles.detailIcon} />
+                    <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Last Updated</Text>
+                  </View>
+                  <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
+                    {format(new Date(transaction.updated_at.endsWith('Z') ? transaction.updated_at : `${transaction.updated_at}Z`), 'MMMM d, yyyy • h:mm a')}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Insights */}

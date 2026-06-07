@@ -66,6 +66,7 @@ class TransactionResponse(TransactionBase):
     status: TransactionStatus
     posted_date: Optional[date] = None
     created_at: datetime
+    updated_at: datetime
 
 
 class EnrichedTransactionResponse(TransactionResponse):
