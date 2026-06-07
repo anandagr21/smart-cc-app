@@ -28,6 +28,9 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   
+  const network = card.network_override || card.card_details?.network || 'VISA';
+  const displayNetwork = network.toUpperCase() === 'NA' ? '' : network;
+
   const getBadgeText = () => {
     if (!recommendation) return '';
     const strategyName = recommendation.confidence_label || 'OPTIMAL';
@@ -57,7 +60,8 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
               {cardName}
             </Text>
             <Text style={[styles.bankName, { color: colors.textMuted }]} numberOfLines={1}>
-              {bankName} • {card.card_details?.network || 'VISA'}
+              {bankName}{displayNetwork ? ` • ${displayNetwork}` : ''}
+              {card.last_4_digits ? ` •••• ${card.last_4_digits}` : ''}
             </Text>
           </View>
         </View>

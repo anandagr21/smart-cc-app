@@ -23,7 +23,8 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
-  const network = card.card_details?.network || 'VISA';
+  const network = card.network_override || card.card_details?.network || 'VISA';
+  const displayNetwork = network.toUpperCase() === 'NA' ? '' : network;
   const isActive = card.card_status === 'ACTIVE';
 
   // Temporary derived data
@@ -64,9 +65,11 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         />
-        <View style={styles.networkAccent}>
-          <Text style={[styles.networkAccentText, !isActive && { color: colors.textMuted }]}>{network}</Text>
-        </View>
+        {!!displayNetwork && (
+          <View style={styles.networkAccent}>
+            <Text style={[styles.networkAccentText, !isActive && { color: colors.textMuted }]}>{displayNetwork}</Text>
+          </View>
+        )}
       </View>
 
       {/* Main Info */}
@@ -77,7 +80,9 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
           </Text>
         </View>
         <View style={styles.tagsRow}>
-          <Text style={[styles.networkText, { color: colors.textMuted }]}>{network} •••• 1234</Text>
+          <Text style={[styles.networkText, { color: colors.textMuted }]}>
+            {displayNetwork}{displayNetwork && card.last_4_digits ? ` •••• ` : ''}{card.last_4_digits || ''}
+          </Text>
           <View style={styles.dot} />
           {tags.map(tag => (
             <Text key={tag} style={[styles.tagText, { color: colors.textSecondary }]}>{tag}</Text>

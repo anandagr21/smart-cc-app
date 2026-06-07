@@ -39,7 +39,8 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   
-  const network = card.card_details?.network || 'default';
+  const network = card.network_override || card.card_details?.network || 'default';
+  const displayNetwork = network.toUpperCase() === 'NA' || network === 'default' ? '' : network.toUpperCase();
   const gradient = getNetworkGradient(network, isDark) as [string, string];
 
   return (
@@ -79,11 +80,13 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
               <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
               <Text style={styles.cardName} numberOfLines={1} adjustsFontSizeToFit>{cardName}</Text>
             </View>
-            <View style={styles.miniArtWrap}>
-              <LinearGradient colors={gradient} style={styles.miniArt} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                <Text style={styles.miniArtNetwork}>{network}</Text>
-              </LinearGradient>
-            </View>
+            {!!displayNetwork && (
+              <View style={styles.miniArtWrap}>
+                <LinearGradient colors={gradient} style={styles.miniArt} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <Text style={styles.miniArtNetwork}>{displayNetwork}</Text>
+                </LinearGradient>
+              </View>
+            )}
           </View>
 
           {/* CONCISE RATIONALE */}

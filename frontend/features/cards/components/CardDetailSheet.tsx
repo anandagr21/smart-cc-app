@@ -25,6 +25,7 @@ import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
 import { EditAnnualFeeSheet } from './EditAnnualFeeSheet';
 import { EditSpendSheet } from './EditSpendSheet';
 import { EditFeeCycleSheet } from './EditFeeCycleSheet';
+import { EditCardDetailsSheet } from './EditCardDetailsSheet';
 import { formatCurrencyIN } from '@/utils/currency';
 
 interface CardDetailSheetProps {
@@ -42,6 +43,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const [isAnnualFeeEditVisible, setIsAnnualFeeEditVisible] = useState(false);
   const [isSpendEditVisible, setIsSpendEditVisible] = useState(false);
   const [isFeeCycleEditVisible, setIsFeeCycleEditVisible] = useState(false);
+  const [isCardDetailsEditVisible, setIsCardDetailsEditVisible] = useState(false);
 
   const { mutate: updateCard } = useUpdateCard(card?.id || '');
 
@@ -49,7 +51,8 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
-  const network = card.card_details?.network || 'VISA';
+  const network = card.network_override || card.card_details?.network || 'VISA';
+  const displayNetwork = network.toUpperCase() === 'NA' ? '' : network.toUpperCase();
   const isActive = card.card_status === 'ACTIVE';
 
   const gradient = getNetworkGradient(network, isDark) as [string, string];
@@ -155,6 +158,11 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                   </View>
                 </View>
                 <Text style={styles.heroCardName} numberOfLines={1}>{cardName}</Text>
+                {card.last_4_digits && (
+                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: tokens.fontSize.body, marginTop: 4, letterSpacing: 2 }}>
+                    •••• {card.last_4_digits}
+                  </Text>
+                )}
 
                 <View style={styles.heroFooter}>
                   <View>
@@ -163,7 +171,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                       {card.effective_annual_fee ? formatCurrencyIN(card.effective_annual_fee) : 'Free'}
                     </Text>
                   </View>
-                  <Text style={styles.heroNetwork}>{network.toUpperCase()}</Text>
+                  {!!displayNetwork && <Text style={styles.heroNetwork}>{displayNetwork}</Text>}
                 </View>
               </LinearGradient>
             </Animated.View>
@@ -320,8 +328,8 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 </View>
                 <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
 
-                {/* Edit Card Details (Mocked) */}
-                <TouchableOpacity style={styles.actionRow} onPress={() => setMockActionTitle("Edit Card Details")}>
+                {/* Edit Card Details */}
+                <TouchableOpacity style={styles.actionRow} onPress={() => setIsCardDetailsEditVisible(true)}>
                   <View style={styles.actionIconWrap}>
                     {/* @ts-ignore */}
                     <Pencil size={18} color={colors.textPrimary} />
@@ -383,6 +391,11 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
       <EditFeeCycleSheet
         visible={isFeeCycleEditVisible}
         onClose={() => setIsFeeCycleEditVisible(false)}
+        card={card}
+      />
+      <EditCardDetailsSheet
+        visible={isCardDetailsEditVisible}
+        onClose={() => setIsCardDetailsEditVisible(false)}
         card={card}
       />
     </Modal>
