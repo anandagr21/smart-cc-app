@@ -28,7 +28,8 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
-  const network = card.card_details?.network || 'VISA';
+  const network = card.network_override || card.card_details?.network || 'VISA';
+  const displayNetwork = network.toUpperCase() === 'NA' ? '' : network.toUpperCase();
 
   // Fallback values if no specific AI insight exists
   const topTag = insight?.badge_label || (card.card_status === 'ACTIVE' ? 'ACTIVE CARD' : 'INACTIVE');
@@ -107,8 +108,8 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
                   {actionableContent}
                 </View>
                 <View style={styles.networkInfo}>
-                  <Text style={styles.networkName}>{network.toUpperCase()}</Text>
-                  <Text style={styles.cardEnds}>•••• 1234</Text>
+                  {!!displayNetwork && <Text style={styles.networkName}>{displayNetwork}</Text>}
+                  {!!card.last_4_digits && <Text style={styles.cardEnds}>•••• {card.last_4_digits}</Text>}
                 </View>
               </View>
             </View>
