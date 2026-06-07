@@ -148,23 +148,7 @@ export default function LoginScreen() {
           style={styles.ctaBtn}
         />
 
-        {/* Biometric row — visual polish, non-functional */}
-        <View style={styles.biometricRow}>
-          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-          <Text style={[styles.biometricText, { color: colors.textMuted }]}>
-            or use biometrics
-          </Text>
-          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-        </View>
-        <View
-          style={[
-            styles.biometricBtn,
-            { backgroundColor: colors.surface, borderColor: colors.borderHighlight },
-          ]}
-        >
-          {/* @ts-ignore */}
-          <Fingerprint size={26} color={colors.textSecondary} strokeWidth={1.5} />
-        </View>
+
       </Animated.View>
     </ScreenContainer>
   );

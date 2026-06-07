@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { X, Fingerprint, Lock, Smartphone, ChevronRight } from 'lucide-react-native';
+import { X, Lock, Smartphone, ChevronRight } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
@@ -10,7 +10,6 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 export default function SecurityModal() {
   const router = useRouter();
   const colors = useThemeColors();
-  const [faceIdEnabled, setFaceIdEnabled] = useState(true);
 
   const SettingsRow = ({ icon: Icon, label, RightComponent }: any) => (
     <View style={[styles.settingsRow, { borderBottomColor: colors.border }]}>
@@ -40,18 +39,6 @@ export default function SecurityModal() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <Animated.View entering={FadeInDown.delay(50).springify()}>
           <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <SettingsRow
-              icon={Fingerprint}
-              label="Face ID / Biometrics"
-              RightComponent={
-                <Switch
-                  value={faceIdEnabled}
-                  onValueChange={setFaceIdEnabled}
-                  trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor="#FFF"
-                />
-              }
-            />
             <TouchableOpacity activeOpacity={0.7}>
               <SettingsRow
                 icon={Lock}
