@@ -20,7 +20,7 @@ class WaiverScoring:
         if is_achieved or effective_annual_fee <= 0:
             return 0.0
             
-        return float(effective_annual_fee) * (1.0 - completion_probability)
+        return round(float(effective_annual_fee) * (1.0 - completion_probability), 2)
         
     @staticmethod
     def determine_comfort_state(

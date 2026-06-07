@@ -56,12 +56,12 @@ class PortfolioOptimizationEngine:
                 elif fee_waiver_state.urgency_level == "ELEVATED":
                     urgency_multiplier = 1.2
                     
-                waiver_value = (contribution / waiver_target) * effective_fee_value * urgency_multiplier
+                waiver_value = round((contribution / waiver_target) * effective_fee_value * urgency_multiplier, 2)
                 reason_codes.append("FEE_WAIVER_PRESERVATION")
                 
                 if remaining <= txn_amount_float:
                     # The transaction triggers the waiver unlock!
-                    waiver_value = effective_fee_value * urgency_multiplier
+                    waiver_value = round(effective_fee_value * urgency_multiplier, 2)
                     reason_codes.append("FEE_WAIVER_ACHIEVED")
 
         # 2. Milestone Acceleration Value

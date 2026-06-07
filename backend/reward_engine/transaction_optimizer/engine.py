@@ -25,7 +25,7 @@ class TransactionOptimizer:
         ranked_cards: List[OptimizerRankedCard] = []
         for r in results:
             immediate_reward = float(r.portfolio_score_breakdown.immediate_reward)
-            fee_waiver_impact = float(r.portfolio_score_breakdown.waiver_value)
+            fee_waiver_impact = round(float(r.portfolio_score_breakdown.waiver_value), 2)
             simplification_score = float(r.portfolio_score_breakdown.portfolio_health)
             
             blended_score = TransactionScorer.compute_blended_score(
