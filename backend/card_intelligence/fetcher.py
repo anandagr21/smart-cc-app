@@ -50,7 +50,7 @@ class UrlKnowledgeFetcher:
             "Accept-Language": "en-US,en;q=0.5",
         }
         
-        async with httpx.AsyncClient(verify=False, follow_redirects=True, timeout=15.0) as client:
+        async with httpx.AsyncClient(verify=True, follow_redirects=True, timeout=15.0) as client:
             try:
                 response = await client.get(url, headers=headers)
                 response.raise_for_status()

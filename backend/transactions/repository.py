@@ -38,6 +38,15 @@ class TransactionRepository:
         if not transaction:
             raise TransactionNotFoundError(transaction_id)
         return transaction
+        
+    async def get_transaction_by_idempotency_key(self, user_id: UUID, idempotency_key: str) -> Optional[Transaction]:
+        """Fetch a transaction by idempotency key for a specific user."""
+        stmt = select(Transaction).where(
+            Transaction.user_id == user_id,
+            Transaction.idempotency_key == idempotency_key
+        )
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
 
     async def get_transactions_by_user(
         self, user_id: UUID, skip: int = 0, limit: int = 50

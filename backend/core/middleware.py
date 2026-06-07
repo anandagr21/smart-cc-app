@@ -38,6 +38,9 @@ def setup_middleware(app):
     """
     # Request ID injection + timing logging (applied first — runs on every request)
     app.add_middleware(RequestIDMiddleware)
+    
+    # Security Headers
+    app.add_middleware(SecurityHeadersMiddleware)
 
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
@@ -82,4 +85,17 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
             },
         )
 
+        return response
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add standard security headers to all HTTP responses."""
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        response = await call_next(request)
+        
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["X-Frame-Options"] = "DENY"
+        
         return response

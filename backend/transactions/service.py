@@ -11,6 +11,7 @@ from datetime import date
 from typing import Optional
 from uuid import UUID
 
+from sqlalchemy.exc import IntegrityError
 from merchants.service import MerchantService
 from transactions.constants import TransactionStatus
 from transactions.exceptions import InvalidTransactionError
@@ -43,6 +44,12 @@ class TransactionService:
         # 1. Pure validation
         validate_transaction_dates(schema.transaction_date, None)
         
+        # 1.5 Idempotency check
+        if schema.idempotency_key:
+            existing = await self._repository.get_transaction_by_idempotency_key(user_id, schema.idempotency_key)
+            if existing:
+                return self._to_response(existing)
+        
         # 2. Merchant Normalization (reusing MerchantService)
         # We don't create the merchant implicitly, we just get the canonical name.
         normalize_res = self._merchant_service.normalize_merchant(schema.merchant_name)
@@ -66,11 +73,20 @@ class TransactionService:
             raw_description=schema.raw_description,
             source=schema.source,
             statement_id=schema.statement_id,
+            idempotency_key=schema.idempotency_key,
             status=TransactionStatus.PENDING,
         )
 
         # 4. Persist
-        persisted = await self._repository.create_transaction(model)
+        try:
+            persisted = await self._repository.create_transaction(model)
+        except IntegrityError:
+            # Handle race condition where another request inserted it concurrently
+            if schema.idempotency_key:
+                existing = await self._repository.get_transaction_by_idempotency_key(user_id, schema.idempotency_key)
+                if existing:
+                    return self._to_response(existing)
+            raise
         
         # 5. Sync derived aggregates
         if self._spend_aggregator:

@@ -12,6 +12,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from models.enums import UserRole
+
 
 class UserRegisterRequest(BaseModel):
     """Request schema for POST /auth/register."""
@@ -45,6 +47,7 @@ class UserResponse(BaseModel):
     id: UUID = Field(..., description="User UUID.")
     email: str = Field(..., description="User email address.")
     full_name: str = Field(..., description="User display name.")
+    role: UserRole = Field(default=UserRole.USER, description="User role.")
 
     model_config = ConfigDict(extra="forbid")
 

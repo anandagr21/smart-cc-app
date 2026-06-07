@@ -11,7 +11,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, AutoString
+
+from .enums import UserRole
 
 if TYPE_CHECKING:
     from models.user_card import UserCard
@@ -35,6 +37,7 @@ class User(SQLModel, table=True):
     email: str = Field(max_length=320, unique=True, index=True)
     hashed_password: str = Field(max_length=128)
     full_name: str = Field(max_length=200)
+    role: UserRole = Field(default=UserRole.USER, sa_type=AutoString)
     created_at: datetime = Field(
         default_factory=datetime.utcnow
     )

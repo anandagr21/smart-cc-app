@@ -22,8 +22,14 @@ async def seed():
         print(f"Found user {user.id}")
         
         # Clear existing transactions for user to have a clean state
-        await session.execute(text(f"DELETE FROM transaction_optimization_records WHERE user_id = '{user.id}'"))
-        await session.execute(text(f"DELETE FROM transactions WHERE user_id = '{user.id}'"))
+        await session.execute(
+            text("DELETE FROM transaction_optimization_records WHERE user_id = :user_id"),
+            {"user_id": user.id}
+        )
+        await session.execute(
+            text("DELETE FROM transactions WHERE user_id = :user_id"),
+            {"user_id": user.id}
+        )
         await session.commit()
 
         categories = ["Dining", "Groceries", "Travel", "Online Shopping", "Utilities"]

@@ -8,7 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.deps import get_merchant_service, get_transaction_enrichment_service
+from api.deps import get_merchant_service, get_transaction_enrichment_service, get_user_card_service
 from auth.dependencies import get_current_user
 from auth.schemas import UserResponse
 from core.database import get_db
@@ -19,6 +19,7 @@ from transactions.exceptions import InvalidTransactionError, TransactionNotFound
 from transactions.repository import TransactionRepository
 from transactions.schemas import EnrichedTransactionResponse, TransactionCreate, TransactionResponse, TransactionUpdateStatus, TransactionUpdate
 from transactions.service import TransactionService
+from services.card_service import UserCardService
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
@@ -123,7 +124,12 @@ async def list_card_transactions(
     current_user: UserResponse = Depends(get_current_user),
     service: TransactionService = Depends(get_transaction_service),
     enrichment_service: TransactionEnrichmentService = Depends(get_transaction_enrichment_service),
+    user_card_service: UserCardService = Depends(get_user_card_service),
 ) -> dict:
+    # Authorization check to prevent IDOR: Ensure the card belongs to the current user
+    # This raises a 404 (or 403 based on implementation) if the card does not belong to the user
+    await user_card_service.get_card_by_id(current_user.id, card_id)
+    
     results = await service.fetch_card_transactions(card_id, skip, limit)
     enriched = await enrichment_service.enrich_transactions(current_user.id, results)
     return {

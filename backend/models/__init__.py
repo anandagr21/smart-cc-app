@@ -17,6 +17,7 @@ from .behavioral_profile import UserBehavioralProfile
 from .optimization_profile import OptimizationPersonalityProfile
 from behavioral_memory.models import RecommendationBehaviorRecord
 from portfolio_evolution.models import PortfolioEvolutionSnapshot
+from .audit_log import AuditLog
 
 
 __all__ = [
@@ -31,5 +32,5 @@ __all__ = [
     "OptimizationPersonalityProfile",
     "RecommendationBehaviorRecord",
     "PortfolioEvolutionSnapshot",
-
+    "AuditLog",
 ]

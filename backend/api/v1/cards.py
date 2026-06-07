@@ -31,8 +31,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Path, Query
 
 from api.deps import get_card_catalog_service, get_user_card_service
-from auth.dependencies import get_current_user
+from auth.dependencies import get_current_admin_user, get_current_user
 from auth.schemas import UserResponse
+from services.audit_service import AuditService
+from api.deps import get_db
+from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi import Request
 from cards.schemas import (
     CardCatalogCreate,
     CardCatalogResponse,
@@ -61,14 +65,19 @@ router = APIRouter(prefix="/cards", tags=["Cards"])
     "/catalog", response_model=SingleResponse[CardCatalogResponse], status_code=201
 )
 async def create_card_catalog_entry(
+    request: Request,
     body: CardCatalogCreate,
+    current_admin: UserResponse = Depends(get_current_admin_user),
     catalog_service: CardCatalogService = Depends(get_card_catalog_service),
+    db: AsyncSession = Depends(get_db)
 ) -> SingleResponse[CardCatalogResponse]:
     """Create a new card definition in the master catalog.
 
     This is an admin-only endpoint. TODO: Add admin authorization guard.
     """
     result = await catalog_service.create_card(body)
+    await AuditService.log_action(db, current_admin.id, "CREATE_CATALOG_ENTRY", "CardCatalog", str(result.id), body.dict(), request)
+    await db.commit()
     return SingleResponse(data=result)
 
 
@@ -116,28 +125,38 @@ async def get_card_catalog_entry(
     "/catalog/{card_id}", response_model=SingleResponse[CardCatalogResponse]
 )
 async def update_card_catalog_entry(
+    request: Request,
     card_id: UUID = Path(..., description="UUID of the catalog entry."),
     body: CardCatalogUpdate = ...,
+    current_admin: UserResponse = Depends(get_current_admin_user),
     catalog_service: CardCatalogService = Depends(get_card_catalog_service),
+    db: AsyncSession = Depends(get_db)
 ) -> SingleResponse[CardCatalogResponse]:
     """Update a card catalog entry (partial update).
 
     This is an admin-only endpoint. TODO: Add admin authorization guard.
     """
     result = await catalog_service.update_card(card_id, body)
+    await AuditService.log_action(db, current_admin.id, "UPDATE_CATALOG_ENTRY", "CardCatalog", str(card_id), body.dict(exclude_unset=True), request)
+    await db.commit()
     return SingleResponse(data=result)
 
 
 @router.delete("/catalog/{card_id}", status_code=204)
 async def delete_card_catalog_entry(
+    request: Request,
     card_id: UUID = Path(..., description="UUID of the catalog entry."),
+    current_admin: UserResponse = Depends(get_current_admin_user),
     catalog_service: CardCatalogService = Depends(get_card_catalog_service),
+    db: AsyncSession = Depends(get_db)
 ) -> None:
     """Delete a card definition from the master catalog.
 
     This is an admin-only endpoint. TODO: Add admin authorization guard.
     """
     await catalog_service.delete_card(card_id)
+    await AuditService.log_action(db, current_admin.id, "DELETE_CATALOG_ENTRY", "CardCatalog", str(card_id), {}, request)
+    await db.commit()
 
 
 # ---------------------------------------------------------------------------

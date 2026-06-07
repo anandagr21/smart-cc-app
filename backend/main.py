@@ -24,6 +24,10 @@ from core.config import get_settings
 from core.database import close_db, init_db
 from core.logging import get_logger, setup_logging
 from core.middleware import setup_middleware
+from core.rate_limit import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 logger = get_logger(__name__)
 
@@ -78,6 +82,11 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if settings.debug else None,
         lifespan=lifespan,
     )
+    
+    app.state.limiter = limiter
+
+    if settings.is_production and "*" in settings.cors_origins:
+        raise ValueError("Wildcard CORS origins are not permitted in production.")
 
     # CORS — allow configured origins (frontend, mobile dev)
     app.add_middleware(
@@ -90,6 +99,8 @@ def create_app() -> FastAPI:
 
     # Request ID, logging, global exception handling
     setup_middleware(app)
+    
+    app.add_middleware(SlowAPIMiddleware)
 
     # Register global exception handlers
     from core.exceptions import (
@@ -102,6 +113,7 @@ def create_app() -> FastAPI:
     
     app.add_exception_handler(AppException, app_exception_handler)
     app.add_exception_handler(RequestValidationError, pydantic_validation_handler)
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.add_exception_handler(Exception, generic_exception_handler)
 
     # API routes — all versioned under /api/v1
