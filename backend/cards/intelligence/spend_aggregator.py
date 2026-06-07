@@ -34,7 +34,10 @@ class SpendAggregator:
         """
         card = await self._session.get(UserCard, user_card_id)
         if not card:
-            raise ValueError(f"UserCard {user_card_id} not found")
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"UserCard {user_card_id} not found. Skipping spend recalculation.")
+            return None
 
         # Sum valid PURCHASE transactions that are PENDING or POSTED
         stmt = (
