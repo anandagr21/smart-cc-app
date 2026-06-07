@@ -17,7 +17,7 @@ async def get_token_and_test():
     token = create_access_token(user_id)
     print(f"Generated Token for user {user_id}")
 
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as client:
+    async with httpx.AsyncClient(base_url="http://localhost:8001") as client:
         response = await client.post(
             "/api/v1/recommendations/evaluate",
             headers={"Authorization": f"Bearer {token}"},
@@ -29,10 +29,15 @@ async def get_token_and_test():
             }
         )
         print("Status:", response.status_code)
+        if response.status_code != 200:
+            print("Response text:", response.text)
         
-        data = response.json()
-        print("Canonical Merchant:", data.get("normalized_merchant"))
-        print("Category:", data.get("category"))
+        try:
+            data = response.json()
+            print("Canonical Merchant:", data.get("normalized_merchant"))
+            print("Category:", data.get("category"))
+        except Exception:
+            data = {}
         print("\nCards:")
         for c in data.get("all_ranked_cards", []):
             print(f"--- {c.get('card_name')} ---")

@@ -48,7 +48,7 @@ def get_monthly_orchestrator(
     # 2. Recommendation dependencies for Analytics
     reward_rule_service = RewardRuleService(session=db)
     rec_orch = RecommendationOrchestrator(merchant_service, card_service, reward_rule_service)
-    rec_service = RecommendationService(rec_orch)
+    rec_service = RecommendationService(rec_orch, session=db)
     
     # 3. Monthly Engines
     analytics_engine = BehaviorAnalyticsEngine(rec_service)

@@ -44,7 +44,7 @@ def get_insight_orchestrator(
     # Recommendation dependencies for Missed Rewards
     reward_rule_service = RewardRuleService(session=db)
     rec_orch = RecommendationOrchestrator(merchant_service, card_service, reward_rule_service)
-    rec_service = RecommendationService(rec_orch)
+    rec_service = RecommendationService(rec_orch, session=db)
     missed_rewards_gen = MissedRewardsGenerator(rec_service)
     
     return InsightOrchestrator(

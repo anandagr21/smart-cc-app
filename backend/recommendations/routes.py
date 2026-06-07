@@ -23,17 +23,21 @@ from services.card_service import UserCardService
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
 
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from core.database import get_db
+
 def _get_recommendation_service(
     merchant_service: MerchantService = Depends(get_merchant_service),
     user_card_service: UserCardService = Depends(get_user_card_service),
     reward_rule_service: RewardRuleService = Depends(get_reward_rule_service),
+    db: AsyncSession = Depends(get_db),
 ) -> RecommendationService:
     orchestrator = RecommendationOrchestrator(
         merchant_service=merchant_service,
         user_card_service=user_card_service,
         reward_rule_service=reward_rule_service,
     )
-    return RecommendationService(orchestrator=orchestrator)
+    return RecommendationService(orchestrator=orchestrator, session=db)
 
 
 @router.post(

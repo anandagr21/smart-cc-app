@@ -18,6 +18,8 @@ from .optimization_profile import OptimizationPersonalityProfile
 from behavioral_memory.models import RecommendationBehaviorRecord
 from portfolio_evolution.models import PortfolioEvolutionSnapshot
 from .audit_log import AuditLog
+from .feedback import Feedback
+from .recommendation_audit import RecommendationAudit
 
 
 __all__ = [
@@ -33,4 +35,6 @@ __all__ = [
     "RecommendationBehaviorRecord",
     "PortfolioEvolutionSnapshot",
     "AuditLog",
+    "Feedback",
+    "RecommendationAudit",
 ]

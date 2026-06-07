@@ -41,6 +41,9 @@ class RecommendationRequest(BaseModel):
 class RecommendationResponse(BaseModel):
     """Full response for a recommendation request."""
 
+    calculation_id: str | None = Field(
+        default=None, description="Unique trace ID for this recommendation calculation."
+    )
     normalized_merchant: str | None = Field(
         default=None, description="Canonical merchant name if matched."
     )

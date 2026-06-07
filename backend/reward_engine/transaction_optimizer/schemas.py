@@ -25,6 +25,7 @@ class OptimizerRankedCard(BaseModel):
     engine_explanations: List[str] = []
 
 class OptimizationResponse(BaseModel):
+    calculation_id: Optional[UUID] = None
     normalized_merchant: Optional[str] = None
     category: Optional[str] = None
     best_cashback_card: Optional[OptimizerRankedCard] = None
