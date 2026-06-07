@@ -25,5 +25,6 @@ class Feedback(SQLModel, table=True):
     calculation_context: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSONB))
     
     status: str = Field(default="open")  # open, investigating, resolved, rejected, duplicate
+    priority: str = Field(default="LOW")  # LOW, MEDIUM, HIGH, CRITICAL
     
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

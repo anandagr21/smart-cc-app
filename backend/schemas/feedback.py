@@ -18,4 +18,5 @@ class FeedbackResponse(FeedbackCreate):
     id: uuid.UUID
     user_id: uuid.UUID
     status: str
+    priority: str
     created_at: datetime
