@@ -1,15 +1,45 @@
 import hashlib
 import requests
+import socket
+import ipaddress
 from bs4 import BeautifulSoup
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from uuid import UUID
 
+import urllib.parse
+from fastapi import HTTPException
+
 from .monitor_models import CardMonitoring
+
+ALLOWED_BANK_DOMAINS = {"sbicard.com", "hdfcbank.com", "icicibank.com", "axisbank.com"}
 
 def fetch_and_clean_card_page(url_or_html: str) -> str:
     """Scrapes card HTML, completely strips out layouts, navbars, and headers, leaving only relevant structural text. Can accept a URL or raw HTML string."""
     if url_or_html.startswith("http://") or url_or_html.startswith("https://"):
+        parsed_url = urllib.parse.urlparse(url_or_html)
+        hostname = parsed_url.hostname or ""
+        
+        if not any(hostname == d or hostname.endswith(f".{d}") for d in ALLOWED_BANK_DOMAINS):
+            raise ValueError(f"SSRF Protection: Domain '{hostname}' is not in the allowed banking domains list.")
+            
+        # Robust DNS Resolution Check
+        try:
+            addr_info = socket.getaddrinfo(hostname, None)
+            for result in addr_info:
+                ip_str = result[4][0]
+                ip_obj = ipaddress.ip_address(ip_str)
+                if (
+                    ip_obj.is_private or 
+                    ip_obj.is_loopback or 
+                    ip_obj.is_link_local or 
+                    ip_obj.is_reserved or 
+                    ip_obj.is_multicast
+                ):
+                    raise ValueError(f"SSRF Protection: Domain resolved to a prohibited IP address ({ip_str}).")
+        except socket.gaierror:
+            raise ValueError(f"SSRF Protection: Domain '{hostname}' failed DNS resolution.")
+            
         headers = {"User-Agent": "SmartCC-Extraction-Bot/1.0"}
         try:
             response = requests.get(url_or_html, headers=headers, timeout=15)
@@ -37,7 +67,7 @@ async def execute_daily_hash_check(card_id: UUID, url: str, db: AsyncSession) ->
     Returns True if a bank change is detected (triggering the pipeline), False otherwise.
     """
     cleaned_text = fetch_and_clean_card_page(url)
-    current_hash = hashlib.md5(cleaned_text.encode('utf-8')).hexdigest()
+    current_hash = hashlib.sha256(cleaned_text.encode('utf-8')).hexdigest()
     
     stmt = select(CardMonitoring).where(CardMonitoring.card_id == card_id)
     result = await db.execute(stmt)
