@@ -33,6 +33,7 @@ class TransactionCreate(TransactionBase):
     """Payload to create a new transaction."""
     recommended_card_id: Optional[UUID] = None
     override_reason: Optional[str] = None
+    idempotency_key: Optional[str] = Field(default=None, max_length=100)
 
 
 class TransactionUpdate(BaseModel):

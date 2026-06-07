@@ -21,6 +21,7 @@ from auth.security import decode_access_token
 from auth.service import AuthService
 from core.config import get_settings
 from core.exceptions import UnauthorizedException
+from models.enums import UserRole
 from repositories.user_repository import UserRepository
 
 settings = get_settings()
@@ -93,3 +94,15 @@ async def get_current_user(
     # 4. Fetch the user (raises NotFoundException → 401 via middleware)
     auth_service = await _get_auth_service(user_repo)
     return await auth_service.get_current_user(user_id)
+
+
+async def get_current_admin_user(
+    current_user: UserResponse = Depends(get_current_user),
+) -> UserResponse:
+    """Dependency that requires the current user to be an ADMIN or SUPER_ADMIN."""
+    if current_user.role not in (UserRole.ADMIN, UserRole.SUPER_ADMIN):
+        raise UnauthorizedException(
+            message="You do not have permission to perform this action.",
+            code="INSUFFICIENT_PERMISSIONS",
+        )
+    return current_user

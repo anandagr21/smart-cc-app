@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Optional
 from uuid import UUID, uuid4
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, UniqueConstraint
 
 from transactions.constants import Currency, PaymentMode, TransactionStatus, TransactionType
 
@@ -25,6 +25,9 @@ class Transaction(SQLModel, table=True):
     """
 
     __tablename__ = "transactions"
+    __table_args__ = (
+        UniqueConstraint("user_id", "idempotency_key", name="uix_user_id_idempotency_key"),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     user_id: UUID = Field(index=True)
@@ -53,6 +56,7 @@ class Transaction(SQLModel, table=True):
     raw_description: Optional[str] = Field(default=None)
     source: Optional[str] = Field(default="manual")
     statement_id: Optional[UUID] = Field(default=None, index=True)
+    idempotency_key: Optional[str] = Field(default=None, max_length=100)
     
     # Lifecycle
     status: TransactionStatus = Field(default=TransactionStatus.PENDING, index=True)
