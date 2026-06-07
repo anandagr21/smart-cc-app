@@ -1,7 +1,8 @@
 import React from 'react';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { CardIntelligenceWorkspaceV2 } from '@/features/card_intelligence/components/CardIntelligenceWorkspaceV2';
-import { SafeAreaView, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { ArrowLeft } from 'lucide-react-native';
 

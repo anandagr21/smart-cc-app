@@ -172,8 +172,6 @@ export const CardSidebar: React.FC<CardSidebarProps> = ({
                   <Text style={[styles.cardItemName, { color: isSelected ? colors.primary : colors.textPrimary }]}>
                     {card.card_name}
                   </Text>
-                  
->
                 </View>
               </TouchableOpacity>
             );
