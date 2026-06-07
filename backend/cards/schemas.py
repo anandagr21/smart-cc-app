@@ -167,6 +167,16 @@ class UserCardCreate(BaseModel):
         max_length=100,
         description="Optional user-assigned label for this card.",
     )
+    last_4_digits: str | None = Field(
+        default=None,
+        max_length=4,
+        description="Optional last 4 digits of the card.",
+    )
+    network_override: str | None = Field(
+        default=None,
+        max_length=20,
+        description="Optional user-specified network.",
+    )
     credit_limit: Decimal = Field(
         default=Decimal("0.00"),
         max_digits=14,
@@ -213,6 +223,14 @@ class UserCardUpdate(BaseModel):
     nickname: str | None = Field(
         default=None,
         max_length=100,
+    )
+    last_4_digits: str | None = Field(
+        default=None,
+        max_length=4,
+    )
+    network_override: str | None = Field(
+        default=None,
+        max_length=20,
     )
     credit_limit: Decimal | None = Field(
         default=None,
@@ -276,6 +294,8 @@ class UserCardResponse(BaseModel):
     user_id: UUID
     card_catalog_id: UUID
     nickname: str | None
+    last_4_digits: str | None
+    network_override: str | None
     credit_limit: Decimal
     current_spend: Decimal
     annual_spend: Decimal

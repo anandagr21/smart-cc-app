@@ -56,6 +56,16 @@ class UserCard(SQLModel, table=True):
         foreign_key="card_catalogs.id", index=True
     )
     nickname: str | None = Field(default=None, max_length=100)
+    last_4_digits: str | None = Field(
+        default=None,
+        max_length=4,
+        description="Last 4 digits of the card number for easy identification."
+    )
+    network_override: str | None = Field(
+        default=None,
+        max_length=20,
+        description="User-specified network if catalog network is missing or incorrect."
+    )
     credit_limit: Decimal = Field(
         default=Decimal("0.00"),
         max_digits=14,
@@ -134,6 +144,15 @@ class UserCard(SQLModel, table=True):
             threshold = self.card_catalog.fee_waiver_spend_threshold
             return Decimal(str(threshold)) if threshold is not None else None
         return None
+
+    @property
+    def effective_network(self) -> str:
+        """Returns the user-overridden network if it exists, otherwise falls back to the catalog network."""
+        if self.network_override:
+            return self.network_override
+        if getattr(self, "card_catalog", None) is not None:
+            return self.card_catalog.network or "NA"
+        return "NA"
 
     @property
     def days_until_fee_debit(self) -> int | None:
