@@ -58,19 +58,25 @@ class TransactionEnrichmentService:
         bonus_index_by_card_id: dict[str, RuleIndex] = {}
         exclusions_by_card_id: dict[str, list[NormalizedRuleConfig]] = {}
         
+        from recommendations.utils import parse_rules_from_catalog
         for uc in user_cards:
             card_id_str = str(uc.card_catalog_id)
             if card_id_str not in bonus_index_by_card_id:
                 raw_rules = await self._reward_rule_service.get_card_active_rules(card_id_str)
-                normalized_rules = [
-                    NormalizedRuleConfig(
-                        rule_name=r.rule_name,
-                        rule_type=r.rule_type,
-                        priority=r.priority,
-                        config=r.rule_config,
-                    )
-                    for r in raw_rules
-                ]
+                if raw_rules:
+                    normalized_rules = [
+                        NormalizedRuleConfig(
+                            rule_name=r.rule_name,
+                            rule_type=r.rule_type,
+                            priority=r.priority,
+                            config=r.rule_config,
+                        )
+                        for r in raw_rules
+                    ]
+                else:
+                    catalog_card = get_catalog_card(uc)
+                    card_name = get_card_name(uc)
+                    normalized_rules = parse_rules_from_catalog(catalog_card, card_name)
                 
                 # Pre-compute indices and filters once per card
                 bonus_rules = filter_bonus_rules(normalized_rules)
@@ -81,13 +87,15 @@ class TransactionEnrichmentService:
 
         # 3. Bulk evaluate in memory (extremely fast pure Python loop)
         for txn in transactions:
+            payment_mode_str = txn.payment_mode.value if hasattr(txn.payment_mode, "value") else str(txn.payment_mode)
+            payment_mode_lower = payment_mode_str.lower()
             txn_context = TransactionContext(
                 merchant=txn.normalized_merchant,
                 category=txn.category,
                 amount=txn.amount,
-                payment_mode=txn.payment_mode.value if hasattr(txn.payment_mode, "value") else str(txn.payment_mode),
+                payment_mode=payment_mode_lower,
                 transaction_date=txn.transaction_date or txn.created_at.date(),
-                is_online=txn.payment_mode in ["online", "contactless"],
+                is_online=payment_mode_lower in ["online", "contactless"],
                 mcc_code=None,
                 cumulative_spend=0,
             )
