@@ -37,10 +37,14 @@ export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) 
 
   const [selectedCard, setSelectedCard] = useState<CardCatalogResponse | null>(null);
   const [nickname, setNickname] = useState('');
+  const [last4Digits, setLast4Digits] = useState('');
+  const [networkOverride, setNetworkOverride] = useState('');
 
   const handleClose = () => {
     setSelectedCard(null);
     setNickname('');
+    setLast4Digits('');
+    setNetworkOverride('');
     onClose();
   };
 
@@ -50,6 +54,8 @@ export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) 
       await addCard({
         card_catalog_id: selectedCard.id,
         nickname: nickname.trim() || undefined,
+        last_4_digits: last4Digits.trim() || undefined,
+        network_override: networkOverride || undefined,
       });
       handleClose();
     } catch {
@@ -131,6 +137,39 @@ export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) 
                   autoCapitalize="words"
                   hint="A friendly name to identify this card"
                 />
+              </View>
+              
+              <View style={styles.nicknameWrap}>
+                <Input
+                  label="Last 4 Digits (Optional)"
+                  placeholder="e.g. 1234"
+                  value={last4Digits}
+                  onChangeText={setLast4Digits}
+                  keyboardType="numeric"
+                  maxLength={4}
+                  hint="Helps differentiate between multiple cards of the same type"
+                />
+              </View>
+
+              <View style={styles.nicknameWrap}>
+                <Text style={{ fontSize: tokens.fontSize.caption, fontWeight: tokens.fontWeight.bold, color: colors.textMuted, marginBottom: 8, letterSpacing: tokens.letterSpacing.widest }}>CARD NETWORK</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {['VISA', 'MASTERCARD', 'RUPAY', 'AMEX', 'DINERS CLUB'].map((net) => {
+                    const isActive = networkOverride === net || (!networkOverride && selectedCard.network.toUpperCase() === net);
+                    return (
+                      <TouchableOpacity
+                        key={net}
+                        onPress={() => setNetworkOverride(net)}
+                        style={[
+                          { paddingHorizontal: 12, paddingVertical: 8, borderRadius: tokens.radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
+                          isActive && { backgroundColor: colors.surfaceElevated, borderColor: colors.primary }
+                        ]}
+                      >
+                        <Text style={{ fontSize: tokens.fontSize.micro, color: isActive ? colors.primary : colors.textSecondary, fontWeight: isActive ? tokens.fontWeight.bold : tokens.fontWeight.medium }}>{net}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
 
               <View style={styles.actionRow}>

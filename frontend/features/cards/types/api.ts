@@ -21,6 +21,8 @@ export interface UserCardResponse {
   user_id: string;
   card_catalog_id: string;
   nickname: string | null;
+  last_4_digits?: string | null;
+  network_override?: string | null;
   credit_limit: number;
   current_spend: number;
   annual_spend: number;
@@ -56,6 +58,8 @@ export interface UserCardResponse {
 
 export interface UserCardUpdate {
   nickname?: string;
+  last_4_digits?: string;
+  network_override?: string;
   card_status?: CardStatus;
   credit_limit?: number;
   current_spend?: number;
@@ -75,6 +79,8 @@ export interface UserCardUpdate {
 export interface UserCardCreate {
   card_catalog_id: string;
   nickname?: string;
+  last_4_digits?: string;
+  network_override?: string;
   credit_limit?: number;
   current_spend?: number;
   annual_spend?: number;
