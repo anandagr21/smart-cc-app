@@ -82,10 +82,17 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
           {/* FINANCIAL IMPACT */}
           <View style={styles.financialsRow}>
             <View style={styles.financialItemRight}>
-              <Text style={styles.financialTotalAmount}>
-                {formatCurrencyIN(recommendation.immediate_reward_value + recommendation.fee_waiver_progress_impact)}
-              </Text>
-              <Text style={styles.financialLabel}>ESTIMATED TOTAL VALUE</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                <Text style={styles.financialTotalAmount}>
+                  {formatCurrencyIN(recommendation.immediate_reward_value)}
+                </Text>
+                {recommendation.fee_waiver_progress_impact > 0 && (
+                  <Text style={[styles.financialTotalAmount, { fontSize: tokens.fontSize.body, marginLeft: 6, color: '#A78BFA' }]}>
+                    + {formatCurrencyIN(recommendation.fee_waiver_progress_impact)}
+                  </Text>
+                )}
+              </View>
+              <Text style={styles.financialLabel}>TOTAL REWARD</Text>
             </View>
           </View>
 

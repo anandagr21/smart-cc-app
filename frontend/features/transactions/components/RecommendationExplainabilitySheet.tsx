@@ -210,10 +210,17 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
 
                 {/* Total */}
                 <View style={[styles.totalRow, { borderColor: 'rgba(16, 185, 129, 0.2)' }]}>
-                  <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Estimated Total Value</Text>
-                  <Text style={[styles.totalValue]}>
-                    {formatCurrencyIN(item.recommendation.immediate_reward_value + item.recommendation.fee_waiver_progress_impact)}
-                  </Text>
+                  <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total Reward</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                    <Text style={[styles.totalValue]}>
+                      {formatCurrencyIN(item.recommendation.immediate_reward_value)}
+                    </Text>
+                    {item.recommendation.fee_waiver_progress_impact > 0 && (
+                      <Text style={[styles.totalValue, { fontSize: tokens.fontSize.body, marginLeft: 6, color: '#A78BFA' }]}>
+                        + {formatCurrencyIN(item.recommendation.fee_waiver_progress_impact)}
+                      </Text>
+                    )}
+                  </View>
                 </View>
               </View>
 

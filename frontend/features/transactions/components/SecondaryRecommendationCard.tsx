@@ -60,10 +60,15 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
           </Text>
 
           {/* Value */}
-          <View style={styles.valueRow}>
+          <View style={[styles.valueRow, { flexDirection: 'row', alignItems: 'baseline' }]}>
             <Text style={styles.rewardAmount} numberOfLines={1}>
-              {formatCurrencyIN(estimatedRewardValue)}
+              {formatCurrencyIN(recommendation.immediate_reward_value)}
             </Text>
+            {recommendation.fee_waiver_progress_impact > 0 && (
+              <Text style={[styles.rewardAmount, { fontSize: tokens.fontSize.micro, marginLeft: 4, color: '#A78BFA' }]} numberOfLines={1}>
+                + {formatCurrencyIN(recommendation.fee_waiver_progress_impact)}
+              </Text>
+            )}
           </View>
 
         </View>
