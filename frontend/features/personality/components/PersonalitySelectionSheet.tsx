@@ -51,13 +51,7 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
       description: 'Focused on extracting the highest immediate return from every transaction.',
       icon: <Sparkles size={20} color={colors.primary} />,
       color: colors.primary,
-    },
-    {
-      id: OptimizationPersonality.TRAVEL_OPTIMIZATION,
-      title: 'Travel Optimization',
-      description: 'Focused on accelerating long-term travel milestones and premium reward unlocks.',
-      icon: <Plane size={20} color={colors.success} />,
-      color: colors.success,
+      disabled: false,
     },
     {
       id: OptimizationPersonality.FEE_MINIMIZATION,
@@ -65,6 +59,7 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
       description: 'Focused on preserving fee waivers and reducing annual fee leakage.',
       icon: <ShieldAlert size={20} color={colors.warning} />,
       color: colors.warning,
+      disabled: false,
     },
     {
       id: OptimizationPersonality.BALANCED_INTELLIGENCE,
@@ -72,6 +67,15 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
       description: 'Blends immediate rewards with long-term portfolio health and fee protection.',
       icon: <Scale size={20} color={colors.textSecondary} />,
       color: colors.textSecondary,
+      disabled: false,
+    },
+    {
+      id: OptimizationPersonality.TRAVEL_OPTIMIZATION,
+      title: 'Travel Optimization',
+      description: 'Focused on accelerating long-term travel milestones and premium reward unlocks.',
+      icon: <Plane size={20} color={colors.success} />,
+      color: colors.success,
+      disabled: true,
     },
     {
       id: OptimizationPersonality.WALLET_SIMPLICITY,
@@ -79,6 +83,7 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
       description: 'Minimizes cognitive load by favoring fewer cards and simpler reward structures.',
       icon: <LayoutList size={20} color={colors.textMuted} />,
       color: colors.textMuted,
+      disabled: true,
     },
   ];
 
@@ -138,14 +143,16 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
                   <TouchableOpacity
                     key={option.id}
                     activeOpacity={0.7}
-                    onPress={() => handleSelect(option.id)}
+                    onPress={() => !option.disabled && handleSelect(option.id)}
                     style={[
                       styles.optionCard,
                       {
                         backgroundColor: isActive ? 'rgba(255,255,255,0.05)' : 'transparent',
                         borderColor: isActive ? option.color : 'rgba(255,255,255,0.05)',
+                        opacity: option.disabled ? 0.4 : 1,
                       }
                     ]}
+                    disabled={option.disabled}
                   >
                     <View style={styles.optionHeaderRow}>
                       <View style={styles.optionIconWrap}>
@@ -154,6 +161,11 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
                       <Text style={[styles.optionTitle, { color: isActive ? option.color : colors.textPrimary }]}>
                         {option.title}
                       </Text>
+                      {option.disabled && (
+                        <View style={{ backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8 }}>
+                          <Text style={{ color: colors.textMuted, fontSize: 10, fontWeight: 'bold' }}>COMING SOON</Text>
+                        </View>
+                      )}
                     </View>
                     <Text style={[styles.optionDescription, { color: colors.textSecondary }]}>
                       {option.description}
