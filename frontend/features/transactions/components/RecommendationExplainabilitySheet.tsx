@@ -224,6 +224,15 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                 </View>
               </View>
 
+              {/* AI DISCLAIMER */}
+              <View style={styles.aiDisclaimerWrap}>
+                {/* @ts-ignore */}
+                <Info size={12} color={colors.textMuted} />
+                <Text style={[styles.aiDisclaimerText, { color: colors.textMuted }]}>
+                  AI-generated recommendation. Verify final rewards and fees with your bank.
+                </Text>
+              </View>
+
             </Animated.View>
             <View style={{ height: 60 }} />
           </ScrollView>
@@ -396,5 +405,17 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 6,
     lineHeight: 16,
+  },
+  aiDisclaimerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 24,
+    paddingHorizontal: 8,
+  },
+  aiDisclaimerText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
   },
 });

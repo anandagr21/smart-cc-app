@@ -34,6 +34,7 @@ import { HeroRecommendationCard } from './HeroRecommendationCard';
 import { SecondaryRecommendationCard } from './SecondaryRecommendationCard';
 import { RecommendationExplainabilitySheet } from './RecommendationExplainabilitySheet';
 import { LinearGradient } from 'expo-linear-gradient';
+import { usePersonalityProfile, OptimizationPersonality } from '@/features/personality/api/personalityApi';
 
 import { FeatureFlags } from '@/config/features';
 
@@ -49,10 +50,10 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const INTENT_OPTIONS = [
-  { label: 'Max Rewards', value: 'MAX_REWARDS' },
-  { label: 'Save Fee', value: 'SAVE_FEE_WAIVER' },
-  { label: 'Balanced', value: 'BALANCED' },
-  { label: 'Simplify', value: 'SIMPLIFY_DECISIONS' }
+  { label: 'Max Rewards', value: 'MAX_REWARDS', disabled: false },
+  { label: 'Save Fee', value: 'SAVE_FEE_WAIVER', disabled: false },
+  { label: 'Balanced', value: 'BALANCED', disabled: false },
+  { label: 'Simplify', value: 'SIMPLIFY_DECISIONS', disabled: true }
 ];
 
 const OVERRIDE_REASONS = [
@@ -62,6 +63,21 @@ const OVERRIDE_REASONS = [
   { label: 'Avoiding annual fee', value: 'Avoiding annual fee' },
   { label: 'Temporary choice', value: 'Temporary choice' }
 ];
+
+const mapPersonalityToIntent = (personality?: OptimizationPersonality) => {
+  switch (personality) {
+    case OptimizationPersonality.MAXIMIZE_REWARDS:
+    case OptimizationPersonality.TRAVEL_OPTIMIZATION:
+      return 'MAX_REWARDS';
+    case OptimizationPersonality.FEE_MINIMIZATION:
+      return 'SAVE_FEE_WAIVER';
+    case OptimizationPersonality.WALLET_SIMPLICITY:
+      return 'SIMPLIFY_DECISIONS';
+    case OptimizationPersonality.BALANCED_INTELLIGENCE:
+    default:
+      return 'BALANCED';
+  }
+};
 
 interface TransactionFormSheetProps {
   visible: boolean;
@@ -85,6 +101,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
   const { data: cardsData } = useCards();
+  const { data: personalityProfile } = usePersonalityProfile();
   const addTx = useCreateTransaction();
   const updateTx = useUpdateTransaction();
   const getRecommendation = useRecommendation();
@@ -121,18 +138,21 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   
   // Fetch recommendations
   useEffect(() => {
-    if (visible && debouncedMerchant?.length >= 3 && FeatureFlags.ENABLE_SMART_RECOMMENDATIONS) {
-      // Default to 1000 if amount is empty to satisfy backend requirements and get flat rankings
-      const fetchAmount = Number(debouncedAmount) > 0 ? Number(debouncedAmount) : 1000;
+    const hasValidMerchant = debouncedMerchant && debouncedMerchant.length >= 3;
+    const hasValidAmount = Number(debouncedAmount) > 0;
+
+    if (visible && FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && (hasValidMerchant || hasValidAmount)) {
+      // Default to 1000 if amount is empty to satisfy backend requirements
+      const fetchAmount = hasValidAmount ? Number(debouncedAmount) : 1000;
+      const fetchMerchant = hasValidMerchant ? debouncedMerchant : 'Unknown Merchant';
       
       getRecommendation.mutate({
-        merchant_name: debouncedMerchant,
+        merchant_name: fetchMerchant,
         amount: fetchAmount,
         payment_mode: (paymentMode || 'ONLINE').toLowerCase() as any,
         intent: intentValue,
       }, {
         onSuccess: (res) => {
-          // The new response structure gives us best cards per intent
           const heroCardName = res.all_ranked_cards?.[0]?.card_name;
           if (heroCardName) {
             const bestCardInWallet = cardsData?.find(c => c.card_details?.card_name === heroCardName || c.nickname === heroCardName);
@@ -142,11 +162,28 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           }
         }
       });
+    } else if (visible && !hasValidMerchant && !hasValidAmount && getRecommendation.data) {
+      // Clear recommendations if both are empty
+      getRecommendation.reset();
     }
   }, [debouncedMerchant, debouncedAmount, paymentMode, intentValue, visible]);
 
+  // Track if we've initialized the form for this open session
+  const [hasInitialized, setHasInitialized] = useState(false);
+
   useEffect(() => {
-    if (visible && initialData) {
+    if (!visible) {
+      setHasInitialized(false);
+      return;
+    }
+    
+    // Only initialize once per open session to avoid wiping user input
+    if (hasInitialized) return;
+    
+    // Wait until we have the basic data needed to initialize
+    if (!initialData && !cardsData?.length) return;
+
+    if (initialData) {
       reset({
         merchant_name: initialData.merchant_name,
         amount: initialData.amount,
@@ -154,16 +191,19 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
         payment_mode: initialData.payment_mode || 'ONLINE',
       });
       setSearchQuery('');
-    } else if (visible && cardsData?.length && !initialData) {
+      setHasInitialized(true);
+    } else {
       reset({
         merchant_name: '',
         amount: undefined,
-        user_card_id: cardsData[0].id,
+        user_card_id: cardsData![0].id,
         payment_mode: 'ONLINE',
+        intent: mapPersonalityToIntent(personalityProfile?.active_personality),
       });
       setSearchQuery('');
+      setHasInitialized(true);
     }
-  }, [visible, initialData, cardsData, reset]);
+  }, [visible, initialData, cardsData, reset, personalityProfile, hasInitialized]);
 
   const onFormSubmit = async (data: any) => {
     try {
@@ -401,23 +441,27 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                         return (
                           <TouchableOpacity
                             key={option.value}
-                            onPress={() => onChange(option.value)}
+                            onPress={() => !option.disabled && onChange(option.value)}
                             activeOpacity={0.7}
+                            disabled={option.disabled}
                             style={[
                               styles.segmentBtn,
                               { paddingHorizontal: 16, backgroundColor: colors.background, borderColor: colors.border },
-                              isActive && { backgroundColor: colors.surfaceElevated, borderColor: colors.primary, borderWidth: 1 }
+                              isActive && { backgroundColor: colors.surfaceElevated, borderColor: colors.primary, borderWidth: 1 },
+                              option.disabled && { opacity: 0.4 }
                             ]}
                           >
-                            <Text style={[
-                              styles.segmentText,
-                              { 
-                                color: isActive ? colors.primary : colors.textMuted,
-                                fontWeight: isActive ? tokens.fontWeight.bold : tokens.fontWeight.medium
-                              }
-                            ]}>
-                              {option.label}
-                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                              <Text style={[
+                                styles.segmentText,
+                                { 
+                                  color: isActive ? colors.primary : colors.textMuted,
+                                  fontWeight: isActive ? tokens.fontWeight.bold : tokens.fontWeight.medium
+                                }
+                              ]}>
+                                {option.label}
+                              </Text>
+                            </View>
                           </TouchableOpacity>
                         );
                       })}
@@ -434,16 +478,16 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                   <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ SMARTEST FINANCIAL CHOICE</Text>
                 </View>
 
-                {(!debouncedMerchant || debouncedMerchant.length < 3) && !getRecommendation.isPending && (
-                  <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.emptyState}>
+                {(!debouncedMerchant || debouncedMerchant.length < 3) && (!debouncedAmount || Number(debouncedAmount) <= 0) && !getRecommendation.isPending && winningWalletCards.length === 0 && (
+                  <Animated.View entering={FadeIn} style={styles.emptyState}>
                     <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
-                      Start typing a merchant to get smart recommendations
+                      Enter an amount or merchant to get smart recommendations
                     </Text>
                   </Animated.View>
                 )}
 
-                {getRecommendation.isPending && debouncedMerchant?.length >= 3 && (
-                  <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.thinkingState, { backgroundColor: colors.surface }]}>
+                {getRecommendation.isPending && ((debouncedMerchant && debouncedMerchant.length >= 3) || (debouncedAmount && Number(debouncedAmount) > 0)) && (
+                  <Animated.View entering={FadeIn} style={[styles.thinkingState, { backgroundColor: colors.surface }]}>
                     {/* @ts-ignore */}
                     <Sparkles size={16} color={colors.primary} style={styles.pulseIcon} />
                     <Text style={[styles.thinkingStateText, { color: colors.textPrimary }]}>
@@ -491,6 +535,15 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                         </ScrollView>
                       </View>
                     )}
+
+                    {/* AI DISCLAIMER */}
+                    <View style={styles.aiDisclaimerWrap}>
+                      {/* @ts-ignore */}
+                      <Info size={12} color={colors.textMuted} />
+                      <Text style={[styles.aiDisclaimerText, { color: colors.textMuted }]}>
+                        AI-generated recommendation. Verify final rewards and fees with your bank.
+                      </Text>
+                    </View>
                   </Animated.View>
                 )}
               </View>
@@ -594,8 +647,10 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                 />
               </Animated.View>
             )}
+          </ScrollView>
 
-            {/* CTA */}
+          {/* STICKY CTA */}
+          <View style={[styles.stickyCtaWrap, { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder }]}>
             <LinearGradient
               colors={['#10B981', '#059669']} // Emerald Glow
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
@@ -622,8 +677,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                 </Text>
               </TouchableOpacity>
             </LinearGradient>
-
-          </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </View>
       </Modal>
@@ -809,9 +863,26 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: tokens.fontSize.caption,
   },
+  aiDisclaimerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 16,
+    paddingHorizontal: 8,
+  },
+  aiDisclaimerText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  stickyCtaWrap: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 32 : 24,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   ctaGradient: {
     borderRadius: tokens.radius.full,
-    marginTop: 8,
   },
   ctaInner: {
     paddingVertical: 16,
