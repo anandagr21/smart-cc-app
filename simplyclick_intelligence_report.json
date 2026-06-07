@@ -1,0 +1,118 @@
+x{
+    "card_metadata": {
+        "bank_name": "SBI",
+        "card_name": "SimplyCLICK SBI Card",
+        "network": null,
+        "source_document_type": "html"
+    },
+    "fees": {
+        "joining_fee": null,
+        "annual_fee": 499,
+        "fee_waiver_threshold": 100000,
+        "fee_waiver_conditions": "Renewal Fee is reversed if annual spends for last year >= Rs. 1,00,000."
+    },
+    "reward_program": {
+        "reward_type": "reward_points",
+        "reward_currency_name": "Reward Points",
+        "reward_conversion_details": null
+    },
+    "reward_rules": [
+        {
+            "rule_name": "10X Partner Online Spends",
+            "merchant_names": [
+                "Apollo 24x7",
+                "BookMyShow",
+                "Cleartrip",
+                "Dominos",
+                "IGP",
+                "Myntra",
+                "Netmeds",
+                "Swiggy",
+                "Yatra",
+                "Gyftr",
+                "Tata Cliq"
+            ],
+            "categories": [
+                "Online Shopping"
+            ],
+            "reward_type": "reward_points",
+            "reward_expression": "10X reward points",
+            "source_text": "Earn 10X Reward Points on online spends with exclusive partners: Apollo 24x7, BookMyShow, Cleartrip, Dominos, IGP, Myntra, Netmeds, Swiggy, Yatra, Gyftr, Tata Cliq",
+            "confidence": 95
+        },
+        {
+            "rule_name": "5X Other Online Spends",
+            "merchant_names": [],
+            "categories": [
+                "Online Shopping"
+            ],
+            "reward_type": "reward_points",
+            "reward_expression": "5X reward points",
+            "source_text": "Earn 5X Reward Points on all other online spends",
+            "confidence": 90
+        },
+        {
+            "rule_name": "Base Spends",
+            "merchant_names": [],
+            "categories": [
+                "All Spends"
+            ],
+            "reward_type": "reward_points",
+            "reward_expression": "1 reward point per ₹100",
+            "source_text": "Earn 1 Reward Point per Rs. 100 on all other spends",
+            "confidence": 99
+        }
+    ],
+    "milestones": [
+        {
+            "name": "Annual Online Spend Milestone - ₹1 Lakh",
+            "spend_threshold": 100000,
+            "benefit": "E-Voucher worth ₹2,000 (Cleartrip / Yatra)",
+            "source_text": "E-Vouchers worth Rs. 2,000 each on reaching annual online spends of 1 Lakh and 2 Lakhs respectively",
+            "confidence": 95
+        },
+        {
+            "name": "Annual Online Spend Milestone - ₹2 Lakhs",
+            "spend_threshold": 200000,
+            "benefit": "E-Voucher worth ₹2,000 (Cleartrip / Yatra)",
+            "source_text": "E-Vouchers worth Rs. 2,000 each on reaching annual online spends of 1 Lakh and 2 Lakhs respectively",
+            "confidence": 95
+        }
+    ],
+    "benefits": [
+        {
+            "benefit_type": "welcome_gift",
+            "description": "Amazon.in e-Gift Card worth ₹500 on payment of Annual Fee",
+            "source_text": "Get Amazon.in e-Gift Card worth Rs. 500 on payment of Annual Fee",
+            "confidence": 98
+        },
+        {
+            "benefit_type": "fuel_surcharge_waiver",
+            "description": "1% fuel surcharge waiver on transactions between ₹500 and ₹3,000 at all petrol pumps across India. Maximum waiver of ₹100 per statement cycle, per credit card account.",
+            "source_text": "Enjoy a 1% fuel surcharge waiver on every transaction between Rs. 500 and Rs. 3,000 at all petrol pumps across India. Maximum waiver of Rs. 100 per statement cycle, per credit card account.",
+            "confidence": 99
+        },
+        {
+            "benefit_type": "fee_waiver",
+            "description": "Annual fee (Renewal Fee) reversed if annual spends for last year >= ₹1,00,000",
+            "source_text": "Renewal Fee is reversed if annual spends for last year >= Rs. 1,00,000.",
+            "confidence": 99
+        }
+    ],
+    "exclusions": [],
+    "warnings": [
+        {
+            "type": "MISSING_POINT_VALUATION",
+            "message": "Reward point conversion value (e.g., 1 RP = ₹X) is not stated in the extracted document text."
+        },
+        {
+            "type": "INCOMPLETE_EXCLUSIONS",
+            "message": "No reward earning exclusions (e.g., fuel, wallet loads, rent, education, utilities) are listed in the extracted text. Full exclusions are likely in the referenced Most Important Terms & Conditions document, which was not included."
+        }
+    ],
+    "confidence_summary": {
+        "overall_confidence": 85,
+        "needs_manual_review": true,
+        "reason": "Reward point valuation not explicitly stated in the extracted document. Exclusions are referenced in a separate MITC document not included in the extraction. 10X and 5X multipliers are relative to a base rate of 1 RP per ₹100, but the absolute value of a reward point is unknown."
+    }
+}

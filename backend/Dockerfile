@@ -42,6 +42,12 @@ COPY --from=builder /app/.venv /opt/venv
 # Copy source
 COPY . .
 
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
 # Activate venv
 ENV PATH="/opt/venv/bin:$PATH"
 

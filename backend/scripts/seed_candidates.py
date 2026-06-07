@@ -33,8 +33,10 @@ async def seed():
         source_id = source.id
 
         # Check if already seeded
-        result = await db.execute(select(CardExtractionCandidate).where(CardExtractionCandidate.card_id == card_id))
-        if len(result.scalars().all()) > 0:
+        check_result = await db.execute(
+            select(CardExtractionCandidate).where(CardExtractionCandidate.card_id == card_id)
+        )
+        if check_result.scalars().first() is not None:
             print("Already seeded.")
             return
 
