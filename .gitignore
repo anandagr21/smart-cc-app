@@ -220,3 +220,7 @@ node_modules/
 package*.json
 
 pitch-deck/
+
+graphify-out/
+.claude/
+.agents/
