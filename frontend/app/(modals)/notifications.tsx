@@ -1,80 +1,139 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { X, Bell, ShieldAlert, Zap } from 'lucide-react-native';
+import { X, Bell, ShieldAlert, Zap, CreditCard, Sparkles, FolderKanban } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useNotifications, useMarkAsRead, useMarkAllAsRead } from '@/features/notifications/hooks/useNotifications';
+import { NotificationType } from '@/features/notifications/types/api';
+
+const getIconForType = (type: NotificationType) => {
+  switch (type) {
+    case 'SECURITY': return ShieldAlert;
+    case 'INSIGHT': return Zap;
+    case 'CARD_INTELLIGENCE': return CreditCard;
+    case 'RECOMMENDATION': return Sparkles;
+    case 'WORKSPACE': return FolderKanban;
+    case 'SYSTEM':
+    default: return Bell;
+  }
+};
+
+const getColorForType = (type: NotificationType, colors: any) => {
+  switch (type) {
+    case 'SECURITY': return { color: colors.danger, bg: colors.dangerSoft };
+    case 'INSIGHT': return { color: colors.warning, bg: colors.warningSoft };
+    case 'RECOMMENDATION': return { color: colors.success, bg: colors.successSoft };
+    case 'CARD_INTELLIGENCE':
+    case 'WORKSPACE':
+    case 'SYSTEM':
+    default: return { color: colors.primary, bg: colors.primarySoft };
+  }
+};
+
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
 
 export default function NotificationsModal() {
   const router = useRouter();
   const colors = useThemeColors();
+  
+  const { data, isLoading, refetch, isRefetching } = useNotifications();
+  const markAsRead = useMarkAsRead();
+  const markAllAsRead = useMarkAllAsRead();
 
-  const MOCK_NOTIFS = [
-    {
-      id: '1',
-      title: 'New optimization insight',
-      body: 'You could have saved ₹120 on your last Starbucks purchase.',
-      time: '2h ago',
-      icon: Zap,
-      color: colors.warning,
-      bg: colors.warningSoft,
-    },
-    {
-      id: '2',
-      title: 'Security Alert',
-      body: 'New login detected from Mac OS device.',
-      time: '1d ago',
-      icon: ShieldAlert,
-      color: colors.danger,
-      bg: colors.dangerSoft,
-    },
-    {
-      id: '3',
-      title: 'Welcome to Smart CC',
-      body: 'Your intelligent wallet is ready to use.',
-      time: '2d ago',
-      icon: Bell,
-      color: colors.primary,
-      bg: colors.primarySoft,
-    },
-  ];
+  const handleNotificationPress = (notification: any) => {
+    if (!notification.is_read) {
+      markAsRead.mutate(notification.id);
+    }
+    
+    if (notification.action_url) {
+      router.push(notification.action_url);
+    }
+  };
+
+  const notifications = data?.notifications || [];
 
   return (
     <ScreenContainer>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Notifications</Text>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={[styles.closeBtn, { backgroundColor: colors.surface }]}
-        >
-          {/* @ts-ignore */}
-          <X size={20} color={colors.textSecondary} strokeWidth={2} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          {notifications.some(n => !n.is_read) && (
+            <TouchableOpacity onPress={() => markAllAsRead.mutate()}>
+              <Text style={{ color: colors.primary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.medium }}>Mark all read</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={[styles.closeBtn, { backgroundColor: colors.surface }]}
+          >
+            {/* @ts-ignore */}
+            <X size={20} color={colors.textSecondary} strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {MOCK_NOTIFS.map((n, i) => (
-          <Animated.View
-            key={n.id}
-            entering={FadeInDown.delay(i * 100).springify()}
-            style={[styles.notifRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          >
-            <View style={[styles.iconWrap, { backgroundColor: n.bg }]}>
-              {/* @ts-ignore */}
-              <n.icon size={20} color={n.color} />
-            </View>
-            <View style={styles.content}>
-              <View style={styles.contentHeader}>
-                <Text style={[styles.notifTitle, { color: colors.textPrimary }]}>{n.title}</Text>
-                <Text style={[styles.time, { color: colors.textMuted }]}>{n.time}</Text>
-              </View>
-              <Text style={[styles.body, { color: colors.textSecondary }]}>{n.body}</Text>
-            </View>
-          </Animated.View>
-        ))}
-      </ScrollView>
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      ) : notifications.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
+          {/* @ts-ignore */}
+          <Bell size={48} color={colors.border} style={{ marginBottom: 16 }} />
+          <Text style={{ color: colors.textSecondary, fontSize: tokens.fontSize.bodyLg, textAlign: 'center' }}>
+            You're all caught up!
+          </Text>
+        </View>
+      ) : (
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          contentContainerStyle={styles.scroll}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        >
+          {notifications.map((n, i) => {
+            const Icon = getIconForType(n.type);
+            const { color, bg } = getColorForType(n.type, colors);
+            
+            return (
+              <Animated.View
+                key={n.id}
+                entering={FadeInDown.delay(Math.min(i, 10) * 50).springify()}
+              >
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => handleNotificationPress(n)}
+                  style={[
+                    styles.notifRow, 
+                    { backgroundColor: n.is_read ? colors.background : colors.surface, borderColor: colors.border },
+                    !n.is_read && { shadowColor: colors.primary, shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.1, shadowRadius: 12, elevation: 3 }
+                  ]}
+                >
+                  <View style={[styles.iconWrap, { backgroundColor: bg }]}>
+                    {/* @ts-ignore */}
+                    <Icon size={20} color={color} />
+                  </View>
+                  <View style={styles.content}>
+                    <View style={styles.contentHeader}>
+                      <Text style={[styles.notifTitle, { color: n.is_read ? colors.textSecondary : colors.textPrimary }]}>{n.title}</Text>
+                      <Text style={[styles.time, { color: colors.textMuted }]}>{formatTime(n.created_at)}</Text>
+                    </View>
+                    <Text style={[styles.body, { color: n.is_read ? colors.textMuted : colors.textSecondary }]} numberOfLines={2}>{n.body}</Text>
+                  </View>
+                  {!n.is_read && (
+                    <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </ScrollView>
+      )}
     </ScreenContainer>
   );
 }
@@ -139,5 +198,12 @@ const styles = StyleSheet.create({
   body: {
     fontSize: tokens.fontSize.body,
     lineHeight: tokens.fontSize.body * 1.4,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginLeft: 12,
+    alignSelf: 'center',
   },
 });
