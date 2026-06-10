@@ -40,7 +40,11 @@ def fetch_and_clean_card_page(url_or_html: str) -> str:
         except socket.gaierror:
             raise ValueError(f"SSRF Protection: Domain '{hostname}' failed DNS resolution.")
             
-        headers = {"User-Agent": "SmartCC-Extraction-Bot/1.0"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5"
+        }
         try:
             response = requests.get(url_or_html, headers=headers, timeout=15)
             response.raise_for_status()

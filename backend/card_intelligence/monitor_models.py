@@ -8,7 +8,7 @@ class CardMonitoring(SQLModel, table=True):
     
     card_id: UUID = Field(primary_key=True, foreign_key="card_catalogs.id", description="Foreign key to CardCatalog.id")
     card_url: str = Field(sa_column=Column(Text, nullable=False))
-    last_seen_hash: str = Field(sa_column=Column(String(32), nullable=False))
+    last_seen_hash: str = Field(sa_column=Column(String(64), nullable=False))
     stored_text: str = Field(sa_column=Column(Text, nullable=False))
     updated_at: datetime = Field(
         default_factory=datetime.utcnow,
