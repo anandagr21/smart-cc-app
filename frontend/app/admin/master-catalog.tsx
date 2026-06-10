@@ -11,6 +11,9 @@ import { CardSidebar } from '@/features/card_intelligence/components/CardSidebar
 import { formatCurrencyIN } from '@/utils/currency';
 import { CardCatalogResponse } from '@/features/cards/types/api';
 
+import { DocumentUploadSheet } from '@/features/card_intelligence/components/DocumentUploadSheet';
+import { Plus } from 'lucide-react-native';
+
 export default function MasterCatalogScreen() {
   const colors = useThemeColors();
   const router = useRouter();
@@ -18,6 +21,7 @@ export default function MasterCatalogScreen() {
 
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isCreateSheetVisible, setCreateSheetVisible] = useState(false);
 
   const formatCurrency = (amount: number | string | undefined | null) => {
     if (amount === undefined || amount === null) return 'N/A';
@@ -31,19 +35,29 @@ export default function MasterCatalogScreen() {
       
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity 
+            style={styles.backBtn} 
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/admin/card-intelligence');
+              }
+            }}
+          >
+            <ArrowLeft size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Live Portfolio Viewer</Text>
+        </View>
+
         <TouchableOpacity 
-          style={styles.backBtn} 
-          onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/admin/card-intelligence');
-            }
-          }}
+          style={[styles.createBtn, { backgroundColor: colors.primary }]}
+          onPress={() => setCreateSheetVisible(true)}
         >
-          <ArrowLeft size={24} color={colors.textPrimary} />
+          <Plus size={16} color="#FFF" />
+          <Text style={styles.createBtnText}>Add Card</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Live Portfolio Viewer</Text>
       </View>
 
       <View style={styles.main}>
@@ -74,6 +88,12 @@ export default function MasterCatalogScreen() {
           )}
         </View>
       </View>
+
+      <DocumentUploadSheet 
+        visible={isCreateSheetVisible} 
+        onClose={() => setCreateSheetVisible(false)}
+        onSuccess={() => setCreateSheetVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -301,6 +321,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: tokens.spacing.xl,
     paddingVertical: tokens.spacing.lg,
     borderBottomWidth: 1,
@@ -308,6 +329,19 @@ const styles = StyleSheet.create({
   },
   backBtn: { marginRight: tokens.spacing.md, padding: tokens.spacing.xs },
   headerTitle: { fontSize: tokens.fontSize.headline, fontWeight: '700' },
+  createBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: tokens.radius.full,
+    gap: 6,
+  },
+  createBtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   main: { flex: 1, flexDirection: 'row' },
   contentArea: { flex: 1, backgroundColor: 'transparent' },
   detailsScroll: { flex: 1 },

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Platform } from 'react-native';
+import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuthStore } from '@/features/auth/store/authStore';
@@ -24,13 +25,27 @@ export default function RootLayout() {
   
   const segments = useSegments();
   const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
 
   useEffect(() => {
     initializeAuth();
     initializeTheme();
   }, []);
 
+  // Load Google Identity Services script on web
   useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    if (!rootNavigationState?.key) return;
     if (isAuthLoading || !isThemeHydrated) return;
 
     const inAuthGroup = segments[0] === '(auth)';
@@ -40,10 +55,10 @@ export default function RootLayout() {
     } else if (token && inAuthGroup) {
       router.replace('/(tabs)');
     }
-  }, [token, isAuthLoading, isThemeHydrated, segments]);
+  }, [token, isAuthLoading, isThemeHydrated, segments, rootNavigationState?.key]);
 
   if (isAuthLoading || !isThemeHydrated) {
-    return null; // A proper splash screen can replace this
+    return null;
   }
 
   return (

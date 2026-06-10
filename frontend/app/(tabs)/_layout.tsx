@@ -13,6 +13,7 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNotifications } from '@/features/notifications/hooks/useNotifications';
 
 const TABS = [
   { name: 'index', route: '/', icon: Sparkles, label: 'Analyze' },
@@ -26,9 +27,10 @@ interface TabButtonProps {
   isActive: boolean;
   onPress: () => void;
   colors: any;
+  unreadCount?: number;
 }
 
-function TabButton({ tab, isActive, onPress, colors }: TabButtonProps) {
+function TabButton({ tab, isActive, onPress, colors, unreadCount }: TabButtonProps) {
   const scale = useSharedValue(1);
   const Icon = tab.icon;
 
@@ -63,11 +65,18 @@ function TabButton({ tab, isActive, onPress, colors }: TabButtonProps) {
             ]}
           />
         )}
-        <Icon
-          size={22}
-          color={isActive ? colors.primary : colors.textMuted}
-          strokeWidth={isActive ? 2.5 : 1.8}
-        />
+        <View>
+          <Icon
+            size={22}
+            color={isActive ? colors.primary : colors.textMuted}
+            strokeWidth={isActive ? 2.5 : 1.8}
+          />
+          {!!unreadCount && unreadCount > 0 && (
+            <View style={[styles.badgeContainer, { backgroundColor: colors.danger }]}>
+              <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+            </View>
+          )}
+        </View>
         <Text
           style={[
             styles.tabLabel,
@@ -100,6 +109,9 @@ function FloatingTabBar() {
     if (tabRoute === '/') return pathname === '/' || pathname === '/index';
     return pathname.startsWith(tabRoute);
   };
+
+  const { data: notificationsData } = useNotifications();
+  const unreadCount = notificationsData?.unread_count || 0;
 
   return (
     <View
@@ -141,6 +153,7 @@ function FloatingTabBar() {
             isActive={isActive(tab.route)}
             onPress={() => router.push(tab.route as any)}
             colors={colors}
+            unreadCount={tab.name === 'profile' ? unreadCount : 0}
           />
         ))}
       </View>
@@ -208,5 +221,21 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     marginTop: 3,
     textTransform: 'uppercase',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: 'bold',
   },
 });
