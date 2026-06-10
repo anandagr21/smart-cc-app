@@ -9,13 +9,11 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { useGoogleAuth } from '@/features/auth/hooks/useGoogleAuth';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { apiClient } from '@/services/api/client';
 import { tokens } from '@/theme/tokens';
-import Animated, {
-  FadeInDown,
-  FadeInUp,
-} from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -29,11 +27,17 @@ export default function LoginScreen() {
   const colors = useThemeColors();
 
   const {
+    signIn: googleSignIn,
+    isLoading: isGoogleLoading,
+    error: googleError,
+  } = useGoogleAuth();
+
+  const {
     control,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({ 
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' }
   });
@@ -148,7 +152,26 @@ export default function LoginScreen() {
           style={styles.ctaBtn}
         />
 
+        <View style={styles.biometricRow}>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          <Text style={[styles.biometricText, { color: colors.textMuted }]}>or continue with</Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+        </View>
 
+        {googleError && (
+          <Text style={[styles.googleError, { color: colors.danger }]}>
+            {googleError}
+          </Text>
+        )}
+
+        <Button
+          label="Google"
+          variant="secondary"
+          onPress={() => googleSignIn()}
+          isLoading={isGoogleLoading}
+          disabled={isGoogleLoading}
+          style={styles.ctaBtn}
+        />
       </Animated.View>
     </ScreenContainer>
   );
@@ -233,5 +256,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  googleError: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+    textAlign: 'center',
+    marginBottom: 12,
   },
 });

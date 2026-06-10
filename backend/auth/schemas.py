@@ -41,6 +41,14 @@ class UserLoginRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class GoogleLoginRequest(BaseModel):
+    """Request schema for POST /auth/google."""
+
+    id_token: str = Field(..., description="Google ID token received from the client.")
+
+    model_config = ConfigDict(extra="forbid")
+
+
 class UserResponse(BaseModel):
     """Response schema for the authenticated user (safe for API exposure)."""
 

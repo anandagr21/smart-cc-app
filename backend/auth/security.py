@@ -34,11 +34,14 @@ def hash_password(password: str) -> str:
     return hashed.decode("utf-8")
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
+def verify_password(plain_password: str, hashed_password: str | None) -> bool:
     """Verify a plaintext password against a bcrypt hash.
 
     Returns True if the password matches, False otherwise.
+    Returns False if hashed_password is None (Google-only accounts have no password).
     """
+    if hashed_password is None:
+        return False
     password_bytes = plain_password.encode("utf-8")
     hashed_bytes = hashed_password.encode("utf-8")
     return bcrypt.checkpw(password_bytes, hashed_bytes)

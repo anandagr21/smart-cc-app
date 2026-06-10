@@ -17,6 +17,7 @@ from auth.schemas import (
     UserLoginRequest,
     UserRegisterRequest,
     UserResponse,
+    GoogleLoginRequest,
 )
 from auth.service import AuthService
 from repositories.user_repository import UserRepository
@@ -75,6 +76,27 @@ async def login(
     Returns 401 Unauthorized if credentials are invalid.
     """
     result = await auth_service.login(payload)
+    return {"data": result}
+
+
+@router.post(
+    "/google",
+    response_model=SingleResponse[TokenResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Log in or register with Google",
+)
+@limiter.limit("5/minute")
+async def google_login(
+    request: Request,
+    payload: GoogleLoginRequest,
+    auth_service: AuthService = Depends(_get_auth_service),
+) -> dict:
+    """Authenticate using a Google ID token from the client.
+
+    If the user does not exist, they are automatically registered.
+    Returns a JWT access token.
+    """
+    result = await auth_service.google_login(payload.id_token)
     return {"data": result}
 
 

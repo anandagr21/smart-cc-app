@@ -35,9 +35,11 @@ class User(SQLModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     email: str = Field(max_length=320, unique=True, index=True)
-    hashed_password: str = Field(max_length=128)
+    hashed_password: str | None = Field(default=None, max_length=128)
     full_name: str = Field(max_length=200)
     role: UserRole = Field(default=UserRole.USER, sa_type=AutoString)
+    auth_provider: str = Field(default="email", max_length=50)
+    google_id: str | None = Field(default=None, unique=True, index=True)
     created_at: datetime = Field(
         default_factory=datetime.utcnow
     )

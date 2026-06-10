@@ -119,10 +119,11 @@ export default function CardsScreen() {
       <View style={{ paddingHorizontal: 24, marginTop: 4, marginBottom: 16 }}>
         <TouchableOpacity 
           onPress={() => router.push('/intelligence')}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: 0.4 }}
+          disabled={true}
         >
           <Text style={{ fontSize: tokens.fontSize.body, color: colors.primary }}>
-            Financial Intelligence
+            Financial Intelligence (Coming Soon)
           </Text>
         </TouchableOpacity>
       </View>

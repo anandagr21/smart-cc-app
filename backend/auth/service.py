@@ -14,6 +14,9 @@ from auth.schemas import TokenResponse, UserLoginRequest, UserRegisterRequest, U
 from auth.security import create_access_token, hash_password, verify_password
 from core.exceptions import ConflictException, UnauthorizedException
 from repositories.user_repository import UserRepository
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from core.config import get_settings
 
 
 class AuthService:
@@ -62,6 +65,7 @@ class AuthService:
                 id=user.id,
                 email=user.email,
                 full_name=user.full_name,
+                role=user.role,
             ),
         )
 
@@ -84,6 +88,11 @@ class AuthService:
             )
 
         if not verify_password(request.password, user.hashed_password):
+            if user.auth_provider == "google":
+                raise UnauthorizedException(
+                    message="This account uses Google Sign-In. Please sign in with Google.",
+                    code="GOOGLE_ACCOUNT",
+                )
             raise UnauthorizedException(
                 message="Invalid email or password.",
                 code="INVALID_CREDENTIALS",
@@ -96,6 +105,76 @@ class AuthService:
                 id=user.id,
                 email=user.email,
                 full_name=user.full_name,
+                role=user.role,
+            ),
+        )
+
+    async def google_login(self, id_token_str: str) -> TokenResponse:
+        """Authenticate using a Google ID token.
+
+        Verifies the token against all configured Google client IDs
+        (iOS, Android, web) since the audience claim varies by platform.
+        Links existing email-registered accounts to Google automatically.
+        """
+        settings = get_settings()
+
+        # Build audience list: all configured client IDs per platform
+        audiences = settings.google_client_ids
+        if not audiences:
+            from core.exceptions import ConfigurationException
+            raise ConfigurationException(
+                message="No Google client IDs configured. Set GOOGLE_CLIENT_IDS_RAW or GOOGLE_CLIENT_ID.",
+                code="GOOGLE_CONFIG_MISSING",
+            )
+
+        try:
+            # verify_token supports a list of valid audiences, unlike verify_oauth2_token
+            idinfo = id_token.verify_token(
+                id_token_str,
+                requests.Request(),
+                audience=audiences[0] if len(audiences) == 1 else audiences,
+                clock_skew_in_seconds=30,
+            )
+            # Explicit issuer check for defense-in-depth
+            if idinfo.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
+                raise ValueError("Invalid issuer")
+            email = idinfo["email"]
+            name = idinfo.get("name", email.split("@")[0])
+            google_id = idinfo["sub"]
+        except ValueError:
+            raise UnauthorizedException(
+                message="Invalid Google ID token.",
+                code="INVALID_TOKEN",
+            )
+
+        user = await self._user_repo.get_by_email(email)
+
+        if user:
+            # If user exists but isn't linked to Google, link them
+            if user.google_id != google_id:
+                update_data: dict = {"google_id": google_id}
+                # Only change auth_provider if the user was previously email-only
+                if user.auth_provider == "email":
+                    update_data["auth_provider"] = "google"
+                user = await self._user_repo.update(user.id, update_data)
+        else:
+            # Create a new user since they don't exist
+            user = await self._user_repo.create({
+                "email": email,
+                "hashed_password": None,
+                "full_name": name,
+                "auth_provider": "google",
+                "google_id": google_id,
+            })
+
+        token = create_access_token(user.id)
+        return TokenResponse(
+            access_token=token,
+            user=UserResponse(
+                id=user.id,
+                email=user.email,
+                full_name=user.full_name,
+                role=user.role,
             ),
         )
 
@@ -110,4 +189,5 @@ class AuthService:
             id=user.id,
             email=user.email,
             full_name=user.full_name,
+            role=user.role,
         )
