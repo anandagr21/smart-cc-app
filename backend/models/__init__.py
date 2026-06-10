@@ -20,6 +20,7 @@ from portfolio_evolution.models import PortfolioEvolutionSnapshot
 from .audit_log import AuditLog
 from .feedback import Feedback
 from .recommendation_audit import RecommendationAudit
+from .notification import Notification
 
 
 __all__ = [
@@ -37,4 +38,5 @@ __all__ = [
     "AuditLog",
     "Feedback",
     "RecommendationAudit",
+    "Notification",
 ]

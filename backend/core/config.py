@@ -57,6 +57,8 @@ class Settings(BaseSettings):
     # ---- Auth ----
     secret_key: str = "change-me-in-production-use-env-var"
     access_token_expire_minutes: int = 43200  # 30 days for smoother local dev
+    google_client_id: str = ""
+    google_client_ids_raw: str = ""  # Comma-separated list of all Google OAuth client IDs (web, iOS, Android)
 
     # ---- Logging ----
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
@@ -79,6 +81,22 @@ class Settings(BaseSettings):
     card_intelligence_model: str = "gemini-2.5-pro"
 
     # ---- Convenience Properties ----
+    @property
+    def google_client_ids(self) -> list[str]:
+        """Return all configured Google OAuth client IDs.
+
+        Combines `google_client_id` (legacy single client) and
+        `google_client_ids_raw` (comma-separated list) into one deduplicated list.
+        Google ID tokens have `aud` set to the platform-specific client ID,
+        so all platform client IDs must be valid audiences.
+        """
+        ids: list[str] = []
+        if self.google_client_ids_raw:
+            ids.extend(cid.strip() for cid in self.google_client_ids_raw.split(",") if cid.strip())
+        if self.google_client_id and self.google_client_id not in ids:
+            ids.append(self.google_client_id)
+        return ids
+
     @property
     def is_production(self) -> bool:
         """Return True if running in production."""
