@@ -4,7 +4,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select, func
 from core.database import get_db
 from core.rate_limit import limiter
-from auth.dependencies import get_current_user
+from auth.dependencies import get_current_user, get_current_admin_user
 from auth.schemas import UserResponse
 from models.feedback import Feedback
 from schemas.feedback import FeedbackCreate, FeedbackResponse
@@ -54,8 +54,7 @@ async def list_feedback(
     skip: int = 0,
     limit: int = 50,
     db: AsyncSession = Depends(get_db),
-    # TODO: Add get_current_admin_user dependency here
-    current_user: UserResponse = Depends(get_current_user)
+    current_admin: UserResponse = Depends(get_current_admin_user)
 ) -> Any:
     """
     List user feedback reports.

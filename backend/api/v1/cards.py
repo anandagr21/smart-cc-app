@@ -55,7 +55,6 @@ router = APIRouter(prefix="/cards", tags=["Cards"])
 # Card Catalog Endpoints (Admin)
 # ---------------------------------------------------------------------------
 #
-# TODO: Add admin role guard via dependency injection.
 # These endpoints manage the global card catalog — only admins should
 # be able to create/update/delete catalog entries.
 #
@@ -71,10 +70,7 @@ async def create_card_catalog_entry(
     catalog_service: CardCatalogService = Depends(get_card_catalog_service),
     db: AsyncSession = Depends(get_db)
 ) -> SingleResponse[CardCatalogResponse]:
-    """Create a new card definition in the master catalog.
-
-    This is an admin-only endpoint. TODO: Add admin authorization guard.
-    """
+    """Create a new card definition in the master catalog."""
     result = await catalog_service.create_card(body)
     await AuditService.log_action(db, current_admin.id, "CREATE_CATALOG_ENTRY", "CardCatalog", str(result.id), body.dict(), request)
     await db.commit()
@@ -132,10 +128,7 @@ async def update_card_catalog_entry(
     catalog_service: CardCatalogService = Depends(get_card_catalog_service),
     db: AsyncSession = Depends(get_db)
 ) -> SingleResponse[CardCatalogResponse]:
-    """Update a card catalog entry (partial update).
-
-    This is an admin-only endpoint. TODO: Add admin authorization guard.
-    """
+    """Update a card catalog entry (partial update)."""
     result = await catalog_service.update_card(card_id, body)
     await AuditService.log_action(db, current_admin.id, "UPDATE_CATALOG_ENTRY", "CardCatalog", str(card_id), body.dict(exclude_unset=True), request)
     await db.commit()
@@ -150,10 +143,7 @@ async def delete_card_catalog_entry(
     catalog_service: CardCatalogService = Depends(get_card_catalog_service),
     db: AsyncSession = Depends(get_db)
 ) -> None:
-    """Delete a card definition from the master catalog.
-
-    This is an admin-only endpoint. TODO: Add admin authorization guard.
-    """
+    """Delete a card catalog entry."""
     await catalog_service.delete_card(card_id)
     await AuditService.log_action(db, current_admin.id, "DELETE_CATALOG_ENTRY", "CardCatalog", str(card_id), {}, request)
     await db.commit()
