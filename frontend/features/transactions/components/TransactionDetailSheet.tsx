@@ -278,10 +278,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 16,
   },
   detailLabelWrap: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 0,
   },
   detailIcon: {
     marginRight: 10,
@@ -293,6 +295,8 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
+    flex: 1,
+    textAlign: 'right',
   },
   insightsWrap: {
     marginBottom: 20,

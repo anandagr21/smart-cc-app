@@ -11,6 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -98,6 +99,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
 }) => {
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
+  const insets = useSafeAreaInsets();
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
   const { data: cardsData } = useCards();
@@ -650,7 +652,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           </ScrollView>
 
           {/* STICKY CTA */}
-          <View style={[styles.stickyCtaWrap, { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder }]}>
+          <View style={[styles.stickyCtaWrap, { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder, paddingBottom: Math.max(insets.bottom, 24) }]}>
             <LinearGradient
               colors={['#10B981', '#059669']} // Emerald Glow
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
