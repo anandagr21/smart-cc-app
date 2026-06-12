@@ -52,7 +52,7 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
       onPress={onPress}
       style={[
         styles.container,
-        { borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+        { borderBottomColor: colors.border },
         !isActive && { opacity: 0.5 }
       ]}
     >
@@ -83,7 +83,7 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
           <Text style={[styles.networkText, { color: colors.textMuted }]}>
             {displayNetwork}{displayNetwork && card.last_4_digits ? ` •••• ` : ''}{card.last_4_digits || ''}
           </Text>
-          <View style={styles.dot} />
+          <View style={[styles.dot, { backgroundColor: colors.borderHighlight }]} />
           {tags.map(tag => (
             <Text key={tag} style={[styles.tagText, { color: colors.textSecondary }]}>{tag}</Text>
           ))}
@@ -109,7 +109,7 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
                 {Math.min(waiverPercent, 100).toFixed(0)}% complete
               </Text>
             </View>
-            <View style={[styles.progressTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }]}>
+            <View style={[styles.progressTrack, { backgroundColor: colors.borderHighlight }]}>
               <View style={[styles.progressFill, { width: `${Math.min(waiverPercent, 100)}%`, backgroundColor: waiverPercent >= 100 ? colors.success : colors.primary }]} />
             </View>
           </View>
@@ -189,7 +189,6 @@ const styles = StyleSheet.create({
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: 'rgba(150,150,150,0.5)',
     marginHorizontal: 6,
   },
   tagText: {

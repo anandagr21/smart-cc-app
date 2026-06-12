@@ -5,8 +5,10 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { UserCardResponse } from '@/features/cards/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
+import { getNetworkGradient } from '@/theme/colors';
 import { formatCurrencyIN } from '@/utils/currency';
 import { InsightResult } from '@/features/insights/types/insight.types';
+import { useThemeStore } from '@/features/theme/store/themeStore';
 
 interface FeaturedWalletCardProps {
   card: UserCardResponse;
@@ -20,11 +22,15 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   onPress,
 }) => {
   const colors = useThemeColors();
+  const { themeMode } = useThemeStore();
+  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   const network = card.network_override || card.card_details?.network || 'VISA';
   const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' ? '' : network.toUpperCase();
+  
+  const networkGradient = getNetworkGradient(network, isDark) as [string, string];
 
   // Fallback values if no specific AI insight exists
   const topTag = insight?.badge_label || (card.card_status === 'ACTIVE' ? 'ACTIVE CARD' : 'INACTIVE');
@@ -41,8 +47,8 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
 
     actionableContent = (
       <View style={styles.minimalWaiver}>
-        <Text style={styles.cognitionText} numberOfLines={1}>
-          <Text style={{ color: '#FFF', fontWeight: tokens.fontWeight.bold }}>{formatCurrencyIN(remaining)}</Text> away from waiver
+        <Text style={[styles.cognitionText, { color: colors.textSecondary }]} numberOfLines={1}>
+          <Text style={{ color: colors.textPrimary, fontWeight: tokens.fontWeight.bold }}>{formatCurrencyIN(remaining)}</Text> away from waiver
         </Text>
         <View style={styles.tinyProgressTrack}>
           <View 
@@ -60,7 +66,7 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   } else {
     actionableContent = (
       <View style={styles.minimalInsight}>
-        <Text style={styles.cognitionText} numberOfLines={2}>
+        <Text style={[styles.cognitionText, { color: colors.textSecondary }]} numberOfLines={2}>
           {insight?.summary || (card.card_status === 'ACTIVE' ? 'Active and ready to use' : 'Currently inactive')}
         </Text>
       </View>
@@ -71,15 +77,15 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
       {/* Ambient background glow */}
       <View style={[styles.ambientGlow, { backgroundColor: topTagColor }]} />
       
-      <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={styles.touchable}>
+      <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={[styles.touchable, { borderColor: colors.borderHighlight, borderWidth: 1 }]}>
         <LinearGradient
-          colors={['#0F172A', '#020617']} // Deep premium dark
+          colors={networkGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.cardBackground}
         >
           {/* Top Edge Highlight */}
-          <View style={styles.topEdge} />
+          <View style={[styles.topEdge, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.4)' }]} />
 
           <View style={styles.content}>
             <View style={styles.headerRow}>
@@ -91,8 +97,8 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
             {/* Group names and footer at the bottom to avoid awkward gap */}
             <View style={styles.bottomBlock}>
               <View style={styles.namesWrap}>
-                <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
-                <Text style={styles.cardName} numberOfLines={2}>{cardName}</Text>
+                <Text style={[styles.bankName, { color: colors.textSecondary }]}>{bankName.toUpperCase()}</Text>
+                <Text style={[styles.cardName, { color: colors.textPrimary }]} numberOfLines={2}>{cardName}</Text>
               </View>
 
               <View style={styles.footerRow}>
@@ -100,8 +106,8 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
                   {actionableContent}
                 </View>
                 <View style={styles.networkInfo}>
-                  {!!displayNetwork && <Text style={styles.networkName}>{displayNetwork}</Text>}
-                  {!!card.last_4_digits && <Text style={styles.cardEnds}>•••• {card.last_4_digits}</Text>}
+                  {!!displayNetwork && <Text style={[styles.networkName, { color: colors.textPrimary }]}>{displayNetwork}</Text>}
+                  {!!card.last_4_digits && <Text style={[styles.cardEnds, { color: colors.textSecondary }]}>•••• {card.last_4_digits}</Text>}
                 </View>
               </View>
             </View>
@@ -117,8 +123,6 @@ const styles = StyleSheet.create({
     width: 240,
     height: 180,
     borderRadius: tokens.radius.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   ambientGlow: {
     position: 'absolute',
@@ -171,14 +175,12 @@ const styles = StyleSheet.create({
     marginBottom: 24, // Space between names and footer
   },
   bankName: {
-    color: 'rgba(255,255,255,0.6)',
     fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 4,
   },
   cardName: {
-    color: '#FFF',
     fontSize: tokens.fontSize.title,
     fontWeight: tokens.fontWeight.heavy,
   },
@@ -200,7 +202,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   cognitionText: {
-    color: 'rgba(255,255,255,0.6)',
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
     lineHeight: 16,
@@ -222,13 +223,11 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   networkName: {
-    color: '#FFF',
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
   },
   cardEnds: {
-    color: 'rgba(255,255,255,0.5)',
     fontSize: 10,
     letterSpacing: 2,
   },

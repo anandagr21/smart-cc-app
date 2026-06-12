@@ -148,30 +148,30 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
               >
-                <View style={styles.heroTopEdge} />
+                <View style={[styles.heroTopEdge, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.4)' }]} />
                 <View style={styles.heroHeader}>
-                  <Text style={styles.heroBankName} numberOfLines={1}>{bankName}</Text>
-                  <View style={[styles.statusPill, { backgroundColor: isActive ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)' }]}>
-                    <Text style={[styles.statusText, { color: isActive ? '#10B981' : '#F59E0B' }]}>
+                  <Text style={[styles.heroBankName, { color: colors.textSecondary }]} numberOfLines={1}>{bankName}</Text>
+                  <View style={[styles.statusPill, { backgroundColor: isActive ? colors.successSoft : colors.warningSoft }]}>
+                    <Text style={[styles.statusText, { color: isActive ? colors.success : colors.warning }]}>
                       {isActive ? 'Active' : 'Inactive'}
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.heroCardName} numberOfLines={1}>{cardName}</Text>
+                <Text style={[styles.heroCardName, { color: colors.textPrimary }]} numberOfLines={1}>{cardName}</Text>
                 {card.last_4_digits && (
-                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: tokens.fontSize.body, marginTop: 4, letterSpacing: 2 }}>
+                  <Text style={{ color: colors.textSecondary, fontSize: tokens.fontSize.body, marginTop: 4, letterSpacing: 2 }}>
                     •••• {card.last_4_digits}
                   </Text>
                 )}
 
                 <View style={styles.heroFooter}>
                   <View>
-                    <Text style={styles.heroFeeLabel}>Annual Fee</Text>
-                    <Text style={styles.heroFeeValue}>
+                    <Text style={[styles.heroFeeLabel, { color: colors.textMuted }]}>Annual Fee</Text>
+                    <Text style={[styles.heroFeeValue, { color: colors.textPrimary }]}>
                       {card.effective_annual_fee ? formatCurrencyIN(card.effective_annual_fee) : 'Free'}
                     </Text>
                   </View>
-                  {!!displayNetwork && <Text style={styles.heroNetwork}>{displayNetwork}</Text>}
+                  {!!displayNetwork && <Text style={[styles.heroNetwork, { color: colors.textSecondary }]}>{displayNetwork}</Text>}
                 </View>
               </LinearGradient>
             </Animated.View>
@@ -210,7 +210,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                   <Text style={[styles.waiverRemaining, { color: colors.textSecondary }]}>
                     {card.waiver_achieved ? 'Waiver achieved' : `₹${remainingSpend.toLocaleString('en-IN')} more to achieve fee waiver`}
                   </Text>
-                  <View style={[styles.milestonePill, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+                  <View style={[styles.milestonePill, { backgroundColor: colors.borderHighlight }]}>
                     <Text style={[styles.milestoneText, { color: colors.textPrimary }]}>{waiverMilestone}</Text>
                   </View>
                 </View>
@@ -300,7 +300,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
 
                 {/* View Transactions (Real Action) */}
                 <TouchableOpacity style={styles.actionRow} onPress={handleViewTransactions}>
-                  <View style={styles.actionIconWrap}>
+                  <View style={[styles.actionIconWrap, { backgroundColor: colors.borderHighlight }]}>
                     {/* @ts-ignore */}
                     <FileText size={18} color={colors.textPrimary} />
                   </View>
@@ -330,7 +330,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
 
                 {/* Edit Card Details */}
                 <TouchableOpacity style={styles.actionRow} onPress={() => setIsCardDetailsEditVisible(true)}>
-                  <View style={styles.actionIconWrap}>
+                  <View style={[styles.actionIconWrap, { backgroundColor: colors.borderHighlight }]}>
                     {/* @ts-ignore */}
                     <Pencil size={18} color={colors.textPrimary} />
                   </View>
@@ -342,7 +342,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
 
                 {/* Update Spend (Real Action) */}
                 <TouchableOpacity style={styles.actionRow} onPress={() => setIsSpendEditVisible(true)}>
-                  <View style={styles.actionIconWrap}>
+                  <View style={[styles.actionIconWrap, { backgroundColor: colors.borderHighlight }]}>
                     {/* @ts-ignore */}
                     <SlidersHorizontal size={18} color={colors.textPrimary} />
                   </View>
@@ -447,11 +447,10 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'transparent',
   },
   heroTopEdge: {
     position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   heroHeader: {
     flexDirection: 'row',
@@ -459,7 +458,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroBankName: {
-    color: 'rgba(255,255,255,0.6)',
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
@@ -476,7 +474,6 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.bold,
   },
   heroCardName: {
-    color: '#FFF',
     fontSize: 28,
     fontWeight: tokens.fontWeight.heavy,
     marginTop: 8,
@@ -488,17 +485,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   heroFeeLabel: {
-    color: 'rgba(255,255,255,0.5)',
     fontSize: tokens.fontSize.micro,
     marginBottom: 2,
   },
   heroFeeValue: {
-    color: 'rgba(255,255,255,0.9)',
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
   },
   heroNetwork: {
-    color: 'rgba(255,255,255,0.5)',
     fontSize: tokens.fontSize.title,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
@@ -597,7 +591,6 @@ const styles = StyleSheet.create({
   actionIconWrap: {
     width: 36, height: 36,
     borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.05)',
     alignItems: 'center', justifyContent: 'center',
     marginRight: 16,
   },
