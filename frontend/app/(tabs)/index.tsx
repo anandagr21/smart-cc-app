@@ -10,6 +10,7 @@ import { TransactionFormSheet } from '@/features/transactions/components/Transac
 import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/useMonthlyIntelligence';
 import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
 import { formatCurrencyIN } from '@/utils/currency';
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -72,9 +73,11 @@ export default function DashboardScreen() {
                   <Trophy size={16} color={colors.warning} />
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Opt. Score</Text>
                 </View>
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-                  {Math.round(monthlySummary?.optimization_rate || 0)}%
-                </Text>
+                <AnimatedNumber
+                  value={monthlySummary?.optimization_rate || 0}
+                  suffix="%"
+                  style={[styles.statValue, { color: colors.textPrimary }]}
+                />
               </View>
 
               {/* Monthly Rewards */}
@@ -84,9 +87,11 @@ export default function DashboardScreen() {
                   <TrendingUp size={16} color={colors.success} />
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rewards</Text>
                 </View>
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-                  {formatCurrencyIN(monthlySummary?.total_rewards_optimized || 0)}
-                </Text>
+                <AnimatedNumber
+                  value={monthlySummary?.total_rewards_optimized || 0}
+                  prefix="₹"
+                  style={[styles.statValue, { color: colors.textPrimary }]}
+                />
               </View>
             </View>
 
@@ -106,7 +111,10 @@ export default function DashboardScreen() {
 
         {/* Recent Recommendation Section */}
         {primaryInsight && (
-          <Animated.View entering={FadeInDown.delay(150).springify()} style={styles.insightSection}>
+          <Animated.View 
+            entering={FadeInDown.delay(150).springify()} 
+            style={styles.insightSection}
+          >
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>RECENT RECOMMENDATION</Text>
             <View style={[styles.insightCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.insightHeader}>

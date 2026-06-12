@@ -1,52 +1,5 @@
 // ─── Smart CC Design System — Color Tokens ───────────────────────────────────
 // Palette locked per product spec. Do NOT add random accents.
-// Emerald = rewards/success ONLY. Indigo/Violet = brand atmosphere.
-
-export const darkTheme = {
-  // ── Backgrounds ────────────────────────────────────────────────────────────
-  background: '#0A0E17',        // Primary canvas — deep navy
-  surface: '#111625',           // Secondary background — cards, sheets
-  surfaceElevated: 'rgba(24, 28, 39, 0.72)', // Elevated surface
-
-  // ── Glass Materials ────────────────────────────────────────────────────────
-  glassSurface: 'rgba(10, 14, 23, 0.80)',
-  glassBorder: 'rgba(255, 255, 255, 0.12)',
-  glassHighlight: 'rgba(255, 255, 255, 0.15)',
-
-  // ── Primary Accent — Brand Atmosphere ─────────────────────────────────────
-  primary: '#7C83FF',           // Indigo/Violet accent
-  primarySoft: 'rgba(124, 131, 255, 0.18)', // Soft indigo glow
-  accent: '#7C83FF',
-  accentSoft: 'rgba(124, 131, 255, 0.12)',
-
-  // ── Semantic: Rewards / Success / Optimization ────────────────────────────
-  success: '#10B981',           // Emerald — rewards ONLY
-  successSoft: 'rgba(16, 185, 129, 0.16)',
-
-  // ── Semantic: Warnings / Danger ───────────────────────────────────────────
-  warning: '#F59E0B',
-  warningSoft: 'rgba(245, 158, 11, 0.15)',
-  danger: '#F87171',
-  dangerSoft: 'rgba(248, 113, 113, 0.15)',
-
-  // ── Typography ─────────────────────────────────────────────────────────────
-  textHero: '#F5F7FA',
-  textPrimary: '#F5F7FA',
-  textSecondary: '#A7B0C0',
-  textMuted: '#6B7280',
-
-  // ── Borders ────────────────────────────────────────────────────────────────
-  border: 'rgba(255, 255, 255, 0.06)',
-  borderHighlight: 'rgba(255, 255, 255, 0.10)',
-
-  // ── Card Network Gradients ────────────────────────────────────────────────
-  // Used by WalletCard — kept restrained (no neon, no cyberpunk)
-  networkVisa: ['#1A237E', '#283593'],
-  networkMastercard: ['#6D1A36', '#8B2252'],
-  networkAmex: ['#1A3A5C', '#1E4976'],
-  networkDiscover: ['#7B4500', '#9C5A00'],
-  networkDefault: ['#1A1E2E', '#232840'],
-};
 
 export const lightTheme = {
   // ── Backgrounds ────────────────────────────────────────────────────────────
@@ -60,10 +13,11 @@ export const lightTheme = {
   glassHighlight: 'rgba(255, 255, 255, 0.90)',
 
   // ── Primary Accent ────────────────────────────────────────────────────────
-  primary: '#4F36FF',
-  primarySoft: '#EDEAFF',
-  accent: '#FF8A3D',
-  accentSoft: 'rgba(255, 181, 69, 0.12)',
+  primary: '#4F36FF',           // Primary Purple
+  primaryDark: '#3322D1',       // Deep Purple
+  primarySoft: '#EDEAFF',       // Light Purple
+  accent: '#FF8A3D',            // Primary Orange
+  accentSoft: '#FFB545',        // Accent Orange
 
   // ── Semantic ───────────────────────────────────────────────────────────────
   success: '#22C55E',
@@ -71,6 +25,7 @@ export const lightTheme = {
 
   warning: '#F59E0B',
   warningSoft: 'rgba(245, 158, 11, 0.12)',
+  
   danger: '#EF4444',
   dangerSoft: 'rgba(239, 68, 68, 0.10)',
 
@@ -84,7 +39,7 @@ export const lightTheme = {
   border: '#E7E8F0',
   borderHighlight: 'rgba(20, 20, 43, 0.08)',
 
-  // ── Card Network Gradients (lighter for light mode) ───────────────────────
+  // ── Card Network Gradients ───────────────────────
   networkVisa: ['#1E293B', '#0F172A'],
   networkMastercard: ['#6D1A36', '#8B2252'],
   networkAmex: ['#1E3A8A', '#1D4ED8'],
@@ -92,8 +47,54 @@ export const lightTheme = {
   networkDefault: ['#334155', '#1E293B'],
 };
 
-// Default export — dark is the primary experience
-export const colors = darkTheme;
+export const darkTheme = {
+  // ── Backgrounds ────────────────────────────────────────────────────────────
+  background: '#0A0E17',
+  surface: '#111625',
+  surfaceElevated: 'rgba(24, 28, 39, 0.72)',
+
+  // ── Glass Materials ────────────────────────────────────────────────────────
+  glassSurface: 'rgba(10, 14, 23, 0.80)',
+  glassBorder: 'rgba(255, 255, 255, 0.12)',
+  glassHighlight: 'rgba(255, 255, 255, 0.15)',
+
+  // ── Primary Accent ────────────────────────────────────────────────────────
+  primary: '#4F36FF',
+  primaryDark: '#3322D1',
+  primarySoft: 'rgba(79, 54, 255, 0.15)',
+  accent: '#FF8A3D',
+  accentSoft: 'rgba(255, 138, 61, 0.15)',
+
+  // ── Semantic ───────────────────────────────────────────────────────────────
+  success: '#22C55E',
+  successSoft: 'rgba(34, 197, 94, 0.16)',
+
+  warning: '#F59E0B',
+  warningSoft: 'rgba(245, 158, 11, 0.15)',
+  
+  danger: '#EF4444',
+  dangerSoft: 'rgba(239, 68, 68, 0.15)',
+
+  // ── Typography ─────────────────────────────────────────────────────────────
+  textHero: '#F5F7FA',
+  textPrimary: '#F5F7FA',
+  textSecondary: '#A7B0C0',
+  textMuted: '#6B7280',
+
+  // ── Borders ────────────────────────────────────────────────────────────────
+  border: 'rgba(255, 255, 255, 0.06)',
+  borderHighlight: 'rgba(255, 255, 255, 0.10)',
+
+  // ── Card Network Gradients ────────────────────────────────────────────────
+  networkVisa: ['#1A237E', '#283593'],
+  networkMastercard: ['#6D1A36', '#8B2252'],
+  networkAmex: ['#1A3A5C', '#1E4976'],
+  networkDiscover: ['#7B4500', '#9C5A00'],
+  networkDefault: ['#1A1E2E', '#232840'],
+};
+
+// Default export
+export const colors = lightTheme;
 
 // Helper: get network gradient by card network name
 export function getNetworkGradient(network: string, isDark: boolean): string[] {
