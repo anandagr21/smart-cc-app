@@ -11,6 +11,7 @@ import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/us
 import { HeroNarrative } from '@/features/monthly_intelligence/components/HeroNarrative';
 import { BehavioralHighlights } from '@/features/monthly_intelligence/components/BehavioralHighlights';
 import { OptimizationTimeline } from '@/features/monthly_intelligence/components/OptimizationTimeline';
+import { OptimizationVisuals } from '@/features/monthly_intelligence/components/OptimizationVisuals';
 import { ForecastingSurface } from '@/features/monthly_intelligence/components/ForecastingSurface';
 import { ExplainabilitySheet } from '@/features/monthly_intelligence/components/ExplainabilitySheet';
 import { AnticipatoryState } from '@/features/monthly_intelligence/components/AnticipatoryState';
@@ -120,6 +121,8 @@ export default function MonthlyIntelligenceScreen() {
               onPressExplain={openExplainability} 
             />
           )}
+
+          <OptimizationVisuals summary={summary} />
 
           <BehavioralHighlights summary={summary} />
 

@@ -11,6 +11,8 @@ import { groupTransactionsByDate } from '@/features/transactions/utils/dateGroup
 import { TransactionRow } from '@/features/transactions/components/TransactionRow';
 import { EmptyTransactionState } from '@/features/transactions/components/EmptyTransactionState';
 import { SavingsSummaryCard } from '@/features/transactions/components/SavingsSummaryCard';
+import { CategoryRewardsChart } from '@/features/transactions/components/CategoryRewardsChart';
+import { RewardLeakageCard } from '@/features/transactions/components/RewardLeakageCard';
 import { TransactionFormSheet } from '@/features/transactions/components/TransactionFormSheet';
 import { TransactionDetailSheet } from '@/features/transactions/components/TransactionDetailSheet';
 import { TransactionListSkeleton } from '@/features/transactions/components/TransactionSkeleton';
@@ -30,6 +32,7 @@ export default function HistoryScreen() {
   const [isFormSheetVisible, setFormSheetVisible] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<TransactionResponse | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
+  const [showInsights, setShowInsights] = useState(false);
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
@@ -149,6 +152,27 @@ export default function HistoryScreen() {
             ListHeaderComponent={
               <View style={styles.summaryWrap}>
                 <SavingsSummaryCard transactions={allTransactions} />
+                
+                {allTransactions.length > 0 && (
+                  <View style={styles.insightToggleWrap}>
+                    <TouchableOpacity 
+                      onPress={() => setShowInsights(!showInsights)}
+                      style={[styles.insightToggleBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.insightToggleText, { color: colors.primary }]}>
+                        {showInsights ? 'Hide Deep Insights' : 'View Deep Insights ✨'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {showInsights && (
+                  <Animated.View entering={FadeInDown.springify()}>
+                    <CategoryRewardsChart transactions={allTransactions} />
+                    <RewardLeakageCard transactions={allTransactions} />
+                  </Animated.View>
+                )}
               </View>
             }
             contentContainerStyle={styles.scrollContent}
@@ -265,6 +289,21 @@ const styles = StyleSheet.create({
   },
   clearBtnText: {
     fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.bold,
+  },
+  insightToggleWrap: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  insightToggleBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: tokens.radius.full,
+    borderWidth: 1,
+  },
+  insightToggleText: {
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
   },
 });
