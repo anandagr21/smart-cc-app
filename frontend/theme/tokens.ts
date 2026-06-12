@@ -97,6 +97,7 @@ export const tokens = {
     micro: 9,      // Tiny labels, status pills
     caption: 11,   // Sub-labels
     label: 12,     // Section headers, uppercase labels
+    bodySm: 12,
     body: 14,      // Body text
     bodyLg: 16,    // Large body
     title: 18,     // Titles
