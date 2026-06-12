@@ -161,6 +161,8 @@ const styles = StyleSheet.create({
     padding: 22,
     justifyContent: 'space-between',
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   topEdge: {
     position: 'absolute',

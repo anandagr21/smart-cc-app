@@ -9,7 +9,6 @@ import {
   Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import { X, Calendar, CreditCard, ShoppingBag, Edit2, Trash2 } from 'lucide-react-native';
 import { TransactionResponse } from '../types/transaction.types';
 import { format } from 'date-fns';
@@ -45,7 +44,6 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
 
   const card = cardsData?.find((c) => c.id === transaction.user_card_id);
   const cardName = card?.nickname || card?.card_details?.card_name || 'Credit Card';
-  const network = card?.card_details?.network || 'default';
 
   const accent = getCategoryAccent(transaction.category);
   // @ts-ignore
@@ -268,7 +266,7 @@ const styles = StyleSheet.create({
   },
   detailsWrap: {
     borderRadius: tokens.radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     paddingHorizontal: 20,
     marginBottom: 32,
   },

@@ -76,17 +76,17 @@ export const tokens = {
     },
     // Semantic glow — primary brand
     glow: {
-      shadowColor: '#7C83FF',
+      shadowColor: '#4F36FF',
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.35,
+      shadowOpacity: 0.30,
       shadowRadius: 20,
       elevation: 8,
     },
     // Semantic glow — success/rewards
     glowSuccess: {
-      shadowColor: '#10B981',
+      shadowColor: '#22C55E',
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.30,
+      shadowOpacity: 0.25,
       shadowRadius: 16,
       elevation: 6,
     },

@@ -7,17 +7,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#09090B',
-        surface: '#18181B',
-        surfaceElevated: '#27272A',
-        primary: '#10B981',
-        accent: '#10B981',
-        accentGlow: 'rgba(16, 185, 129, 0.15)',
-        textPrimary: '#FFFFFF',
-        textSecondary: '#A1A1AA',
-        textMuted: '#71717A',
-        border: '#27272A',
-        borderHighlight: '#3F3F46',
+        background: '#F8F8FC',
+        surface: '#FFFFFF',
+        surfaceElevated: '#FFFFFF',
+        primary: '#4F36FF',
+        accent: '#FF8A3D',
+        accentGlow: 'rgba(255, 138, 61, 0.15)',
+        textPrimary: '#14142B',
+        textSecondary: '#666A80',
+        textMuted: '#A7B0C0',
+        border: '#E7E8F0',
+        borderHighlight: 'rgba(20, 20, 43, 0.08)',
       }
     },
   },

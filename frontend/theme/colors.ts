@@ -50,46 +50,46 @@ export const darkTheme = {
 
 export const lightTheme = {
   // ── Backgrounds ────────────────────────────────────────────────────────────
-  background: '#F7F9FC',
+  background: '#F8F8FC',
   surface: '#FFFFFF',
-  surfaceElevated: 'rgba(255, 255, 255, 0.82)',
+  surfaceElevated: '#FFFFFF',
 
   // ── Glass Materials ────────────────────────────────────────────────────────
-  glassSurface: 'rgba(255, 255, 255, 0.72)',
-  glassBorder: 'rgba(255, 255, 255, 0.55)',
-  glassHighlight: 'rgba(255, 255, 255, 0.85)',
+  glassSurface: 'rgba(255, 255, 255, 0.80)',
+  glassBorder: 'rgba(231, 232, 240, 0.70)',
+  glassHighlight: 'rgba(255, 255, 255, 0.90)',
 
   // ── Primary Accent ────────────────────────────────────────────────────────
-  primary: '#6366F1',
-  primarySoft: 'rgba(99, 102, 241, 0.12)',
-  accent: '#6366F1',
-  accentSoft: 'rgba(99, 102, 241, 0.08)',
+  primary: '#4F36FF',
+  primarySoft: '#EDEAFF',
+  accent: '#FF8A3D',
+  accentSoft: 'rgba(255, 181, 69, 0.12)',
 
   // ── Semantic ───────────────────────────────────────────────────────────────
-  success: '#10B981',
-  successSoft: 'rgba(16, 185, 129, 0.12)',
+  success: '#22C55E',
+  successSoft: 'rgba(34, 197, 94, 0.12)',
 
-  warning: '#D97706',
-  warningSoft: 'rgba(217, 119, 6, 0.12)',
+  warning: '#F59E0B',
+  warningSoft: 'rgba(245, 158, 11, 0.12)',
   danger: '#EF4444',
   dangerSoft: 'rgba(239, 68, 68, 0.10)',
 
   // ── Typography ─────────────────────────────────────────────────────────────
-  textHero: '#0F172A',
-  textPrimary: '#0F172A',
-  textSecondary: '#475569',
-  textMuted: '#94A3B8',
+  textHero: '#14142B',
+  textPrimary: '#14142B',
+  textSecondary: '#666A80',
+  textMuted: '#A7B0C0',
 
   // ── Borders ────────────────────────────────────────────────────────────────
-  border: 'rgba(15, 23, 42, 0.06)',
-  borderHighlight: 'rgba(15, 23, 42, 0.10)',
+  border: '#E7E8F0',
+  borderHighlight: 'rgba(20, 20, 43, 0.08)',
 
   // ── Card Network Gradients (lighter for light mode) ───────────────────────
-  networkVisa: ['#1565C0', '#1976D2'],
-  networkMastercard: ['#C62828', '#D32F2F'],
-  networkAmex: ['#1565C0', '#0277BD'],
-  networkDiscover: ['#E65100', '#EF6C00'],
-  networkDefault: ['#37474F', '#455A64'],
+  networkVisa: ['#1E293B', '#0F172A'],
+  networkMastercard: ['#6D1A36', '#8B2252'],
+  networkAmex: ['#1E3A8A', '#1D4ED8'],
+  networkDiscover: ['#C2410C', '#9A3412'],
+  networkDefault: ['#334155', '#1E293B'],
 };
 
 // Default export — dark is the primary experience

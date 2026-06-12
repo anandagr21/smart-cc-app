@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, ViewProps, StyleSheet } from 'react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
-import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 
 interface CardProps extends ViewProps {
@@ -23,8 +22,6 @@ export const Card: React.FC<CardProps> = ({
   ...props
 }) => {
   const colors = useThemeColors();
-  const { themeMode } = useThemeStore();
-  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
   const padding = padded ? 20 : 0;
 
@@ -90,7 +87,7 @@ export const Card: React.FC<CardProps> = ({
 const styles = StyleSheet.create({
   card: {
     borderRadius: tokens.radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     overflow: 'hidden',
   },
   topHighlight: {

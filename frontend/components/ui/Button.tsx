@@ -62,7 +62,7 @@ export const Button: React.FC<ButtonProps> = ({
         return {
           ...base,
           backgroundColor: colors.primary,
-          ...tokens.elevation.level2,
+          ...tokens.elevation.glow,
         };
       case 'secondary':
         return {

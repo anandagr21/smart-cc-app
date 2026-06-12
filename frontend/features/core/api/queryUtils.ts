@@ -19,6 +19,7 @@ export const invalidateTransactionsAndWallet = (queryClient: QueryClient) => {
   invalidateTransactionFeed(queryClient);
   invalidateWalletIntelligence(queryClient);
   queryClient.invalidateQueries({ queryKey: QueryKeys.insights.all });
+  queryClient.invalidateQueries({ queryKey: ['monthlyIntelligence'] });
 };
 
 export const invalidateCatalog = (queryClient: QueryClient) => {

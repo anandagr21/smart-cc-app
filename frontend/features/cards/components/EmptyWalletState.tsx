@@ -89,7 +89,7 @@ export const EmptyWalletState: React.FC<EmptyWalletStateProps> = ({ onAddCard })
 
       <Button
         label="Add Your First Card"
-        variant="secondary"
+        variant="primary"
         onPress={onAddCard}
         style={styles.cta}
       />

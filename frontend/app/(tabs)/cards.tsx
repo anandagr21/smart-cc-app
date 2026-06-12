@@ -52,7 +52,7 @@ export default function CardsScreen() {
         <FeaturedCardsSection cards={cards || []} onSelectCard={(card) => setSelectedCardId(card.id)} />
         
         <View style={styles.searchSection}>
-          <View style={[styles.searchBar, { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+          <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {/* @ts-ignore */}
             <Search size={18} color={colors.textMuted} />
             <TextInput

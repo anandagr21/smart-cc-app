@@ -1,13 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Sparkles, CheckCircle2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { UserCardResponse } from '@/features/cards/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
-import { getNetworkGradient } from '@/theme/colors';
-import { useThemeStore } from '@/features/theme/store/themeStore';
 import { formatCurrencyIN } from '@/utils/currency';
 import { InsightResult } from '@/features/insights/types/insight.types';
 
@@ -23,8 +20,6 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   onPress,
 }) => {
   const colors = useThemeColors();
-  const { themeMode } = useThemeStore();
-  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
@@ -71,9 +66,6 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
       </View>
     );
   }
-
-  const networkGradient = getNetworkGradient(network, isDark) as [string, string];
-
   return (
     <Animated.View entering={FadeIn.duration(400)} style={styles.container}>
       {/* Ambient background glow */}
@@ -126,7 +118,7 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: tokens.radius.xl,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   ambientGlow: {
     position: 'absolute',

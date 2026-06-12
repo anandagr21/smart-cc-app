@@ -57,8 +57,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isVisible, onClose
           <View style={styles.header}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               {/* @ts-ignore */}
-              <MessageSquareWarning size={20} color={colors.text} />
-              <Text style={[styles.title, { color: colors.text }]}>Report Issue</Text>
+              <MessageSquareWarning size={20} color={colors.textPrimary} />
+              <Text style={[styles.title, { color: colors.textPrimary }]}>Report Issue</Text>
             </View>
             <TouchableOpacity onPress={onClose} disabled={isSubmitting}>
               {/* @ts-ignore */}
@@ -88,16 +88,16 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isVisible, onClose
                 ]}>
                   {selectedIssue === issue.id && <View style={styles.radioInner} />}
                 </View>
-                <Text style={[styles.optionText, { color: colors.text }]}>{issue.label}</Text>
+                <Text style={[styles.optionText, { color: colors.textPrimary }]}>{issue.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={[styles.label, { color: colors.text }]}>Additional comments (optional)</Text>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>Additional comments (optional)</Text>
           <TextInput
-            style={[styles.textInput, { color: colors.text, borderColor: colors.border }]}
+            style={[styles.textInput, { color: colors.textPrimary, borderColor: colors.border }]}
             placeholder="What did you expect the reward to be?"
-            placeholderTextColor={colors.textTertiary}
+            placeholderTextColor={colors.textMuted}
             multiline
             numberOfLines={3}
             value={description}
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.medium,
   },
   label: {
-    fontSize: tokens.fontSize.small,
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
     marginBottom: 8,
   },
