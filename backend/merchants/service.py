@@ -25,12 +25,18 @@ from merchants.matcher import find_best_match as match_merchant
 from merchants.matcher import MatchResult
 from merchants.normalizer import normalize, normalize_with_tokens
 from merchants.repository import AliasRepository, MerchantRepository
+from merchants import cache as resolution_cache
+from merchants import fuzzy as fuzzy_index
 from merchants.schemas import (
+    AliasConfirmResponse,
     MerchantBriefResponse,
     MerchantResponse,
     MerchantSearchResponse,
     NormalizeResponse,
 )
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from merchants.models import Merchant, MerchantAlias, MerchantAliasLearning
 
 
 class MerchantService:
@@ -204,3 +210,108 @@ class MerchantService:
         by the repository before calling this method.
         """
         return MerchantResponse.model_validate(entity)
+
+    # ------------------------------------------------------------------
+    # Alias Learning (User Confirmation)
+    # ------------------------------------------------------------------
+
+    async def confirm_alias(
+        self,
+        raw_name: str,
+        merchant_id: UUID,
+        session: AsyncSession,
+    ) -> AliasConfirmResponse:
+        """Record a user-confirmed alias correction and promote to merchant_aliases.
+
+        Algorithm:
+        1. Upsert merchant_alias_learning (increment confirmation_count).
+        2. Always immediately insert into merchant_aliases with source=USER_CONFIRMED.
+        3. Invalidate both the cache and the fuzzy index so future resolutions
+           pick up the new alias without an LLM call.
+
+        Args:
+            raw_name: Raw merchant name the user is confirming.
+            merchant_id: UUID of the canonical merchant.
+            session: Async DB session.
+
+        Returns:
+            AliasConfirmResponse with merchant name and confirmation count.
+        """
+        normalized_alias = normalize(raw_name)
+
+        # Fetch the merchant for display name
+        merchant_result = await session.execute(
+            select(Merchant).where(Merchant.id == merchant_id)
+        )
+        merchant = merchant_result.scalar_one_or_none()
+        if merchant is None:
+            raise ValueError(f"Merchant {merchant_id} not found.")
+
+        # 1. Upsert alias learning record
+        learning_result = await session.execute(
+            select(MerchantAliasLearning)
+            .where(MerchantAliasLearning.normalized_alias == normalized_alias)
+            .where(MerchantAliasLearning.merchant_id == merchant_id)
+        )
+        learning = learning_result.scalar_one_or_none()
+
+        if learning is None:
+            learning = MerchantAliasLearning(
+                alias=raw_name,
+                normalized_alias=normalized_alias,
+                merchant_id=merchant_id,
+                confirmation_count=1,
+            )
+            session.add(learning)
+        else:
+            learning.confirmation_count += 1
+            from datetime import datetime
+            learning.last_confirmed_at = datetime.utcnow()
+            session.add(learning)
+
+        await session.flush()
+
+        # 2. Insert into merchant_aliases if not already present
+        alias_result = await session.execute(
+            select(MerchantAlias)
+            .where(MerchantAlias.merchant_id == merchant_id)
+            .where(MerchantAlias.normalized_name == normalized_alias)
+        )
+        existing_alias = alias_result.scalar_one_or_none()
+        alias_created = False
+
+        if existing_alias is None:
+            new_alias = MerchantAlias(
+                merchant_id=merchant_id,
+                raw_name=raw_name,
+                normalized_name=normalized_alias,
+                normalized_tokens=normalized_alias.split(),
+                source="USER_CONFIRMED",
+                confidence=1.0,
+            )
+            session.add(new_alias)
+            await session.flush()
+            alias_created = True
+
+        # 3. Invalidate cache + fuzzy index
+        resolution_cache.invalidate(normalized_alias)
+        fuzzy_index.invalidate_index()
+
+        # 4. Cache this resolution immediately
+        resolution_cache.put(
+            normalized_alias,
+            merchant_id=str(merchant_id),
+            merchant_name=merchant.display_name or merchant.canonical_name,
+            category=merchant.category,
+            merchant_type=merchant.merchant_type,
+            confidence=1.0,
+            resolution_type="USER_CONFIRMED",
+        )
+
+        return AliasConfirmResponse(
+            raw_name=raw_name,
+            merchant_id=merchant_id,
+            merchant_name=merchant.display_name or merchant.canonical_name,
+            confirmation_count=learning.confirmation_count,
+            alias_created=alias_created,
+        )

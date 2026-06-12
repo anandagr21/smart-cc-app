@@ -17,6 +17,7 @@ from fastapi import APIRouter
 from .auth import router as auth_router
 from .cards import router as cards_router
 from .health import router as health_router
+from .merchant_admin import router as merchant_admin_router
 from merchants.routes import router as merchants_router
 from rewards.routes import router as reward_rules_router
 from reward_engine.eval_routes import router as eval_router
@@ -29,6 +30,7 @@ from .portfolio_evolution import router as portfolio_evolution_router
 from card_intelligence.routes import router as card_intelligence_router
 from .feedback import router as feedback_router
 from .notifications import router as notifications_router
+from search.routes import router as search_router
 from core.config import get_settings
 
 settings = get_settings()
@@ -37,9 +39,11 @@ api_router = APIRouter(prefix=settings.api_v1_prefix)
 
 # Register route modules here
 api_router.include_router(auth_router)
+api_router.include_router(search_router)
 api_router.include_router(cards_router)
 api_router.include_router(health_router)
 api_router.include_router(merchants_router)
+api_router.include_router(merchant_admin_router)
 api_router.include_router(reward_rules_router)
 api_router.include_router(eval_router)
 api_router.include_router(recommendations_router)

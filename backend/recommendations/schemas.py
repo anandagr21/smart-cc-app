@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -37,12 +38,30 @@ class RecommendationRequest(BaseModel):
     intent: OptimizationIntent = Field(
         default=OptimizationIntent.BALANCED, description="The user's optimization intent."
     )
+    skip_resolution: bool = Field(
+        default=False, description="If true, skip the merchant resolution engine and use the raw name directly."
+    )
 
 class RecommendationResponse(BaseModel):
     """Full response for a recommendation request."""
 
     calculation_id: str | None = Field(
         default=None, description="Unique trace ID for this recommendation calculation."
+    )
+    resolved_merchant_name: str | None = Field(
+        default=None, description="Canonical merchant name if resolved via auto-correction UX."
+    )
+    resolution_confidence: float | None = Field(
+        default=None, description="Confidence score from the merchant resolution engine."
+    )
+    resolution_type: str | None = Field(
+        default=None, description="Type of merchant resolution (e.g., ALIAS, FUZZY_AUTO, LLM_RECOVERY)."
+    )
+    resolution_source: str | None = Field(
+        default=None, description="Source of the resolution for analytics and tracking."
+    )
+    merchant_id: UUID | None = Field(
+        default=None, description="UUID of the resolved merchant, if applicable."
     )
     normalized_merchant: str | None = Field(
         default=None, description="Canonical merchant name if matched."

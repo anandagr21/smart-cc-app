@@ -15,19 +15,83 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.deps import get_merchant_service
+from api.deps import get_db, get_merchant_service
+from merchants.resolution_engine import resolve as run_resolution
 from merchants.schemas import (
+    AliasConfirmRequest,
+    AliasConfirmResponse,
     AliasRegisterRequest,
     MerchantCreate,
     MerchantResponse,
     MerchantSearchResponse,
     NormalizeRequest,
     NormalizeResponse,
+    ResolutionRequest,
+    ResolutionResponse,
 )
 from merchants.service import MerchantService
 
 router = APIRouter(prefix="/merchants", tags=["merchants"])
+
+
+# ------------------------------------------------------------------
+# Resolution Engine
+# ------------------------------------------------------------------
+
+@router.post("/resolve", response_model=ResolutionResponse)
+async def resolve_merchant(
+    request: ResolutionRequest,
+    service: MerchantService = Depends(get_merchant_service),
+    db: AsyncSession = Depends(get_db),
+) -> ResolutionResponse:
+    """Resolve a noisy user-entered merchant name to a canonical merchant.
+
+    Multi-stage pipeline:
+      1. Cache lookup
+      2. Exact alias match (< 10ms)
+      3. RapidFuzz fuzzy search (< 50ms)
+         - score >= 95 → FUZZY_AUTO
+         - score 80-94 → LLM Recovery (< 500ms)
+         - score 50-79 → LLM Discovery (< 1s)
+         - score < 50  → UNKNOWN (no LLM)
+      4. Metrics emission
+
+    Examples: "flipcart" → Flipkart, "swigy" → Swiggy, "flpkrt" → Flipkart
+    """
+    result = await run_resolution(raw_input=request.raw_name, session=db)
+    return ResolutionResponse(
+        merchant_id=result.merchant_id,
+        merchant_name=result.merchant_name,
+        category=result.category,
+        merchant_type=result.merchant_type,
+        confidence=result.confidence,
+        resolution_type=result.resolution_type,
+        requires_confirmation=result.requires_confirmation,
+        pending_review_id=result.pending_review_id,
+    )
+
+
+@router.post("/confirm-alias", response_model=AliasConfirmResponse)
+async def confirm_alias(
+    request: AliasConfirmRequest,
+    service: MerchantService = Depends(get_merchant_service),
+    db: AsyncSession = Depends(get_db),
+) -> AliasConfirmResponse:
+    """Confirm that a raw merchant name maps to a specific canonical merchant.
+
+    Records the user's correction in the alias learning table and immediately
+    promotes the alias to merchant_aliases with source=USER_CONFIRMED.
+    Future resolutions of this input will match via alias (no LLM needed).
+
+    Example: User confirms "flipcart" → Flipkart.
+    """
+    return await service.confirm_alias(
+        raw_name=request.raw_name,
+        merchant_id=request.merchant_id,
+        session=db,
+    )
 
 
 # ------------------------------------------------------------------

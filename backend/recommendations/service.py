@@ -36,7 +36,7 @@ class RecommendationService:
         calculation_id = uuid.uuid4()
         
         # 2. Run the pure orchestrator logic
-        response = await self._orchestrator.generate_recommendation(user_id, request)
+        response = await self._orchestrator.generate_recommendation(user_id, request, self._session)
         
         # 3. Attach calculation_id
         response.calculation_id = str(calculation_id)

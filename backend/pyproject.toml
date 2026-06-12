@@ -31,6 +31,7 @@ dependencies = [
     "langchain-google-genai>=1.0.0",
     "aiosqlite>=0.22.1",
     "slowapi>=0.1.9",
+    "rapidfuzz>=3.6.0",
 ]
 
 [project.optional-dependencies]

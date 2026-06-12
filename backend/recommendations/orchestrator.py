@@ -48,15 +48,30 @@ class RecommendationOrchestrator:
         self._reward_rule_service = reward_rule_service
 
     async def generate_recommendation(
-        self, user_id: UUID, request: RecommendationRequest
+        self, user_id: UUID, request: RecommendationRequest, session: Any
     ) -> RecommendationResponse:
         """Run the end-to-end recommendation workflow."""
         start_time = time.perf_counter()
         
-        # 1. Normalize merchant
-        normalize_res = self._merchant_service.normalize_merchant(request.merchant_name)
-        canonical_merchant = normalize_res.canonical_name
-        category = normalize_res.category or "other"
+        # 1. Resolve merchant using the new multi-stage pipeline, unless skipped
+        from merchants.resolution_engine import resolve as resolve_merchant
+        
+        if request.skip_resolution:
+            # If skipping, we mock a ResolutionResult with original data
+            from merchants.resolution_engine import ResolutionResult
+            resolve_res = ResolutionResult(
+                merchant_id=None,
+                merchant_name=request.merchant_name,
+                category="other",
+                merchant_type="UNKNOWN",
+                confidence=1.0,
+                resolution_type="SKIPPED"
+            )
+        else:
+            resolve_res = await resolve_merchant(request.merchant_name, session)
+        
+        canonical_merchant = resolve_res.merchant_name or request.merchant_name
+        category = resolve_res.category or "other"
 
         # 2. Fetch user cards
         from cards.enums import is_card_eligible_for_recommendation
@@ -67,6 +82,11 @@ class RecommendationOrchestrator:
         
         if not user_cards:
             return RecommendationResponse(
+                resolved_merchant_name=resolve_res.merchant_name,
+                resolution_confidence=resolve_res.confidence,
+                resolution_type=resolve_res.resolution_type,
+                resolution_source="ALIAS" if resolve_res.resolution_type == "ALIAS" else ("LLM" if "LLM" in resolve_res.resolution_type else "FUZZY"),
+                merchant_id=resolve_res.merchant_id,
                 normalized_merchant=canonical_merchant,
                 category=category,
                 all_ranked_cards=[],
@@ -124,6 +144,11 @@ class RecommendationOrchestrator:
         )
         
         return RecommendationResponse(
+            resolved_merchant_name=resolve_res.merchant_name,
+            resolution_confidence=resolve_res.confidence,
+            resolution_type=resolve_res.resolution_type,
+            resolution_source="ALIAS" if resolve_res.resolution_type == "ALIAS" else ("LLM" if "LLM" in resolve_res.resolution_type else "FUZZY"),
+            merchant_id=resolve_res.merchant_id,
             normalized_merchant=opt_response.normalized_merchant,
             category=opt_response.category,
             best_cashback_card=opt_response.best_cashback_card,
