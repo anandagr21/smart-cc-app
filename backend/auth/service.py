@@ -66,6 +66,7 @@ class AuthService:
                 email=user.email,
                 full_name=user.full_name,
                 role=user.role,
+                terms_accepted=user.terms_accepted,
             ),
         )
 
@@ -106,6 +107,7 @@ class AuthService:
                 email=user.email,
                 full_name=user.full_name,
                 role=user.role,
+                terms_accepted=user.terms_accepted,
             ),
         )
 
@@ -175,7 +177,19 @@ class AuthService:
                 email=user.email,
                 full_name=user.full_name,
                 role=user.role,
+                terms_accepted=user.terms_accepted,
             ),
+        )
+
+    async def accept_terms(self, user_id: UUID) -> UserResponse:
+        """Mark the user as having accepted the terms and conditions."""
+        user = await self._user_repo.update(user_id, {"terms_accepted": True})
+        return UserResponse(
+            id=user.id,
+            email=user.email,
+            full_name=user.full_name,
+            role=user.role,
+            terms_accepted=user.terms_accepted,
         )
 
     async def get_current_user(self, user_id: UUID) -> UserResponse:
@@ -190,4 +204,5 @@ class AuthService:
             email=user.email,
             full_name=user.full_name,
             role=user.role,
+            terms_accepted=user.terms_accepted,
         )

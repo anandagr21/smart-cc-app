@@ -117,3 +117,18 @@ async def get_me(
     Requires a valid Bearer token in the Authorization header.
     """
     return {"data": current_user}
+
+
+@router.patch(
+    "/me/terms",
+    response_model=SingleResponse[UserResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Accept Terms and Conditions",
+)
+async def accept_terms(
+    current_user: UserResponse = Depends(get_current_user),
+    auth_service: AuthService = Depends(_get_auth_service),
+) -> dict:
+    """Mark the user as having accepted the terms and conditions."""
+    result = await auth_service.accept_terms(current_user.id)
+    return {"data": result}

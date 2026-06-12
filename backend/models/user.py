@@ -40,6 +40,7 @@ class User(SQLModel, table=True):
     role: UserRole = Field(default=UserRole.USER, sa_type=AutoString)
     auth_provider: str = Field(default="email", max_length=50)
     google_id: str | None = Field(default=None, unique=True, index=True)
+    terms_accepted: bool = Field(default=False)
     created_at: datetime = Field(
         default_factory=datetime.utcnow
     )

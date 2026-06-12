@@ -56,6 +56,7 @@ class UserResponse(BaseModel):
     email: str = Field(..., description="User email address.")
     full_name: str = Field(..., description="User display name.")
     role: UserRole = Field(default=UserRole.USER, description="User role.")
+    terms_accepted: bool = Field(default=False, description="Whether the user has accepted terms and conditions.")
 
     model_config = ConfigDict(extra="forbid")
 
