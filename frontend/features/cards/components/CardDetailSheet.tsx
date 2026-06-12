@@ -52,7 +52,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   const network = card.network_override || card.card_details?.network || 'VISA';
-  const displayNetwork = network.toUpperCase() === 'NA' ? '' : network.toUpperCase();
+  const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' ? '' : network.toUpperCase();
   const isActive = card.card_status === 'ACTIVE';
 
   const gradient = getNetworkGradient(network, isDark) as [string, string];

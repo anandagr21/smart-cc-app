@@ -29,7 +29,7 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
   const bankName = card.card_details?.bank_name || 'Bank';
   
   const network = card.network_override || card.card_details?.network || 'VISA';
-  const displayNetwork = network.toUpperCase() === 'NA' ? '' : network;
+  const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' ? '' : network;
 
   const getBadgeText = () => {
     if (!recommendation) return '';

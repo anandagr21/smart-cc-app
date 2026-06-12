@@ -40,7 +40,7 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
   const bankName = card.card_details?.bank_name || 'Bank';
   
   const network = card.network_override || card.card_details?.network || 'default';
-  const displayNetwork = network.toUpperCase() === 'NA' || network === 'default' ? '' : network.toUpperCase();
+  const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' || network === 'default' ? '' : network.toUpperCase();
   const gradient = getNetworkGradient(network, isDark) as [string, string];
 
   return (

@@ -40,7 +40,9 @@ function FeeWaiverProgressBar({ threshold, remaining }: { threshold: number; rem
 
 /** Returns a short display label for the network */
 function getNetworkLabel(network: string): string {
+  if (!network) return '';
   const n = network.toLowerCase();
+  if (n.includes('n/a') || n === 'na') return '';
   if (n.includes('visa')) return 'VISA';
   if (n.includes('mastercard')) return 'Mastercard';
   if (n.includes('amex') || n.includes('american express')) return 'Amex';
