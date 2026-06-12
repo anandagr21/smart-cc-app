@@ -55,7 +55,7 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
           </View>
           
           {/* Card Name */}
-          <Text style={[styles.cardName, { color: colors.textPrimary }]} numberOfLines={1} adjustsFontSizeToFit>
+          <Text style={[styles.cardName, { color: colors.textPrimary }]} numberOfLines={2}>
             {cardName}
           </Text>
 
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.lg,
     borderWidth: 1,
     width: 140, // More compact
-    height: 90,
+    height: 106, // Increased height to fit 2 lines of text cleanly
     marginRight: 12,
     overflow: 'hidden',
   },
@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   strategyText: {
+    flex: 1,
     fontSize: tokens.fontSize.micro - 1,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
@@ -108,6 +109,8 @@ const styles = StyleSheet.create({
   cardName: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
+    lineHeight: 16,
+    marginBottom: 4,
   },
   valueRow: {
     marginTop: 'auto',
