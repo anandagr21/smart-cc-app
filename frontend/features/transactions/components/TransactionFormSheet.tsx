@@ -16,11 +16,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Store, X, Search, Info, Sparkles, CheckCircle2, AlertTriangle, Undo2 } from 'lucide-react-native';
+import { Store, X, Search, Info, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInUp, FadeOut, SlideInDown } from 'react-native-reanimated';
 
 import { TransactionResponse } from '../types/transaction.types';
-import { OptimizationIntent } from '@/features/recommendations/types/api';
+
 import { Input } from '@/components/ui/Input';
 import { apiClient } from '@/services/api/client';
 import { useCards } from '@/features/cards/hooks/useCards';
@@ -60,7 +60,7 @@ const formSchema = z.object({
   intent: z.enum(['MAX_REWARDS', 'SAVE_FEE_WAIVER', 'BALANCED', 'SIMPLIFY_DECISIONS']).default('BALANCED'),
 });
 
-type FormData = z.infer<typeof formSchema>;
+
 
 const INTENT_OPTIONS = [
   { label: 'Max Rewards', value: 'MAX_REWARDS', disabled: false },
@@ -151,8 +151,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   // Auto-correction UI states
   const [resolvedMerchantName, setResolvedMerchantName] = useState<string | null>(null);
   const [resolutionConfidence, setResolutionConfidence] = useState<number | null>(null);
-  const [resolutionType, setResolutionType] = useState<string | null>(null);
-  const [resolutionSource, setResolutionSource] = useState<string | null>(null);
+
   const [isUndoDisabled, setIsUndoDisabled] = useState(false);
   const [showCorrection, setShowCorrection] = useState(false);
 
@@ -195,8 +194,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           ) {
             setResolvedMerchantName(res.resolved_merchant_name);
             setResolutionConfidence(res.resolution_confidence);
-            setResolutionType(res.resolution_type);
-            setResolutionSource(res.resolution_source);
+
             setShowCorrection(true);
             
             // Emit analytics event
