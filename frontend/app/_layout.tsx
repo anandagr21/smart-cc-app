@@ -7,6 +7,7 @@ import { useAuthStore } from '@/features/auth/store/authStore';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { StatusBar } from 'expo-status-bar';
+import { TermsDisclaimerModal } from '@/components/TermsDisclaimerModal';
 import '@/global.css';
 
 const queryClient = new QueryClient({
@@ -71,6 +72,7 @@ export default function RootLayout() {
           <Stack.Screen name="monthly-intelligence" options={{ presentation: 'modal' }} />
           <Stack.Screen name="intelligence" options={{ presentation: 'modal', animation: 'fade' }} />
         </Stack>
+        <TermsDisclaimerModal />
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

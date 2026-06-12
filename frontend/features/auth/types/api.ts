@@ -15,6 +15,7 @@ export interface UserResponse {
   email: string;
   full_name: string;
   role: string;
+  terms_accepted: boolean;
 }
 
 /** Normalised error shape extracted from API responses. */

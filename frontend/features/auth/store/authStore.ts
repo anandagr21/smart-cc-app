@@ -9,6 +9,7 @@ interface AuthState {
   login: (token: string, user: any) => Promise<void>;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
+  acceptTerms: () => Promise<void>;
 }
 
 // Helper for cross-platform secure storage
@@ -65,6 +66,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
     } catch (e) {
       set({ isLoading: false });
+    }
+  },
+  acceptTerms: async () => {
+    // Need to use get() to access current state in async functions, or we can just use the destructured version
+    const { user } = useAuthStore.getState();
+    if (user) {
+      const updatedUser = { ...user, terms_accepted: true };
+      await setItemAsync('auth_user', JSON.stringify(updatedUser));
+      set({ user: updatedUser });
     }
   }
 }));

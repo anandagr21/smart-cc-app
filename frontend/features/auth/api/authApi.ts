@@ -13,3 +13,7 @@ export const googleLogin = async (idToken: string): Promise<TokenResponse> => {
   });
   return response.data.data;
 };
+
+export const acceptTerms = async (): Promise<void> => {
+  await apiClient.patch('/auth/me/terms');
+};
