@@ -10,6 +10,7 @@ export interface RecommendationRequest {
   transaction_date?: string;
   mcc_code?: string;
   intent?: OptimizationIntent;
+  skip_resolution?: boolean;
 }
 
 export interface OptimizerRankedCard {
@@ -29,6 +30,11 @@ export interface OptimizerRankedCard {
 
 export interface RecommendationResponse {
   calculation_id?: string;
+  resolved_merchant_name: string | null;
+  resolution_confidence: number | null;
+  resolution_type: string | null;
+  resolution_source: string | null;
+  merchant_id: string | null;
   normalized_merchant: string | null;
   category: string | null;
   best_cashback_card: OptimizerRankedCard | null;

@@ -16,12 +16,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Store, X, Search, Info, Sparkles } from 'lucide-react-native';
-import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
+import { Store, X, Search, Info, Sparkles, CheckCircle2, AlertTriangle, Undo2 } from 'lucide-react-native';
+import Animated, { FadeIn, FadeInUp, FadeOut, SlideInDown } from 'react-native-reanimated';
 
 import { TransactionResponse } from '../types/transaction.types';
 import { OptimizationIntent } from '@/features/recommendations/types/api';
 import { Input } from '@/components/ui/Input';
+import { apiClient } from '@/services/api/client';
 import { useCards } from '@/features/cards/hooks/useCards';
 import { useCreateTransaction } from '../hooks/useTransactions';
 import { useUpdateTransaction } from '../hooks/useUpdateTransaction';
@@ -147,6 +148,14 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   
     const [explainCardId, setExplainCardId] = useState<string | null>(null);
 
+  // Auto-correction UI states
+  const [resolvedMerchantName, setResolvedMerchantName] = useState<string | null>(null);
+  const [resolutionConfidence, setResolutionConfidence] = useState<number | null>(null);
+  const [resolutionType, setResolutionType] = useState<string | null>(null);
+  const [resolutionSource, setResolutionSource] = useState<string | null>(null);
+  const [isUndoDisabled, setIsUndoDisabled] = useState(false);
+  const [showCorrection, setShowCorrection] = useState(false);
+
   // Accordion state
   
   // Fetch recommendations
@@ -164,6 +173,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
         amount: fetchAmount,
         payment_mode: (paymentMode || 'ONLINE').toLowerCase() as any,
         intent: intentValue,
+        skip_resolution: isUndoDisabled,
       }, {
         onSuccess: (res) => {
           const heroCardName = res.all_ranked_cards?.[0]?.card_name;
@@ -173,13 +183,62 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
               setValue('user_card_id', bestCardInWallet.id);
             }
           }
+          
+          // Auto-correction logic
+          if (
+            hasValidMerchant &&
+            !isUndoDisabled &&
+            res.resolved_merchant_name &&
+            res.resolution_confidence &&
+            res.resolution_confidence >= 0.85 &&
+            res.resolved_merchant_name.toLowerCase() !== fetchMerchant.toLowerCase()
+          ) {
+            setResolvedMerchantName(res.resolved_merchant_name);
+            setResolutionConfidence(res.resolution_confidence);
+            setResolutionType(res.resolution_type);
+            setResolutionSource(res.resolution_source);
+            setShowCorrection(true);
+            
+            // Emit analytics event
+            apiClient.post('/search/events', {
+              event_type: 'merchant_corrected',
+              payload: { 
+                calculation_id: res.calculation_id,
+                raw_input: fetchMerchant,
+                resolved_merchant: res.resolved_merchant_name,
+                confidence: res.resolution_confidence
+              }
+            }).catch(console.error);
+          } else {
+            // Hide if no confident resolution or if undo is disabled
+            setShowCorrection(false);
+            setResolvedMerchantName(null);
+          }
         }
       });
     } else if (visible && !hasValidMerchant && !hasValidAmount && getRecommendation.data) {
       // Clear recommendations if both are empty
       getRecommendation.reset();
     }
-  }, [debouncedMerchant, debouncedAmount, paymentMode, intentValue, visible]);
+  }, [debouncedMerchant, debouncedAmount, paymentMode, intentValue, visible, isUndoDisabled]);
+
+  const handleUndoCorrection = () => {
+    setIsUndoDisabled(true);
+    setShowCorrection(false);
+    setResolvedMerchantName(null);
+    
+    // Fire analytics event
+    apiClient.post('/search/events', {
+      event_type: 'merchant_correction_undone',
+      payload: { 
+        calculation_id: getRecommendation.data?.calculation_id,
+        raw_input: merchantName,
+        resolved_merchant: resolvedMerchantName
+      }
+    }).catch(console.error);
+    
+    triggerHaptic('selection');
+  };
 
   // Track if we've initialized the form for this open session
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -221,11 +280,24 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
 
   const onFormSubmit = async (data: any) => {
     try {
+      const finalMerchantName = (showCorrection && resolvedMerchantName) ? resolvedMerchantName : data.merchant_name;
+      
+      if (showCorrection && resolvedMerchantName) {
+        apiClient.post('/search/events', {
+          event_type: 'merchant_correction_accepted',
+          payload: { 
+            calculation_id: getRecommendation.data?.calculation_id,
+            raw_input: data.merchant_name,
+            resolved_merchant: resolvedMerchantName
+          }
+        }).catch(console.error);
+      }
+
       if (isEditing) {
         await updateTx.mutateAsync({
           id: initialData.id,
           data: {
-            merchant_name: data.merchant_name,
+            merchant_name: finalMerchantName,
             amount: data.amount,
             user_card_id: data.user_card_id,
             payment_mode: data.payment_mode.toLowerCase() as any,
@@ -234,6 +306,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
       } else {
         await addTx.mutateAsync({
           ...data,
+          merchant_name: finalMerchantName,
           payment_mode: data.payment_mode.toLowerCase() as any,
           transaction_date: new Date().toISOString().split('T')[0],
           recommended_card_id: recommendedCardId,
@@ -389,22 +462,51 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
             </View>
 
             {/* MERCHANT */}
-            <Controller
-              control={control}
-              name="merchant_name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  testID="merchant-input"
-                  label="Merchant"
-                  placeholder="Amazon, Uber, Starbucks..."
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                  error={errors.merchant_name?.message as string}
-                  leftIcon={<Store size={18} color={colors.textMuted} />}
-                />
+            <View>
+              <Controller
+                control={control}
+                name="merchant_name"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <Input
+                    testID="merchant-input"
+                    label="Merchant"
+                    placeholder="Amazon, Uber, Starbucks..."
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    error={errors.merchant_name?.message as string}
+                    leftIcon={<Store size={18} color={colors.textMuted} />}
+                  />
+                )}
+              />
+              {/* Auto-Correction UI */}
+              {showCorrection && resolvedMerchantName && (
+                <Animated.View 
+                  entering={SlideInDown.springify().mass(0.8).damping(15)}
+                  exiting={FadeOut.duration(150)}
+                  style={styles.correctionContainer}
+                >
+                  <View style={styles.correctionLeft}>
+                    {resolutionConfidence && resolutionConfidence >= 0.95 ? (
+                      // @ts-ignore
+                      <CheckCircle2 size={16} color={colors.success} />
+                    ) : (
+                      // @ts-ignore
+                      <AlertTriangle size={16} color={colors.warning} />
+                    )}
+                    <Text style={[styles.correctionText, { color: colors.textSecondary }]}>
+                      {resolutionConfidence && resolutionConfidence >= 0.95 ? 'Using ' : 'Recognized as '}
+                      <Text style={{ color: colors.textPrimary, fontWeight: tokens.fontWeight.bold }}>
+                        {resolvedMerchantName}
+                      </Text>
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={handleUndoCorrection} style={styles.undoBtn} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                    <Text style={[styles.undoText, { color: colors.primary }]}>Undo</Text>
+                  </TouchableOpacity>
+                </Animated.View>
               )}
-            />
+            </View>
 
             {/* PAYMENT MODE */}
             <View style={styles.sectionWrap}>
@@ -983,13 +1085,35 @@ const styles = StyleSheet.create({
   },
   overrideChip: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: tokens.radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    marginRight: 8,
   },
   overrideChipText: {
     fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.medium,
+  },
+  correctionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  correctionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  correctionText: {
+    fontSize: tokens.fontSize.body,
+  },
+  undoBtn: {
+    padding: 4,
+  },
+  undoText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.bold,
   },
 });

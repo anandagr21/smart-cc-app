@@ -42,6 +42,7 @@ export default function DashboardScreen() {
           <Text style={[styles.greeting, { color: colors.textMuted }]}>
             {getGreeting()} · Smart CC
           </Text>
+          
           <Text style={[styles.heroText, { color: colors.textPrimary }]}>
             Dashboard
           </Text>
@@ -164,13 +165,34 @@ export default function DashboardScreen() {
 
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 120 },
-  header: { marginTop: 16, marginBottom: 24 },
+  header: {
+    marginBottom: 32,
+  },
   greeting: {
-    fontSize: tokens.fontSize.label,
-    fontWeight: tokens.fontWeight.medium,
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.semibold,
     letterSpacing: tokens.letterSpacing.wider,
     textTransform: 'uppercase',
     marginBottom: 8,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: tokens.radius.full,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  searchBarText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.medium,
   },
   heroText: {
     fontSize: tokens.fontSize.heroXl,
