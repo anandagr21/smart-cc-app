@@ -71,7 +71,7 @@ export const TransactionRow = React.memo(({ transaction, onPress, index }: Trans
 
           <View style={styles.leftContent}>
             {/* Category Icon */}
-            <View style={[styles.iconWrap, { backgroundColor: colors.surfaceElevated }]}>
+            <View style={[styles.iconWrap, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
               {/* @ts-ignore */}
               <IconComponent size={20} color={colors.textSecondary} strokeWidth={1.5} />
             </View>
@@ -143,7 +143,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 16,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
   merchantInfo: {
     flex: 1,

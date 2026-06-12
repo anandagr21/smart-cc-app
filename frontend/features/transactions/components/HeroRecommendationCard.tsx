@@ -38,7 +38,7 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
-  
+
   const network = card.network_override || card.card_details?.network || 'default';
   const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' || network === 'default' ? '' : network.toUpperCase();
   const gradient = getNetworkGradient(network, isDark) as [string, string];
@@ -47,29 +47,29 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
     <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
       <TouchableOpacity activeOpacity={0.9} onPress={onSelect} style={styles.touchable}>
         <LinearGradient
-          colors={['#0F172A', '#020617']} // Deep layered dark surface
+          colors={[colors.surface, colors.background]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={styles.cardBackground}
+          style={[styles.cardBackground, { borderColor: colors.border, borderWidth: 1 }]}
         >
           {/* Top highlight line */}
-          <View style={styles.topEdge} />
+          <View style={[styles.topEdge, { backgroundColor: colors.glassHighlight }]} />
 
           {/* EDITORIAL TAG ROW */}
           <View style={styles.editorialRow}>
-            <View style={styles.strategyTagWrap}>
-              <Text style={styles.strategyTagText}>
+            <View style={[styles.strategyTagWrap, { backgroundColor: colors.primarySoft, borderColor: colors.primarySoft }]}>
+              <Text style={[styles.strategyTagText, { color: colors.primary }]}>
                 {recommendation.confidence_label?.toUpperCase() || 'OPTIMAL'}
               </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={() => setIsFeedbackVisible(true)}>
+              <TouchableOpacity hitSlop={{ top: 14, right: 14, bottom: 14, left: 14 }} onPress={() => setIsFeedbackVisible(true)}>
                 {/* @ts-ignore */}
-                <MessageSquareWarning size={16} color="rgba(255,255,255,0.4)" />
+                <MessageSquareWarning size={16} color={colors.textSecondary} />
               </TouchableOpacity>
-              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress}>
+              <TouchableOpacity hitSlop={{ top: 14, right: 14, bottom: 14, left: 14 }} onPress={onInfoPress}>
                 {/* @ts-ignore */}
-                <Info size={16} color="rgba(255,255,255,0.4)" />
+                <Info size={16} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -77,11 +77,11 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
           {/* CARD IDENTITY */}
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
-              <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
-              <Text style={styles.cardName} numberOfLines={1} adjustsFontSizeToFit>{cardName}</Text>
+              <Text style={[styles.bankName, { color: colors.textSecondary }]}>{bankName.toUpperCase()}</Text>
+              <Text style={[styles.cardName, { color: colors.textPrimary }]} numberOfLines={1} adjustsFontSizeToFit>{cardName}</Text>
             </View>
             {!!displayNetwork && (
-              <View style={styles.miniArtWrap}>
+              <View style={[styles.miniArtWrap, { borderColor: colors.borderHighlight }]}>
                 <LinearGradient colors={gradient} style={styles.miniArt} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
                   <Text style={styles.miniArtNetwork}>{displayNetwork}</Text>
                 </LinearGradient>
@@ -91,25 +91,25 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
 
           {/* CONCISE RATIONALE */}
           <View style={styles.rationaleWrap}>
-            <Text style={styles.rationaleText}>
+            <Text style={[styles.rationaleText, { color: colors.textPrimary }]}>
               {recommendation.explanation || 'Optimal choice for this transaction.'}
             </Text>
           </View>
 
           {/* FINANCIAL IMPACT */}
-          <View style={styles.financialsRow}>
+          <View style={[styles.financialsRow, { borderColor: colors.borderHighlight }]}>
             <View style={styles.financialItemRight}>
               <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                <Text style={styles.financialTotalAmount}>
+                <Text style={[styles.financialTotalAmount, { color: colors.success }]}>
                   {formatCurrencyIN(recommendation.immediate_reward_value)}
                 </Text>
                 {recommendation.fee_waiver_progress_impact > 0 && (
-                  <Text style={[styles.financialTotalAmount, { fontSize: tokens.fontSize.body, marginLeft: 6, color: '#A78BFA' }]}>
-                    + {formatCurrencyIN(recommendation.fee_waiver_progress_impact)}
+                  <Text style={[styles.financialTotalAmount, { fontSize: tokens.fontSize.body, marginLeft: 6, color: colors.success }]}>
+                    + {formatCurrencyIN(recommendation.fee_waiver_progress_impact)} saved
                   </Text>
                 )}
               </View>
-              <Text style={styles.financialLabel}>TOTAL REWARD</Text>
+              <Text style={[styles.financialLabel, { color: colors.textSecondary }]}>TOTAL REWARD</Text>
             </View>
           </View>
 
@@ -140,8 +140,6 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 0,
     borderRadius: tokens.radius.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
     overflow: 'hidden',
   },
   touchable: {
@@ -194,7 +192,7 @@ const styles = StyleSheet.create({
   },
   cardName: {
     color: '#FFFFFF',
-    fontSize: tokens.fontSize.headline,
+    fontSize: tokens.fontSize.heroSm,
     fontWeight: tokens.fontWeight.heavy,
   },
   miniArtWrap: {

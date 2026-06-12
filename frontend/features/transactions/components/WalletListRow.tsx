@@ -41,7 +41,7 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: withSpring(isActive ? 1.01 : 1, { damping: 20, stiffness: 200 }) }],
-      borderColor: withSpring(isActive ? colors.success : 'transparent'),
+      borderColor: withSpring(isActive ? colors.primary : 'transparent'),
       backgroundColor: withSpring(isActive ? colors.surfaceElevated : colors.background),
       opacity: card.card_status === 'ACTIVE' ? 1 : 0.5,
     };
@@ -68,10 +68,10 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
 
         <View style={styles.rightContent}>
           {recommendation && card.card_status === 'ACTIVE' && (
-            <Animated.View entering={FadeIn} style={styles.recommendationBadge}>
+            <Animated.View entering={FadeIn} style={[styles.recommendationBadge, { backgroundColor: colors.primarySoft }]}>
               {/* @ts-ignore */}
-              <Sparkles size={10} color={colors.success} style={{ marginRight: 4 }} />
-              <Text style={[styles.recommendationText, { color: colors.success }]} numberOfLines={1}>
+              <Sparkles size={10} color={colors.primary} style={{ marginRight: 4 }} />
+              <Text style={[styles.recommendationText, { color: colors.primary }]} numberOfLines={1}>
                 {getBadgeText()}
               </Text>
             </Animated.View>
@@ -81,7 +81,7 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
             {isActive && card.card_status === 'ACTIVE' && (
               <Animated.View entering={FadeIn.duration(200)}>
                 {/* @ts-ignore */}
-                <CheckCircle2 size={18} color={colors.success} weight="fill" />
+                <CheckCircle2 size={18} color={colors.primary} weight="fill" />
               </Animated.View>
             )}
             {card.card_status !== 'ACTIVE' && (
@@ -137,7 +137,6 @@ const styles = StyleSheet.create({
   recommendationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.1)', // Subtle success tint
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: tokens.radius.full,
@@ -159,7 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(150,150,150,0.1)',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: tokens.radius.xs,
   },
   inactiveText: {
     fontSize: 10,

@@ -31,8 +31,8 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: withSpring(isActive ? 1.02 : 1, { damping: 20, stiffness: 200 }) }],
-      borderColor: withSpring(isActive ? '#10B981' : colors.glassBorder),
-      backgroundColor: withSpring(isActive ? 'rgba(16, 185, 129, 0.05)' : colors.surfaceElevated),
+      borderColor: withSpring(isActive ? colors.primary : colors.border),
+      backgroundColor: withSpring(isActive ? colors.primarySoft : colors.surfaceElevated),
     };
   });
 
@@ -43,7 +43,7 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
           
           {/* Strategy Tag */}
           <View style={styles.strategyRow}>
-            <Text style={[styles.strategyText, { color: isActive ? '#10B981' : colors.textMuted }]} numberOfLines={1}>
+            <Text style={[styles.strategyText, { color: isActive ? colors.primary : colors.textMuted }]} numberOfLines={1}>
               {recommendation.confidence_label?.toUpperCase() || 'ALTERNATIVE'}
             </Text>
             {onInfoPress && (
@@ -61,11 +61,11 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
 
           {/* Value */}
           <View style={[styles.valueRow, { flexDirection: 'row', alignItems: 'baseline' }]}>
-            <Text style={styles.rewardAmount} numberOfLines={1}>
+            <Text style={[styles.rewardAmount, { color: colors.success }]} numberOfLines={1}>
               {formatCurrencyIN(recommendation.immediate_reward_value)}
             </Text>
             {recommendation.fee_waiver_progress_impact > 0 && (
-              <Text style={[styles.rewardAmount, { fontSize: tokens.fontSize.micro, marginLeft: 4, color: '#A78BFA' }]} numberOfLines={1}>
+              <Text style={[styles.rewardAmount, { fontSize: tokens.fontSize.micro, marginLeft: 4, color: colors.primary }]} numberOfLines={1}>
                 + {formatCurrencyIN(recommendation.fee_waiver_progress_impact)}
               </Text>
             )}
@@ -117,7 +117,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   rewardAmount: {
-    color: '#10B981',
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.heavy,
   },

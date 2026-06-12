@@ -512,7 +512,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                 control={control}
                 name="payment_mode"
                 render={({ field: { onChange, value } }) => (
-                  <View style={[styles.segmentRow, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                  <View style={[styles.segmentRow, { backgroundColor: colors.background }]}>
                     {PAYMENT_MODES.map((mode) => {
                       const isActive = value === mode.value;
                       return (
@@ -525,7 +525,10 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                           activeOpacity={0.7}
                           style={[
                             styles.segmentBtn,
-                            isActive && { backgroundColor: colors.surfaceElevated, borderColor: colors.primary, borderWidth: StyleSheet.hairlineWidth }
+                            isActive && { 
+                              backgroundColor: colors.surfaceElevated,
+                              shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 
+                            }
                           ]}
                         >
                           <Text style={[
@@ -548,7 +551,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
             {/* INTENT SELECTOR */}
             {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && (
               <View style={styles.sectionWrap}>
-                <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>OPTIMIZATION INTENT</Text>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Optimization Intent</Text>
                 <Controller
                   control={control}
                   name="intent"
@@ -569,8 +572,11 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                             disabled={option.disabled}
                             style={[
                               styles.segmentBtn,
-                              { paddingHorizontal: 16, backgroundColor: colors.background, borderColor: colors.border },
-                              isActive && { backgroundColor: colors.surfaceElevated, borderColor: colors.primary, borderWidth: 1 },
+                              { paddingHorizontal: 16, backgroundColor: colors.background },
+                              isActive && { 
+                                backgroundColor: colors.surfaceElevated,
+                                shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 
+                              },
                               option.disabled && { opacity: 0.4 }
                             ]}
                           >
@@ -602,9 +608,16 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                 </View>
 
                 {(!debouncedMerchant || debouncedMerchant.length < 3) && (!debouncedAmount || Number(debouncedAmount) <= 0) && !getRecommendation.isPending && winningWalletCards.length === 0 && (
-                  <Animated.View entering={FadeIn} style={styles.emptyState}>
+                  <Animated.View entering={FadeIn} style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <View style={[styles.emptyIconWrap, { backgroundColor: colors.background }]}>
+                      {/* @ts-ignore */}
+                      <Sparkles size={24} color={colors.primary} />
+                    </View>
+                    <Text style={[styles.emptyStateTitle, { color: colors.textPrimary }]}>
+                      Ready to Optimize
+                    </Text>
                     <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
-                      Enter an amount or merchant to get smart recommendations
+                      Enter an amount or merchant above to discover the best card to use.
                     </Text>
                   </Animated.View>
                 )}
@@ -681,7 +694,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
             {/* SECTION 2: SEARCHABLE FULL WALLET */}
             <View style={styles.walletSection}>
               <View style={styles.walletHeader}>
-                <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>YOUR WALLET</Text>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Your Wallet</Text>
                 {errors.user_card_id?.message && (
                   <Text style={[styles.errorText, { color: colors.danger, marginTop: 0 }]}>
                     {errors.user_card_id.message as string}
@@ -689,17 +702,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                 )}
               </View>
 
-              <View style={[styles.searchBar, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                {/* @ts-ignore */}
-                <Search size={16} color={colors.textMuted} style={styles.searchIcon} />
-                <TextInput
-                  placeholder="Search cards by bank, card name or network..."
-                  placeholderTextColor={colors.textMuted}
-                  style={[styles.searchInput, { color: colors.textPrimary }]}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-              </View>
+
 
               <View style={styles.walletList}>
                 {Object.entries(groupedActive).map(([bank, cards]) => (
@@ -784,7 +787,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           {/* STICKY CTA */}
           <View style={[styles.stickyCtaWrap, { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder, paddingBottom: Math.max(insets.bottom, 24) }]}>
             <LinearGradient
-              colors={['#10B981', '#059669']} // Emerald Glow
+              colors={['#8B5CF6', '#6D28D9']} // Primary Purple
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={styles.ctaGradient}
             >
@@ -1027,12 +1030,29 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.bold,
   },
   emptyState: {
-    paddingVertical: 32,
+    paddingVertical: 40,
+    paddingHorizontal: 24,
     alignItems: 'center',
+    borderRadius: tokens.radius.xl,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  emptyIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: tokens.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: tokens.fontSize.title,
+    fontWeight: tokens.fontWeight.bold,
+    marginBottom: 8,
   },
   emptyStateText: {
     fontSize: tokens.fontSize.body,
-    fontStyle: 'italic',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   thinkingState: {
     paddingVertical: 32,

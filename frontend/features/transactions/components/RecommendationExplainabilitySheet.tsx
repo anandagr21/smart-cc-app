@@ -73,17 +73,17 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
               <Text style={[styles.title, { color: colors.textPrimary }]}>Why {topCardName}?</Text>
 
               {/* NARRATIVE */}
-              <View style={[styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: 'rgba(139, 92, 246, 0.3)' }]}>
+              <View style={[styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.primarySoft }]}>
                 {/* @ts-ignore */}
-                <Sparkles size={18} color="#A78BFA" style={{ marginBottom: 16 }} />
-                <Text style={[styles.strategyTitle, { color: '#A78BFA' }]}>
+                <Sparkles size={18} color={colors.primary} style={{ marginBottom: 16 }} />
+                <Text style={[styles.strategyTitle, { color: colors.primary }]}>
                   {humanStrategy.toUpperCase()}
                 </Text>
                 <Text style={[styles.narrativeText, { color: colors.textPrimary }]}>
                   {item.recommendation.explanation || 'This card provides the highest blended value for your selected intent.'}
                 </Text>
                 <LinearGradient
-                  colors={['rgba(139, 92, 246, 0.1)', 'transparent']}
+                  colors={[colors.primarySoft, 'transparent']}
                   style={StyleSheet.absoluteFill}
                   pointerEvents="none"
                 />
@@ -155,7 +155,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                           <Info size={13} color={colors.textMuted} />
                         </TouchableOpacity>
                       </View>
-                      <Text style={[styles.breakdownValue, { color: '#A78BFA' }]}>
+                      <Text style={[styles.breakdownValue, { color: colors.primary }]}>
                         {formatCurrencyIN(item.recommendation.fee_waiver_progress_impact)}
                       </Text>
                     </View>
@@ -209,14 +209,14 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                 )}
 
                 {/* Total */}
-                <View style={[styles.totalRow, { borderColor: 'rgba(16, 185, 129, 0.2)' }]}>
+                <View style={[styles.totalRow, { borderColor: colors.successSoft, backgroundColor: colors.successSoft }]}>
                   <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total Reward</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                    <Text style={[styles.totalValue]}>
+                    <Text style={[styles.totalValue, { color: colors.success }]}>
                       {formatCurrencyIN(item.recommendation.immediate_reward_value)}
                     </Text>
                     {item.recommendation.fee_waiver_progress_impact > 0 && (
-                      <Text style={[styles.totalValue, { fontSize: tokens.fontSize.body, marginLeft: 6, color: '#A78BFA' }]}>
+                      <Text style={[styles.totalValue, { fontSize: tokens.fontSize.body, marginLeft: 6, color: colors.primary }]}>
                         + {formatCurrencyIN(item.recommendation.fee_waiver_progress_impact)}
                       </Text>
                     )}
@@ -362,8 +362,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 18,
     paddingVertical: 16,
-    borderTopWidth: 1,
-    backgroundColor: 'rgba(16, 185, 129, 0.06)',
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   totalLabel: {
     fontSize: tokens.fontSize.body,
@@ -372,7 +371,6 @@ const styles = StyleSheet.create({
   totalValue: {
     fontSize: tokens.fontSize.title,
     fontWeight: tokens.fontWeight.heavy,
-    color: '#10B981',
   },
   // Fee waiver expand
   expandedBox: {
