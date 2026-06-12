@@ -11,6 +11,7 @@ import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/us
 import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
 import { formatCurrencyIN } from '@/utils/currency';
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
+import { TransactionResponse } from '@/features/transactions/types/transaction.types';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -49,6 +50,8 @@ export default function DashboardScreen() {
           <Text style={[styles.subText, { color: colors.textSecondary }]}>
             Your proactive financial assistant.
           </Text>
+
+
           
           <TouchableOpacity 
             style={[styles.intelligenceCta, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -137,10 +140,12 @@ export default function DashboardScreen() {
           </Animated.View>
         )}
 
+
+
         {/* Primary Action Button */}
-        <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.actionContainer}>
+        <Animated.View entering={FadeInDown.delay(250).springify()} style={[styles.actionContainer, { backgroundColor: colors.primarySoft, borderColor: colors.primarySoft }]}>
           <TouchableOpacity 
-            style={[styles.primaryActionBtn, { backgroundColor: colors.primary, ...tokens.elevation.glow }]}
+            style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
             activeOpacity={0.8}
             onPress={() => setFormSheetVisible(true)}
           >
@@ -175,25 +180,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 8,
   },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginTop: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: tokens.radius.full,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  searchBarText: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.medium,
-  },
+
   heroText: {
     fontSize: tokens.fontSize.heroXl,
     fontWeight: tokens.fontWeight.heavy,
@@ -316,14 +303,13 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.body,
     lineHeight: 20,
   },
+
   actionContainer: {
     alignItems: 'center',
     marginTop: 8,
     padding: 24,
     borderRadius: tokens.radius.card,
-    backgroundColor: 'rgba(79, 54, 255, 0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(79, 54, 255, 0.08)',
   },
   primaryActionBtn: {
     flexDirection: 'row',

@@ -141,7 +141,7 @@ export default function SearchResultsScreen() {
 
         {/* Resolution Feedback Banner */}
         {intent?.resolution_type === 'LLM_RECOVERY' && (
-          <Animated.View entering={FadeInDown.delay(100).springify()} style={[styles.banner, { backgroundColor: colors.warning + '20', borderColor: colors.warning }]}>
+          <Animated.View entering={FadeInDown.delay(100).springify()} style={[styles.banner, { backgroundColor: colors.warningSoft, borderColor: colors.warning }]}>
              {/* @ts-ignore */}
             <AlertTriangle size={20} color={colors.warning} />
             <View style={styles.bannerTextContainer}>
@@ -194,8 +194,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: tokens.fontSize.bodyLg,
-    fontWeight: tokens.fontWeight.semibold,
+    fontSize: tokens.fontSize.headline,
+    fontWeight: tokens.fontWeight.heavy,
   },
   centerContainer: {
     flex: 1,

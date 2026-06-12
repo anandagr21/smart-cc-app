@@ -106,15 +106,15 @@ export default function SearchScreen() {
   const renderIcon = (type: SearchResultType) => {
     switch (type) {
       case SearchResultType.MERCHANT:
-        return <Store size={20} color={colors.textSecondary} />;
+        return <Store size={20} color={colors.primary} />;
       case SearchResultType.CATEGORY:
-        return <MapPin size={20} color={colors.textSecondary} />;
+        return <MapPin size={20} color={colors.primary} />;
       case SearchResultType.CARD:
-        return <CreditCard size={20} color={colors.textSecondary} />;
+        return <CreditCard size={20} color={colors.primary} />;
       case SearchResultType.OFFER:
-        return <Tag size={20} color={colors.textSecondary} />;
+        return <Tag size={20} color={colors.primary} />;
       default:
-        return <Search size={20} color={colors.textSecondary} />;
+        return <Search size={20} color={colors.primary} />;
     }
   };
 
@@ -125,7 +125,7 @@ export default function SearchScreen() {
           style={[styles.suggestionRow, { borderBottomColor: colors.border }]}
           onPress={() => handleSelectSuggestion(item)}
         >
-          <View style={[styles.iconContainer, { backgroundColor: colors.surface }]}>
+          <View style={[styles.iconContainer, { backgroundColor: colors.primarySoft }]}>
             {renderIcon(item.type)}
           </View>
           <View style={styles.suggestionContent}>
@@ -162,7 +162,7 @@ export default function SearchScreen() {
             <TextInput
               ref={inputRef}
               style={[styles.input, { color: colors.textPrimary }]}
-              placeholder="Search merchants, categories, or cards..."
+              placeholder="Ask Smart CC or search merchants..."
               placeholderTextColor={colors.textMuted}
               value={query}
               onChangeText={setQuery}
@@ -232,7 +232,7 @@ export default function SearchScreen() {
                     onPress={() => setQuery(trend)}
                   >
                     {/* @ts-ignore */}
-                    <TrendingUp size={14} color={colors.primary} />
+                    <TrendingUp size={14} color={colors.textSecondary} />
                     <Text style={[styles.chipText, { color: colors.textPrimary }]}>{trend}</Text>
                   </TouchableOpacity>
                 ))}
@@ -251,7 +251,7 @@ export default function SearchScreen() {
                     onPress={() => setQuery(cat)}
                   >
                     {/* @ts-ignore */}
-                    <MapPin size={14} color={colors.primary} />
+                    <MapPin size={14} color={colors.textSecondary} />
                     <Text style={[styles.chipText, { color: colors.textPrimary }]}>{cat}</Text>
                   </TouchableOpacity>
                 ))}
@@ -299,8 +299,8 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.medium,
+    fontSize: tokens.fontSize.bodyLg,
+    fontWeight: tokens.fontWeight.semibold,
   },
   loadingContainer: {
     padding: 20,
