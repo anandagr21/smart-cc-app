@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2, Wifi } from 'lucide-react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { UserCardResponse } from '../types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
@@ -15,6 +15,27 @@ const CARD_HEIGHT = CARD_WIDTH / 1.586; // Standard credit card ratio
 interface WalletCardProps {
   card: UserCardResponse;
   index: number;
+}
+
+function FeeWaiverProgressBar({ threshold, remaining }: { threshold: number; remaining: number }) {
+  const progressPercent = Math.min(100, Math.max(0, ((threshold - remaining) / threshold) * 100));
+  const widthAnim = useSharedValue(0);
+
+  React.useEffect(() => {
+    widthAnim.value = withTiming(progressPercent, { duration: 800 });
+  }, [progressPercent]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: `${widthAnim.value}%`,
+    };
+  });
+
+  return (
+    <View style={styles.progressBarBg}>
+      <Animated.View style={[styles.progressBarFill, animatedStyle]} />
+    </View>
+  );
 }
 
 /** Returns a short display label for the network */
@@ -107,6 +128,10 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
                   <Text style={styles.waiverAmbientText}>
                     ₹{card.remaining_spend_for_waiver?.toLocaleString('en-IN')} left for waiver
                   </Text>
+                  <FeeWaiverProgressBar 
+                    threshold={card.effective_fee_waiver_threshold} 
+                    remaining={card.remaining_spend_for_waiver || 0} 
+                  />
                   {card.days_until_renewal !== undefined && card.days_until_renewal !== null && (
                     <Text style={styles.waiverAmbientSubtext}>
                       {card.days_until_renewal} days remaining
@@ -293,7 +318,25 @@ const styles = StyleSheet.create({
   waiverAmbientSubtext: {
     color: 'rgba(255,255,255,0.5)',
     fontSize: tokens.fontSize.micro,
-    marginTop: 2,
+    marginTop: 4,
     letterSpacing: 0.3,
+  },
+  progressBarBg: {
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 2,
+    marginTop: 6,
+    overflow: 'hidden',
+    width: '80%',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#22C55E', // success green
+    borderRadius: 2,
+    shadowColor: '#22C55E',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 2, // subtle glow
   },
 });

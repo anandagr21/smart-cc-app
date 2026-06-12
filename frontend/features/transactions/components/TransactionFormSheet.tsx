@@ -11,12 +11,13 @@ import {
   TextInput,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Store, X, Search, Info, Sparkles } from 'lucide-react-native';
-import Animated, { FadeIn, FadeInUp, FadeOut, LinearTransition } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 
 import { TransactionResponse } from '../types/transaction.types';
 import { OptimizationIntent } from '@/features/recommendations/types/api';
@@ -38,6 +39,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { usePersonalityProfile, OptimizationPersonality } from '@/features/personality/api/personalityApi';
 
 import { FeatureFlags } from '@/config/features';
+
+const triggerHaptic = async (type: 'selection' | 'success' | 'error') => {
+  try {
+    if (type === 'selection') await Haptics.selectionAsync();
+    else if (type === 'success') await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    else if (type === 'error') await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  } catch (e) {
+    // Ignore error if native module is not linked
+  }
+};
 
 const formSchema = z.object({
   merchant_name: z.string().min(1, 'Merchant name is required').transform((v) => v.trim()),
@@ -191,6 +202,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
         amount: initialData.amount,
         user_card_id: initialData.user_card_id,
         payment_mode: initialData.payment_mode || 'ONLINE',
+        intent: 'BALANCED',
       });
       setSearchQuery('');
       setHasInitialized(true);
@@ -227,9 +239,10 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           recommended_card_id: recommendedCardId,
         });
       }
+      triggerHaptic('success');
       onClose();
     } catch {
-      // Error handled by hook
+      triggerHaptic('error');
     }
   };
 
@@ -405,7 +418,10 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                       return (
                         <TouchableOpacity
                           key={mode.value}
-                          onPress={() => onChange(mode.value)}
+                          onPress={() => {
+                            triggerHaptic('selection');
+                            onChange(mode.value);
+                          }}
                           activeOpacity={0.7}
                           style={[
                             styles.segmentBtn,
@@ -443,7 +459,12 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                         return (
                           <TouchableOpacity
                             key={option.value}
-                            onPress={() => !option.disabled && onChange(option.value)}
+                            onPress={() => {
+                              if (!option.disabled) {
+                                triggerHaptic('selection');
+                                onChange(option.value);
+                              }
+                            }}
                             activeOpacity={0.7}
                             disabled={option.disabled}
                             style={[
@@ -499,12 +520,15 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                 )}
 
                 {!getRecommendation.isPending && winningWalletCards.length > 0 && (
-                  <Animated.View entering={FadeInUp.springify().damping(20).stiffness(150)} layout={LinearTransition.springify().damping(20).stiffness(150)}>
+                  <Animated.View entering={FadeInUp.springify().damping(20).stiffness(150)}>
                     {/* HERO RECOMMENDATION */}
                     <HeroRecommendationCard
                       card={winningWalletCards[0].card}
                       recommendation={winningWalletCards[0].recommendation}
-                      onSelect={() => setValue('user_card_id', winningWalletCards[0].card.id)}
+                      onSelect={() => {
+                        triggerHaptic('selection');
+                        setValue('user_card_id', winningWalletCards[0].card.id);
+                      }}
                       onInfoPress={() => setExplainCardId(winningWalletCards[0].card.id)}
                       merchantName={debouncedMerchant}
                       amount={Number(debouncedAmount) || 1000}
@@ -522,14 +546,17 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                           showsHorizontalScrollIndicator={false}
                           contentContainerStyle={styles.alternativesScrollContent}
                         >
-                          <Animated.View style={styles.alternativesInnerRow} entering={FadeInUp.springify().damping(20).stiffness(150)} layout={LinearTransition.springify().damping(20).stiffness(150)}>
+                          <Animated.View style={styles.alternativesInnerRow} entering={FadeInUp.springify().damping(20).stiffness(150)}>
                             {winningWalletCards.slice(1).map(({ card, recommendation }) => (
                               <SecondaryRecommendationCard
                                 key={card.id}
                                 card={card}
                                 recommendation={recommendation}
                                 isActive={selectedCardId === card.id}
-                                onPress={() => setValue('user_card_id', card.id)}
+                                onPress={() => {
+                                  triggerHaptic('selection');
+                                  setValue('user_card_id', card.id);
+                                }}
                                 onInfoPress={() => setExplainCardId(card.id)}
                               />
                             ))}
@@ -585,7 +612,10 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                           key={card.id}
                           card={card}
                           isActive={selectedCardId === card.id}
-                          onPress={(id) => setValue('user_card_id', id)}
+                          onPress={(id) => {
+                            triggerHaptic('selection');
+                            setValue('user_card_id', id);
+                          }}
                           recommendation={recommendation}
                         />
                       );
