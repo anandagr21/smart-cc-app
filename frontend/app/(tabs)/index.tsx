@@ -7,6 +7,7 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useRouter } from 'expo-router';
 import { TransactionFormSheet } from '@/features/transactions/components/TransactionFormSheet';
+import { EmptyDashboardState } from '@/features/transactions/components/EmptyDashboardState';
 import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/useMonthlyIntelligence';
 import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
 import { formatCurrencyIN } from '@/utils/currency';
@@ -66,6 +67,14 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </Animated.View>
 
+        {/* Empty Dashboard State */}
+        {!hasStats && !primaryInsight && (
+          <EmptyDashboardState
+            onAddCard={() => router.push('/cards')}
+            onAddTransaction={() => setFormSheetVisible(true)}
+          />
+        )}
+
         {/* Intelligence Cards Section */}
         {hasStats && (
           <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.statsContainer}>
@@ -75,7 +84,7 @@ export default function DashboardScreen() {
                 <View style={styles.statHeader}>
                   {/* @ts-ignore */}
                   <Trophy size={16} color={colors.warning} />
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Opt. Score</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Reward Efficiency</Text>
                 </View>
                 <AnimatedNumber
                   value={monthlySummary?.optimization_rate || 0}

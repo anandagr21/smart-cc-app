@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, SectionList, RefreshControl, StyleSheet } from 'react-native';
-import { Plus, X } from 'lucide-react-native';
+import { Plus, X, BarChart3 } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -155,13 +155,23 @@ export default function HistoryScreen() {
                 
                 {allTransactions.length > 0 && (
                   <View style={styles.insightToggleWrap}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => setShowInsights(!showInsights)}
-                      style={[styles.insightToggleBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                      style={[
+                        styles.insightChip,
+                        {
+                          backgroundColor: showInsights ? colors.primarySoft : colors.surface,
+                          borderColor: showInsights ? colors.primary : colors.border,
+                        },
+                      ]}
                       activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={showInsights ? 'Hide analytics' : 'Show analytics'}
                     >
-                      <Text style={[styles.insightToggleText, { color: colors.primary }]}>
-                        {showInsights ? 'Hide Deep Insights' : 'View Deep Insights ✨'}
+                      {/* @ts-ignore */}
+                      <BarChart3 size={16} color={showInsights ? colors.primary : colors.textSecondary} strokeWidth={1.8} />
+                      <Text style={[styles.insightChipText, { color: showInsights ? colors.primary : colors.textSecondary }]}>
+                        {showInsights ? 'Hide Analytics' : 'Analytics'}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -292,18 +302,23 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.bold,
   },
   insightToggleWrap: {
-    paddingHorizontal: 24,
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: 24,
-    alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  insightToggleBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+  insightChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderRadius: tokens.radius.full,
     borderWidth: 1,
   },
-  insightToggleText: {
+  insightChipText: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
+    letterSpacing: 0.3,
   },
 });
