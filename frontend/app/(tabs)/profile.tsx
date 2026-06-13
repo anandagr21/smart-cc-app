@@ -10,6 +10,7 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useCards } from '@/features/cards/hooks/useCards';
 import { useTransactions } from '@/features/transactions/hooks/useTransactions';
 import { SkeletonBox } from '@/components/ui/SkeletonBox';
+import { ProfileSummaryCard } from '@/features/profile/components/ProfileSummaryCard';
 import { tokens } from '@/theme/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -122,8 +123,13 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* Theme Settings */}
+        {/* Summary Card */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.section}>
+          <ProfileSummaryCard />
+        </Animated.View>
+
+        {/* Theme Settings */}
+        <Animated.View entering={FadeInDown.delay(130).springify()} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Appearance</Text>
           <View style={[styles.themeRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <ThemePill mode="system" icon={Monitor} label="System" />
@@ -133,7 +139,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         {/* Preferences */}
-        <Animated.View entering={FadeInDown.delay(150).springify()} style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(160).springify()} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Account</Text>
           <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <SettingsRow icon={Bell} label="Notifications" onPress={() => router.push('/notifications')} />
