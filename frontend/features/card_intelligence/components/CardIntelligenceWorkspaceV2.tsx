@@ -13,9 +13,9 @@ interface Props {
 export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
   const colors = useThemeColors();
   
-  const { data, isLoading } = useCardReviewData(cardId);
+  const { data, isLoading, isError, error } = useCardReviewData(cardId);
   const submitReviewActionMutation = useSubmitReviewAction();
-  
+
   const [editedJson, setEditedJson] = useState<SuggestedCardData | null>(null);
 
   useEffect(() => {
@@ -24,10 +24,36 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
     }
   }, [data]);
 
-  if (isLoading || !data || !editedJson) {
+  // ── Loading state ──────────────────────────────────────────────────────────
+  if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.statusText, { color: colors.textSecondary, marginTop: 16 }]}>
+          Loading extraction data…
+        </Text>
+      </View>
+    );
+  }
+
+  // ── Error / no snapshot state ──────────────────────────────────────────────
+  if (isError || !data || !editedJson) {
+    const axiosError = error as { response?: { status?: number }; message?: string } | null;
+    const is404 = axiosError?.response?.status === 404;
+
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <View style={[styles.errorBox, { backgroundColor: colors.warningSoft, borderColor: colors.warning }]}>
+          <AlertTriangle size={24} color={colors.warning} />
+          <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>
+            {is404 ? 'No Ingestion Snapshot' : 'Failed to Load'}
+          </Text>
+          <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>
+            {is404
+              ? 'This card hasn\'t been through the Document Ingestion pipeline yet. Upload a bank PDF or URL source to generate structured extraction data.'
+              : axiosError?.message || 'An unexpected error occurred while loading the review data.'}
+          </Text>
+        </View>
       </View>
     );
   }
@@ -229,6 +255,31 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  statusText: {
+    fontSize: tokens.fontSize.body,
+    fontFamily: 'Inter-Medium',
+  },
+  errorBox: {
+    marginHorizontal: tokens.spacing.xl,
+    padding: tokens.spacing.xl,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    alignItems: 'center',
+    maxWidth: 480,
+  },
+  errorTitle: {
+    fontSize: tokens.fontSize.title,
+    fontFamily: 'Inter-Bold',
+    marginTop: tokens.spacing.md,
+    marginBottom: tokens.spacing.sm,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    fontSize: tokens.fontSize.body,
+    fontFamily: 'Inter-Regular',
+    lineHeight: Math.round(tokens.fontSize.body * tokens.lineHeight.relaxed),
+    textAlign: 'center',
   },
   sidebar: {
     width: 400,
