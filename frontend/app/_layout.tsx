@@ -8,6 +8,8 @@ import { useThemeStore } from '@/features/theme/store/themeStore';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { StatusBar } from 'expo-status-bar';
 import { TermsDisclaimerModal } from '@/components/TermsDisclaimerModal';
+import { useOnboardingStore } from '@/features/onboarding/store/onboardingStore';
+import { OnboardingModal } from '@/features/onboarding/components/OnboardingModal';
 import '@/global.css';
 
 const queryClient = new QueryClient({
@@ -22,6 +24,7 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const { initializeAuth, token, isLoading: isAuthLoading } = useAuthStore();
   const { initializeTheme, isHydrated: isThemeHydrated, themeMode } = useThemeStore();
+  const { hasSeenOnboarding, isLoading: isOnboardingLoading, initializeOnboarding } = useOnboardingStore();
   const colors = useThemeColors();
   
   const segments = useSegments();
@@ -31,6 +34,7 @@ export default function RootLayout() {
   useEffect(() => {
     initializeAuth();
     initializeTheme();
+    initializeOnboarding();
   }, []);
 
   // Load Google Identity Services script on web
@@ -58,7 +62,7 @@ export default function RootLayout() {
     }
   }, [token, isAuthLoading, isThemeHydrated, segments, rootNavigationState?.key]);
 
-  if (isAuthLoading || !isThemeHydrated) {
+  if (isAuthLoading || !isThemeHydrated || isOnboardingLoading) {
     return null;
   }
 
@@ -72,6 +76,7 @@ export default function RootLayout() {
           <Stack.Screen name="monthly-intelligence" options={{ presentation: 'modal' }} />
           <Stack.Screen name="intelligence" options={{ presentation: 'modal', animation: 'fade' }} />
         </Stack>
+        {token && !hasSeenOnboarding && <OnboardingModal />}
         <TermsDisclaimerModal />
       </QueryClientProvider>
     </GestureHandlerRootView>

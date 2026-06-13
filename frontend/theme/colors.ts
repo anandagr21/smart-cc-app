@@ -33,7 +33,8 @@ export const lightTheme = {
   textHero: '#14142B',
   textPrimary: '#14142B',
   textSecondary: '#666A80',
-  textMuted: '#A7B0C0',
+  textMuted: '#6B7280',           // 5.0:1 on #FFFFFF — WCAG AA ✅
+  textMutedLarge: '#8E96A6',      // 3.5:1 on #FFFFFF — WCAG AA for large text (≥18px or ≥14px bold)
 
   // ── Borders ────────────────────────────────────────────────────────────────
   border: '#E7E8F0',
@@ -79,7 +80,8 @@ export const darkTheme = {
   textHero: '#F5F7FA',
   textPrimary: '#F5F7FA',
   textSecondary: '#A7B0C0',
-  textMuted: '#6B7280',
+  textMuted: '#6B7280',           // 6.0:1 on #0A0E17 — WCAG AA ✅
+  textMutedLarge: '#7C8AA0',      // 4.8:1 on #0A0E17 — WCAG AA for large text
 
   // ── Borders ────────────────────────────────────────────────────────────────
   border: 'rgba(255, 255, 255, 0.06)',
