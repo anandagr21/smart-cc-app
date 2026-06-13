@@ -294,10 +294,6 @@ class MerchantPendingReview(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     reviewed_at: Optional[datetime] = Field(default=None)
 
-    __table_args__ = (
-        Index("ix_merchant_pending_review_status", "status"),
-    )
-
 
 class MerchantResolutionMetric(SQLModel, table=True):
     """Telemetry record for each merchant resolution attempt.

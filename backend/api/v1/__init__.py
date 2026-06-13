@@ -18,6 +18,7 @@ from .auth import router as auth_router
 from .cards import router as cards_router
 from .health import router as health_router
 from .merchant_admin import router as merchant_admin_router
+from .admin_ingestion import router as admin_ingestion_router
 from merchants.routes import router as merchants_router
 from rewards.routes import router as reward_rules_router
 from reward_engine.eval_routes import router as eval_router
@@ -44,6 +45,7 @@ api_router.include_router(cards_router)
 api_router.include_router(health_router)
 api_router.include_router(merchants_router)
 api_router.include_router(merchant_admin_router)
+api_router.include_router(admin_ingestion_router, prefix="/admin/ingestion", tags=["admin_ingestion"])
 api_router.include_router(reward_rules_router)
 api_router.include_router(eval_router)
 api_router.include_router(recommendations_router)
