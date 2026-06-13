@@ -1,0 +1,27 @@
+[
+  {
+    "name": "01-analyze",
+    "status": "success",
+    "description": "Analyze tab — Reward Efficiency renamed"
+  },
+  {
+    "name": "02-wallet",
+    "status": "success",
+    "description": "Wallet tab"
+  },
+  {
+    "name": "03-activity",
+    "status": "success",
+    "description": "Activity tab — Analytics chip toggle"
+  },
+  {
+    "name": "04-profile",
+    "status": "success",
+    "description": "Profile tab — Your Summary card"
+  },
+  {
+    "name": "05-search",
+    "status": "success",
+    "description": "Search"
+  }
+]

@@ -1,0 +1,117 @@
+{
+  "capturedAt": "2026-06-13T14:41:43.630Z",
+  "results": [
+    {
+      "name": "01-analyze",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/01-analyze.png",
+      "url": "http://localhost:19006/",
+      "description": "Analyze tab — main dashboard with AI insights",
+      "status": "success"
+    },
+    {
+      "name": "02-wallet",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/02-wallet.png",
+      "url": "http://localhost:19006/cards",
+      "description": "Wallet tab — credit cards inventory",
+      "status": "success"
+    },
+    {
+      "name": "03-activity",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/03-activity.png",
+      "url": "http://localhost:19006/history",
+      "description": "Activity tab — transaction history",
+      "status": "success"
+    },
+    {
+      "name": "04-profile",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/04-profile.png",
+      "url": "http://localhost:19006/profile",
+      "description": "Profile tab — user settings & preferences",
+      "status": "success"
+    },
+    {
+      "name": "05-intelligence",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/05-intelligence.png",
+      "url": "http://localhost:19006/intelligence",
+      "description": "Transaction intelligence detail",
+      "status": "success"
+    },
+    {
+      "name": "06-monthly-intelligence",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/06-monthly-intelligence.png",
+      "url": "http://localhost:19006/monthly-intelligence",
+      "description": "Monthly intelligence report",
+      "status": "success"
+    },
+    {
+      "name": "07-search",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/07-search.png",
+      "url": "http://localhost:19006/search",
+      "description": "Search — merchant/product search",
+      "status": "success"
+    },
+    {
+      "name": "08-search-results",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/08-search-results.png",
+      "url": "http://localhost:19006/search/results?q=amazon",
+      "description": "Search results for \"amazon\"",
+      "status": "success"
+    },
+    {
+      "name": "09-notifications",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/09-notifications.png",
+      "url": "http://localhost:19006/(modals)/notifications",
+      "description": "Notifications preferences modal",
+      "status": "success"
+    },
+    {
+      "name": "10-preferences",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/10-preferences.png",
+      "url": "http://localhost:19006/(modals)/preferences",
+      "description": "App preferences modal",
+      "status": "success"
+    },
+    {
+      "name": "11-security",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/11-security.png",
+      "url": "http://localhost:19006/(modals)/security",
+      "description": "Security settings modal",
+      "status": "success"
+    },
+    {
+      "name": "12-admin-catalog",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/12-admin-catalog.png",
+      "url": "http://localhost:19006/admin/master-catalog",
+      "description": "Admin — Master catalog",
+      "status": "success"
+    },
+    {
+      "name": "13-admin-card-intelligence",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/13-admin-card-intelligence.png",
+      "url": "http://localhost:19006/admin/card-intelligence",
+      "description": "Admin — Card intelligence dashboard",
+      "status": "success"
+    },
+    {
+      "name": "14-admin-feedback",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/14-admin-feedback.png",
+      "url": "http://localhost:19006/admin/feedback",
+      "description": "Admin — User feedback",
+      "status": "success"
+    },
+    {
+      "name": "15-dark-analyze",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/15-dark-analyze.png",
+      "url": "http://localhost:19006/",
+      "description": "Dark mode — Analyze tab",
+      "status": "success"
+    },
+    {
+      "name": "16-dark-wallet",
+      "path": "/Users/anandagrawal/work/smart-cc-app/frontend/screenshots/16-dark-wallet.png",
+      "url": "http://localhost:19006/cards",
+      "description": "Dark mode — Wallet tab",
+      "status": "success"
+    }
+  ]
+}
