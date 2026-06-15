@@ -524,7 +524,7 @@ async def create_benchmark(
 
 from fastapi import BackgroundTasks
 from services.benchmark_runner import process_evaluation_job
-from models.ingestion import EvaluationJob, BenchmarkRun, PromptTemplate
+from models.ingestion import EvaluationJob, BenchmarkRun, PromptTemplate, BenchmarkDataset
 
 @router.post(
     "/evaluation/run",

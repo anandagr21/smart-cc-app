@@ -4,6 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import { colors } from '@/theme/colors';
 import { apiClient } from '@/services/api/client';
+import { AdminUsageGuide } from '@/components/admin/AdminUsageGuide';
 
 export default function EvaluationDashboardScreen() {
   const router = useRouter();
@@ -32,12 +33,18 @@ export default function EvaluationDashboardScreen() {
     setIsLoading(true);
     try {
       const response = await apiClient.get('/admin/ingestion/evaluation', {
-        params: selectedDatasetId ? { dataset_id: selectedDatasetId } : undefined,
+        params: selectedDatasetId && selectedDatasetId !== "" ? { dataset_id: selectedDatasetId } : undefined,
       });
       setData(response.data);
+      
+      const status = response.data?.job_progress?.status;
+      if (status !== 'RUNNING' && status !== 'PENDING') {
+        setIsEvaluating(false);
+      }
     } catch (err: any) {
       const message = err?.response?.data?.detail || err?.message || 'Failed to load evaluation data';
       Alert.alert("Error", message);
+      setIsEvaluating(false);
     } finally {
       setIsLoading(false);
     }
@@ -51,7 +58,8 @@ export default function EvaluationDashboardScreen() {
     fetchDashboardData();
     // Poll every 5 seconds if a job is running
     const interval = setInterval(() => {
-      if (data?.job_progress || isEvaluating) {
+      // Always fetch to check status, because isEvaluating might be true
+      if (isEvaluating || data?.job_progress?.status === 'RUNNING' || data?.job_progress?.status === 'PENDING') {
         fetchDashboardData();
       }
     }, 5000);
@@ -61,7 +69,9 @@ export default function EvaluationDashboardScreen() {
   const runEvaluationSuite = async () => {
     setIsEvaluating(true);
     try {
-      await apiClient.post('/admin/ingestion/evaluation/run');
+      await apiClient.post('/admin/ingestion/evaluation/run', null, {
+        params: selectedDatasetId && selectedDatasetId !== "" ? { dataset_id: selectedDatasetId } : undefined,
+      });
       // Immediately fetch data to show progress
       fetchDashboardData();
     } catch (err: any) {
@@ -97,7 +107,7 @@ export default function EvaluationDashboardScreen() {
               style={{ height: 40, width: 200 }}
               onValueChange={(itemValue: string | null) => setSelectedDatasetId(itemValue)}
             >
-              <Picker.Item label="All Datasets" value={null} />
+              <Picker.Item label="All Datasets" value="" />
               {datasets.map(d => (
                 <Picker.Item key={d.id} label={`${d.name} (${d.status})`} value={d.id} />
               ))}
@@ -123,6 +133,16 @@ export default function EvaluationDashboardScreen() {
           </TouchableOpacity>
         )}
       </View>
+      
+      <AdminUsageGuide 
+        title="Evaluation Dashboard"
+        description="Monitor system-wide accuracy of the AI extraction pipeline using Gold Standard datasets."
+        workflowSteps={[
+          "Select an evaluation dataset",
+          "Click 'Run Evaluation Suite' to process all benchmarks",
+          "Review health metrics, failure analysis, and field-level accuracy"
+        ]}
+      />
       
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         {/* Section 1: System Health */}

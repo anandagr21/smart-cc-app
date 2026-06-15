@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Activi
 import { useRouter } from 'expo-router';
 import { colors } from '@/theme/colors';
 import { apiClient } from '@/services/api/client';
+import { AdminUsageGuide } from '@/components/admin/AdminUsageGuide';
 
 const SUPPORTED_FIELDS = [
   "annual_fee",
@@ -43,7 +44,16 @@ export default function ExtractionPlaygroundScreen() {
 
       setResult(response.data);
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      let errorMsg = "An error occurred";
+      const detail = error?.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        errorMsg = detail.map((e: any) => `${e.loc.join('.')}: ${e.msg}`).join('\n');
+      } else if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      Alert.alert("Error", errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -57,6 +67,17 @@ export default function ExtractionPlaygroundScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Extraction Playground</Text>
       </View>
+      
+      <AdminUsageGuide 
+        title="AI Extraction Playground"
+        description="Test the LLM extraction logic on a single field using a specific document. This helps debug retrieval and prompt quality."
+        workflowSteps={[
+          "Enter a valid Document UUID",
+          "Select the target field to extract",
+          "Run extraction and review the LLM output and retrieved chunks",
+          "If accurate, approve it as Ground Truth for future benchmarks"
+        ]}
+      />
       
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         <View style={styles.card}>
