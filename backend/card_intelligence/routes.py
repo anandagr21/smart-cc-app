@@ -21,10 +21,11 @@ router = APIRouter(prefix="/card-intelligence", tags=["Card Intelligence"])
 
 class RawIngestionRequest(BaseModel):
     url: str
-    bank_name: str
-    card_name: str
+    bank_name: Optional[str] = None
+    card_name: Optional[str] = None
     source_title: str
     html_source: Optional[str] = None
+    card_id: Optional[str] = None
 
 
 class AdminReviewActionPayload(BaseModel):
@@ -127,6 +128,8 @@ async def ingest_raw_bank_url(
     from .monitor_service import fetch_and_clean_card_page
     from .service import CardIntelligenceService
     from sqlmodel import select
+    from models.ingestion import SourceDocument
+    from services.html_parser import parse_and_chunk_markdown
     import hashlib
 
     # 1. Fetch and scrub the website HTML text into readable markdown content
@@ -143,7 +146,20 @@ async def ingest_raw_bank_url(
     
     # 3. Get or create the card catalog entry to ensure a valid foreign key UUID
     service = CardIntelligenceService(session)
-    valid_card_id = await service.find_or_create_card(payload.bank_name, payload.card_name)
+    if payload.card_id:
+        try:
+            valid_card_id = UUID(payload.card_id)
+            # Verify card exists
+            from models.card_catalog import CardCatalog
+            card_exists = await session.get(CardCatalog, valid_card_id)
+            if not card_exists:
+                raise ValueError("Provided Card ID does not exist")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid Card ID: {e}")
+    else:
+        if not payload.bank_name or not payload.card_name:
+            raise HTTPException(status_code=400, detail="Bank Name and Card Name are required for new ingestions.")
+        valid_card_id = await service.find_or_create_card(payload.bank_name, payload.card_name)
 
     # 4. Save the baseline parameters directly to the CardMonitoring database table row state
     from .monitor_models import CardMonitoring
@@ -168,11 +184,27 @@ async def ingest_raw_bank_url(
         session.add(new_monitor_record)
         
     await AuditService.log_action(session, current_admin.id, "INGEST_RAW_URL", "CardMonitoring", str(valid_card_id), payload.dict(), request)
+    
+    # 4.5. Also create a SourceDocument and chunk it for RAG (Playground)
+    doc = SourceDocument(
+        card_catalog_id=valid_card_id,
+        source_type="HTML_PAGE",
+        file_name=payload.url[:250], # Truncate if URL is extremely long
+        checksum_sha256=text_hash,
+        file_size=len(cleaned_markdown.encode('utf-8')),
+        status="UPLOADED"
+    )
+    session.add(doc)
     await session.commit()
+    await session.refresh(doc)
+    
+    # Queue chunking background task
+    background_tasks.add_task(parse_and_chunk_markdown, session, doc, cleaned_markdown)
 
     # 5. Return the newly registered tracking token to the frontend UI
     return {
         "status": "success",
         "card_id": str(valid_card_id),
+        "document_id": str(doc.id),
         "message": "Raw page layout parsed successfully. Redirecting to extraction dashboard..."
     }

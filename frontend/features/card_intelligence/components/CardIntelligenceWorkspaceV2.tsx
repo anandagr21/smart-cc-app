@@ -5,6 +5,8 @@ import { tokens } from '@/theme/tokens';
 import { CheckCircle, AlertTriangle } from 'lucide-react-native';
 import { useCardReviewData, useSubmitReviewAction, SuggestedCardData, RewardRule } from '../api/cardIntelligenceApi';
 import { router } from 'expo-router';
+import { DocumentUploadSheet } from './DocumentUploadSheet';
+import { UploadCloud } from 'lucide-react-native';
 
 interface Props {
   cardId: string;
@@ -17,6 +19,7 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
   const submitReviewActionMutation = useSubmitReviewAction();
 
   const [editedJson, setEditedJson] = useState<SuggestedCardData | null>(null);
+  const [isUploadSheetOpen, setIsUploadSheetOpen] = useState(false);
 
   useEffect(() => {
     if (data && data.suggested_database_json) {
@@ -53,7 +56,25 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
               ? 'This card hasn\'t been through the Document Ingestion pipeline yet. Upload a bank PDF or URL source to generate structured extraction data.'
               : axiosError?.message || 'An unexpected error occurred while loading the review data.'}
           </Text>
+          {is404 && (
+            <TouchableOpacity 
+              style={[styles.decisionBtn, { backgroundColor: colors.primary, minWidth: 150, alignSelf: 'flex-start', marginTop: tokens.spacing.lg }]}
+              onPress={() => setIsUploadSheetOpen(true)}
+            >
+              <UploadCloud size={20} color="#FFF" />
+              <Text style={{ color: '#FFF', fontSize: 14, fontFamily: 'Inter-SemiBold' }}>Ingest Source Now</Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        {isUploadSheetOpen && (
+          <DocumentUploadSheet 
+            visible={isUploadSheetOpen} 
+            onClose={() => setIsUploadSheetOpen(false)} 
+            cardId={cardId} 
+            onSuccess={() => setIsUploadSheetOpen(false)}
+          />
+        )}
       </View>
     );
   }
@@ -171,7 +192,7 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
                 keyboardType="numeric"
                 placeholder="E.g., 100000"
                 placeholderTextColor={colors.textMuted}
-                onChangeText={(val) => updateRootField('fee_waiver_spend_threshold', val ? parseFloat(val) : null)}
+                onChangeText={(val) => updateRootField('fee_waiver_spend_threshold', val ? parseFloat(val) : 0)}
               />
             </View>
 
@@ -239,9 +260,29 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
               <AlertTriangle size={20} color={colors.textSecondary} />
               <Text style={[styles.needsCorrectionBtnText, { color: colors.textSecondary }]}>Reject & Rescrape</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.decisionBtn, { backgroundColor: colors.primary, minWidth: 150 }]}
+              onPress={() => setIsUploadSheetOpen(true)}
+            >
+              <UploadCloud size={20} color="#FFF" />
+              <Text style={{ color: '#FFF', fontSize: 14, fontFamily: 'Inter-SemiBold' }}>Re-Ingest Source</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
+
+      {isUploadSheetOpen && (
+        <DocumentUploadSheet 
+          visible={isUploadSheetOpen} 
+          onClose={() => setIsUploadSheetOpen(false)} 
+          cardId={cardId} 
+          onSuccess={() => {
+            // Wait for modal to close and state to update
+            setIsUploadSheetOpen(false);
+          }}
+        />
+      )}
     </View>
   );
 };
