@@ -154,7 +154,7 @@ export default function ProfileScreen() {
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Admin</Text>
             <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <SettingsRow icon={Shield} label="Feedback Dashboard" onPress={() => router.push('/admin/feedback')} />
-              <SettingsRow icon={Monitor} label="Master Catalog" onPress={() => router.push('/admin/master-catalog')} />
+              <SettingsRow icon={Monitor} label="Card Operations" onPress={() => router.push('/admin/operations')} />
             </View>
           </Animated.View>
         )}

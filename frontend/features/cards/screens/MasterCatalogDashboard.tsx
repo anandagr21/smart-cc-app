@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, Stack } from 'expo-router';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
+import { AdminUsageGuide } from '@/components/admin/AdminUsageGuide';
 import { tokens } from '@/theme/tokens';
 import { useCardCatalog } from '@/features/cards/hooks/useCardCatalog';
 import { ArrowLeft, CreditCard, Network, IndianRupee, ShieldAlert, CheckCircle, Check, ListChecks } from 'lucide-react-native';
@@ -14,9 +13,8 @@ import { CardCatalogResponse } from '@/features/cards/types/api';
 import { DocumentUploadSheet } from '@/features/card_intelligence/components/DocumentUploadSheet';
 import { Plus } from 'lucide-react-native';
 
-export default function MasterCatalogScreen() {
+export function MasterCatalogDashboard() {
   const colors = useThemeColors();
-  const router = useRouter();
   const { data: catalog, isLoading } = useCardCatalog();
 
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -30,25 +28,11 @@ export default function MasterCatalogScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Stack.Screen options={{ headerShown: false }} />
-      
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity 
-            style={styles.backBtn} 
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace('/admin/card-intelligence');
-              }
-            }}
-          >
-            <ArrowLeft size={24} color={colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Live Portfolio Viewer</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary, marginLeft: 0 }]}>Live Portfolio Viewer</Text>
         </View>
 
         <TouchableOpacity 
@@ -74,6 +58,15 @@ export default function MasterCatalogScreen() {
             <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : !selectedCardId ? (
             <View style={styles.emptyState}>
+              <AdminUsageGuide 
+                title="Master Catalog Management"
+                description="View and edit canonical credit card data. Changes made here affect all users' portfolios."
+                workflowSteps={[
+                  "Select a card from the list to view details",
+                  "Click 'Edit Fees' to override specific values",
+                  "Save changes to update the canonical database immediately"
+                ]}
+              />
               <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>Select a card from the sidebar to view production rules.</Text>
             </View>
           ) : (
@@ -94,7 +87,7 @@ export default function MasterCatalogScreen() {
         onClose={() => setCreateSheetVisible(false)}
         onSuccess={() => setCreateSheetVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -128,8 +121,8 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
   const renderRewardRules = () => {
     let rules = card.reward_rules_json;
     if (rules && !Array.isArray(rules)) {
-      if (rules.rules) rules = rules.rules;
-      else if (rules.reward_rules) rules = rules.reward_rules;
+      if ((rules as any).rules) rules = (rules as any).rules;
+      else if ((rules as any).reward_rules) rules = (rules as any).reward_rules;
       else rules = [];
     }
 

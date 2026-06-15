@@ -1,37 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
-import { Database, FileText, BrainCircuit, MessageSquare, ArrowRight, ShieldCheck } from 'lucide-react-native';
+import { Database, BrainCircuit, MessageSquare, ArrowRight, ShieldCheck } from 'lucide-react-native';
+import { AdminUsageGuide } from '@/components/admin/AdminUsageGuide';
+import { AdminWorkflowModal } from '@/components/admin/AdminWorkflowModal';
+import { Settings } from 'lucide-react-native';
 
 type ModuleColorKey = 'primary' | 'accent' | 'success' | 'warning';
 
 const ADMIN_MODULES = [
   {
-    id: 'master-catalog',
-    title: 'Master Catalog',
-    description: 'Manage canonical credit cards, fee structures, and reward rules.',
+    id: 'operations',
+    title: 'Card Operations Hub',
+    description: 'Unified hub to ingest new documents, review AI parsing, and manage the live card catalog.',
     icon: Database,
-    route: '/admin/master-catalog',
+    route: '/admin/operations',
     colorKey: 'primary' as ModuleColorKey,
-  },
-  {
-    id: 'ingestion',
-    title: 'Document Ingestion & AI',
-    description: 'Upload bank PDFs, run extractions, and evaluate benchmark accuracy.',
-    icon: FileText,
-    route: '/admin/ingestion',
-    colorKey: 'accent' as ModuleColorKey,
-  },
-  {
-    id: 'card-intelligence',
-    title: 'Card Intelligence',
-    description: 'Test and debug AI narrative generation and card embeddings.',
-    icon: BrainCircuit,
-    route: '/admin/card-intelligence',
-    colorKey: 'success' as ModuleColorKey,
   },
   {
     id: 'feedback',
@@ -53,6 +40,7 @@ const SOFT_BG_MAP: Record<ModuleColorKey, string> = {
 export default function AdminDashboard() {
   const router = useRouter();
   const colors = useThemeColors();
+  const [isWorkflowModalVisible, setIsWorkflowModalVisible] = useState(false);
 
   // Pick only the scalar color keys (exclude gradient arrays like networkVisa)
   type ScalarColors = Pick<
@@ -77,7 +65,29 @@ export default function AdminDashboard() {
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Centralized operations hub for platform management and AI workflows.
           </Text>
+          <TouchableOpacity 
+            style={styles.workflowBtn}
+            onPress={() => setIsWorkflowModalVisible(true)}
+          >
+            <Settings size={16} color="#F8FAFC" />
+            <Text style={styles.workflowBtnText}>View Architecture & Workflow</Text>
+          </TouchableOpacity>
         </View>
+
+        <AdminWorkflowModal 
+          visible={isWorkflowModalVisible}
+          onClose={() => setIsWorkflowModalVisible(false)}
+        />
+
+        <AdminUsageGuide 
+          title="Admin Control Panel Overview"
+          description="Centralized hub for all platform operations. Use these modules to manage canonical data, run AI extraction pipelines, and evaluate platform health."
+          workflowSteps={[
+            "Select a module from the grid below",
+            "Follow the specific workflows within each module",
+            "Ensure you have necessary permissions for destructive actions"
+          ]}
+        />
 
         {/* Module cards */}
         <View style={styles.grid}>
@@ -142,8 +152,9 @@ const styles = StyleSheet.create({
     paddingBottom: tokens.spacing['3xl'],
   },
   header: {
-    marginBottom: 40,
+    flexDirection: 'column',
     alignItems: 'center',
+    marginBottom: 40,
   },
   iconBadge: {
     width: 64,
@@ -198,5 +209,22 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.bodySm,
     lineHeight: Math.round(tokens.fontSize.bodySm * tokens.lineHeight.relaxed),
     fontWeight: tokens.fontWeight.regular,
+  },
+  workflowBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  workflowBtnText: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
