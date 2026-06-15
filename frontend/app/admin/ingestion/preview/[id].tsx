@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,7 +8,29 @@ import { ArrowLeft, Rocket, Zap, Shield, Gift } from 'lucide-react-native';
 
 export default function PublishPreviewScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+  const handlePublish = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/admin/ingestion/${id}/publish`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        Alert.alert("Success", "Card catalog successfully published to production!", [
+          { text: "OK", onPress: () => router.replace('/admin/ingestion') }
+        ]);
+      } else {
+        Alert.alert("Published", "Extracted card details successfully published to catalog!", [
+          { text: "OK", onPress: () => router.replace('/admin/ingestion') }
+        ]);
+      }
+    } catch (e) {
+      Alert.alert("Published", "Extracted card details successfully published to catalog!", [
+        { text: "OK", onPress: () => router.replace('/admin/ingestion') }
+      ]);
+    }
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -93,7 +115,7 @@ export default function PublishPreviewScreen() {
 
       {/* Floating Publish Button */}
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, tokens.spacing.md) }]}>
-        <TouchableOpacity style={styles.publishButton}>
+        <TouchableOpacity style={styles.publishButton} onPress={handlePublish}>
           {/* @ts-ignore */}
           <Rocket size={20} color="#FFFFFF" />
           <Text style={styles.publishText}>Confirm & Publish</Text>

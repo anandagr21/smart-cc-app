@@ -10,9 +10,9 @@ import { TransactionFormSheet } from '@/features/transactions/components/Transac
 import { EmptyDashboardState } from '@/features/transactions/components/EmptyDashboardState';
 import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/useMonthlyIntelligence';
 import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
-import { formatCurrencyIN } from '@/utils/currency';
+
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
-import { TransactionResponse } from '@/features/transactions/types/transaction.types';
+
 
 function getGreeting() {
   const h = new Date().getHours();

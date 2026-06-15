@@ -15,7 +15,7 @@ import { OnboardingSlide, SLIDES } from './OnboardingSlide';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/components/ui/Button';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 
 export const OnboardingModal: React.FC = () => {
   const colors = useThemeColors();

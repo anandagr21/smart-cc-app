@@ -158,6 +158,7 @@ async def extract_single_field(db: AsyncSession, document_id: UUID, field_name: 
 
     import time
     start_time = time.time()
+    client = get_openai_client()
     try:
         response = await client.chat.completions.create(
             model="deepseek-chat",
