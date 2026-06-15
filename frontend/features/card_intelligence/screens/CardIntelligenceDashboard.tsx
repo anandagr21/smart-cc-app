@@ -28,13 +28,22 @@ export const CardIntelligenceDashboard: React.FC = () => {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Intelligence Operations</Text>
         <View style={{ flexDirection: 'row', gap: tokens.spacing.md }}>
+
           <TouchableOpacity
             style={[styles.globalUploadBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1 }]}
-            onPress={() => router.push('/admin/master-catalog')}
+            onPress={() => router.push('/admin/ingestion/evaluation')}
           >
             {/* @ts-ignore */}
-            <CreditCard size={18} color={colors.textPrimary} />
-            <Text style={[styles.uploadBtnText, { color: colors.textPrimary }]}>Master Catalog</Text>
+            <CheckCircle size={18} color={colors.textPrimary} />
+            <Text style={[styles.uploadBtnText, { color: colors.textPrimary }]}>Eval Dashboard</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.globalUploadBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1 }]}
+            onPress={() => router.push('/admin/ingestion/playground')}
+          >
+            {/* @ts-ignore */}
+            <PlayCircle size={18} color={colors.textPrimary} />
+            <Text style={[styles.uploadBtnText, { color: colors.textPrimary }]}>Playground</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.globalUploadBtn, { backgroundColor: colors.primary }]}
@@ -44,9 +53,7 @@ export const CardIntelligenceDashboard: React.FC = () => {
             <UploadCloud size={18} color="#FFFFFF" />
             <Text style={[styles.uploadBtnText, { color: '#FFFFFF' }]}>Add Source</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Text style={[styles.backBtnText, { color: colors.textSecondary }]}>Close</Text>
-          </TouchableOpacity>
+
         </View>
       </View>
 

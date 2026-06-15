@@ -3,11 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { QueryKeys } from '@/features/core/api/queryKeys';
 
 export const submitUrlSource = async (
-  bankName: string,
-  cardName: string,
+  bankName: string | undefined,
+  cardName: string | undefined,
   url: string,
   sourceTitle: string,
-  htmlSource?: string
+  htmlSource?: string,
+  cardId?: string
 ): Promise<any> => {
   const { data } = await apiClient.post<any>('/card-intelligence/ingest-raw', {
     bank_name: bankName,
@@ -15,6 +16,7 @@ export const submitUrlSource = async (
     url,
     source_title: sourceTitle,
     html_source: htmlSource,
+    card_id: cardId,
   });
   return data;
 };
@@ -22,8 +24,8 @@ export const submitUrlSource = async (
 export const useSubmitUrlSource = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: { bankName: string; cardName: string; url: string; sourceTitle: string; html_source?: string }) =>
-      submitUrlSource(params.bankName, params.cardName, params.url, params.sourceTitle, params.html_source),
+    mutationFn: (params: { bankName?: string; cardName?: string; url: string; sourceTitle: string; html_source?: string; cardId?: string }) =>
+      submitUrlSource(params.bankName, params.cardName, params.url, params.sourceTitle, params.html_source, params.cardId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QueryKeys.catalog.all });
     },

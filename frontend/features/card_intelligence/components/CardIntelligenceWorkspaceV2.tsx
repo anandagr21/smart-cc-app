@@ -5,6 +5,8 @@ import { tokens } from '@/theme/tokens';
 import { CheckCircle, AlertTriangle } from 'lucide-react-native';
 import { useCardReviewData, useSubmitReviewAction, SuggestedCardData, RewardRule } from '../api/cardIntelligenceApi';
 import { router } from 'expo-router';
+import { DocumentUploadSheet } from './DocumentUploadSheet';
+import { UploadCloud } from 'lucide-react-native';
 
 interface Props {
   cardId: string;
@@ -13,10 +15,11 @@ interface Props {
 export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
   const colors = useThemeColors();
   
-  const { data, isLoading } = useCardReviewData(cardId);
+  const { data, isLoading, isError, error } = useCardReviewData(cardId);
   const submitReviewActionMutation = useSubmitReviewAction();
-  
+
   const [editedJson, setEditedJson] = useState<SuggestedCardData | null>(null);
+  const [isUploadSheetOpen, setIsUploadSheetOpen] = useState(false);
 
   useEffect(() => {
     if (data && data.suggested_database_json) {
@@ -24,10 +27,54 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
     }
   }, [data]);
 
-  if (isLoading || !data || !editedJson) {
+  // ── Loading state ──────────────────────────────────────────────────────────
+  if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.statusText, { color: colors.textSecondary, marginTop: 16 }]}>
+          Loading extraction data…
+        </Text>
+      </View>
+    );
+  }
+
+  // ── Error / no snapshot state ──────────────────────────────────────────────
+  if (isError || !data || !editedJson) {
+    const axiosError = error as { response?: { status?: number }; message?: string } | null;
+    const is404 = axiosError?.response?.status === 404;
+
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <View style={[styles.errorBox, { backgroundColor: colors.warningSoft, borderColor: colors.warning }]}>
+          <AlertTriangle size={24} color={colors.warning} />
+          <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>
+            {is404 ? 'No Ingestion Snapshot' : 'Failed to Load'}
+          </Text>
+          <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>
+            {is404
+              ? 'This card hasn\'t been through the Document Ingestion pipeline yet. Upload a bank PDF or URL source to generate structured extraction data.'
+              : axiosError?.message || 'An unexpected error occurred while loading the review data.'}
+          </Text>
+          {is404 && (
+            <TouchableOpacity 
+              style={[styles.decisionBtn, { backgroundColor: colors.primary, minWidth: 150, alignSelf: 'flex-start', marginTop: tokens.spacing.lg }]}
+              onPress={() => setIsUploadSheetOpen(true)}
+            >
+              <UploadCloud size={20} color="#FFF" />
+              <Text style={{ color: '#FFF', fontSize: 14, fontFamily: 'Inter-SemiBold' }}>Ingest Source Now</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {isUploadSheetOpen && (
+          <DocumentUploadSheet 
+            visible={isUploadSheetOpen} 
+            onClose={() => setIsUploadSheetOpen(false)} 
+            cardId={cardId} 
+            onSuccess={() => setIsUploadSheetOpen(false)}
+          />
+        )}
       </View>
     );
   }
@@ -145,7 +192,7 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
                 keyboardType="numeric"
                 placeholder="E.g., 100000"
                 placeholderTextColor={colors.textMuted}
-                onChangeText={(val) => updateRootField('fee_waiver_spend_threshold', val ? parseFloat(val) : null)}
+                onChangeText={(val) => updateRootField('fee_waiver_spend_threshold', val ? parseFloat(val) : 0)}
               />
             </View>
 
@@ -213,9 +260,29 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
               <AlertTriangle size={20} color={colors.textSecondary} />
               <Text style={[styles.needsCorrectionBtnText, { color: colors.textSecondary }]}>Reject & Rescrape</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.decisionBtn, { backgroundColor: colors.primary, minWidth: 150 }]}
+              onPress={() => setIsUploadSheetOpen(true)}
+            >
+              <UploadCloud size={20} color="#FFF" />
+              <Text style={{ color: '#FFF', fontSize: 14, fontFamily: 'Inter-SemiBold' }}>Re-Ingest Source</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
+
+      {isUploadSheetOpen && (
+        <DocumentUploadSheet 
+          visible={isUploadSheetOpen} 
+          onClose={() => setIsUploadSheetOpen(false)} 
+          cardId={cardId} 
+          onSuccess={() => {
+            // Wait for modal to close and state to update
+            setIsUploadSheetOpen(false);
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -229,6 +296,31 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  statusText: {
+    fontSize: tokens.fontSize.body,
+    fontFamily: 'Inter-Medium',
+  },
+  errorBox: {
+    marginHorizontal: tokens.spacing.xl,
+    padding: tokens.spacing.xl,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    alignItems: 'center',
+    maxWidth: 480,
+  },
+  errorTitle: {
+    fontSize: tokens.fontSize.title,
+    fontFamily: 'Inter-Bold',
+    marginTop: tokens.spacing.md,
+    marginBottom: tokens.spacing.sm,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    fontSize: tokens.fontSize.body,
+    fontFamily: 'Inter-Regular',
+    lineHeight: Math.round(tokens.fontSize.body * tokens.lineHeight.relaxed),
+    textAlign: 'center',
   },
   sidebar: {
     width: 400,

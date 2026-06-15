@@ -20,7 +20,10 @@ export default function AdminLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
       <Stack.Screen name="master-catalog" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="card-intelligence" />
+      <Stack.Screen name="ingestion" />
       <Stack.Screen name="feedback" options={{ presentation: 'modal' }} />
     </Stack>
   );

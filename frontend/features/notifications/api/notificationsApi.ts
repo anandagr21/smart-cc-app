@@ -1,4 +1,4 @@
-import api from '@/services/api/client';
+import { apiClient as api } from '@/services/api/client';
 import { NotificationsListResponse } from '../types/api';
 
 export const fetchNotifications = async (): Promise<NotificationsListResponse> => {

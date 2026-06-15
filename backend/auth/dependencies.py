@@ -91,10 +91,19 @@ async def get_current_user(
             code="INVALID_TOKEN",
         )
 
-    # 4. Fetch the user (raises NotFoundException → 401 via middleware)
-    auth_service = await _get_auth_service(user_repo)
-    return await auth_service.get_current_user(user_id)
-
+    # 4. Fetch the user (raises NotFoundException which we map to 401)
+    try:
+        auth_service = await _get_auth_service(user_repo)
+        return await auth_service.get_current_user(user_id)
+    except Exception as e:
+        # If user is not found (e.g. database reset), treat as unauthorized so frontend logs out.
+        from core.exceptions import NotFoundException
+        if isinstance(e, NotFoundException):
+            raise UnauthorizedException(
+                message="User associated with this token no longer exists.",
+                code="USER_NOT_FOUND",
+            )
+        raise e
 
 async def get_current_admin_user(
     current_user: UserResponse = Depends(get_current_user),

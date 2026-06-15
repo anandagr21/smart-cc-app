@@ -5,6 +5,7 @@ import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { ArrowLeft } from 'lucide-react-native';
+import { AdminUsageGuide } from '@/components/admin/AdminUsageGuide';
 
 export default function ReviewCardIntelligenceScreen() {
   const { card_id } = useLocalSearchParams<{ card_id: string }>();
@@ -23,6 +24,16 @@ export default function ReviewCardIntelligenceScreen() {
         <ArrowLeft size={16} color={colors.textPrimary} />
         <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Back to Intelligence</Text>
       </TouchableOpacity>
+
+      <AdminUsageGuide 
+        title="Card Intelligence Structural Editor"
+        description="Review the raw extracted JSON data for a specific card against its source text. Use this interface to verify reward rates, fee structures, and category caps before final approval."
+        workflowSteps={[
+          "Compare the parsed values on the right with the raw source text on the left",
+          "Edit any discrepancies manually in the input fields",
+          "Click 'Approve & Save' to publish this structured intelligence"
+        ]}
+      />
 
       <CardIntelligenceWorkspaceV2 cardId={card_id} />
     </SafeAreaView>

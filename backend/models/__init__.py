@@ -21,10 +21,37 @@ from .audit_log import AuditLog
 from .feedback import Feedback
 from .recommendation_audit import RecommendationAudit
 from .notification import Notification
-
+from .ingestion import (
+    CardCatalogVersion,
+    CardIngestionSession,
+    CardIngestionField,
+    CardFieldSource,
+    IngestionAuditLog,
+    BankExtractionTemplate,
+    SourceDocument,
+    SourceChunk,
+    ExtractionRun,
+    ExtractedFieldCandidate,
+    PromptTemplate,
+    ExtractionBenchmark,
+    BenchmarkRun,
+)
 
 __all__ = [
     "CardCatalog",
+    "CardCatalogVersion",
+    "CardIngestionSession",
+    "CardIngestionField",
+    "CardFieldSource",
+    "IngestionAuditLog",
+    "BankExtractionTemplate",
+    "SourceDocument",
+    "SourceChunk",
+    "ExtractionRun",
+    "ExtractedFieldCandidate",
+    "PromptTemplate",
+    "ExtractionBenchmark",
+    "BenchmarkRun",
     "Merchant",
     "MerchantAlias",
     "User",
