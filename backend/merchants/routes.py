@@ -18,6 +18,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.deps import get_db, get_merchant_service
+from auth.dependencies import get_current_admin_user
+from auth.schemas import UserResponse
 from merchants.resolution_engine import resolve as run_resolution
 from merchants.schemas import (
     AliasConfirmRequest,
@@ -45,6 +47,7 @@ async def resolve_merchant(
     request: ResolutionRequest,
     service: MerchantService = Depends(get_merchant_service),
     db: AsyncSession = Depends(get_db),
+    current_admin: UserResponse = Depends(get_current_admin_user),
 ) -> ResolutionResponse:
     """Resolve a noisy user-entered merchant name to a canonical merchant.
 
@@ -78,6 +81,7 @@ async def confirm_alias(
     request: AliasConfirmRequest,
     service: MerchantService = Depends(get_merchant_service),
     db: AsyncSession = Depends(get_db),
+    current_admin: UserResponse = Depends(get_current_admin_user),
 ) -> AliasConfirmResponse:
     """Confirm that a raw merchant name maps to a specific canonical merchant.
 
@@ -102,6 +106,7 @@ async def confirm_alias(
 async def normalize_merchant(
     request: NormalizeRequest,
     service: MerchantService = Depends(get_merchant_service),
+    current_admin: UserResponse = Depends(get_current_admin_user),
 ) -> NormalizeResponse:
     """Normalize a raw merchant name and optionally suggest a category.
 
@@ -122,6 +127,7 @@ async def normalize_merchant(
 async def create_merchant(
     request: MerchantCreate,
     service: MerchantService = Depends(get_merchant_service),
+    current_admin: UserResponse = Depends(get_current_admin_user),
 ) -> MerchantResponse:
     """Create a canonical merchant with optional aliases.
 
@@ -172,6 +178,7 @@ async def register_alias(
     merchant_id: UUID,
     request: AliasRegisterRequest,
     service: MerchantService = Depends(get_merchant_service),
+    current_admin: UserResponse = Depends(get_current_admin_user),
 ) -> MerchantResponse:
     """Register a new raw-name alias for an existing merchant.
 

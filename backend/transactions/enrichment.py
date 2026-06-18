@@ -113,8 +113,14 @@ class TransactionEnrichmentService:
                 bonus_index = bonus_index_by_card_id.get(card_id_str)
                 exclusion_rules = exclusions_by_card_id.get(card_id_str, [])
                 
+                # Temporary cap bug mitigation: Requires Reward Ledger implementation (P1)
+                # current_spend is total INR spend, which incorrectly exhausts reward limits.
+                # Bypassing historical usage for now to prevent 0-reward recommendation errors.
+                import sentry_sdk
+                sentry_sdk.capture_message("Cap evaluation running without historical usage", level="warning")
+                card_txn_context = txn_context.model_copy(update={"cumulative_spend": 0})
                 eval_result = engine_evaluate(
-                    txn_context, 
+                    card_txn_context, 
                     rules=None, # Not passing raw rules anymore
                     bonus_index=bonus_index,
                     exclusion_rules=exclusion_rules

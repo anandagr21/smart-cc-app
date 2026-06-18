@@ -24,7 +24,6 @@ from typing import Callable, Optional
 
 from reward_engine.caps import apply_caps_from_config
 from reward_engine.matcher import match_transaction_to_rule
-from reward_engine.caps import evaluate_rule_cap_allowance
 from reward_engine.cashback import build_cashback_step, evaluate_cashback
 from reward_engine.constants import RewardType, ZERO_DECIMAL
 from reward_engine.exclusions import evaluate_exclusions
@@ -93,6 +92,15 @@ def evaluate(
     Returns:
         EvaluationResult with effective_reward_inr, breakdown, and diagnostics.
     """
+    import sentry_sdk
+    sentry_sdk.set_tag("service", "reward_engine")
+    sentry_sdk.add_breadcrumb(
+        category="reward_engine",
+        message=f"Evaluating rewards for merchant: {txn.merchant_name}",
+        level="info",
+        data={"amount": str(txn.amount), "category": txn.category}
+    )
+
     breakdown: list[EvaluationStep] = []
     warnings: list[str] = []
 
@@ -147,6 +155,11 @@ def evaluate(
 
     if match is None:
         warnings.append("No applicable reward rule matched this transaction.")
+        sentry_sdk.add_breadcrumb(
+            category="reward_engine",
+            message="No applicable reward rule matched this transaction.",
+            level="info"
+        )
         return EvaluationResult(
             effective_reward_inr=ZERO_DECIMAL,
             reward_type=RewardType.NONE,
@@ -288,56 +301,3 @@ def evaluate(
         warnings=warnings,
         explanations=explanations,
     )
-
-async def evaluate_transaction_for_portfolio(transaction: dict, user_portfolio_cards: list) -> list:
-    """
-    Evaluates a single transaction against all active cards in a user's portfolio
-    to determine the optimal card to use based on maximum calculated yield.
-    """
-    amount = float(transaction.get("amount", 0.0))
-    results = []
-
-    for user_card in user_portfolio_cards:
-        card_profile = user_card.card_catalog if hasattr(user_card, "card_catalog") else getattr(user_card, "card", None)
-        if not card_profile:
-            continue
-            
-        reward_rules = getattr(card_profile, "reward_rules_json", []) or []
-        base_rate = float(getattr(card_profile, "base_reward_rate_per_100", 1.0))
-        
-        # Match Rule
-        matched_rule = match_transaction_to_rule(transaction, reward_rules)
-        
-        # Determine Multiplier & Limits
-        effective_multiplier = 1.0
-        rule_applied = "Base Rate"
-        reward_type = "points"
-        
-        if matched_rule:
-            rule_applied = matched_rule.get("category_name", "Custom Rule")
-            reward_type = matched_rule.get("reward_type", "points")
-            
-            has_cap = matched_rule.get("has_cap", False)
-            if has_cap:
-                effective_multiplier = await evaluate_rule_cap_allowance(
-                    matched_rule, 
-                    user_id=getattr(user_card, "user_id", "unknown"), 
-                    card_id=str(getattr(card_profile, "id", "unknown"))
-                )
-            else:
-                effective_multiplier = float(matched_rule.get("multiplier", 1.0))
-                
-        # Compute Exact Return Calculation
-        calculated_points = (amount / 100.0) * base_rate * effective_multiplier
-        
-        results.append({
-            "card_id": str(getattr(card_profile, "id", "unknown")),
-            "card_name": getattr(card_profile, "card_name", "Unknown Card"),
-            "calculated_yield": calculated_points,
-            "reward_type": reward_type,
-            "rule_applied": rule_applied
-        })
-        
-    # Sort output array by highest calculated yield descending
-    results.sort(key=lambda x: x["calculated_yield"], reverse=True)
-    return results

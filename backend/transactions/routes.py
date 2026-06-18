@@ -3,9 +3,11 @@ Module: backend.transactions.routes
 Responsibility: HTTP endpoints for Transactions.
 """
 
+from typing import Optional
 from uuid import UUID
+import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.deps import get_merchant_service, get_transaction_enrichment_service, get_user_card_service
@@ -60,8 +62,12 @@ async def create_transaction(
     service: TransactionService = Depends(get_transaction_service),
     enrichment_service: TransactionEnrichmentService = Depends(get_transaction_enrichment_service),
     db: AsyncSession = Depends(get_db),
+    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
 ) -> dict:
     try:
+        if idempotency_key:
+            request.idempotency_key = idempotency_key
+
         result = await service.create_transaction(current_user.id, request)
         enriched = await enrichment_service.enrich_transactions(current_user.id, [result])
         

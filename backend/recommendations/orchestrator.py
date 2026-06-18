@@ -51,6 +51,16 @@ class RecommendationOrchestrator:
         self, user_id: UUID, request: RecommendationRequest, session: Any
     ) -> RecommendationResponse:
         """Run the end-to-end recommendation workflow."""
+        import sentry_sdk
+        sentry_sdk.set_tag("service", "recommendations")
+        sentry_sdk.set_user({"id": str(user_id)})
+        sentry_sdk.add_breadcrumb(
+            category="recommendation",
+            message=f"Generating recommendation for merchant: {request.merchant_name}",
+            level="info",
+            data={"amount": str(request.amount)}
+        )
+
         start_time = time.perf_counter()
         
         # 1. Resolve merchant using the new multi-stage pipeline, unless skipped
@@ -81,6 +91,11 @@ class RecommendationOrchestrator:
         user_cards = [c for c in all_user_cards if is_card_eligible_for_recommendation(c.card_status)]
         
         if not user_cards:
+            sentry_sdk.add_breadcrumb(
+                category="recommendation",
+                message="No active cards found for user.",
+                level="info"
+            )
             return RecommendationResponse(
                 resolved_merchant_name=resolve_res.merchant_name,
                 resolution_confidence=resolve_res.confidence,
@@ -116,7 +131,13 @@ class RecommendationOrchestrator:
             normalized_rules = parse_rules_from_catalog(catalog_card, card_name)
 
             # Pure evaluate
-            eval_result: EvaluationResult = engine_evaluate(txn_context, normalized_rules)
+            # Temporary cap bug mitigation: Requires Reward Ledger implementation (P1)
+            # current_spend is total INR spend, which incorrectly exhausts reward limits.
+            # Bypassing historical usage for now to prevent 0-reward recommendation errors.
+            import sentry_sdk
+            sentry_sdk.capture_message("Cap evaluation running without historical usage", level="warning")
+            card_txn_context = txn_context.model_copy(update={"cumulative_spend": 0})
+            eval_result: EvaluationResult = engine_evaluate(card_txn_context, normalized_rules)
             
             # Phase 2: Compute fee waiver intelligence and portfolio optimization
             from fee_waiver.service import FeeWaiverService

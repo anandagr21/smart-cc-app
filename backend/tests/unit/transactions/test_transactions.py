@@ -172,6 +172,129 @@ async def test_update_status(service: TransactionService, repo: AsyncMock):
     assert res.posted_date == date.today()
 
 
+@pytest.mark.asyncio
+async def test_missing_idempotency_key_generates_uuid(service: TransactionService, repo: AsyncMock):
+    user_id = uuid4()
+    req1 = TransactionCreate(
+        user_card_id=uuid4(),
+        merchant_name="Starbucks",
+        amount=Decimal("5.00"),
+        transaction_date=date.today(),
+    )
+    req2 = TransactionCreate(
+        user_card_id=req1.user_card_id,
+        merchant_name="Starbucks",
+        amount=Decimal("5.00"),
+        transaction_date=date.today(),
+    )
+    
+    async def mock_get_idemp(u_id, key):
+        return None
+        
+    repo.get_transaction_by_idempotency_key.side_effect = mock_get_idemp
+    
+    async def mock_create(txn):
+        txn.id = uuid4()
+        return txn
+        
+    repo.create_transaction.side_effect = mock_create
+
+    res1 = await service.create_transaction(user_id, req1)
+    res2 = await service.create_transaction(user_id, req2)
+
+    assert res1.id != res2.id
+    assert repo.create_transaction.call_count == 2
+    
+    # Check that fallback is a valid UUID
+    from uuid import UUID
+    assert UUID(res1.idempotency_key)
+    assert UUID(res2.idempotency_key)
+    assert res1.idempotency_key != res2.idempotency_key
+
+@pytest.mark.asyncio
+async def test_create_transaction_explicit_idempotency(service: TransactionService, repo: AsyncMock):
+    user_id = uuid4()
+    req1 = TransactionCreate(
+        user_card_id=uuid4(),
+        merchant_name="Starbucks",
+        amount=Decimal("5.00"),
+        transaction_date=date.today(),
+        idempotency_key="custom_key_1"
+    )
+    req2 = TransactionCreate(
+        user_card_id=req1.user_card_id,
+        merchant_name="Starbucks",
+        amount=Decimal("5.00"),
+        transaction_date=date.today(),
+        idempotency_key="custom_key_2"
+    )
+    
+    persisted_keys = set()
+    async def mock_get_idemp(u_id, key):
+        return None
+        
+    repo.get_transaction_by_idempotency_key.side_effect = mock_get_idemp
+    
+    async def mock_create(txn):
+        txn.id = uuid4()
+        persisted_keys.add(txn.idempotency_key)
+        return txn
+        
+    repo.create_transaction.side_effect = mock_create
+
+    res1 = await service.create_transaction(user_id, req1)
+    res2 = await service.create_transaction(user_id, req2)
+
+    assert res1.id != res2.id
+    assert repo.create_transaction.call_count == 2
+    assert "custom_key_1" in persisted_keys
+    assert "custom_key_2" in persisted_keys
+
+@pytest.mark.asyncio
+async def test_concurrent_integrity_error_handling(service: TransactionService, repo: AsyncMock):
+    from sqlalchemy.exc import IntegrityError
+    
+    user_id = uuid4()
+    req = TransactionCreate(
+        user_card_id=uuid4(),
+        merchant_name="Starbucks",
+        amount=Decimal("5.00"),
+        transaction_date=date.today(),
+    )
+    
+    existing_txn = Transaction(
+        id=uuid4(),
+        user_id=user_id,
+        user_card_id=req.user_card_id,
+        merchant_name=req.merchant_name,
+        normalized_merchant="starbucks",
+        category="dining",
+        amount=req.amount,
+        transaction_date=req.transaction_date,
+        status=TransactionStatus.PENDING,
+    )
+    
+    call_count = 0
+    async def mock_get_idemp(u_id, key):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return None
+        else:
+            return existing_txn
+            
+    repo.get_transaction_by_idempotency_key.side_effect = mock_get_idemp
+    
+    # Mock IntegrityError
+    repo.create_transaction.side_effect = IntegrityError("statement", "params", "orig")
+    
+    res = await service.create_transaction(user_id, req)
+    
+    assert res.id == existing_txn.id
+    assert repo.create_transaction.call_count == 1
+    assert call_count == 2
+
+
 # ---------------------------------------------------------------------------
 # Aggregation Tests
 # ---------------------------------------------------------------------------

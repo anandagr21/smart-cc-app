@@ -85,8 +85,8 @@ class StructuredParser:
             return StructuredCardData(**parsed)
         else:
             prompt = ChatPromptTemplate.from_messages([
-                ("system", system_prompt),
-                ("user", "{text}")
+                ("system", system_prompt + "\n\nAnalyze the document provided between the <document> and </document> tags."),
+                ("user", "<document>\n{text}\n</document>")
             ])
             
             chain = prompt | self.structured_llm
