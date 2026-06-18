@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '../services/transactionService';
 import { TransactionCreate } from '../types/transaction.types';
@@ -23,8 +24,17 @@ export function useCreateTransaction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TransactionCreate) => transactionService.createTransaction(data),
-    onSuccess: (newTransaction) => {
+    mutationFn: (variables: { data: TransactionCreate; idempotencyKey?: string }) => transactionService.createTransaction(variables.data, variables.idempotencyKey),
+    onSuccess: (newTransaction, variables) => {
+      Sentry.addBreadcrumb({
+        category: 'business',
+        message: 'Transaction Added',
+        data: {
+          cardId: variables.data.user_card_id,
+          amount: variables.data.amount,
+        },
+      });
+
       // 1. Optimistic Cache Patching for instant UI feedback
       queryClient.setQueryData(QueryKeys.transactions.feed(), (oldData: any) => {
         if (!oldData || !oldData.pages) return oldData;

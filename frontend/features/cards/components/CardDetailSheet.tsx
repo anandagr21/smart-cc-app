@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as Sentry from '@sentry/react-native';
 import {
   View,
   Text,
@@ -46,6 +47,20 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const [isCardDetailsEditVisible, setIsCardDetailsEditVisible] = useState(false);
 
   const { mutate: updateCard } = useUpdateCard(card?.id || '');
+
+  // Log breadcrumb if card has fee waiver logic and sheet is opened
+  React.useEffect(() => {
+    if (card && card.effective_fee_waiver_threshold && card.effective_fee_waiver_threshold > 0) {
+      Sentry.addBreadcrumb({
+        category: 'business',
+        message: 'Fee Waiver Viewed',
+        data: {
+          cardId: card.id,
+          waiverTarget: card.effective_fee_waiver_threshold,
+        },
+      });
+    }
+  }, [card?.id]);
 
   if (!card) return null;
 

@@ -6,6 +6,7 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { useCards } from '@/features/cards/hooks/useCards';
 
 interface EmptyDashboardStateProps {
   onAddCard: () => void;
@@ -17,6 +18,8 @@ export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
   onAddTransaction,
 }) => {
   const colors = useThemeColors();
+  const { data: cards } = useCards();
+  const hasCards = !!cards && cards.length > 0;
 
   return (
     <Animated.View entering={FadeInDown.delay(100).springify()}>
@@ -38,20 +41,22 @@ export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
         </View>
 
         {/* CTAs */}
-        <View style={styles.ctas}>
-          <Button
-            label="Add a Card"
-            variant="primary"
-            onPress={onAddCard}
-            style={styles.cta}
-          />
-          <Button
-            label="Log a Transaction"
-            variant="secondary"
-            onPress={onAddTransaction}
-            style={styles.cta}
-          />
-        </View>
+        {!hasCards && (
+          <View style={styles.ctas}>
+            <Button
+              label="Add a Card"
+              variant="primary"
+              onPress={onAddCard}
+              style={styles.cta}
+            />
+            <Button
+              label="Log a Transaction"
+              variant="secondary"
+              onPress={onAddTransaction}
+              style={styles.cta}
+            />
+          </View>
+        )}
       </Card>
     </Animated.View>
   );

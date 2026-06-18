@@ -17,8 +17,9 @@ class TransactionService {
   /**
    * Create a new manual transaction
    */
-  async createTransaction(payload: TransactionCreate): Promise<TransactionResponse> {
-    const { data } = await apiClient.post<SingleResponse<TransactionResponse>>('/transactions', payload);
+  async createTransaction(payload: TransactionCreate, idempotencyKey?: string): Promise<TransactionResponse> {
+    const config = idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined;
+    const { data } = await apiClient.post<SingleResponse<TransactionResponse>>('/transactions', payload, config);
     return data.data;
   }
 
