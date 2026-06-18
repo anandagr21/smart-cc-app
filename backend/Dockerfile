@@ -29,6 +29,10 @@ RUN uv venv && uv sync --no-dev
 # =========================
 FROM python:3.12-slim
 
+# Add AWS Lambda Web Adapter
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+ENV PORT=8000
+
 WORKDIR /app
 
 # Runtime dependencies only
