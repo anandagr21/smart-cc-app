@@ -4,7 +4,9 @@ Responsibility: HTTP routes for the AI-Assisted Credit Card Catalog Ingestion Ad
 """
 
 from typing import Any
+import uuid
 from uuid import UUID
+import shutil
 
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, BackgroundTasks
 from pydantic import BaseModel
@@ -66,6 +68,15 @@ async def create_session(
     current_admin: UserResponse = Depends(get_current_admin_user),
 ) -> Any:
     """Manually create an ingestion session. Unblocks Phase 2 manual entry workflows."""
+    import sentry_sdk
+    sentry_sdk.set_tag("service", "ingestion")
+    sentry_sdk.set_user({"id": str(current_admin.id), "email": getattr(current_admin, "email", "")})
+    sentry_sdk.add_breadcrumb(
+        category="ingestion",
+        message=f"Creating manual session for {request.bank_name} {request.card_name}",
+        level="info"
+    )
+
     session = CardIngestionSession(
         card_name=request.card_name,
         bank_name=request.bank_name,
@@ -361,24 +372,50 @@ async def upload_source_document(
     db: AsyncSession = Depends(get_db),
     current_admin: UserResponse = Depends(get_current_admin_user),
 ) -> Any:
-    # 1. Save file locally
-    contents = await file.read()
-    checksum = hashlib.sha256(contents).hexdigest()
-    
+    # 1. Validate MIME type
+    if file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+
+    # 2. Save file locally
     upload_dir = "data/uploads"
     os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, f"{checksum}.pdf")
     
-    with open(file_path, "wb") as f:
-        f.write(contents)
+    # Stream to a temporary UUID filename first
+    temp_filename = f"{uuid.uuid4()}.pdf"
+    temp_file_path = os.path.join(upload_dir, temp_filename)
+    
+    MAX_UPLOAD_SIZE_MB = 25
+    MAX_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+    bytes_written = 0
+    sha256_hash = hashlib.sha256()
+
+    import aiofiles
+    async with aiofiles.open(temp_file_path, "wb") as f:
+        while chunk := await file.read(1024 * 1024):
+            bytes_written += len(chunk)
+            if bytes_written > MAX_SIZE:
+                import os
+                if os.path.exists(temp_file_path):
+                    os.remove(temp_file_path)
+                raise HTTPException(status_code=413, detail=f"File exceeds maximum size of {MAX_UPLOAD_SIZE_MB}MB.")
+            sha256_hash.update(chunk)
+            await f.write(chunk)
+            
+    file_size = bytes_written
+    checksum = sha256_hash.hexdigest()
+    
+    # Rename to checksum
+    file_path = os.path.join(upload_dir, f"{checksum}.pdf")
+    if temp_file_path != file_path:
+        os.rename(temp_file_path, file_path)
         
-    # 2. Create SourceDocument
+    # 3. Create SourceDocument
     doc = SourceDocument(
         card_catalog_id=card_catalog_id,
         source_type=source_type,
         file_name=file.filename,
         checksum_sha256=checksum,
-        file_size=len(contents),
+        file_size=file_size,
         status="UPLOADED"
     )
     db.add(doc)
@@ -448,6 +485,15 @@ async def api_extract_field(
     db: AsyncSession = Depends(get_db),
     current_admin: UserResponse = Depends(get_current_admin_user),
 ) -> Any:
+    import sentry_sdk
+    sentry_sdk.set_tag("service", "ingestion")
+    sentry_sdk.set_user({"id": str(current_admin.id), "email": getattr(current_admin, "email", "")})
+    sentry_sdk.add_breadcrumb(
+        category="ingestion",
+        message=f"Extracting field {request.field_name} from doc {request.document_id}",
+        level="info"
+    )
+
     try:
         candidate = await extract_single_field(db, request.document_id, request.field_name)
         
@@ -462,6 +508,8 @@ async def api_extract_field(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        import sentry_sdk
+        sentry_sdk.capture_message(f"ingestion_failure: Extraction error for {request.field_name} - {str(e)}", level="error")
         raise HTTPException(status_code=500, detail=f"Extraction error: {str(e)}")
 
 from models.ingestion import ExtractionBenchmark

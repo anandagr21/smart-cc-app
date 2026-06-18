@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api/client';
 import { UserCardResponse, UserCardUpdate } from '../types/api';
@@ -45,6 +46,16 @@ export const useUpdateCard = (cardId: string) => {
       if (context?.previousCards) {
         queryClient.setQueryData(QueryKeys.cards.wallet(), context.previousCards);
       }
+    },
+    onSuccess: (data, variables) => {
+      Sentry.addBreadcrumb({
+        category: 'business',
+        message: 'Card Updated',
+        data: {
+          cardId: cardId,
+          fieldsUpdated: Object.keys(variables),
+        },
+      });
     },
     onSettled: () => {
       // Always refetch after error or success to ensure backend sync

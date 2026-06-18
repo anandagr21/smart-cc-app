@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
 import { Platform } from 'react-native';
-import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Stack, useRouter, useSegments, useNavigationContainerRef, useRootNavigationState } from 'expo-router';
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
+import axios from 'axios';
+import * as Sentry from '@sentry/react-native';
+import Constants from 'expo-constants';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { useThemeStore } from '@/features/theme/store/themeStore';
@@ -12,7 +15,42 @@ import { useOnboardingStore } from '@/features/onboarding/store/onboardingStore'
 import { OnboardingModal } from '@/features/onboarding/components/OnboardingModal';
 import '@/global.css';
 
+const routingIntegration = Sentry.reactNavigationIntegration();
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: __DEV__ ? 1.0 : 0.05,
+  release: Constants.expoConfig?.version,
+  environment: __DEV__ ? "development" : "production",
+  integrations: [
+    routingIntegration,
+  ],
+});
+
+const handleQueryError = (error: any) => {
+  if (axios.isAxiosError(error) && error.response) {
+    const status = error.response.status;
+    // Ignore expected status codes
+    if ([401, 403, 404, 400, 422].includes(status)) {
+      return;
+    }
+  }
+  // Ignore cancelled requests and offline/network errors
+  if (error.name === 'CanceledError' || 
+      error.message?.toLowerCase().includes('network error') || 
+      error.message?.toLowerCase().includes('offline')) {
+    return;
+  }
+  Sentry.captureException(error);
+};
+
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: handleQueryError,
+  }),
+  mutationCache: new MutationCache({
+    onError: handleQueryError,
+  }),
   defaultOptions: {
     queries: {
       retry: 2,
@@ -21,14 +59,15 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function RootLayout() {
-  const { initializeAuth, token, isLoading: isAuthLoading } = useAuthStore();
+export default Sentry.wrap(function RootLayout() {
+  const { initializeAuth, token, user, isLoading: isAuthLoading } = useAuthStore();
   const { initializeTheme, isHydrated: isThemeHydrated, themeMode } = useThemeStore();
   const { hasSeenOnboarding, isLoading: isOnboardingLoading, initializeOnboarding } = useOnboardingStore();
   const colors = useThemeColors();
   
   const segments = useSegments();
   const router = useRouter();
+  const ref = useNavigationContainerRef();
   const rootNavigationState = useRootNavigationState();
 
   useEffect(() => {
@@ -36,6 +75,13 @@ export default function RootLayout() {
     initializeTheme();
     initializeOnboarding();
   }, []);
+
+  // Track React Navigation for Sentry
+  useEffect(() => {
+    if (ref) {
+      routingIntegration.registerNavigationContainer(ref);
+    }
+  }, [ref]);
 
   // Load Google Identity Services script on web
   useEffect(() => {
@@ -56,11 +102,17 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!token && !inAuthGroup) {
+      Sentry.setUser(null);
       router.replace('/(auth)/login');
     } else if (token && inAuthGroup) {
+      if (user) {
+        Sentry.setUser({ id: user.id });
+      }
       router.replace('/(tabs)');
+    } else if (token && user) {
+      Sentry.setUser({ id: user.id });
     }
-  }, [token, isAuthLoading, isThemeHydrated, segments, rootNavigationState?.key]);
+  }, [token, user, isAuthLoading, isThemeHydrated, segments]);
 
   if (isAuthLoading || !isThemeHydrated || isOnboardingLoading) {
     return null;
@@ -68,17 +120,19 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
-      <QueryClientProvider client={queryClient}>
-        <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-          <Stack.Screen name="(auth)/login" options={{ animation: 'fade' }} />
-          <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-          <Stack.Screen name="monthly-intelligence" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="intelligence" options={{ presentation: 'modal', animation: 'fade' }} />
-        </Stack>
-        {token && !hasSeenOnboarding && <OnboardingModal />}
-        <TermsDisclaimerModal />
-      </QueryClientProvider>
+      <Sentry.ErrorBoundary fallback={null}>
+        <QueryClientProvider client={queryClient}>
+          <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+            <Stack.Screen name="(auth)/login" options={{ animation: 'fade' }} />
+            <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+            <Stack.Screen name="monthly-intelligence" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="intelligence" options={{ presentation: 'modal', animation: 'fade' }} />
+          </Stack>
+          {token && !hasSeenOnboarding && <OnboardingModal />}
+          <TermsDisclaimerModal />
+        </QueryClientProvider>
+      </Sentry.ErrorBoundary>
     </GestureHandlerRootView>
   );
-}
+});

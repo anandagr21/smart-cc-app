@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import * as Sentry from '@sentry/react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Sparkles, Plus, Trophy, TrendingUp, Lightbulb } from 'lucide-react-native';
@@ -44,7 +45,7 @@ export default function DashboardScreen() {
           <Text style={[styles.greeting, { color: colors.textMuted }]}>
             {getGreeting()} · Smart CC
           </Text>
-          
+
           <Text style={[styles.heroText, { color: colors.textPrimary }]}>
             Dashboard
           </Text>
@@ -53,11 +54,17 @@ export default function DashboardScreen() {
           </Text>
 
 
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.intelligenceCta, { backgroundColor: colors.surface, borderColor: colors.border }]}
             activeOpacity={0.7}
-            onPress={() => router.push('/monthly-intelligence')}
+            onPress={() => {
+              Sentry.addBreadcrumb({
+                category: 'navigation',
+                message: 'Monthly Intelligence Opened',
+              });
+              router.push('/monthly-intelligence');
+            }}
           >
             {/* @ts-ignore */}
             <Sparkles size={14} color={colors.primary} />
@@ -124,8 +131,8 @@ export default function DashboardScreen() {
 
         {/* Recent Recommendation Section */}
         {primaryInsight && (
-          <Animated.View 
-            entering={FadeInDown.delay(150).springify()} 
+          <Animated.View
+            entering={FadeInDown.delay(150).springify()}
             style={styles.insightSection}
           >
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>RECENT RECOMMENDATION</Text>
@@ -153,7 +160,7 @@ export default function DashboardScreen() {
 
         {/* Primary Action Button */}
         <Animated.View entering={FadeInDown.delay(250).springify()} style={[styles.actionContainer, { backgroundColor: colors.primarySoft, borderColor: colors.primarySoft }]}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
             activeOpacity={0.8}
             onPress={() => setFormSheetVisible(true)}

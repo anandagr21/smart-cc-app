@@ -37,6 +37,14 @@
         {
           "iosUrlScheme": "com.googleusercontent.apps.768994784419-gftc3oigrn4snh3f2d22i2s0c1p2k2a9"
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "smart-cc-app",
+          "organization": "smart-cc"
+        }
       ]
     ]
   }

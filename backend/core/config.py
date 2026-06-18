@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = False
     environment: Environment = Environment.DEVELOPMENT
+    sentry_dsn_backend: str | None = None
 
     # ---- Server ----
     host: str = "0.0.0.0"

@@ -7,6 +7,7 @@ Architectural Boundaries:
 - No DB queries, no reward logic, no recommendation logic.
 """
 
+import hashlib
 from datetime import date
 from typing import Optional
 from uuid import UUID
@@ -45,10 +46,13 @@ class TransactionService:
         validate_transaction_dates(schema.transaction_date, None)
         
         # 1.5 Idempotency check
-        if schema.idempotency_key:
-            existing = await self._repository.get_transaction_by_idempotency_key(user_id, schema.idempotency_key)
-            if existing:
-                return self._to_response(existing)
+        if not schema.idempotency_key:
+            import uuid
+            schema.idempotency_key = str(uuid.uuid4())
+            
+        existing = await self._repository.get_transaction_by_idempotency_key(user_id, schema.idempotency_key)
+        if existing:
+            return self._to_response(existing)
         
         # 2. Merchant Normalization (reusing MerchantService)
         # We don't create the merchant implicitly, we just get the canonical name.

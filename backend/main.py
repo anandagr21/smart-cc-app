@@ -75,6 +75,18 @@ def create_app() -> FastAPI:
     """
     settings = get_settings()
 
+    if settings.sentry_dsn_backend and settings.is_production:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn_backend,
+            environment=settings.environment.value if hasattr(settings.environment, "value") else settings.environment,
+            traces_sample_rate=0.1,
+            release=settings.app_version,
+            integrations=[FastApiIntegration()],
+        )
+
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
@@ -118,6 +130,11 @@ def create_app() -> FastAPI:
 
     # API routes — all versioned under /api/v1
     app.include_router(api_router)
+
+    if not settings.is_production:
+        @app.get("/api/sentry-debug", tags=["Debug"])
+        async def trigger_error():
+            division_by_zero = 1 / 0
 
     return app
 

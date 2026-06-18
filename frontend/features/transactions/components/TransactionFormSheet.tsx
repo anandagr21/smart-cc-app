@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ScrollView,
   TextInput,
 } from 'react-native';
+import * as Crypto from 'expo-crypto';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -113,6 +114,8 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   const { themeMode } = useThemeStore();
   const insets = useSafeAreaInsets();
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
+
+  const idempotencyKey = useRef(Crypto.randomUUID());
 
   const { data: cardsData } = useCards();
   const { data: personalityProfile } = usePersonalityProfile();
@@ -303,12 +306,16 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
         });
       } else {
         await addTx.mutateAsync({
-          ...data,
-          merchant_name: finalMerchantName,
-          payment_mode: data.payment_mode.toLowerCase() as any,
-          transaction_date: new Date().toISOString().split('T')[0],
-          recommended_card_id: recommendedCardId,
+          data: {
+            ...data,
+            merchant_name: finalMerchantName,
+            payment_mode: data.payment_mode.toLowerCase() as any,
+            transaction_date: new Date().toISOString().split('T')[0],
+            recommended_card_id: recommendedCardId,
+          },
+          idempotencyKey: idempotencyKey.current,
         });
+        idempotencyKey.current = Crypto.randomUUID();
       }
       triggerHaptic('success');
       onClose();
