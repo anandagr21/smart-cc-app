@@ -61,13 +61,10 @@ ENV ENVIRONMENT=development
 
 EXPOSE 8000
 
-# Run based on environment
+# Run based on environment (AWS Lambda Web Adapter expects a web server on PORT)
 CMD sh -c '\
     if [ "$ENVIRONMENT" = "development" ]; then \
         python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000; \
     else \
-        gunicorn main:app \
-            -k uvicorn.workers.UvicornWorker \
-            -w 4 \
-            -b 0.0.0.0:8000; \
+        python -m uvicorn main:app --host 0.0.0.0 --port 8000; \
     fi'
