@@ -42,7 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy virtualenv to /opt/venv (outside /app) so bind mount doesn't wipe it
-COPY --from=builder /app/.venv /opt/venv
+COPY --from=builder /opt/venv /opt/venv
 
 # Copy source
 COPY . .
