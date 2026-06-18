@@ -21,8 +21,9 @@ ENV PATH="/root/.local/bin:$PATH"
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
-# Create virtual environment and install dependencies
-RUN uv venv && uv sync --no-dev
+# Create virtual environment at /opt/venv so absolute paths match when copied to runtime
+ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
+RUN uv sync --no-dev
 
 # =========================
 # Runtime Stage
