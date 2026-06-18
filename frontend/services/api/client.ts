@@ -48,6 +48,8 @@ apiClient.interceptors.request.use(
 );
 
 
+import * as Sentry from '@sentry/react-native';
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -56,6 +58,26 @@ apiClient.interceptors.response.use(
       console.warn('API returned 401 Unauthorized. Logging out.');
       useAuthStore.getState().logout();
     }
+    
+    // Sentry Error Tracking for unhandled/unexpected errors
+    if (error.response) {
+      const status = error.response.status;
+      // Do not capture expected client errors (401, 403, 404, 400, 422)
+      if (![401, 403, 404, 400, 422].includes(status)) {
+        Sentry.captureException(error);
+      }
+    } else if (error.request) {
+      // Network error, timeout, offline - maybe we capture timeout specifically
+      if (error.code === 'ECONNABORTED' || error.message?.toLowerCase().includes('timeout')) {
+        Sentry.captureException(error);
+      }
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      if (error.name !== 'CanceledError') {
+        Sentry.captureException(error);
+      }
+    }
+
     return Promise.reject(error);
   }
 );
