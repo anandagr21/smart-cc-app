@@ -57,6 +57,7 @@ class UserResponse(BaseModel):
     full_name: str = Field(..., description="User display name.")
     role: UserRole = Field(default=UserRole.USER, description="User role.")
     terms_accepted: bool = Field(default=False, description="Whether the user has accepted terms and conditions.")
+    is_premium: bool = Field(default=False, description="Whether the user has premium access.")
 
     model_config = ConfigDict(extra="forbid")
 

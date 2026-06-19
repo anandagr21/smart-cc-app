@@ -15,6 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
+import { useAuthStore } from '@/features/auth/store/authStore';
+
 import { UserCardResponse } from '../types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
@@ -39,6 +41,8 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
+  const user = useAuthStore((state) => state.user);
+  const isPremium = user?.is_premium;
 
   const [mockActionTitle, setMockActionTitle] = useState<string | null>(null);
   const [isAnnualFeeEditVisible, setIsAnnualFeeEditVisible] = useState(false);
@@ -229,6 +233,57 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                     <Text style={[styles.milestoneText, { color: colors.textPrimary }]}>{waiverMilestone}</Text>
                   </View>
                 </View>
+              </Animated.View>
+            )}
+
+            {/* Section 2.2: Milestones Progress */}
+            {card.milestone_progress && card.milestone_progress.length > 0 && (
+              <Animated.View entering={FadeInUp.duration(400).delay(175)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                <View style={styles.sectionTitleRow}>
+                  <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>MILESTONE PROGRESS</Text>
+                  {/* @ts-ignore */}
+                  <Sparkles size={14} color={colors.primary} />
+                </View>
+                
+                {isPremium ? card.milestone_progress.map((milestone, idx) => (
+                  <View key={idx} style={{ marginBottom: idx < card.milestone_progress!.length - 1 ? 20 : 0 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.medium }}>
+                        {milestone.target_type === 'TRANSACTION_COUNT' ? 'Monthly Transactions' : 'Spend Threshold'}
+                      </Text>
+                      <Text style={{ color: colors.success, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.bold }}>
+                        {milestone.target_type === 'TRANSACTION_COUNT' 
+                          ? `${milestone.current_value} / ${milestone.target_value}`
+                          : `₹${milestone.current_value.toLocaleString('en-IN')} / ₹${milestone.target_value.toLocaleString('en-IN')}`
+                        }
+                      </Text>
+                    </View>
+                    <View style={[styles.progressTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', height: 6, marginBottom: 8 }]}>
+                      <View style={[styles.progressFill, { width: `${milestone.progress_percentage}%`, backgroundColor: colors.success }]} />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={{ color: colors.textSecondary, fontSize: tokens.fontSize.micro }}>
+                        {milestone.target_type === 'TRANSACTION_COUNT' && milestone.min_transaction_amount 
+                          ? `Min ₹${milestone.min_transaction_amount} per txn` 
+                          : `Resets ${milestone.period.toLowerCase()}`}
+                      </Text>
+                      <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.micro, fontWeight: tokens.fontWeight.medium }}>
+                        Reward: {milestone.bonus_points ? `${milestone.bonus_points} Pts` : milestone.fee_waiver ? 'Fee Waiver' : 'Milestone'}
+                      </Text>
+                    </View>
+                  </View>
+                )) : (
+                  <View style={{ alignItems: 'center', paddingVertical: 16 }}>
+                    {/* @ts-ignore */}
+                    <Zap size={24} color={colors.primary} style={{ marginBottom: 12, opacity: 0.8 }} />
+                    <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.medium, marginBottom: 4 }}>
+                      Unlock Premium
+                    </Text>
+                    <Text style={{ color: colors.textMuted, fontSize: tokens.fontSize.caption, textAlign: 'center' }}>
+                      Track your monthly transaction and spend milestones live.
+                    </Text>
+                  </View>
+                )}
               </Animated.View>
             )}
 

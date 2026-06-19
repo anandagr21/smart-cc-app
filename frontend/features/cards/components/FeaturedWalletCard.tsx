@@ -8,7 +8,6 @@ import { tokens } from '@/theme/tokens';
 import { getNetworkGradient } from '@/theme/colors';
 import { formatCurrencyIN } from '@/utils/currency';
 import { InsightResult } from '@/features/insights/types/insight.types';
-import { useThemeStore } from '@/features/theme/store/themeStore';
 
 interface FeaturedWalletCardProps {
   card: UserCardResponse;
@@ -22,8 +21,7 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   onPress,
 }) => {
   const colors = useThemeColors();
-  const { themeMode } = useThemeStore();
-  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
+  const isDark = colors.isDark;
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
@@ -47,18 +45,18 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
 
     actionableContent = (
       <View style={styles.minimalWaiver}>
-        <Text style={[styles.cognitionText, { color: colors.textSecondary }]} numberOfLines={1}>
-          <Text style={{ color: colors.textPrimary, fontWeight: tokens.fontWeight.bold }}>{formatCurrencyIN(remaining)}</Text> away from waiver
+        <Text style={styles.cognitionText} numberOfLines={1}>
+          <Text style={{ color: 'rgba(255,255,255,0.95)', fontWeight: tokens.fontWeight.bold }}>{formatCurrencyIN(remaining)}</Text> away from waiver
         </Text>
         <View style={styles.tinyProgressTrack}>
-          <View 
+          <View
             style={[
-              styles.tinyProgressFill, 
-              { 
+              styles.tinyProgressFill,
+              {
                 width: `${percentComplete}%`,
                 backgroundColor: topTagColor
               }
-            ]} 
+            ]}
           />
         </View>
       </View>
@@ -66,7 +64,7 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   } else {
     actionableContent = (
       <View style={styles.minimalInsight}>
-        <Text style={[styles.cognitionText, { color: colors.textSecondary }]} numberOfLines={2}>
+        <Text style={styles.cognitionText} numberOfLines={2}>
           {insight?.summary || (card.card_status === 'ACTIVE' ? 'Active and ready to use' : 'Currently inactive')}
         </Text>
       </View>
@@ -97,8 +95,8 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
             {/* Group names and footer at the bottom to avoid awkward gap */}
             <View style={styles.bottomBlock}>
               <View style={styles.namesWrap}>
-                <Text style={[styles.bankName, { color: colors.textSecondary }]}>{bankName.toUpperCase()}</Text>
-                <Text style={[styles.cardName, { color: colors.textPrimary }]} numberOfLines={2}>{cardName}</Text>
+                <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
+                <Text style={styles.cardName} numberOfLines={2}>{cardName}</Text>
               </View>
 
               <View style={styles.footerRow}>
@@ -106,8 +104,8 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
                   {actionableContent}
                 </View>
                 <View style={styles.networkInfo}>
-                  {!!displayNetwork && <Text style={[styles.networkName, { color: colors.textPrimary }]}>{displayNetwork}</Text>}
-                  {!!card.last_4_digits && <Text style={[styles.cardEnds, { color: colors.textSecondary }]}>•••• {card.last_4_digits}</Text>}
+                  {!!displayNetwork && <Text style={styles.networkName}>{displayNetwork}</Text>}
+                  {!!card.last_4_digits && <Text style={styles.cardEnds}>•••• {card.last_4_digits}</Text>}
                 </View>
               </View>
             </View>
@@ -179,10 +177,12 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 4,
+    color: 'rgba(255,255,255,0.6)',
   },
   cardName: {
     fontSize: tokens.fontSize.title,
     fontWeight: tokens.fontWeight.heavy,
+    color: 'rgba(255,255,255,0.95)',
   },
   footerRow: {
     flexDirection: 'row',
@@ -205,6 +205,7 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
     lineHeight: 16,
+    color: 'rgba(255,255,255,0.7)',
   },
   tinyProgressTrack: {
     height: 3,
@@ -226,9 +227,11 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
+    color: 'rgba(255,255,255,0.85)',
   },
   cardEnds: {
     fontSize: 10,
     letterSpacing: 2,
+    color: 'rgba(255,255,255,0.55)',
   },
 });

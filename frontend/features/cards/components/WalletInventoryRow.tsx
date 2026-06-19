@@ -4,7 +4,6 @@ import { ChevronRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { UserCardResponse } from '@/features/cards/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
-import { useThemeStore } from '@/features/theme/store/themeStore';
 import { getNetworkGradient } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
 
@@ -18,8 +17,7 @@ interface WalletInventoryRowProps {
 
 export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, onPress }) => {
   const colors = useThemeColors();
-  const { themeMode } = useThemeStore();
-  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
+  const isDark = colors.isDark;
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';

@@ -11,7 +11,22 @@ export interface CardCatalogResponse {
   created_at: string;
   updated_at: string;
   reward_rules_json?: any[];
-  milestones_json?: any[];
+  milestones_json?: any;
+}
+
+export interface MilestoneProgress {
+  period: string;
+  target_type: string;
+  target_value: number;
+  min_transaction_amount?: number | null;
+  
+  current_value: number;
+  is_achieved: boolean;
+  progress_percentage: number;
+  
+  bonus_points?: number | null;
+  fee_waiver?: boolean | null;
+  fee_waiver_percent?: number | null;
 }
 
 export type CardStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'CLOSED' | 'EXPIRED';
@@ -54,6 +69,9 @@ export interface UserCardResponse {
   urgency_level?: string | null;
   comfort_state?: string | null;
   explanation_text?: string | null;
+
+  // Milestone Tracking
+  milestone_progress?: MilestoneProgress[] | null;
 }
 
 export interface UserCardUpdate {

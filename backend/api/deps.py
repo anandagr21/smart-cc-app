@@ -28,6 +28,7 @@ from repositories.card_repository import CardCatalogRepository, UserCardReposito
 from repositories.user_repository import UserRepository
 from rewards.service import RewardRuleService
 from services.card_service import CardCatalogService, UserCardService
+from transactions.repository import TransactionRepository
 
 
 async def get_user_repo(db: AsyncSession = Depends(get_db)) -> UserRepository:
@@ -56,11 +57,19 @@ async def get_card_catalog_service(
     return CardCatalogService(catalog_repo=catalog_repo)
 
 
+async def get_transaction_repo(
+    db: AsyncSession = Depends(get_db),
+) -> TransactionRepository:
+    """Provide a TransactionRepository instance wired with the current DB session."""
+    return TransactionRepository(session=db)
+
+
 async def get_user_card_service(
     user_card_repo: UserCardRepository = Depends(get_user_card_repo),
+    transaction_repo: TransactionRepository = Depends(get_transaction_repo),
 ) -> UserCardService:
-    """Provide a UserCardService instance with its repository dependency wired."""
-    return UserCardService(user_card_repo=user_card_repo)
+    """Provide a UserCardService instance with its repository dependencies wired."""
+    return UserCardService(user_card_repo=user_card_repo, transaction_repo=transaction_repo)
 
 
 async def get_merchant_repo(

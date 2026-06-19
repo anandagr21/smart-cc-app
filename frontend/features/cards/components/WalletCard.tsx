@@ -5,9 +5,9 @@ import { CheckCircle2, Wifi } from 'lucide-react-native';
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { UserCardResponse } from '../types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
-import { useThemeStore } from '@/features/theme/store/themeStore';
 import { getNetworkGradient } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
+import { useAuthStore } from '@/features/auth/store/authStore';
 
 const CARD_WIDTH = Dimensions.get('window').width - tokens.layout.screenPadding * 2;
 const CARD_HEIGHT = CARD_WIDTH / 1.586; // Standard credit card ratio
@@ -52,8 +52,9 @@ function getNetworkLabel(network: string): string {
 
 export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
   const colors = useThemeColors();
-  const { themeMode } = useThemeStore();
-  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
+  const isDark = colors.isDark;
+  const user = useAuthStore((state) => state.user);
+  const isPremium = user?.is_premium;
 
   const network = card.card_details?.network || '';
   const gradient = getNetworkGradient(network, isDark) as [string, string];
@@ -155,18 +156,31 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
           </View>
 
           <View style={styles.bottomRight}>
-            {/* Active badge */}
-            <View style={styles.activeBadge}>
-              {isActive ? (
-                <>
+            {/* Active badge / Milestone badge */}
+            {isPremium && card.milestone_progress?.some(m => !m.is_achieved && m.target_type === 'TRANSACTION_COUNT') && isActive ? (() => {
+              const m = card.milestone_progress.find(m => !m.is_achieved && m.target_type === 'TRANSACTION_COUNT')!;
+              return (
+                <View style={[styles.activeBadge, { backgroundColor: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }]}>
                   {/* @ts-ignore */}
-                  <CheckCircle2 size={11} color="rgba(255,255,255,0.85)" strokeWidth={2} />
-                  <Text style={styles.activeBadgeText}>Active</Text>
-                </>
-              ) : (
-                <Text style={[styles.activeBadgeText, { color: 'rgba(255,255,255,0.6)' }]}>Inactive</Text>
-              )}
-            </View>
+                  <CheckCircle2 size={11} color="#4ADE80" strokeWidth={2} />
+                  <Text style={[styles.activeBadgeText, { color: '#4ADE80' }]}>
+                    {m.current_value}/{m.target_value} Txns
+                  </Text>
+                </View>
+              );
+            })() : (
+              <View style={styles.activeBadge}>
+                {isActive ? (
+                  <>
+                    {/* @ts-ignore */}
+                    <CheckCircle2 size={11} color="rgba(255,255,255,0.85)" strokeWidth={2} />
+                    <Text style={styles.activeBadgeText}>Active</Text>
+                  </>
+                ) : (
+                  <Text style={[styles.activeBadgeText, { color: 'rgba(255,255,255,0.6)' }]}>Inactive</Text>
+                )}
+              </View>
+            )}
             {/* Network label */}
             <Text style={styles.networkText}>{networkLabel}</Text>
           </View>

@@ -41,6 +41,7 @@ class User(SQLModel, table=True):
     auth_provider: str = Field(default="email", max_length=50)
     google_id: str | None = Field(default=None, unique=True, index=True)
     terms_accepted: bool = Field(default=False)
+    is_premium: bool = Field(default=False, description="Premium tier for early alpha features.")
     created_at: datetime = Field(
         default_factory=datetime.utcnow
     )
