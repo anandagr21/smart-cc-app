@@ -16,6 +16,7 @@ export interface UserResponse {
   full_name: string;
   role: string;
   terms_accepted: boolean;
+  is_premium: boolean;
 }
 
 /** Normalised error shape extracted from API responses. */

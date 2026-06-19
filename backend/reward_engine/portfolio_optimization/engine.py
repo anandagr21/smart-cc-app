@@ -65,10 +65,44 @@ class PortfolioOptimizationEngine:
                     reason_codes.append("FEE_WAIVER_ACHIEVED")
 
         # 2. Milestone Acceleration Value
-        if eval_result.matched_rule and "milestone" in eval_result.matched_rule.rule_type.lower():
-            # MVP: Fixed acceleration bonus for milestone rules
-            milestone_value = txn_amount_float * 0.02
-            reason_codes.append("MILESTONE_ACCELERATION")
+        milestone_progress_list = getattr(user_card, "milestone_progress", [])
+        if milestone_progress_list:
+            for milestone in milestone_progress_list:
+                if milestone.is_achieved:
+                    continue
+                    
+                target = float(milestone.target_value)
+                current = float(milestone.current_value)
+                is_txn_count = milestone.target_type == 'TRANSACTION_COUNT'
+                min_amount = float(milestone.min_transaction_amount or 0)
+                
+                # Check if this transaction triggers the milestone
+                triggered = False
+                if is_txn_count:
+                    if txn_amount_float >= min_amount:
+                        if current + 1 >= target:
+                            triggered = True
+                else: # SPEND
+                    if current + txn_amount_float >= target:
+                        triggered = True
+                        
+                if triggered:
+                    bonus_pts = float(milestone.bonus_points or 0)
+                    if bonus_pts > 0:
+                        # Convert points to INR
+                        base_point_value = float(getattr(catalog_card, "base_point_value", 1.0) if catalog_card else 1.0)
+                        milestone_inr_value = bonus_pts * base_point_value
+                        milestone_value += milestone_inr_value
+                        reason_codes.append("MILESTONE_ACHIEVED")
+                    
+                    if milestone.fee_waiver:
+                        reason_codes.append("FEE_WAIVER_ACHIEVED")
+                else:
+                    # Partial acceleration value
+                    if is_txn_count and txn_amount_float >= min_amount:
+                        reason_codes.append("MILESTONE_ACCELERATION")
+                    elif not is_txn_count:
+                        reason_codes.append("MILESTONE_ACCELERATION")
 
         # 3. Longitudinal Portfolio Value (Health)
         # e.g., balancing utilization or reviving dormant cards
@@ -206,6 +240,10 @@ class PortfolioOptimizationEngine:
                 title = "Preserves Fee Waiver Progress"
                 desc = "Helps preserve your annual fee waiver eligibility."
                 strategy = "Fee Waiver Optimization"
+            elif "MILESTONE_ACHIEVED" in result.reason_codes:
+                title = "Unlocks Milestone Reward"
+                desc = "This transaction unlocks a major milestone reward!"
+                strategy = "Milestone Optimization"
             elif "MILESTONE_ACCELERATION" in result.reason_codes:
                 title = "Accelerates Milestone Rewards"
                 desc = "Accelerates milestone progress."

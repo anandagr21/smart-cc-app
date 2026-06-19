@@ -15,6 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
+import { useAuthStore } from '@/features/auth/store/authStore';
+
 import { UserCardResponse } from '../types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
@@ -39,6 +41,8 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
+  const user = useAuthStore((state) => state.user);
+  const isPremium = user?.is_premium;
 
   const [mockActionTitle, setMockActionTitle] = useState<string | null>(null);
   const [isAnnualFeeEditVisible, setIsAnnualFeeEditVisible] = useState(false);
@@ -241,7 +245,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                   <Sparkles size={14} color={colors.primary} />
                 </View>
                 
-                {card.milestone_progress.map((milestone, idx) => (
+                {isPremium ? card.milestone_progress.map((milestone, idx) => (
                   <View key={idx} style={{ marginBottom: idx < card.milestone_progress!.length - 1 ? 20 : 0 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                       <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.medium }}>
@@ -268,7 +272,18 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                       </Text>
                     </View>
                   </View>
-                ))}
+                )) : (
+                  <View style={{ alignItems: 'center', paddingVertical: 16 }}>
+                    {/* @ts-ignore */}
+                    <Zap size={24} color={colors.primary} style={{ marginBottom: 12, opacity: 0.8 }} />
+                    <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.medium, marginBottom: 4 }}>
+                      Unlock Premium
+                    </Text>
+                    <Text style={{ color: colors.textMuted, fontSize: tokens.fontSize.caption, textAlign: 'center' }}>
+                      Track your monthly transaction and spend milestones live.
+                    </Text>
+                  </View>
+                )}
               </Animated.View>
             )}
 
