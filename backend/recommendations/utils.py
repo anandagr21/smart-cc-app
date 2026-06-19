@@ -80,14 +80,22 @@ def parse_rules_from_catalog(catalog_card: Any, card_name: str) -> list[Normaliz
     for r in raw_rules:
         category = str(r.get("category_name", "other"))
         r_type = str(r.get("reward_type", "cashback")).lower()
-        multiplier = float(r.get("multiplier", 0.0))
+        
+        if r_type == "cashback":
+            rate = float(r.get("cashback_percent", r.get("multiplier", 0.0))) / 100.0
+            pts_mult = 1.0
+        else:
+            rate = 0.0
+            pts_mult = float(r.get("points", r.get("multiplier", 0.0)))
+            
+        spend_unit = float(r.get("spend_unit", 100))
         
         config = {
             "reward_type": r_type,
-            "reward_rate": (multiplier / 100.0) if r_type == "cashback" else 0.0,
-            "points_multiplier": multiplier if r_type != "cashback" else 1.0,
+            "reward_rate": rate,
+            "points_multiplier": pts_mult,
             "rupee_value": base_point_value,
-            "spend_unit": 100,
+            "spend_unit": spend_unit,
             "payment_mode": "any",
             "cap": float(r.get("cap_limit", 0) or 0) if r.get("has_cap") else 0.0,
             "scope": "monthly" if r.get("cap_cycle") == "monthly" else "transaction",

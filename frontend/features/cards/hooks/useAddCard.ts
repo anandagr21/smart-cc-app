@@ -14,12 +14,15 @@ export const useAddCard = () => {
         category: 'business',
         message: 'Card Added',
         data: {
-          cardId: variables.catalog_card_id,
+          cardId: variables.card_catalog_id,
         },
       });
-
-      // Invalidate the cards query so the wallet instantly refreshes
+      // Invalidate the broader intelligence queries
       invalidateWalletIntelligence(queryClient);
+    },
+    onSettled: () => {
+      // Force refetch of wallet to ensure UI updates immediately
+      queryClient.invalidateQueries({ queryKey: ['cards', 'wallet'] });
     },
   });
 };
