@@ -232,6 +232,46 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
               </Animated.View>
             )}
 
+            {/* Section 2.2: Milestones Progress */}
+            {card.milestone_progress && card.milestone_progress.length > 0 && (
+              <Animated.View entering={FadeInUp.duration(400).delay(175)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                <View style={styles.sectionTitleRow}>
+                  <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>MILESTONE PROGRESS</Text>
+                  {/* @ts-ignore */}
+                  <Sparkles size={14} color={colors.primary} />
+                </View>
+                
+                {card.milestone_progress.map((milestone, idx) => (
+                  <View key={idx} style={{ marginBottom: idx < card.milestone_progress!.length - 1 ? 20 : 0 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.medium }}>
+                        {milestone.target_type === 'TRANSACTION_COUNT' ? 'Monthly Transactions' : 'Spend Threshold'}
+                      </Text>
+                      <Text style={{ color: colors.success, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.bold }}>
+                        {milestone.target_type === 'TRANSACTION_COUNT' 
+                          ? `${milestone.current_value} / ${milestone.target_value}`
+                          : `₹${milestone.current_value.toLocaleString('en-IN')} / ₹${milestone.target_value.toLocaleString('en-IN')}`
+                        }
+                      </Text>
+                    </View>
+                    <View style={[styles.progressTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', height: 6, marginBottom: 8 }]}>
+                      <View style={[styles.progressFill, { width: `${milestone.progress_percentage}%`, backgroundColor: colors.success }]} />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={{ color: colors.textSecondary, fontSize: tokens.fontSize.micro }}>
+                        {milestone.target_type === 'TRANSACTION_COUNT' && milestone.min_transaction_amount 
+                          ? `Min ₹${milestone.min_transaction_amount} per txn` 
+                          : `Resets ${milestone.period.toLowerCase()}`}
+                      </Text>
+                      <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.micro, fontWeight: tokens.fontWeight.medium }}>
+                        Reward: {milestone.bonus_points ? `${milestone.bonus_points} Pts` : milestone.fee_waiver ? 'Fee Waiver' : 'Milestone'}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </Animated.View>
+            )}
+
             {/* Section 2.5: Annual Fee */}
             <Animated.View entering={FadeInUp.duration(400).delay(200)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
               <View style={styles.sectionTitleRow}>

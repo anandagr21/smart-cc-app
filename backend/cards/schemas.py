@@ -282,6 +282,24 @@ class UserCardUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class MilestoneProgress(BaseModel):
+    """Progress towards a specific milestone for a user card."""
+    period: str
+    target_type: str
+    target_value: Decimal
+    min_transaction_amount: Decimal | None = None
+    
+    current_value: Decimal
+    is_achieved: bool
+    progress_percentage: float
+    
+    bonus_points: int | None = None
+    fee_waiver: bool | None = None
+    fee_waiver_percent: float | None = None
+    
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
+
+
 class UserCardResponse(BaseModel):
     """Response schema for a single user-owned card.
 
@@ -329,5 +347,8 @@ class UserCardResponse(BaseModel):
     urgency_level: str | None = None
     comfort_state: str | None = None
     explanation_text: str | None = None
+    
+    # Milestone Tracking
+    milestone_progress: list[MilestoneProgress] | None = None
 
     model_config = ConfigDict(from_attributes=True, extra="forbid")

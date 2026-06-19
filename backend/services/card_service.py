@@ -28,6 +28,8 @@ from cards.schemas import (
 )
 from repositories.card_repository import CardCatalogRepository, UserCardRepository
 from cards.intelligence.fee_waiver import get_waiver_progress
+from milestones.engine import MilestoneEngine
+from transactions.repository import TransactionRepository
 
 
 class CardCatalogService:
@@ -87,8 +89,9 @@ class UserCardService:
     adds user-specific metadata (limits, spend, billing dates, etc.).
     """
 
-    def __init__(self, user_card_repo: UserCardRepository):
+    def __init__(self, user_card_repo: UserCardRepository, transaction_repo: TransactionRepository = None):
         self._user_card_repo = user_card_repo
+        self._transaction_repo = transaction_repo
 
     async def create_user_card(
         self, user_id: UUID, schema: UserCardCreate
@@ -116,7 +119,18 @@ class UserCardService:
         items, total = await self._user_card_repo.get_by_user(
             user_id, skip=skip, limit=limit
         )
-        responses = [self._to_response(item) for item in items]
+        
+        # Fetch recent transactions for milestone evaluation
+        from datetime import date
+        today = date.today()
+        start_of_month = date(today.year, today.month, 1)
+        recent_transactions = []
+        if self._transaction_repo:
+            recent_transactions = await self._transaction_repo.get_transactions_by_date_range(
+                user_id=user_id, start_date=start_of_month, end_date=today
+            )
+            
+        responses = [self._to_response(item, recent_transactions) for item in items]
         return responses, total
 
     async def fetch_raw_cards(
@@ -137,7 +151,18 @@ class UserCardService:
     ) -> UserCardResponse:
         """Get a specific user-owned card, scoped to the owning user."""
         entity = await self._user_card_repo.get_by_user_and_id(user_id, card_id)
-        return self._to_response(entity)
+        
+        # Fetch recent transactions
+        from datetime import date
+        today = date.today()
+        start_of_month = date(today.year, today.month, 1)
+        recent_transactions = []
+        if self._transaction_repo:
+            recent_transactions = await self._transaction_repo.get_transactions_by_date_range(
+                user_id=user_id, start_date=start_of_month, end_date=today
+            )
+            
+        return self._to_response(entity, recent_transactions)
 
     async def update_card(
         self, user_id: UUID, card_id: UUID, schema: UserCardUpdate
@@ -181,7 +206,7 @@ class UserCardService:
         return self._to_response(entity)
 
     @staticmethod
-    def _to_response(entity) -> UserCardResponse:
+    def _to_response(entity, recent_transactions: list = None) -> UserCardResponse:
         """Convert a UserCard entity to its response schema.
 
         Includes nested card catalog details when available via eager loading,
@@ -223,5 +248,9 @@ class UserCardService:
                 response.urgency_level = waiver_state.urgency_level.value if waiver_state.urgency_level else None
                 response.comfort_state = waiver_state.comfort_state.value if waiver_state.comfort_state else None
                 response.explanation_text = waiver_state.explanation_text
+
+            # Evaluate milestones
+            card_txns = [t for t in (recent_transactions or []) if t.user_card_id == entity.id]
+            response.milestone_progress = MilestoneEngine.evaluate_card_milestones(entity, card_txns)
 
         return response
