@@ -55,8 +55,8 @@ export default function CTA() {
               </motion.div>
 
               <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-white">
-                Ready to{" "}
-                <span className="text-gradient">master your cards?</span>
+                Start optimizing your{" "}
+                <span className="text-gradient">cards today.</span>
               </h2>
               <p className="text-white/50 text-lg max-w-lg mx-auto mb-10">
                 Join 2,000+ cardholders already saving on fees and maximising rewards.
@@ -119,7 +119,7 @@ export default function CTA() {
                         </>
                       ) : (
                         <>
-                          Join the Waitlist
+                          Get Early Access
                           <ArrowRightIcon className="w-4 h-4" />
                         </>
                       )}

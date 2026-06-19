@@ -2,8 +2,7 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Features from "./components/Features";
 import HowItWorks from "./components/HowItWorks";
-import Testimonials from "./components/Testimonials";
-import Pricing from "./components/Pricing";
+import ProductProof from "./components/ProductProof";
 import CTA from "./components/CTA";
 import Footer from "./components/Footer";
 
@@ -49,9 +48,8 @@ export default function App() {
       <Hero />
       <TickerStrip />
       <Features />
+      <ProductProof />
       <HowItWorks />
-      <Testimonials />
-      <Pricing />
       <CTA />
       <Footer />
     </div>

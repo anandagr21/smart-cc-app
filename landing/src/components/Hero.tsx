@@ -41,7 +41,7 @@ export default function Hero() {
                 <span className="absolute inset-0 rounded-full bg-brand-500 animate-ping opacity-75" />
                 <span className="relative block w-2 h-2 rounded-full bg-brand-500" />
               </span>
-              Now in Public Beta · Join 2,000+ users
+              100% Free During Early Access
             </motion.div>
 
             {/* Headline */}
@@ -78,7 +78,7 @@ export default function Hero() {
                 href="#cta"
                 className="group inline-flex items-center justify-center px-8 py-4 bg-accent-500 hover:bg-accent-600 text-white font-semibold text-lg rounded-2xl transition-all duration-200 shadow-xl shadow-accent-500/30 hover:shadow-accent-500/50 cursor-pointer"
               >
-                Get Started Free
+                Join Early Access
                 <ArrowRightIcon className="w-5 h-5 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
               </a>
               <a
