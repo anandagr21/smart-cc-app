@@ -1,0 +1,364 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  /* Brand - Amber/Gold */
+  --color-brand-50:  #FFFBEB;
+  --color-brand-100: #FEF3C7;
+  --color-brand-200: #FDE68A;
+  --color-brand-300: #FCD34D;
+  --color-brand-400: #FBBF24;
+  --color-brand-500: #F59E0B;
+  --color-brand-600: #D97706;
+  --color-brand-700: #B45309;
+
+  /* Accent - Violet */
+  --color-accent-300: #C4B5FD;
+  --color-accent-400: #A78BFA;
+  --color-accent-500: #8B5CF6;
+  --color-accent-600: #7C3AED;
+  --color-accent-700: #6D28D9;
+
+  /* Cyan accent */
+  --color-cyan-400: #22D3EE;
+  --color-cyan-500: #06B6D4;
+
+  /* Surface - Deep Dark */
+  --color-surface-50:  #F8FAFC;
+  --color-surface-100: #F1F5F9;
+  --color-surface-800: #1E293B;
+  --color-surface-850: #131C2E;
+  --color-surface-900: #0F172A;
+  --color-surface-950: #020617;
+}
+
+/* ─── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139,92,246,0.3) transparent;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.35); border-radius: 99px; }
+
+body {
+  margin: 0;
+  background: #020617;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* ─── Background Grid — pure CSS, no animation ────────────── */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  /* No filter, no animation — just pixels */
+}
+
+.bg-dot {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ─── Glass Utilities ─────────────────────────────────────── */
+/*
+   Performance rule: never stack more than 2 backdrop-filter layers
+   in the visible viewport. Use solid semi-transparent bg as fallback.
+*/
+.glass {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.glass-strong {
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.glass-card {
+  /* Reduced blur from 16px → 8px — cuts GPU cost significantly */
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.glass-hover {
+  transition: background 0.2s, border-color 0.2s;
+}
+.glass-hover:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.16);
+}
+
+/* ─── Gradients ───────────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(125deg, #FBBF24 0%, #F59E0B 30%, #A78BFA 70%, #8B5CF6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(251,191,36,0.5), rgba(139,92,246,0.5));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ─── Hero static glow orbs ───────────────────────────────── */
+/*
+   KEY PERF FIX: No animated scale, no animated filter.
+   Static radial-gradient blobs — zero GPU cost per frame.
+   Using CSS @keyframes opacity-only (opacity is compositor-only).
+*/
+.hero-orb-left {
+  position: absolute;
+  width: 700px;
+  height: 700px;
+  top: -10%;
+  left: -15%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 65%);
+  pointer-events: none;
+  /* No filter: blur() — the radial-gradient itself softens the edge */
+  animation: orb-breathe 9s ease-in-out infinite;
+}
+.hero-orb-right {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  top: 5%;
+  right: -12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 65%);
+  pointer-events: none;
+  animation: orb-breathe 11s ease-in-out infinite 2s;
+}
+
+@keyframes orb-breathe {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1;   }
+}
+
+/* ─── Hero floating chips — CSS keyframes ─────────────────── */
+/* JS motion was scheduling 120 fps updates; CSS runs on compositor thread */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-10px); }
+}
+@keyframes float-fast {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-7px); }
+}
+.hero-float-slow {
+  animation: float-slow 5s ease-in-out infinite;
+  will-change: transform;
+}
+.hero-float-fast {
+  animation: float-fast 4s ease-in-out infinite 1.5s;
+  will-change: transform;
+}
+
+/* ─── Scroll cue ──────────────────────────────────────────── */
+@keyframes scroll-cue {
+  0%, 100% { transform: scaleY(1);   opacity: 0.4; }
+  50%       { transform: scaleY(0.3); opacity: 1;   }
+}
+.scroll-cue-line {
+  width: 1px;
+  height: 32px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.2), transparent);
+  transform-origin: top;
+  animation: scroll-cue 1.8s ease-in-out infinite;
+}
+
+/* ─── Glow Orbs (section decorations) ────────────────────── */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  /* Static — no blur filter, no motion. Radial gradient does the work. */
+  pointer-events: none;
+  z-index: 0;
+}
+
+.icon-glow { box-shadow: 0 0 20px rgba(139,92,246,0.22); }
+
+/* ─── Hero Card ───────────────────────────────────────────── */
+.hero-card {
+  background: linear-gradient(135deg, rgba(30,41,59,0.88) 0%, rgba(15,23,42,0.94) 100%);
+  /* Reduced backdrop blur from 32px → 16px */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 28px;
+  box-shadow:
+    0 32px 64px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* ─── Marquee ─────────────────────────────────────────────── */
+/* will-change: transform tells the browser to promote to its own layer */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 30s linear infinite;
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.marquee-track:hover { animation-play-state: paused; }
+
+/* ─── Ticker ──────────────────────────────────────────────── */
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-track {
+  animation: ticker 22s linear infinite;
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+/* ─── Testimonial cards — NO backdrop-filter (was 24 blurred layers) ─ */
+/* Solid semi-transparent bg renders in a single GPU pass vs blur compositing */
+.testimonial-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 24px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.testimonial-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,0.14);
+}
+
+.savings-badge {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+.stat-bar {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+/* ─── CTA card — solid bg, static gradient orbs ──────────────────── */
+.cta-card {
+  background: rgba(15,23,42,0.8);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+/* CTA orbs — pure CSS opacity breathing, no JS, no filter */
+.cta-orb-left {
+  animation: orb-breathe 8s ease-in-out infinite;
+  will-change: opacity;
+}
+.cta-orb-right {
+  animation: orb-breathe 10s ease-in-out infinite 2.5s;
+  will-change: opacity;
+}
+
+.cta-badge {
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.15);
+  color: #FBBF24;
+}
+
+.cta-input {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.cta-input:focus {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(139,92,246,0.5);
+}
+
+.cta-btn {
+  background: #8B5CF6;
+  box-shadow: 0 8px 24px rgba(139,92,246,0.3);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.cta-btn:hover:not(:disabled) {
+  background: #7C3AED;
+  box-shadow: 0 12px 32px rgba(139,92,246,0.5);
+}
+.cta-btn:disabled { opacity: 0.6; }
+
+.cta-success-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* CSS spinner — no JS RAF needed */
+@keyframes spin { to { transform: rotate(360deg); } }
+.cta-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  will-change: transform;
+}
+
+/* ─── Pricing card hover lift — CSS only ─────────────────────────── */
+.pricing-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.pricing-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 28px 56px rgba(0,0,0,0.4);
+}
+
+/* ─── Card hover lifts — CSS transform instead of JS whileHover ─── */
+/* transform + box-shadow on their own compositor layer = no layout repaint */
+.feature-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 28px 56px rgba(0,0,0,0.4);
+}
+
+/* ─── Focus / A11y ────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(139,92,246,0.7);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* ─── Respect reduced motion ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .marquee-track,
+  .ticker-track {
+    animation: none !important;
+  }
+}
