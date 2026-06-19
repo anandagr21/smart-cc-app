@@ -96,7 +96,7 @@ def evaluate(
     sentry_sdk.set_tag("service", "reward_engine")
     sentry_sdk.add_breadcrumb(
         category="reward_engine",
-        message=f"Evaluating rewards for merchant: {txn.merchant_name}",
+        message=f"Evaluating rewards for merchant: {txn.merchant}",
         level="info",
         data={"amount": str(txn.amount), "category": txn.category}
     )

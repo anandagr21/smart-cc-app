@@ -5,17 +5,18 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 const getDefaultBaseUrl = () => {
-  // Try to use the Metro server IP so physical devices work without hardcoding
+  // Always prioritize the explicit environment variable if set
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
+  // Try to use the Metro server IP so physical devices work without hardcoding local IPs
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {
     const ip = hostUri.split(':')[0];
     if (ip) {
       return `http://${ip}:8000/api/v1`;
     }
-  }
-
-  if (process.env.EXPO_PUBLIC_API_URL && !process.env.EXPO_PUBLIC_API_URL.includes('localhost')) {
-    return process.env.EXPO_PUBLIC_API_URL;
   }
   
   // Fallbacks
