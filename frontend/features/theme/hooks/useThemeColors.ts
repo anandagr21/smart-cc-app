@@ -24,5 +24,5 @@ export function useThemeColors() {
     return themeMode === 'dark';
   }, [themeMode, colorScheme]);
 
-  return isDark ? darkTheme : lightTheme;
+  return { ...(isDark ? darkTheme : lightTheme), isDark };
 }

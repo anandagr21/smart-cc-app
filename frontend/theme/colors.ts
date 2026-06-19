@@ -41,11 +41,11 @@ export const lightTheme = {
   borderHighlight: 'rgba(20, 20, 43, 0.08)',
 
   // ── Card Network Gradients ───────────────────────
-  networkVisa: ['#1E293B', '#0F172A'],
-  networkMastercard: ['#6D1A36', '#8B2252'],
-  networkAmex: ['#1E3A8A', '#1D4ED8'],
-  networkDiscover: ['#C2410C', '#9A3412'],
-  networkDefault: ['#334155', '#1E293B'],
+  networkVisa: ['#1E3A8A', '#3B82F6'],
+  networkMastercard: ['#881337', '#E11D48'],
+  networkAmex: ['#1E3A8A', '#4F46E5'],
+  networkDiscover: ['#9A3412', '#F97316'],
+  networkDefault: ['#334155', '#64748B'],
 };
 
 export const darkTheme = {
