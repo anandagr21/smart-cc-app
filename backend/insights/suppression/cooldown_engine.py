@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -12,8 +12,8 @@ class CooldownEngine:
         self.db = db
 
     async def filter_suppressed(
-        self, user_id: str, insights: List[InsightResponse]
-    ) -> List[InsightResponse]:
+        self, user_id: str, insights: list[InsightResponse]
+    ) -> list[InsightResponse]:
         """
         Removes insights that are currently on cooldown or dismissed.
         """

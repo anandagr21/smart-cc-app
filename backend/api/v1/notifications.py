@@ -1,15 +1,13 @@
-from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import select
+from fastapi import APIRouter, Depends, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from auth.dependencies import get_current_user
+from auth.schemas import UserResponse
 from core.database import get_db
-from api.v1.auth import get_current_user
-from models.user import User
-from models.notification import Notification
 from schemas.notification import NotificationsListResponse
+from services.notification_service import NotificationService
 
 router = APIRouter()
 
@@ -17,66 +15,33 @@ router = APIRouter()
 @router.get("/", response_model=NotificationsListResponse)
 async def list_notifications(
     session: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Any:
+    current_user: UserResponse = Depends(get_current_user),
+) -> dict:
     """Get all notifications for the current user and an unread count."""
-    
-    # Query all notifications for user, ordered by newest first
-    stmt = (
-        select(Notification)
-        .where(Notification.user_id == current_user.id)
-        .order_by(Notification.created_at.desc())
+    notifications, unread_count = await NotificationService.list_notifications(
+        session, current_user.id
     )
-    result = await session.execute(stmt)
-    notifications = result.scalars().all()
-    
-    unread_count = sum(1 for n in notifications if not n.is_read)
-    
-    return {
-        "notifications": notifications,
-        "unread_count": unread_count
-    }
+    return {"notifications": notifications, "unread_count": unread_count}
 
 
 @router.post("/{notification_id}/read", status_code=status.HTTP_200_OK)
 async def mark_notification_read(
     notification_id: UUID,
     session: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Any:
+    current_user: UserResponse = Depends(get_current_user),
+) -> dict:
     """Mark a specific notification as read."""
-    
-    notification = await session.get(Notification, notification_id)
-    
-    if not notification or notification.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Notification not found")
-        
-    notification.is_read = True
-    session.add(notification)
-    await session.commit()
-    
+    await NotificationService.mark_notification_read(
+        session, notification_id, current_user.id
+    )
     return {"status": "success"}
 
 
 @router.post("/read-all", status_code=status.HTTP_200_OK)
 async def mark_all_notifications_read(
     session: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Any:
+    current_user: UserResponse = Depends(get_current_user),
+) -> dict:
     """Mark all notifications as read for the current user."""
-    
-    stmt = (
-        select(Notification)
-        .where(Notification.user_id == current_user.id)
-        .where(Notification.is_read == False)
-    )
-    result = await session.execute(stmt)
-    unread_notifications = result.scalars().all()
-    
-    for notification in unread_notifications:
-        notification.is_read = True
-        session.add(notification)
-        
-    await session.commit()
-    
+    await NotificationService.mark_all_notifications_read(session, current_user.id)
     return {"status": "success"}

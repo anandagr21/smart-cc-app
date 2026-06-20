@@ -1,4 +1,4 @@
-from typing import List, Optional
+
 from pydantic import BaseModel
 from merchants.service import MerchantService
 from transactions.models import Transaction
@@ -10,7 +10,7 @@ class EnrichedTransaction(BaseModel):
     normalized_merchant_name: str
     category: str
     date: str
-    card_id: Optional[str] = None
+    card_id: str | None = None
     
     class Config:
         arbitrary_types_allowed = True
@@ -19,7 +19,7 @@ class TransactionEnrichmentService:
     def __init__(self, merchant_service: MerchantService):
         self.merchant_service = merchant_service
 
-    async def enrich_transactions(self, transactions: List[Transaction]) -> List[EnrichedTransaction]:
+    async def enrich_transactions(self, transactions: list[Transaction]) -> list[EnrichedTransaction]:
         """
         Takes raw transactions and enriches them with normalized merchant names,
         canonical categories, and other metadata BEFORE they reach generators.

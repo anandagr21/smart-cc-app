@@ -1,4 +1,4 @@
-from typing import List
+
 from uuid import UUID
 
 from insights.enrichment.transaction_enrichment import TransactionEnrichmentService
@@ -35,7 +35,7 @@ class InsightOrchestrator:
         # Dependency injected generators
         self.missed_rewards_gen = missed_rewards_gen
 
-    async def generate_user_insights(self, user_id: UUID) -> List[InsightResponse]:
+    async def generate_user_insights(self, user_id: UUID) -> list[InsightResponse]:
         """
         End-to-end orchestration pipeline for intelligence generation.
         """
@@ -49,7 +49,7 @@ class InsightOrchestrator:
         enriched_txns = await self.enrichment_service.enrich_transactions(raw_transactions)
         
         # 3. Execute Generators
-        insights: List[InsightResponse] = []
+        insights: list[InsightResponse] = []
         
         # Sync generators
         insights.extend(self.fee_waiver_gen.generate(str(user_id), cards, enriched_txns))
@@ -68,7 +68,7 @@ class InsightOrchestrator:
         
         return ranked_insights
 
-    async def mark_insight_shown(self, user_id: UUID, insight_hash: str, insights: List[InsightResponse]):
+    async def mark_insight_shown(self, user_id: UUID, insight_hash: str, insights: list[InsightResponse]):
         insight = next((i for i in insights if i.insight_hash == insight_hash), None)
         if insight:
             await self.cooldown_engine.record_shown(str(user_id), insight)

@@ -1,4 +1,3 @@
-from typing import List, Optional
 from abc import ABC, abstractmethod
 
 from models.user_card import UserCard
@@ -12,14 +11,14 @@ class InsightGenerator(ABC):
     Generators MUST NOT query the database directly.
     They receive fully hydrated and normalized context.
     """
-    
+
     @abstractmethod
     def generate(
-        self, 
+        self,
         user_id: str,
-        cards: List[UserCard], 
-        transactions: List[EnrichedTransaction]
-    ) -> List[InsightResponse]:
+        cards: list[UserCard],
+        transactions: list[EnrichedTransaction],
+    ) -> list[InsightResponse]:
         """
         Generate insights deterministically based on the provided context.
         """

@@ -1,5 +1,5 @@
 import hashlib
-from typing import List
+
 
 from insights.generators.base import InsightGenerator
 from insights.schemas import (
@@ -14,8 +14,8 @@ from models.user_card import UserCard
 
 class PortfolioOptimizationGenerator(InsightGenerator):
     def generate(
-        self, user_id: str, cards: List[UserCard], transactions: List[EnrichedTransaction]
-    ) -> List[InsightResponse]:
+        self, user_id: str, cards: list[UserCard], transactions: list[EnrichedTransaction]
+    ) -> list[InsightResponse]:
         insights = []
         
         # This is a stub for portfolio optimization.

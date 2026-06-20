@@ -1,9 +1,9 @@
-from typing import List
+
 from insights.schemas import InsightResponse, InsightPriority
 
 class PrioritizationEngine:
     @staticmethod
-    def rank_insights(insights: List[InsightResponse]) -> List[InsightResponse]:
+    def rank_insights(insights: list[InsightResponse]) -> list[InsightResponse]:
         """
         PRIORITY ORDER:
         1. URGENT (e.g. Fee waiver expiring in 2 days)
@@ -30,7 +30,7 @@ class PrioritizationEngine:
         )
 
     @staticmethod
-    def select_primary_insight(insights: List[InsightResponse]) -> InsightResponse | None:
+    def select_primary_insight(insights: list[InsightResponse]) -> InsightResponse | None:
         """
         IMPORTANT PRODUCT RULE: Surface ONLY ONE PRIMARY INSIGHT at a time.
         """

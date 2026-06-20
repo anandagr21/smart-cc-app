@@ -1,5 +1,5 @@
 import hashlib
-from typing import List
+
 
 from insights.generators.base import InsightGenerator
 from insights.schemas import (
@@ -18,8 +18,8 @@ class MissedRewardsGenerator(InsightGenerator):
         self.recommendation_service = recommendation_service
 
     async def generate_async(
-        self, user_id: str, cards: List[UserCard], transactions: List[EnrichedTransaction]
-    ) -> List[InsightResponse]:
+        self, user_id: str, cards: list[UserCard], transactions: list[EnrichedTransaction]
+    ) -> list[InsightResponse]:
         insights = []
 
         if len(cards) < 2 or not transactions:
@@ -102,7 +102,7 @@ class MissedRewardsGenerator(InsightGenerator):
         return insights
         
     def generate(
-        self, user_id: str, cards: List[UserCard], transactions: List[EnrichedTransaction]
-    ) -> List[InsightResponse]:
+        self, user_id: str, cards: list[UserCard], transactions: list[EnrichedTransaction]
+    ) -> list[InsightResponse]:
         # Implementation moved to generate_async since recommendation_service.evaluate is async
         return []

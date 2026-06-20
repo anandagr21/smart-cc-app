@@ -3,17 +3,18 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.deps import get_db
 from auth.dependencies import get_current_user
-from models.user import User
+from auth.schemas import UserResponse
 from portfolio_evolution.service import PortfolioEvolutionService
 
 router = APIRouter(prefix="/portfolio-evolution", tags=["portfolio_evolution"])
 
+
 @router.get("/")
 async def get_portfolio_evolution(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: UserResponse = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
-    snapshot = await PortfolioEvolutionService.generate_snapshot(user.id, db)
+    snapshot = await PortfolioEvolutionService.generate_snapshot(current_user.id, db)
     
     return {
         "snapshot_date": snapshot.snapshot_date,
