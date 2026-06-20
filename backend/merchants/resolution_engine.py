@@ -376,13 +376,24 @@ def _emit_metric_sync(
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
-            loop.create_task(metrics_repo.record(
-                raw_input=normalized_input,
-                normalized_input=normalized_input,
-                resolution_type=resolution_type,
-                confidence=confidence,
-                cache_hit=cache_hit,
-                merchant_id=merchant_id,
-            ))
+            task = loop.create_task(
+                metrics_repo.record(
+                    raw_input=normalized_input,
+                    normalized_input=normalized_input,
+                    resolution_type=resolution_type,
+                    confidence=confidence,
+                    cache_hit=cache_hit,
+                    merchant_id=merchant_id,
+                ),
+                name=f"emit_metric_{resolution_type}",
+            )
+
+            def _log_exception(fut: asyncio.Task) -> None:
+                try:
+                    fut.result()
+                except Exception:
+                    logger.exception("Fire-and-forget metric emission failed")
+
+            task.add_done_callback(_log_exception)
     except Exception as e:
         logger.debug("Could not emit cache hit metric: %s", e)

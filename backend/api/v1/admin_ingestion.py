@@ -70,7 +70,7 @@ async def create_session(
     """Manually create an ingestion session. Unblocks Phase 2 manual entry workflows."""
     import sentry_sdk
     sentry_sdk.set_tag("service", "ingestion")
-    sentry_sdk.set_user({"id": str(current_admin.id), "email": getattr(current_admin, "email", "")})
+    sentry_sdk.set_user({"id": str(current_admin.id)})
     sentry_sdk.add_breadcrumb(
         category="ingestion",
         message=f"Creating manual session for {request.bank_name} {request.card_name}",
@@ -487,7 +487,7 @@ async def api_extract_field(
 ) -> Any:
     import sentry_sdk
     sentry_sdk.set_tag("service", "ingestion")
-    sentry_sdk.set_user({"id": str(current_admin.id), "email": getattr(current_admin, "email", "")})
+    sentry_sdk.set_user({"id": str(current_admin.id)})
     sentry_sdk.add_breadcrumb(
         category="ingestion",
         message=f"Extracting field {request.field_name} from doc {request.document_id}",

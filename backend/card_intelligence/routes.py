@@ -1,9 +1,10 @@
-from uuid import UUID
+import json
+import logging
 from typing import List, Optional
+from uuid import UUID
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Body, BackgroundTasks, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel, field_validator
-import json
 
 from api.deps import get_db
 from auth.dependencies import get_current_user, get_current_admin_user
@@ -18,6 +19,8 @@ from core.rate_limit import limiter
 from services.audit_service import AuditService
 
 router = APIRouter(prefix="/card-intelligence", tags=["Card Intelligence"])
+
+logger = logging.getLogger(__name__)
 
 class RawIngestionRequest(BaseModel):
     url: str
@@ -134,9 +137,9 @@ async def ingest_raw_bank_url(
 
     # 1. Fetch and scrub the website HTML text into readable markdown content
     try:
-        print(f"DEBUG: payload.html_source length = {len(payload.html_source) if payload.html_source else 0}")
+        logger.debug("payload.html_source length = %d", len(payload.html_source) if payload.html_source else 0)
         source_data = payload.html_source if payload.html_source else payload.url
-        print(f"DEBUG: source_data begins with: {source_data[:50]}")
+        logger.debug("source_data begins with: %s", source_data[:50] if source_data else "")
         cleaned_markdown = fetch_and_clean_card_page(source_data)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Web Scraping Failed: {str(e)}")

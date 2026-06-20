@@ -116,8 +116,6 @@ class TransactionEnrichmentService:
                 # Temporary cap bug mitigation: Requires Reward Ledger implementation (P1)
                 # current_spend is total INR spend, which incorrectly exhausts reward limits.
                 # Bypassing historical usage for now to prevent 0-reward recommendation errors.
-                import sentry_sdk
-                sentry_sdk.capture_message("Cap evaluation running without historical usage", level="warning")
                 card_txn_context = txn_context.model_copy(update={"cumulative_spend": 0})
                 eval_result = engine_evaluate(
                     card_txn_context, 
