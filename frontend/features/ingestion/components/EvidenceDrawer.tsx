@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { X, FileText, CheckCircle, AlertTriangle } from 'lucide-react-native';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export interface FieldSource {
   id: string;
@@ -35,7 +36,7 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ field, visible, 
   if (!field) return null;
 
   const isVerified = field.verification_status === 'VERIFIED';
-  const StatusIcon = isVerified ? CheckCircle : AlertTriangle;
+  const statusIconName = isVerified ? 'CheckCircle' : 'AlertTriangle';
   const statusColor = isVerified ? colors.success : colors.warning;
 
   return (
@@ -73,16 +74,14 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ field, visible, 
             <View>
               <Text style={styles.fieldName}>{field.field_name}</Text>
               <View style={styles.statusRow}>
-                {/* @ts-ignore */}
-                <StatusIcon size={14} color={statusColor} />
+                <DynamicIcon name={statusIconName} size={14} color={statusColor} />
                 <Text style={[styles.statusText, { color: statusColor }]}>
                   {field.verification_status} ({field.confidence_score}% Confidence)
                 </Text>
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              {/* @ts-ignore */}
-              <X size={20} color={colors.textSecondary} />
+              <DynamicIcon name="X" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -99,8 +98,7 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ field, visible, 
               <View key={source.id} style={styles.sourceCard}>
                 <View style={styles.sourceHeader}>
                   <View style={styles.sourceTypeWrap}>
-                    {/* @ts-ignore */}
-                    <FileText size={16} color={colors.primary} />
+                    <DynamicIcon name="FileText" size={16} color={colors.primary} />
                     <Text style={styles.sourceType}>{source.source_type}</Text>
                   </View>
                   <Text style={styles.sourceConfidence}>+{source.confidence_contribution}%</Text>

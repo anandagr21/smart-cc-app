@@ -4,7 +4,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { NarrativeObservation } from '../api/evolutionApi';
-import { Clock } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface Props {
   observations: NarrativeObservation[];
@@ -18,7 +19,7 @@ export function PortfolioEvolutionTimeline({ observations }: Props) {
   return (
     <Animated.View entering={FadeInDown.duration(800).delay(400)} style={styles.container}>
       <View style={styles.header}>
-        <Clock size={16} color={colors.textMuted} />
+        <DynamicIcon name="Clock" size={16} color={colors.textMuted} />
         <Text style={[styles.title, { color: colors.textMuted }]}>EVOLUTION TIMELINE</Text>
       </View>
       

@@ -4,7 +4,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { NarrativeObservation } from '../api/evolutionApi';
-import { Compass } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface Props {
   reflections: NarrativeObservation[];
@@ -18,7 +19,7 @@ export function StrategyReflectionSurface({ reflections }: Props) {
   return (
     <Animated.View entering={FadeInDown.duration(800).delay(600)} style={styles.container}>
       <View style={styles.header}>
-        <Compass size={16} color={colors.textMuted} />
+        <DynamicIcon name="Compass" size={16} color={colors.textMuted} />
         <Text style={[styles.title, { color: colors.textMuted }]}>STRATEGIC ALIGNMENT</Text>
       </View>
 

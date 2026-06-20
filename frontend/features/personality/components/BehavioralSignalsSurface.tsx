@@ -4,7 +4,8 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { usePersonalityProfile } from '../api/personalityApi';
-import { Sparkles } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export const BehavioralSignalsSurface = () => {
   const colors = useThemeColors();
@@ -31,8 +32,7 @@ export const BehavioralSignalsSurface = () => {
 
   return (
     <Animated.View entering={FadeInUp.delay(200).springify()} style={styles.container}>
-      {/* @ts-ignore */}
-      <Sparkles size={14} color={colors.primary} style={styles.icon} />
+      <DynamicIcon name="Sparkles" size={14} color={colors.primary} style={styles.icon} />
       <Text style={[styles.signalText, { color: colors.textSecondary }]}>
         {signalText}
       </Text>

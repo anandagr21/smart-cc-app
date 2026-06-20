@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { X, Info, TrendingUp, CreditCard } from 'lucide-react-native';
+
 
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface ExplainabilityData {
   title: string;
@@ -55,13 +56,11 @@ export const ExplainabilitySheet: React.FC<ExplainabilitySheetProps> = ({
 
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              {/* @ts-ignore */}
-              <Info size={20} color={colors.primary} />
+              <DynamicIcon name="Info" size={20} color={colors.primary} />
               <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Intelligence Insight</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.surface }]}>
-              {/* @ts-ignore */}
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
+              <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
           </View>
 
@@ -91,8 +90,7 @@ export const ExplainabilitySheet: React.FC<ExplainabilitySheetProps> = ({
                 <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>KEY CONTRIBUTORS</Text>
                 {data.supportingEntities.map((entity, idx) => (
                   <View key={idx} style={styles.entityRow}>
-                    {/* @ts-ignore */}
-                    <CreditCard size={14} color={colors.textMuted} />
+                    <DynamicIcon name="CreditCard" size={14} color={colors.textMuted} />
                     <Text style={[styles.entityText, { color: colors.textSecondary }]}>{entity}</Text>
                   </View>
                 ))}
