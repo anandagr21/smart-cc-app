@@ -11,8 +11,11 @@ from schemas.waitlist import WaitlistCreate, WaitlistResponse
 
 router = APIRouter()
 
-# --- Simple in-memory rate limiter for waitlist endpoint ---
-# Limits: 5 requests per minute per IP address
+# --- Rate limiting for waitlist endpoint ---
+# NOTE: This in-memory rate limiter only works within a single Lambda warm
+# invocation. Across cold starts, each invocation has its own counter.
+# For production, configure API Gateway rate limiting or swap for a
+# shared store (Redis/ElastiCache, DynamoDB TTL counters).
 _rate_limit_store: dict[str, list[float]] = defaultdict(list)
 _RATE_LIMIT_MAX = 5
 _RATE_LIMIT_WINDOW = 60  # seconds
