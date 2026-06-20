@@ -52,8 +52,9 @@ const Pulse: React.FC<{ delay: number }> = ({ delay }) => {
 };
 
 import { Text, TouchableOpacity } from 'react-native';
-import { CreditCard } from 'lucide-react-native';
+
 import { Button } from '@/components/ui/Button';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface EmptyWalletStateProps {
   onAddCard: () => void;
@@ -75,8 +76,7 @@ export const EmptyWalletState: React.FC<EmptyWalletStateProps> = ({ onAddCard })
             { backgroundColor: colors.surface, borderColor: colors.borderHighlight },
           ]}
         >
-          {/* @ts-ignore */}
-          <CreditCard size={36} color={colors.textMuted} strokeWidth={1.5} />
+          <DynamicIcon name="CreditCard" size={36} color={colors.textMuted} strokeWidth={1.5} />
         </View>
       </View>
 

@@ -4,14 +4,13 @@ import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } fr
 import { TransactionResponse } from '../types/transaction.types';
 import { getCategoryAccent } from '../utils/categoryAccents';
 import { useCards } from '@/features/cards/hooks/useCards';
-import {
-  Utensils, ShoppingBag, Plane, ShoppingCart, Zap, Film, Car, Receipt,
-} from 'lucide-react-native';
+
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { RewardInsightPill } from './RewardInsightPill';
 import { tokens } from '@/theme/tokens';
 import { getNetworkGradient } from '@/theme/colors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface TransactionRowProps {
   transaction: TransactionResponse;
@@ -31,11 +30,7 @@ export const TransactionRow = React.memo(({ transaction, onPress, index }: Trans
   const isDifferent = transaction.normalized_merchant !== transaction.merchant_name;
   
   const accent = getCategoryAccent(transaction.category);
-  // @ts-ignore
-  const ICON_MAP: Record<string, React.ComponentType<any>> = {
-    Utensils, ShoppingBag, Plane, ShoppingCart, Zap, Film, Car, Receipt,
-  };
-  const IconComponent = ICON_MAP[accent.iconName] || Receipt;
+  const iconName = accent.iconName || 'Receipt';
 
   const formatAmount = (amt: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -77,8 +72,7 @@ export const TransactionRow = React.memo(({ transaction, onPress, index }: Trans
           <View style={styles.leftContent}>
             {/* Category Icon */}
             <View style={[styles.iconWrap, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-              {/* @ts-ignore */}
-              <IconComponent size={20} color={colors.textSecondary} strokeWidth={1.5} />
+              <DynamicIcon name={iconName} size={20} color={colors.textSecondary} strokeWidth={1.5} />
             </View>
 
             {/* Merchant Info */}

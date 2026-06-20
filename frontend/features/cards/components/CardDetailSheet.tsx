@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Switch,
 } from 'react-native';
-import { X, Sparkles, Pencil, Activity, Trash2, SlidersHorizontal, FileText, ChevronRight, Fuel, Plane, ShoppingBag, Utensils, Zap } from 'lucide-react-native';
+
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -30,6 +30,7 @@ import { EditSpendSheet } from './EditSpendSheet';
 import { EditFeeCycleSheet } from './EditFeeCycleSheet';
 import { EditCardDetailsSheet } from './EditCardDetailsSheet';
 import { formatCurrencyIN } from '@/utils/currency';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface CardDetailSheetProps {
   card: UserCardResponse | null;
@@ -94,23 +95,23 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
 
   // 1. Health
   if (hasWaiver && waiverPercent >= 75 && waiverPercent < 100) {
-    intelligenceChips.push({ label: 'Near Fee Waiver', icon: Activity, color: colors.warning });
+    intelligenceChips.push({ label: 'Near Fee Waiver', icon: 'Activity', color: colors.warning });
   } else if (card.annual_spend > 50000) {
-    intelligenceChips.push({ label: 'Frequently Used', icon: Zap, color: colors.primary });
+    intelligenceChips.push({ label: 'Frequently Used', icon: 'Zap', color: colors.primary });
   }
 
   // 2. Categories
   if (cNameLow.includes('travel') || cNameLow.includes('miles') || cNameLow.includes('club')) {
-    intelligenceChips.push({ label: 'Travel Optimized', icon: Plane, color: '#0EA5E9' });
+    intelligenceChips.push({ label: 'Travel Optimized', icon: 'Plane', color: '#0EA5E9' });
   }
   if (cNameLow.includes('cashback') || cNameLow.includes('ace')) {
-    intelligenceChips.push({ label: 'Cashback Rewards', icon: ShoppingBag, color: '#10B981' });
+    intelligenceChips.push({ label: 'Cashback Rewards', icon: 'ShoppingBag', color: '#10B981' });
   }
   if (cNameLow.includes('fuel') || cNameLow.includes('petro')) {
-    intelligenceChips.push({ label: 'Fuel Benefits', icon: Fuel, color: '#F59E0B' });
+    intelligenceChips.push({ label: 'Fuel Benefits', icon: 'Fuel', color: '#F59E0B' });
   }
   if (cNameLow.includes('dine') || cNameLow.includes('swiggy')) {
-    intelligenceChips.push({ label: 'Dining Benefits', icon: Utensils, color: '#EC4899' });
+    intelligenceChips.push({ label: 'Dining Benefits', icon: 'Utensils', color: '#EC4899' });
   }
 
   // Trim to max 4 chips to prevent visual overload
@@ -152,8 +153,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
           <View style={styles.header}>
             <View style={styles.headerSpacer} />
             <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}>
-              {/* @ts-ignore */}
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
+              <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
           </View>
 
@@ -201,8 +201,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 <View style={styles.sectionTitleRow}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginRight: 8 }]}>FEE WAIVER PROGRESS</Text>
-                    {/* @ts-ignore */}
-                    <Sparkles size={14} color={colors.primary} />
+                    <DynamicIcon name="Sparkles" size={14} color={colors.primary} />
                   </View>
                   <TouchableOpacity onPress={() => setIsSpendEditVisible(true)} style={styles.sectionEditBtn}>
                     <Text style={[styles.sectionEditText, { color: colors.textSecondary }]}>Edit</Text>
@@ -241,8 +240,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
               <Animated.View entering={FadeInUp.duration(400).delay(175)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
                 <View style={styles.sectionTitleRow}>
                   <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>MILESTONE PROGRESS</Text>
-                  {/* @ts-ignore */}
-                  <Sparkles size={14} color={colors.primary} />
+                  <DynamicIcon name="Sparkles" size={14} color={colors.primary} />
                 </View>
                 
                 {isPremium ? card.milestone_progress.map((milestone, idx) => (
@@ -274,8 +272,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                   </View>
                 )) : (
                   <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-                    {/* @ts-ignore */}
-                    <Zap size={24} color={colors.primary} style={{ marginBottom: 12, opacity: 0.8 }} />
+                    <DynamicIcon name="Zap" size={24} color={colors.primary} style={{ marginBottom: 12, opacity: 0.8 }} />
                     <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.medium, marginBottom: 4 }}>
                       Unlock Premium
                     </Text>
@@ -333,8 +330,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
             <Animated.View entering={FadeInUp.duration(400).delay(225)} style={[styles.section, styles.cardBox, { backgroundColor: 'rgba(139, 92, 246, 0.05)', borderColor: 'rgba(139, 92, 246, 0.2)' }]}>
               <View style={styles.sectionTitleRow}>
                 <Text style={[styles.sectionTitle, { color: '#8B5CF6' }]}>OPTIMIZATION POTENTIAL</Text>
-                {/* @ts-ignore */}
-                <Sparkles size={14} color="#8B5CF6" />
+                <DynamicIcon name="Sparkles" size={14} color="#8B5CF6" />
               </View>
               {hasWaiver && card.explanation_text ? (
                 <Text style={[styles.feeIntelligenceSource, { color: colors.textPrimary, lineHeight: 20 }]}>
@@ -354,8 +350,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 <View style={styles.chipsContainer}>
                   {finalChips.map((chip, idx) => (
                     <View key={idx} style={[styles.intelligenceChip, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                      {/* @ts-ignore */}
-                      <chip.icon size={16} color={chip.color} style={{ marginBottom: 8 }} />
+                      <DynamicIcon name={chip.icon} size={16} color={chip.color} style={{ marginBottom: 8 }} />
                       <Text style={[styles.chipLabel, { color: colors.textPrimary }]}>{chip.label}</Text>
                     </View>
                   ))}
@@ -371,20 +366,17 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 {/* View Transactions (Real Action) */}
                 <TouchableOpacity style={styles.actionRow} onPress={handleViewTransactions}>
                   <View style={[styles.actionIconWrap, { backgroundColor: colors.borderHighlight }]}>
-                    {/* @ts-ignore */}
-                    <FileText size={18} color={colors.textPrimary} />
+                    <DynamicIcon name="FileText" size={18} color={colors.textPrimary} />
                   </View>
                   <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>View Transactions</Text>
-                  {/* @ts-ignore */}
-                  <ChevronRight size={16} color={colors.textMuted} />
+                  <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
                 </TouchableOpacity>
                 <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
 
                 {/* Toggle Status (Real Action) */}
                 <View style={styles.actionRow}>
                   <View style={styles.actionIconWrap}>
-                    {/* @ts-ignore */}
-                    <Activity size={18} color={colors.textPrimary} />
+                    <DynamicIcon name="Activity" size={18} color={colors.textPrimary} />
                   </View>
                   <View style={styles.actionTextWrap}>
                     <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Card Status</Text>
@@ -401,36 +393,30 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 {/* Edit Card Details */}
                 <TouchableOpacity style={styles.actionRow} onPress={() => setIsCardDetailsEditVisible(true)}>
                   <View style={[styles.actionIconWrap, { backgroundColor: colors.borderHighlight }]}>
-                    {/* @ts-ignore */}
-                    <Pencil size={18} color={colors.textPrimary} />
+                    <DynamicIcon name="Pencil" size={18} color={colors.textPrimary} />
                   </View>
                   <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Edit Card Details</Text>
-                  {/* @ts-ignore */}
-                  <ChevronRight size={16} color={colors.textMuted} />
+                  <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
                 </TouchableOpacity>
                 <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
 
                 {/* Update Spend (Real Action) */}
                 <TouchableOpacity style={styles.actionRow} onPress={() => setIsSpendEditVisible(true)}>
                   <View style={[styles.actionIconWrap, { backgroundColor: colors.borderHighlight }]}>
-                    {/* @ts-ignore */}
-                    <SlidersHorizontal size={18} color={colors.textPrimary} />
+                    <DynamicIcon name="SlidersHorizontal" size={18} color={colors.textPrimary} />
                   </View>
                   <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Update Annual Spend</Text>
-                  {/* @ts-ignore */}
-                  <ChevronRight size={16} color={colors.textMuted} />
+                  <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
                 </TouchableOpacity>
                 <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
 
                 {/* Remove Card (Mocked) */}
                 <TouchableOpacity style={styles.actionRow} onPress={() => setMockActionTitle("Remove Card")}>
                   <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
-                    {/* @ts-ignore */}
-                    <Trash2 size={18} color="#EF4444" />
+                    <DynamicIcon name="Trash2" size={18} color="#EF4444" />
                   </View>
                   <Text style={[styles.actionLabel, { color: '#EF4444' }]}>Remove Card</Text>
-                  {/* @ts-ignore */}
-                  <ChevronRight size={16} color={colors.textMuted} />
+                  <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
                 </TouchableOpacity>
 
               </View>

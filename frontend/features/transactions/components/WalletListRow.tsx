@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { CheckCircle2, Sparkles } from 'lucide-react-native';
+
 import Animated, { FadeIn, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { UserCardResponse } from '@/features/cards/types/api';
 import { OptimizerRankedCard } from '@/features/recommendations/types/api';
@@ -8,6 +8,7 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface WalletListRowProps {
   card: UserCardResponse;
@@ -69,8 +70,7 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
         <View style={styles.rightContent}>
           {recommendation && card.card_status === 'ACTIVE' && (
             <Animated.View entering={FadeIn} style={[styles.recommendationBadge, { backgroundColor: colors.primarySoft }]}>
-              {/* @ts-ignore */}
-              <Sparkles size={10} color={colors.primary} style={{ marginRight: 4 }} />
+              <DynamicIcon name="Sparkles" size={10} color={colors.primary} style={{ marginRight: 4 }} />
               <Text style={[styles.recommendationText, { color: colors.primary }]} numberOfLines={1}>
                 {getBadgeText()}
               </Text>
@@ -80,8 +80,7 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
           <View style={styles.checkCircleWrapper}>
             {isActive && card.card_status === 'ACTIVE' && (
               <Animated.View entering={FadeIn.duration(200)}>
-                {/* @ts-ignore */}
-                <CheckCircle2 size={18} color={colors.primary} weight="fill" />
+                <DynamicIcon name="CheckCircle2" size={18} color={colors.primary} weight="fill" />
               </Animated.View>
             )}
             {card.card_status !== 'ACTIVE' && (

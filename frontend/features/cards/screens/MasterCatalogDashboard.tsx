@@ -4,14 +4,15 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { AdminUsageGuide } from '@/components/admin/AdminUsageGuide';
 import { tokens } from '@/theme/tokens';
 import { useCardCatalog } from '@/features/cards/hooks/useCardCatalog';
-import { ArrowLeft, CreditCard, Network, IndianRupee, ShieldAlert, CheckCircle, Check, ListChecks } from 'lucide-react-native';
+
 import { useUpdateCatalogCard } from '@/features/cards/hooks/useUpdateCatalogCard';
 import { CardSidebar } from '@/features/card_intelligence/components/CardSidebar';
 import { formatCurrencyIN } from '@/utils/currency';
 import { CardCatalogResponse } from '@/features/cards/types/api';
 
 import { DocumentUploadSheet } from '@/features/card_intelligence/components/DocumentUploadSheet';
-import { Plus } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export function MasterCatalogDashboard() {
   const colors = useThemeColors();
@@ -39,7 +40,7 @@ export function MasterCatalogDashboard() {
           style={[styles.createBtn, { backgroundColor: colors.primary }]}
           onPress={() => setCreateSheetVisible(true)}
         >
-          <Plus size={16} color="#FFF" />
+          <DynamicIcon name="Plus" size={16} color="#FFF" />
           <Text style={styles.createBtnText}>Add Card</Text>
         </TouchableOpacity>
       </View>
@@ -121,8 +122,9 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
   const renderRewardRules = () => {
     let rules = card.reward_rules_json;
     if (rules && !Array.isArray(rules)) {
-      if ((rules as any).rules) rules = (rules as any).rules;
-      else if ((rules as any).reward_rules) rules = (rules as any).reward_rules;
+      const obj = rules as Record<string, unknown>;
+      if (Array.isArray(obj.rules)) rules = obj.rules as unknown as typeof rules;
+      else if (Array.isArray(obj.reward_rules)) rules = obj.reward_rules as unknown as typeof rules;
       else rules = [];
     }
 
@@ -170,8 +172,7 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
       <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconBox, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
-            {/* @ts-ignore */}
-            <CreditCard size={20} color={colors.primary} />
+            <DynamicIcon name="CreditCard" size={20} color={colors.primary} />
           </View>
           <View style={styles.cardHeaderTexts}>
             <Text style={[styles.bankName, { color: colors.textSecondary }]}>{card.bank_name}</Text>
@@ -184,8 +185,7 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
         <View style={styles.detailsGrid}>
           <View style={styles.detailItem}>
             <View style={styles.detailIconRow}>
-              {/* @ts-ignore */}
-              <Network size={14} color={colors.textMuted} />
+              <DynamicIcon name="Network" size={14} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Network</Text>
             </View>
             <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{card.network || 'Not specified'}</Text>
@@ -193,8 +193,7 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
 
           <View style={styles.detailItem}>
             <View style={styles.detailIconRow}>
-              {/* @ts-ignore */}
-              <IndianRupee size={14} color={colors.textMuted} />
+              <DynamicIcon name="IndianRupee" size={14} color={colors.textMuted} />
               <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Base Value</Text>
             </View>
             <Text style={[styles.detailValue, { color: colors.textPrimary }]}>₹{Number(card.base_point_value).toFixed(2)} / pt</Text>
@@ -204,14 +203,12 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
         <View style={[styles.statusRow, { borderTopColor: colors.border }]}>
           {card.is_active ? (
             <>
-              {/* @ts-ignore */}
-              <CheckCircle size={14} color={colors.success} />
+              <DynamicIcon name="CheckCircle" size={14} color={colors.success} />
               <Text style={[styles.statusText, { color: colors.success }]}>Active in Catalog</Text>
             </>
           ) : (
             <>
-              {/* @ts-ignore */}
-              <ShieldAlert size={14} color={colors.textMuted} />
+              <DynamicIcon name="ShieldAlert" size={14} color={colors.textMuted} />
               <Text style={[styles.statusText, { color: colors.textMuted }]}>Inactive</Text>
             </>
           )}
@@ -284,8 +281,7 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
                 <ActivityIndicator size="small" color="#FFF" />
               ) : (
                 <>
-                  {/* @ts-ignore */}
-                  <Check size={16} color="#FFF" />
+                  <DynamicIcon name="Check" size={16} color="#FFF" />
                   <Text style={styles.saveBtnText}>Save Fee Changes</Text>
                 </>
               )}
@@ -297,8 +293,7 @@ function CatalogCard({ card, colors, formatCurrency }: { card: CardCatalogRespon
       {/* Rules Section */}
       <View style={[styles.section, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
         <View style={styles.sectionHeader}>
-          {/* @ts-ignore */}
-          <ListChecks size={20} color={colors.textPrimary} />
+          <DynamicIcon name="ListChecks" size={20} color={colors.textPrimary} />
           <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 0, marginLeft: 8 }]}>Structured Reward Rules</Text>
         </View>
         <View style={{ padding: 16, paddingTop: 0 }}>

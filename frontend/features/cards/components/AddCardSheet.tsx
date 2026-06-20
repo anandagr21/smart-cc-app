@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { X } from 'lucide-react-native';
+
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CardCatalogResponse } from '../types/api';
@@ -22,6 +22,7 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { getNetworkGradient } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface AddCardSheetProps {
   visible: boolean;
@@ -104,8 +105,7 @@ export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) 
               onPress={handleClose}
               style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}
             >
-              {/* @ts-ignore */}
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
+              <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
           </View>
 

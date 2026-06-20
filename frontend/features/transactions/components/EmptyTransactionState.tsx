@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Receipt } from 'lucide-react-native';
+
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -12,6 +12,7 @@ import Animated, {
 import { Button } from '@/components/ui/Button';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 const Pulse: React.FC<{ delay: number }> = ({ delay }) => {
   const colors = useThemeColors();
@@ -72,8 +73,7 @@ export const EmptyTransactionState: React.FC<EmptyTransactionStateProps> = ({ on
             { backgroundColor: colors.surface, borderColor: colors.borderHighlight },
           ]}
         >
-          {/* @ts-ignore */}
-          <Receipt size={36} color={colors.textMuted} strokeWidth={1.5} />
+          <DynamicIcon name="Receipt" size={36} color={colors.textMuted} strokeWidth={1.5} />
         </View>
       </View>
 

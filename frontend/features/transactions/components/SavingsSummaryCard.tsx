@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Trophy, TrendingUp } from 'lucide-react-native';
+
 import Animated, { FadeInDown, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import { TextInput } from 'react-native';
 import { TransactionResponse } from '../types/transaction.types';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 const AnimatedText = Animated.createAnimatedComponent(TextInput);
 
@@ -65,8 +66,7 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
         <View style={[styles.topHighlight, { backgroundColor: colors.glassHighlight }]} />
 
         <View style={styles.header}>
-          {/* @ts-ignore */}
-          <Trophy size={16} color={colors.warning} style={styles.icon} />
+          <DynamicIcon name="Trophy" size={16} color={colors.warning} style={styles.icon} />
           <Text style={[styles.eyebrow, { color: colors.warning }]}>
             Optimization Summary
           </Text>
@@ -84,8 +84,7 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
 
         {maxCategoryReward > 0 && (
           <View style={[styles.bestCategoryPill, { backgroundColor: colors.successSoft, borderColor: colors.success }]}>
-            {/* @ts-ignore */}
-            <TrendingUp size={12} color={colors.success} style={styles.trendIcon} />
+            <DynamicIcon name="TrendingUp" size={12} color={colors.success} style={styles.trendIcon} />
             <Text style={[styles.bestCategoryText, { color: colors.success }]}>
               Best optimization: <Text style={styles.bestCategoryBold}>{bestCategory}</Text>
             </Text>

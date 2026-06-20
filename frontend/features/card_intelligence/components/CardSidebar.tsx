@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Platform } from 'react-native';
-import { Search, Filter, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react-native';
+
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { CardCatalogResponse } from '@/features/cards/types/api';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface CardSidebarProps {
   catalog: CardCatalogResponse[];
@@ -63,16 +64,13 @@ export const CardSidebar: React.FC<CardSidebarProps> = ({
     return (
       <View style={[styles.collapsedContainer, { backgroundColor: colors.surfaceElevated, borderRightColor: colors.border }]}>
         <TouchableOpacity style={styles.toggleBtn} onPress={onToggleCollapse}>
-          {/* @ts-ignore */}
-          <ChevronRight size={20} color={colors.textSecondary} />
+          <DynamicIcon name="ChevronRight" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.collapsedIconBtn} onPress={onToggleCollapse}>
-          {/* @ts-ignore */}
-          <Search size={20} color={colors.textSecondary} />
+          <DynamicIcon name="Search" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.collapsedIconBtn} onPress={onToggleCollapse}>
-          {/* @ts-ignore */}
-          <Filter size={20} color={colors.textSecondary} />
+          <DynamicIcon name="Filter" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
     );
@@ -83,15 +81,13 @@ export const CardSidebar: React.FC<CardSidebarProps> = ({
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Card Selection</Text>
         <TouchableOpacity onPress={onToggleCollapse}>
-          {/* @ts-ignore */}
-          <ChevronLeft size={20} color={colors.textSecondary} />
+          <DynamicIcon name="ChevronLeft" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
         <View style={[styles.searchInputWrapper, { backgroundColor: colors.background, borderColor: colors.border }]}>
-          {/* @ts-ignore */}
-          <Search size={16} color={colors.textSecondary} style={styles.searchIcon} />
+          <DynamicIcon name="Search" size={16} color={colors.textSecondary} style={styles.searchIcon} />
           <TextInput
             style={[styles.searchInput, { color: colors.textPrimary }]}
             placeholder="Search cards..."
@@ -107,8 +103,7 @@ export const CardSidebar: React.FC<CardSidebarProps> = ({
           ]}
           onPress={() => setIsFilterExpanded(!isFilterExpanded)}
         >
-          {/* @ts-ignore */}
-          <Filter size={16} color={selectedBanks.size > 0 ? colors.primary : colors.textSecondary} />
+          <DynamicIcon name="Filter" size={16} color={selectedBanks.size > 0 ? colors.primary : colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -162,8 +157,7 @@ export const CardSidebar: React.FC<CardSidebarProps> = ({
                 onPress={() => onSelectCard(card.id)}
               >
                 <View style={styles.cardItemIcon}>
-                  {/* @ts-ignore */}
-                  <CreditCard size={16} color={isSelected ? colors.primary : colors.textSecondary} />
+                  <DynamicIcon name="CreditCard" size={16} color={isSelected ? colors.primary : colors.textSecondary} />
                 </View>
                 <View style={styles.cardItemText}>
                   <Text style={[styles.cardItemBank, { color: isSelected ? colors.primary : colors.textSecondary }]}>

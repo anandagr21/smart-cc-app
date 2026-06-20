@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
-import { X, Sparkles } from 'lucide-react-native';
+
 import { BlurView } from 'expo-blur';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/components/ui/Button';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface ComingSoonSheetProps {
   visible: boolean;
@@ -48,15 +49,13 @@ export const ComingSoonSheet: React.FC<ComingSoonSheetProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}>
-              {/* @ts-ignore */}
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
+              <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.content}>
             <View style={[styles.iconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-              {/* @ts-ignore */}
-              <Sparkles size={32} color={colors.success} />
+              <DynamicIcon name="Sparkles" size={32} color={colors.success} />
             </View>
             
             <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>

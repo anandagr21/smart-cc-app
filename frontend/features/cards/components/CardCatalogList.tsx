@@ -6,13 +6,14 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import { Search, ChevronRight } from 'lucide-react-native';
+
 import { Input } from '@/components/ui/Input';
 import { CardCatalogResponse } from '../types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { getNetworkGradient } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface CardCatalogListProps {
   catalog: CardCatalogResponse[];
@@ -55,7 +56,7 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
           onChangeText={setSearchQuery}
           autoCapitalize="none"
           autoCorrect={false}
-          leftIcon={<Search size={18} color={colors.textMuted} strokeWidth={1.5} />}
+          leftIcon={<DynamicIcon name="Search" size={18} color={colors.textMuted} strokeWidth={1.5} />}
           style={{ marginBottom: 0 }}
         />
       </View>
@@ -99,8 +100,7 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
                 </Text>
               </View>
 
-              {/* @ts-ignore */}
-              <ChevronRight size={18} color={colors.borderHighlight} strokeWidth={1.5} />
+              <DynamicIcon name="ChevronRight" size={18} color={colors.borderHighlight} strokeWidth={1.5} />
             </TouchableOpacity>
           ))
         )}

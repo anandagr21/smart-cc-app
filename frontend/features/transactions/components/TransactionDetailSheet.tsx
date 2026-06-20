@@ -9,17 +9,18 @@ import {
   Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { X, Calendar, CreditCard, ShoppingBag, Edit2, Trash2 } from 'lucide-react-native';
+
 import { TransactionResponse } from '../types/transaction.types';
 import { format } from 'date-fns';
 import { getCategoryAccent } from '../utils/categoryAccents';
 import { useCards } from '@/features/cards/hooks/useCards';
 import { useDeleteTransaction } from '../hooks/useDeleteTransaction';
-import { Utensils, ShoppingBag, Plane, ShoppingCart, Zap, Film, Car, Receipt } from 'lucide-react-native';
+
 import { TransactionInsightCard } from './TransactionInsightCard';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface TransactionDetailSheetProps {
   transaction: TransactionResponse | null;
@@ -46,9 +47,6 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
   const cardName = card?.nickname || card?.card_details?.card_name || 'Credit Card';
 
   const accent = getCategoryAccent(transaction.category);
-  // @ts-ignore
-  const ICON_MAP: Record<string, React.ComponentType<any>> = { Utensils, ShoppingBag, Plane, ShoppingCart, Zap, Film, Car, Receipt };
-  const IconComponent = ICON_MAP[accent.iconName] || Receipt;
 
   const dateString = transaction.created_at 
     ? (transaction.created_at.endsWith('Z') ? transaction.created_at : `${transaction.created_at}Z`)
@@ -104,17 +102,14 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
           {/* Header Actions */}
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={[styles.iconBtn, { backgroundColor: colors.surface }]}>
-              {/* @ts-ignore */}
-              <X size={20} color={colors.textSecondary} strokeWidth={2} />
+              <DynamicIcon name="X" size={20} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
             <View style={styles.headerRight}>
               <TouchableOpacity onPress={() => onEdit(transaction)} style={[styles.iconBtn, { backgroundColor: colors.surface, marginRight: 8 }]}>
-                {/* @ts-ignore */}
-                <Edit2 size={18} color={colors.textSecondary} strokeWidth={2} />
+                <DynamicIcon name="Edit2" size={18} color={colors.textSecondary} strokeWidth={2} />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete} style={[styles.iconBtn, { backgroundColor: colors.dangerSoft }]}>
-                {/* @ts-ignore */}
-                <Trash2 size={18} color={colors.danger} strokeWidth={2} />
+                <DynamicIcon name="Trash2" size={18} color={colors.danger} strokeWidth={2} />
               </TouchableOpacity>
             </View>
           </View>
@@ -124,8 +119,7 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
             <View style={styles.heroWrap}>
               <View style={[styles.iconRing, { borderColor: colors.borderHighlight }]}>
                 <View style={[styles.iconInner, { backgroundColor: colors.surfaceElevated }]}>
-                  {/* @ts-ignore */}
-                  <IconComponent size={32} color={colors.textPrimary} strokeWidth={1.5} />
+                  <DynamicIcon name={accent.iconName} size={32} color={colors.textPrimary} strokeWidth={1.5} />
                 </View>
               </View>
               <Text style={[styles.heroAmount, { color: colors.textPrimary }]}>
@@ -140,8 +134,7 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
             <View style={[styles.detailsWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
                 <View style={styles.detailLabelWrap}>
-                  {/* @ts-ignore */}
-                  <ShoppingBag size={16} color={colors.textMuted} style={styles.detailIcon} />
+                  <DynamicIcon name="ShoppingBag" size={16} color={colors.textMuted} style={styles.detailIcon} />
                   <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Category</Text>
                 </View>
                 <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{transaction.category}</Text>
@@ -149,8 +142,7 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
               
               <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
                 <View style={styles.detailLabelWrap}>
-                  {/* @ts-ignore */}
-                  <Calendar size={16} color={colors.textMuted} style={styles.detailIcon} />
+                  <DynamicIcon name="Calendar" size={16} color={colors.textMuted} style={styles.detailIcon} />
                   <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Date & Time</Text>
                 </View>
                 <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{formattedDate}</Text>
@@ -158,8 +150,7 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
 
               <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
                 <View style={styles.detailLabelWrap}>
-                  {/* @ts-ignore */}
-                  <CreditCard size={16} color={colors.textMuted} style={styles.detailIcon} />
+                  <DynamicIcon name="CreditCard" size={16} color={colors.textMuted} style={styles.detailIcon} />
                   <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Payment Method</Text>
                 </View>
                 <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{cardName}</Text>
@@ -168,8 +159,7 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
               {transaction.updated_at && transaction.updated_at !== transaction.created_at && (
                 <View style={[styles.detailRow, { borderBottomWidth: 0, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border }]}>
                   <View style={styles.detailLabelWrap}>
-                    {/* @ts-ignore */}
-                    <Calendar size={16} color={colors.textMuted} style={styles.detailIcon} />
+                    <DynamicIcon name="Calendar" size={16} color={colors.textMuted} style={styles.detailIcon} />
                     <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Last Updated</Text>
                   </View>
                   <Text style={[styles.detailValue, { color: colors.textPrimary }]}>

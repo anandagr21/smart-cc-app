@@ -4,7 +4,7 @@ import {
   Alert, TextInput, ScrollView, Platform,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { X, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react-native';
+
 import { tokens } from '@/theme/tokens';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
@@ -12,6 +12,7 @@ import { useSubmitUrlSource } from '../api/cardIntelligenceApi';
 import { router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { apiClient } from '@/services/api/client';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 // ── Top 20 Indian credit card issuing banks ────────────────────────────────
 const BANKS = [
@@ -217,8 +218,7 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.textPrimary }]}>{cardId ? 'Re-Ingest Card Source' : 'Fetch Live Bank Data'}</Text>
             <TouchableOpacity onPress={resetAndClose} style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}>
-              {/* @ts-ignore */}
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
+              <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
           </View>
 
@@ -245,8 +245,7 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
                   <Text style={[styles.dropdownTriggerText, { color: bankName ? colors.textPrimary : colors.textSecondary }]}>
                     {bankName || 'Select issuing bank...'}
                   </Text>
-                  {/* @ts-ignore */}
-                  {isBankDropdownOpen ? <ChevronUp size={16} color={colors.textSecondary} /> : <ChevronDown size={16} color={colors.textSecondary} />}
+                  {isBankDropdownOpen ? <DynamicIcon name="ChevronUp" size={16} color={colors.textSecondary} /> : <DynamicIcon name="ChevronDown" size={16} color={colors.textSecondary} />}
                 </TouchableOpacity>
 
                 {isBankDropdownOpen && (
@@ -265,8 +264,7 @@ export const DocumentUploadSheet: React.FC<Props> = ({ visible, onClose, onSucce
                             {bank}
                           </Text>
                           {bankName === bank && (
-                            // @ts-ignore
-                            <CheckCircle size={14} color={colors.primary} />
+                            <DynamicIcon name="CheckCircle" size={14} color={colors.primary} />
                           )}
                         </TouchableOpacity>
                       ))}
