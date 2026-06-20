@@ -101,7 +101,7 @@ async def get_active_rules(session: AsyncSession, card_id: str) -> list[RewardRu
         select(RewardRule)
         .where(
             RewardRule.card_id == card_id,
-            RewardRule.is_active == True,  # noqa: E712
+            RewardRule.is_active.is_(True),
         )
         .order_by(RewardRule.priority.asc())
     )

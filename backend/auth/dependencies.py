@@ -20,7 +20,7 @@ from auth.schemas import UserResponse
 from auth.security import decode_access_token
 from auth.service import AuthService
 from core.config import get_settings
-from core.exceptions import UnauthorizedException
+from core.exceptions import NotFoundException, UnauthorizedException
 from models.enums import UserRole
 from repositories.user_repository import UserRepository
 
@@ -95,15 +95,11 @@ async def get_current_user(
     try:
         auth_service = await _get_auth_service(user_repo)
         return await auth_service.get_current_user(user_id)
-    except Exception as e:
-        # If user is not found (e.g. database reset), treat as unauthorized so frontend logs out.
-        from core.exceptions import NotFoundException
-        if isinstance(e, NotFoundException):
-            raise UnauthorizedException(
-                message="User associated with this token no longer exists.",
-                code="USER_NOT_FOUND",
-            )
-        raise e
+    except NotFoundException:
+        raise UnauthorizedException(
+            message="User associated with this token no longer exists.",
+            code="USER_NOT_FOUND",
+        )
 
 async def get_current_admin_user(
     current_user: UserResponse = Depends(get_current_user),
