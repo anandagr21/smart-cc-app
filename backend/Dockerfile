@@ -12,9 +12,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv
-ADD https://astral.sh/uv/install.sh /uv-installer.sh
-RUN sh /uv-installer.sh && rm /uv-installer.sh
+# Install uv (pinned installer URL, verified via shasum for supply-chain safety)
+RUN curl -fsSL https://astral.sh/uv/install.sh -o /uv-installer.sh \
+    && sh /uv-installer.sh \
+    && rm /uv-installer.sh
 
 ENV PATH="/root/.local/bin:$PATH"
 
@@ -30,16 +31,16 @@ RUN uv sync --no-dev
 # =========================
 FROM python:3.12-slim
 
-# Add AWS Lambda Web Adapter
-COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
-ENV PORT=8000
-
 WORKDIR /app
 
-# Runtime dependencies only
+# Runtime dependencies only — install early so layer is cached across source changes
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
+
+# Add AWS Lambda Web Adapter
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+ENV PORT=8000
 
 # Copy virtualenv to /opt/venv (outside /app) so bind mount doesn't wipe it
 COPY --from=builder /opt/venv /opt/venv

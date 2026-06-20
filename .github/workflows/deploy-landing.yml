@@ -6,7 +6,6 @@ on:
       - 'land_release_*'
 
 env:
-  CLOUDFLARE_ACCOUNT_ID: 952180b7ad12238ca1a7f1d9089e4b26
   PROJECT_NAME: smart-cc-landing
 
 permissions:
@@ -40,6 +39,6 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name ${{ env.PROJECT_NAME }} --branch main --commit-dirty=true
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name ${{ env.PROJECT_NAME }} --branch main
           workingDirectory: landing

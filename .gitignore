@@ -225,3 +225,4 @@ graphify-out/
 .claude/
 .agents/
 .agent/
+.DS_Store

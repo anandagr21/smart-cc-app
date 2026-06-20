@@ -3,19 +3,25 @@ services:
     image: postgres:16-alpine
     container_name: smart-cc-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: smart_cc
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-smart_cc}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d smart_cc"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-smart_cc}"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
 
   backend:
     build:
@@ -23,7 +29,7 @@ services:
       dockerfile: Dockerfile
     container_name: smart-cc-backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/smart_cc
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-smart_cc}
       ENVIRONMENT: development
       DEBUG: "true"
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -40,16 +46,30 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
   adminer:
-    image: adminer:latest
+    image: adminer:4.8.1
     container_name: smart-cc-adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
     ports:
-      - "9001:8080"
+      - "127.0.0.1:9001:8080"
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
 
 volumes:
   pgdata:

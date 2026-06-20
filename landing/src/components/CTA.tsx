@@ -3,31 +3,48 @@ import { useState } from "react";
 import ScrollReveal from "./ScrollReveal";
 import { ArrowRightIcon } from "./Icons";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 export default function CTA() {
-  const [email, setEmail]   = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [email, setEmail]       = useState("");
+  const [status, setStatus]     = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setStatus("loading");
-    
+    setErrorMsg("");
+
+    if (!API_URL) {
+      setErrorMsg("API is not configured. Please try again later.");
+      setStatus("error");
+      return;
+    }
+
     try {
-      const res = await fetch("http://localhost:8000/api/v1/waitlist/", {
+      const res = await fetch(`${API_URL}/api/v1/waitlist/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      
+
       if (res.ok) {
         setStatus("success");
       } else {
-        console.error("Failed to join waitlist:", await res.text());
-        setStatus("idle");
+        const body = await res.text();
+        console.error("Failed to join waitlist:", body);
+        setErrorMsg(
+          res.status === 429
+            ? "Too many attempts. Please wait a moment and try again."
+            : "Something went wrong. Please try again."
+        );
+        setStatus("error");
       }
     } catch (err) {
       console.error("Network error:", err);
-      setStatus("idle");
+      setErrorMsg("Network error. Please check your connection and try again.");
+      setStatus("error");
     }
   };
 
@@ -79,6 +96,18 @@ export default function CTA() {
                 Join 2,000+ cardholders already saving on fees and maximising rewards.
                 Early access is free — no credit card needed.
               </p>
+
+              {status === "error" && (
+                <motion.div
+                  key="error"
+                  className="rounded-xl p-4 max-w-md mx-auto mb-4"
+                  style={{ background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.25)" }}
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <p className="text-red-400 text-sm">{errorMsg}</p>
+                </motion.div>
+              )}
 
               <AnimatePresence mode="wait">
                 {status === "success" ? (
