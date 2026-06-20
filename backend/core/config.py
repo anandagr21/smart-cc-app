@@ -11,12 +11,19 @@ Decision: Using Pydantic v2's `BaseSettings` (from pydantic-settings) ensures
 type-safe config with automatic env-var loading and validation at startup.
 """
 
+import logging
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from core.constants import Environment
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_SECRET_KEY_MARKER = "change-me-in-production-use-env-var"
+DEFAULT_DATABASE_URL_MARKER = "postgresql+asyncpg://postgres:postgres@localhost:5432/smart_cc"
 
 
 class Settings(BaseSettings):
@@ -50,16 +57,50 @@ class Settings(BaseSettings):
 
     # ---- Database ----
     # WARNING: Default credentials are for local dev only. Override via DATABASE_URL env var in production.
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/smart_cc"
+    database_url: str = DEFAULT_DATABASE_URL_MARKER
     database_pool_size: int = 10
     database_max_overflow: int = 20
     database_pool_pre_ping: bool = True  # Verify connections before use — prevents stale pool errors
 
     # ---- Auth ----
-    secret_key: str = "change-me-in-production-use-env-var"
+    secret_key: str = DEFAULT_SECRET_KEY_MARKER
     access_token_expire_minutes: int = 43200  # 30 days for smoother local dev
     google_client_id: str = ""
     google_client_ids_raw: str = ""  # Comma-separated list of all Google OAuth client IDs (web, iOS, Android)
+
+    @model_validator(mode="after")
+    def _enforce_secure_defaults(self) -> "Settings":
+        """Reject startup in non-dev environments with insecure default values.
+
+        Prevents accidental production deployments using well-known default secrets
+        or database credentials.
+        """
+        if not self.is_development:
+            if self.secret_key == DEFAULT_SECRET_KEY_MARKER:
+                raise RuntimeError(
+                    "SECRET_KEY is still the default value. "
+                    "Set the SECRET_KEY environment variable before deploying to non-development environments."
+                )
+            if self.database_url == DEFAULT_DATABASE_URL_MARKER:
+                raise RuntimeError(
+                    "DATABASE_URL is still the default value. "
+                    "Set the DATABASE_URL environment variable before deploying to non-development environments."
+                )
+
+        # Warn in development too (doesn't block startup, but surfaces the issue)
+        if self.is_development:
+            if self.secret_key == DEFAULT_SECRET_KEY_MARKER:
+                logger.warning(
+                    "SECRET_KEY is using the default value. This is fine for local development, "
+                    "but must be overridden in staging/production."
+                )
+            if self.database_url == DEFAULT_DATABASE_URL_MARKER:
+                logger.warning(
+                    "DATABASE_URL is using the default value. This is fine for local development, "
+                    "but must be overridden in staging/production."
+                )
+
+        return self
 
     # ---- Logging ----
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"

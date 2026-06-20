@@ -7,11 +7,28 @@ export default function CTA() {
   const [email, setEmail]   = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setStatus("loading");
-    setTimeout(() => setStatus("success"), 900);
+    
+    try {
+      const res = await fetch("http://localhost:8000/api/v1/waitlist/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      
+      if (res.ok) {
+        setStatus("success");
+      } else {
+        console.error("Failed to join waitlist:", await res.text());
+        setStatus("idle");
+      }
+    } catch (err) {
+      console.error("Network error:", err);
+      setStatus("idle");
+    }
   };
 
   return (

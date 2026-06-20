@@ -31,6 +31,7 @@ from .portfolio_evolution import router as portfolio_evolution_router
 from card_intelligence.routes import router as card_intelligence_router
 from .feedback import router as feedback_router
 from .notifications import router as notifications_router
+from .waitlist import router as waitlist_router
 from search.routes import router as search_router
 from core.config import get_settings
 
@@ -57,3 +58,4 @@ api_router.include_router(portfolio_evolution_router)
 api_router.include_router(card_intelligence_router)
 api_router.include_router(feedback_router, prefix="/feedback", tags=["feedback"])
 api_router.include_router(notifications_router, prefix="/notifications", tags=["notifications"])
+api_router.include_router(waitlist_router, prefix="/waitlist", tags=["waitlist"])

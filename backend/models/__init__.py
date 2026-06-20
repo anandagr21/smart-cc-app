@@ -21,6 +21,7 @@ from .audit_log import AuditLog
 from .feedback import Feedback
 from .recommendation_audit import RecommendationAudit
 from .notification import Notification
+from .waitlist import WaitlistEntry
 from .ingestion import (
     CardCatalogVersion,
     CardIngestionSession,
@@ -66,4 +67,5 @@ __all__ = [
     "Feedback",
     "RecommendationAudit",
     "Notification",
+    "WaitlistEntry",
 ]

@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 REQUEST_ID_HEADER = "X-Request-ID"
 
 
-def setup_middleware(app):
+def setup_middleware(app) -> None:
     """Register core middleware on a FastAPI application.
 
     This is the canonical setup function called from `main.py`.
@@ -75,7 +75,8 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         # Log request completion with duration
         duration_ms = (time.perf_counter() - start_time) * 1000
         logger.info(
-            f"{request.method} {request.url.path} completed",
+            "%s %s completed",
+            request.method, request.url.path,
             extra={
                 "request_id": request_id,
                 "method": request.method,
@@ -92,10 +93,25 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         response = await call_next(request)
-        
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+        # HSTS — only set on HTTPS connections (avoids issues behind proxies in dev/staging)
+        if request.url.scheme == "https" or request.headers.get("X-Forwarded-Proto") == "https":
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains; preload"
+            )
+
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["X-Frame-Options"] = "DENY"
-        
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self' https:; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'"
+        )
+
         return response
