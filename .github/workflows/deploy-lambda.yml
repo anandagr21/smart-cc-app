@@ -39,6 +39,7 @@ jobs:
           uv sync
 
       - name: Run Migrations
+        if: ${{ secrets.DATABASE_URL != '' }}
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
