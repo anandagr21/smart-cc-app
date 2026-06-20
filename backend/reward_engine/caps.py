@@ -261,16 +261,16 @@ def apply_caps_from_config(
     from reward_engine.cap_normalizer import normalize_caps
     from reward_engine.cap_matcher import match_caps
     from reward_engine.schemas import CapResult
-    from reward_engine.cap_exceptions import CapInvalidConfigException
+    from reward_engine.cap_exceptions import CapInvalidConfigError
     from pydantic import ValidationError
 
-    # Normalize caps from config. Both CapInvalidConfigException (domain) and
+    # Normalize caps from config. Both CapInvalidConfigError (domain) and
     # ValidationError (pydantic schema) indicate an unusable cap config — treat
     # either as "no cap defined" so the engine never crashes on bad rule data.
     try:
         caps_result = normalize_caps(config)
         caps = caps_result if isinstance(caps_result, list) else [caps_result]
-    except (CapInvalidConfigException, ValidationError):
+    except (CapInvalidConfigError, ValidationError):
         caps = []
 
     if not caps:

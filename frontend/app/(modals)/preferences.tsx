@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
-import { X, CreditCard, IndianRupee, BellRing, ChevronRight } from 'lucide-react-native';
+
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function PreferencesModal() {
   const router = useRouter();
   const colors = useThemeColors();
   const [smartRouting, setSmartRouting] = useState(true);
 
-  const SettingsRow = ({ icon: Icon, label, value, RightComponent }: any) => (
+  const SettingsRow = ({ icon, label, value, RightComponent }: any) => (
     <View style={[styles.settingsRow, { borderBottomColor: colors.border }]}>
       <View style={[styles.settingsIconWrap, { backgroundColor: colors.surfaceElevated }]}>
-        <Icon size={18} color={colors.textSecondary} />
+        <DynamicIcon name={icon} size={18} color={colors.textSecondary} />
       </View>
       <View style={styles.labelWrap}>
         <Text style={[styles.settingsLabel, { color: colors.textPrimary }]}>
@@ -39,8 +40,7 @@ export default function PreferencesModal() {
           onPress={() => router.back()}
           style={[styles.closeBtn, { backgroundColor: colors.surface }]}
         >
-          {/* @ts-ignore */}
-          <X size={20} color={colors.textSecondary} strokeWidth={2} />
+          <DynamicIcon name="X" size={20} color={colors.textSecondary} strokeWidth={2} />
         </TouchableOpacity>
       </View>
 
@@ -49,18 +49,18 @@ export default function PreferencesModal() {
           <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TouchableOpacity activeOpacity={0.7}>
               <SettingsRow
-                icon={CreditCard}
+                icon="CreditCard"
                 label="Default Payment Mode"
                 value="Online"
-                RightComponent={<ChevronRight size={18} color={colors.textMuted} />}
+                RightComponent={<DynamicIcon name="ChevronRight" size={18} color={colors.textMuted} />}
               />
             </TouchableOpacity>
             <TouchableOpacity activeOpacity={0.7}>
               <SettingsRow
-                icon={IndianRupee}
+                icon="IndianRupee"
                 label="Display Currency"
                 value="INR (₹)"
-                RightComponent={<ChevronRight size={18} color={colors.textMuted} />}
+                RightComponent={<DynamicIcon name="ChevronRight" size={18} color={colors.textMuted} />}
               />
             </TouchableOpacity>
           </View>
@@ -70,7 +70,7 @@ export default function PreferencesModal() {
           <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>AI Engine</Text>
           <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <SettingsRow
-              icon={BellRing}
+              icon="BellRing"
               label="Smart Routing Alerts"
               RightComponent={
                 <Switch

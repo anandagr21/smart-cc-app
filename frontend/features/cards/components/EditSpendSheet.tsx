@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { X } from 'lucide-react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
-import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { useUpdateCard } from '../hooks/useUpdateCard';
 import { UserCardResponse } from '../types/api';
 import { formatCurrencyIN } from '@/utils/currency';
+import { CardEditSheetBase } from './CardEditSheetBase';
 
 interface EditSpendSheetProps {
   visible: boolean;
@@ -17,8 +16,6 @@ interface EditSpendSheetProps {
 
 export const EditSpendSheet: React.FC<EditSpendSheetProps> = ({ visible, onClose, card }) => {
   const colors = useThemeColors();
-  const { themeMode } = useThemeStore();
-  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
   const [spendValue, setSpendValue] = useState('');
   const [targetValue, setTargetValue] = useState('');
@@ -51,130 +48,68 @@ export const EditSpendSheet: React.FC<EditSpendSheetProps> = ({ visible, onClose
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.backdrop}>
-        <View style={styles.sheet}>
-          <BlurView
-            tint={isDark ? 'dark' : 'light'}
-            intensity={95}
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                borderTopLeftRadius: tokens.radius.sheet,
-                borderTopRightRadius: tokens.radius.sheet,
-                backgroundColor: colors.glassSurface,
-                borderWidth: 1,
-                borderColor: colors.glassBorder,
-              },
-            ]}
-          />
-          <View style={[styles.topHighlight, { backgroundColor: colors.glassHighlight }]} />
+    <CardEditSheetBase visible={visible} onClose={onClose} title="Edit Waiver Progress">
+      <ScrollView keyboardShouldPersistTaps="handled">
+        <Text style={[styles.label, { color: colors.textSecondary }]}>Current annual spend on this card</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { 
+              color: colors.textPrimary,
+              backgroundColor: colors.surfaceElevated,
+              borderColor: colors.border
+            }
+          ]}
+          value={spendValue}
+          onChangeText={setSpendValue}
+          keyboardType="numeric"
+          placeholder="0.00"
+          placeholderTextColor={colors.textMuted}
+          autoFocus
+        />
 
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>Edit Waiver Progress</Text>
-            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}>
-              {/* @ts-ignore */}
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
-            </TouchableOpacity>
+        <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Annual Waiver Target</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { 
+              color: colors.textPrimary,
+              backgroundColor: colors.surfaceElevated,
+              borderColor: colors.border
+            }
+          ]}
+          value={targetValue}
+          onChangeText={setTargetValue}
+          keyboardType="numeric"
+          placeholder="0.00"
+          placeholderTextColor={colors.textMuted}
+        />
+        {card?.user_override_fee_waiver_threshold != null && card.fee_waiver_threshold != null && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: -8, marginBottom: 16 }}>
+            <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>
+              💡 Catalog Default: {formatCurrencyIN(card.fee_waiver_threshold)}
+            </Text>
           </View>
+        )}
 
-          <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Current annual spend on this card</Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  color: colors.textPrimary,
-                  backgroundColor: colors.surfaceElevated,
-                  borderColor: colors.border
-                }
-              ]}
-              value={spendValue}
-              onChangeText={setSpendValue}
-              keyboardType="numeric"
-              placeholder="0.00"
-              placeholderTextColor={colors.textMuted}
-              autoFocus
-            />
-
-            <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Annual Waiver Target</Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  color: colors.textPrimary,
-                  backgroundColor: colors.surfaceElevated,
-                  borderColor: colors.border
-                }
-              ]}
-              value={targetValue}
-              onChangeText={setTargetValue}
-              keyboardType="numeric"
-              placeholder="0.00"
-              placeholderTextColor={colors.textMuted}
-            />
-            {card?.user_override_fee_waiver_threshold != null && card.fee_waiver_threshold != null && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: -8, marginBottom: 16 }}>
-                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>
-                  💡 Catalog Default: {formatCurrencyIN(card.fee_waiver_threshold)}
-                </Text>
-              </View>
-            )}
-
-            <TouchableOpacity 
-              style={[
-                styles.saveBtn, 
-                { opacity: updateMutation.isPending ? 0.7 : 1 }
-              ]} 
-              onPress={handleSave}
-              disabled={updateMutation.isPending}
-            >
-              <Text style={styles.saveBtnText}>
-                {updateMutation.isPending ? 'Saving...' : 'Save Progress'}
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+        <TouchableOpacity 
+          style={[
+            styles.saveBtn, 
+            { opacity: updateMutation.isPending ? 0.7 : 1 }
+          ]} 
+          onPress={handleSave}
+          disabled={updateMutation.isPending}
+        >
+          <Text style={styles.saveBtnText}>
+            {updateMutation.isPending ? 'Saving...' : 'Save Progress'}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </CardEditSheetBase>
   );
 };
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  sheet: {
-    borderTopLeftRadius: tokens.radius.sheet,
-    borderTopRightRadius: tokens.radius.sheet,
-    overflow: 'hidden',
-    maxHeight: '80%',
-  },
-  topHighlight: {
-    position: 'absolute', top: 0, left: 0, right: 0, height: 1, zIndex: 10,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 16,
-  },
-  title: {
-    fontSize: tokens.fontSize.title,
-    fontWeight: tokens.fontWeight.bold,
-  },
-  closeBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  content: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
   label: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,

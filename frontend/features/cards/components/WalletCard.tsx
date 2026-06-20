@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle2, Wifi } from 'lucide-react-native';
+
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { UserCardResponse } from '../types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { getNetworkGradient } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 const CARD_WIDTH = Dimensions.get('window').width - tokens.layout.screenPadding * 2;
 const CARD_HEIGHT = CARD_WIDTH / 1.586; // Standard credit card ratio
@@ -110,8 +111,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
 
           {/* NFC/Contactless */}
           <View style={styles.nfcIcon}>
-            {/* @ts-ignore */}
-            <Wifi size={20} color="rgba(255,255,255,0.5)" strokeWidth={1.5} />
+            <DynamicIcon name="Wifi" size={20} color="rgba(255,255,255,0.5)" strokeWidth={1.5} />
           </View>
         </View>
 
@@ -161,8 +161,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
               const m = card.milestone_progress.find(m => !m.is_achieved && m.target_type === 'TRANSACTION_COUNT')!;
               return (
                 <View style={[styles.activeBadge, { backgroundColor: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }]}>
-                  {/* @ts-ignore */}
-                  <CheckCircle2 size={11} color="#4ADE80" strokeWidth={2} />
+                  <DynamicIcon name="CheckCircle2" size={11} color="#4ADE80" strokeWidth={2} />
                   <Text style={[styles.activeBadgeText, { color: '#4ADE80' }]}>
                     {m.current_value}/{m.target_value} Txns
                   </Text>
@@ -172,8 +171,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
               <View style={styles.activeBadge}>
                 {isActive ? (
                   <>
-                    {/* @ts-ignore */}
-                    <CheckCircle2 size={11} color="rgba(255,255,255,0.85)" strokeWidth={2} />
+                    <DynamicIcon name="CheckCircle2" size={11} color="rgba(255,255,255,0.85)" strokeWidth={2} />
                     <Text style={styles.activeBadgeText}>Active</Text>
                   </>
                 ) : (

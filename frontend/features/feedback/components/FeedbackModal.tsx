@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { X, MessageSquareWarning } from 'lucide-react-native';
+
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { feedbackApi, FeedbackCreatePayload } from '../api';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface FeedbackModalProps {
   isVisible: boolean;
@@ -56,13 +57,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isVisible, onClose
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={styles.header}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              {/* @ts-ignore */}
-              <MessageSquareWarning size={20} color={colors.textPrimary} />
+              <DynamicIcon name="MessageSquareWarning" size={20} color={colors.textPrimary} />
               <Text style={[styles.title, { color: colors.textPrimary }]}>Report Issue</Text>
             </View>
             <TouchableOpacity onPress={onClose} disabled={isSubmitting}>
-              {/* @ts-ignore */}
-              <X size={24} color={colors.textSecondary} />
+              <DynamicIcon name="X" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Store, IndianRupee } from 'lucide-react-native';
+
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Card';
 import { RecommendationRequest, PaymentMode } from '../types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 const PAYMENT_MODES: { label: string; value: PaymentMode }[] = [
   { label: 'Any', value: 'ANY' as PaymentMode },
@@ -79,7 +80,7 @@ export const RecommendationForm: React.FC<RecommendationFormProps> = ({
               value={value}
               error={errors.merchant_name?.message as string}
               leftIcon={
-                <Store size={18} color={colors.textMuted} strokeWidth={1.5} />
+                <DynamicIcon name="Store" size={18} color={colors.textMuted} strokeWidth={1.5} />
               }
             />
           )}
@@ -100,7 +101,7 @@ export const RecommendationForm: React.FC<RecommendationFormProps> = ({
               error={errors.amount?.message as string}
               hint="Optional — helps estimate reward value"
               leftIcon={
-                <IndianRupee size={18} color={colors.textMuted} strokeWidth={1.5} />
+                <DynamicIcon name="IndianRupee" size={18} color={colors.textMuted} strokeWidth={1.5} />
               }
             />
           )}

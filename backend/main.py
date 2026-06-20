@@ -55,8 +55,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
 
     # In development, auto-create tables for convenience.
-    # In production, use Alembic migrations instead.
-    if settings.environment == "development":
+    # In production, use Alembic migrations instead (via CI/CD).
+    if settings.is_development:
         logger.info("Development mode: auto-creating database tables")
         await init_db()
 

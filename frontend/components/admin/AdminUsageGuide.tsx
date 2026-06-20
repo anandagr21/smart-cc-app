@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Info, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react-native';
+
 import { colors } from '@/theme/colors';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface AdminUsageGuideProps {
   title: string;
@@ -24,16 +25,13 @@ export const AdminUsageGuide: React.FC<AdminUsageGuideProps> = ({
         activeOpacity={0.7}
       >
         <View style={styles.titleRow}>
-          {/* @ts-ignore */}
-          <Info size={18} color={colors.primary} />
+          <DynamicIcon name="Info" size={18} color={colors.primary} />
           <Text style={styles.title}>{title}</Text>
         </View>
         {expanded ? (
-          /* @ts-ignore */
-          <ChevronUp size={20} color={colors.textSecondary} />
+          <DynamicIcon name="ChevronUp" size={20} color={colors.textSecondary} />
         ) : (
-          /* @ts-ignore */
-          <ChevronDown size={20} color={colors.textSecondary} />
+          <DynamicIcon name="ChevronDown" size={20} color={colors.textSecondary} />
         )}
       </TouchableOpacity>
       
@@ -45,8 +43,7 @@ export const AdminUsageGuide: React.FC<AdminUsageGuideProps> = ({
             <Text style={styles.workflowTitle}>Suggested Workflow:</Text>
             {workflowSteps.map((step, index) => (
               <View key={index} style={styles.stepRow}>
-                {/* @ts-ignore */}
-                <CheckCircle2 size={16} color={colors.success} style={styles.stepIcon} />
+                <DynamicIcon name="CheckCircle2" size={16} color={colors.success} style={styles.stepIcon} />
                 <Text style={styles.stepText}>{step}</Text>
               </View>
             ))}

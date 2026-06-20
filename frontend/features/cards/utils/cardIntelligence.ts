@@ -1,6 +1,7 @@
 import { UserCardResponse } from '../types/api';
 import { deriveFeeWaiverProgress } from './feeWaiver';
-import { Activity, Plane, ShoppingBag, Utensils, Zap, CheckCircle2, LucideIcon, Fuel } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export interface CardIntelligenceInsight {
   label: string;

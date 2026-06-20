@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { UserCardResponse } from '@/features/cards/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
@@ -9,6 +9,7 @@ import { tokens } from '@/theme/tokens';
 
 import { formatCurrencyIN } from '@/utils/currency';
 import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface WalletInventoryRowProps {
   card: UserCardResponse;
@@ -129,8 +130,7 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
 
       {/* Chevron */}
       <View style={styles.chevronWrap}>
-        {/* @ts-ignore */}
-        <ChevronRight size={16} color={colors.textMuted} />
+        <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
       </View>
     </TouchableOpacity>
   );

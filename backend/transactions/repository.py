@@ -26,9 +26,9 @@ class TransactionRepository:
         self._session = session
 
     async def create_transaction(self, transaction: Transaction) -> Transaction:
-        """Persist a new transaction."""
+        """Persist a new transaction. Flushes so caller manages the commit boundary."""
         self._session.add(transaction)
-        await self._session.commit()
+        await self._session.flush()
         await self._session.refresh(transaction)
         return transaction
 
@@ -97,24 +97,24 @@ class TransactionRepository:
     ) -> Transaction:
         """Update only the status (and optionally posted_date) to preserve immutability."""
         transaction = await self.get_transaction_by_id(transaction_id)
-        
+
         transaction.status = status
         if posted_date:
             transaction.posted_date = posted_date
-            
+
         self._session.add(transaction)
-        await self._session.commit()
+        await self._session.flush()
         await self._session.refresh(transaction)
         return transaction
 
     async def update_transaction(self, transaction: Transaction) -> Transaction:
-        """Persist updates to an existing transaction."""
+        """Persist updates to an existing transaction. Flushes so caller manages commit."""
         self._session.add(transaction)
-        await self._session.commit()
+        await self._session.flush()
         await self._session.refresh(transaction)
         return transaction
 
     async def delete_transaction(self, transaction: Transaction) -> None:
-        """Delete an existing transaction."""
+        """Delete an existing transaction. Flushes so caller manages commit."""
         await self._session.delete(transaction)
-        await self._session.commit()
+        await self._session.flush()

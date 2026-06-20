@@ -4,10 +4,11 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
-import { LucideIcon, Plus, CreditCard, Trophy } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface OnboardingSlideData {
-  icon: LucideIcon;
+  icon: string;
   title: string;
   description: string;
   gradient: [string, string];
@@ -15,21 +16,21 @@ interface OnboardingSlideData {
 
 export const SLIDES: OnboardingSlideData[] = [
   {
-    icon: CreditCard,
+    icon: 'CreditCard',
     title: 'Add Your Cards',
     description:
       'Connect your credit cards to unlock AI-powered reward optimization.',
     gradient: ['#4F36FF', '#6C5CE7'],
   },
   {
-    icon: Plus,
+    icon: 'Plus',
     title: 'Track Transactions',
     description:
       'Log each purchase. Smart CC instantly recommends the best card to maximize your rewards.',
     gradient: ['#6C5CE7', '#8B5CF6'],
   },
   {
-    icon: Trophy,
+    icon: 'Trophy',
     title: 'Unlock Better Rewards',
     description:
       'Watch your reward efficiency climb. Never leave cashback or points on the table again.',
@@ -62,8 +63,7 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
           end={{ x: 1, y: 1 }}
           style={styles.iconGradient}
         >
-          {/* @ts-ignore */}
-          <Icon size={40} color="#FFFFFF" strokeWidth={1.5} />
+          <DynamicIcon name={slide.icon} size={40} color="#FFFFFF" strokeWidth={1.5} />
         </LinearGradient>
       </Animated.View>
 

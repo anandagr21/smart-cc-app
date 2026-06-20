@@ -4,8 +4,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { NarrativeObservation } from '../api/evolutionApi';
-import { Network } from 'lucide-react-native';
+
 import { BlurView } from 'expo-blur';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface Props {
   insights: NarrativeObservation[];
@@ -19,7 +20,7 @@ export function PortfolioTopologySurface({ insights }: Props) {
   return (
     <Animated.View entering={FadeInDown.duration(800).delay(500)} style={styles.container}>
       <View style={styles.header}>
-        <Network size={16} color={colors.textMuted} />
+        <DynamicIcon name="Network" size={16} color={colors.textMuted} />
         <Text style={[styles.title, { color: colors.textMuted }]}>PORTFOLIO TOPOLOGY</Text>
       </View>
       

@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { X, BookOpen, AlertTriangle, Zap } from 'lucide-react-native';
+
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface GlossarySheetProps {
   visible: boolean;
@@ -44,8 +45,7 @@ export const GlossarySheet: React.FC<GlossarySheetProps> = ({ visible, onClose }
           <View style={styles.header}>
             <View style={styles.headerSpacer} />
             <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}>
-              {/* @ts-ignore */}
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
+              <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
           </View>
 
@@ -53,8 +53,7 @@ export const GlossarySheet: React.FC<GlossarySheetProps> = ({ visible, onClose }
             <Animated.View entering={FadeInUp.duration(400)}>
               
               <View style={styles.titleRow}>
-                {/* @ts-ignore */}
-                <BookOpen size={24} color={colors.primary} style={{ marginRight: 12 }} />
+                <DynamicIcon name="BookOpen" size={24} color={colors.primary} style={{ marginRight: 12 }} />
                 <Text style={[styles.title, { color: colors.textPrimary }]}>Intelligence Engine</Text>
               </View>
               
@@ -65,8 +64,7 @@ export const GlossarySheet: React.FC<GlossarySheetProps> = ({ visible, onClose }
               {/* VALUE AT RISK */}
               <View style={[styles.termBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
                 <View style={styles.termHeader}>
-                  {/* @ts-ignore */}
-                  <AlertTriangle size={18} color="#F59E0B" style={styles.termIcon} />
+                  <DynamicIcon name="AlertTriangle" size={18} color="#F59E0B" style={styles.termIcon} />
                   <Text style={[styles.termTitle, { color: '#F59E0B' }]}>Value at Risk (VaR)</Text>
                 </View>
                 <Text style={[styles.termDescription, { color: colors.textPrimary }]}>
@@ -85,8 +83,7 @@ export const GlossarySheet: React.FC<GlossarySheetProps> = ({ visible, onClose }
               {/* URGENCY MULTIPLIER */}
               <View style={[styles.termBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
                 <View style={styles.termHeader}>
-                  {/* @ts-ignore */}
-                  <Zap size={18} color="#EF4444" style={styles.termIcon} />
+                  <DynamicIcon name="Zap" size={18} color="#EF4444" style={styles.termIcon} />
                   <Text style={[styles.termTitle, { color: '#EF4444' }]}>Urgency Multiplier</Text>
                 </View>
                 <Text style={[styles.termDescription, { color: colors.textPrimary }]}>

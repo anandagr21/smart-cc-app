@@ -5,11 +5,12 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { usePortfolioEvolution } from '../api/evolutionApi';
 import { ActivityIndicator } from 'react-native';
-import { Layers, Activity, Maximize, Zap, ChevronDown, ChevronUp } from 'lucide-react-native';
+
 
 import { PortfolioEvolutionTimeline } from './PortfolioEvolutionTimeline';
 import { PortfolioTopologySurface } from './PortfolioTopologySurface';
 import { StrategyReflectionSurface } from './StrategyReflectionSurface';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export function PortfolioEvolutionSurface() {
   const colors = useThemeColors();
@@ -80,8 +81,8 @@ export function PortfolioEvolutionSurface() {
             {showMetrics ? "Hide Strategic Metrics" : "View Strategic Metrics"}
           </Text>
           {showMetrics ? 
-            <ChevronUp size={16} color={colors.textMuted} /> : 
-            <ChevronDown size={16} color={colors.textMuted} />
+            <DynamicIcon name="ChevronUp" size={16} color={colors.textMuted} /> : 
+            <DynamicIcon name="ChevronDown" size={16} color={colors.textMuted} />
           }
         </TouchableOpacity>
 

@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { AlertTriangle } from 'lucide-react-native';
+
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { TransactionResponse } from '../types/transaction.types';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface RewardLeakageCardProps {
   transactions: TransactionResponse[];
@@ -37,8 +38,7 @@ export const RewardLeakageCard: React.FC<RewardLeakageCardProps> = ({ transactio
             ]}
           >
             <View style={styles.left}>
-              {/* @ts-ignore */}
-              <AlertTriangle size={16} color={colors.danger} style={styles.icon} />
+              <DynamicIcon name="AlertTriangle" size={16} color={colors.danger} style={styles.icon} />
               <View>
                 <Text style={[styles.merchantName, { color: colors.textPrimary }]}>
                   {tx.merchant_name}

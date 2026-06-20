@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Mail, Lock, Fingerprint } from 'lucide-react-native';
+
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -15,6 +15,7 @@ import { apiClient } from '@/services/api/client';
 import { tokens } from '@/theme/tokens';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 const GoogleIcon = ({ size = 18 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -110,8 +111,7 @@ export default function LoginScreen() {
       <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.logoWrap}>
         <View style={[styles.logoRing, { borderColor: colors.primarySoft }]}>
           <View style={[styles.logoInner, { backgroundColor: colors.primarySoft }]}>
-            {/* @ts-ignore */}
-            <Fingerprint size={28} color={colors.primary} strokeWidth={1.5} />
+            <DynamicIcon name="Fingerprint" size={28} color={colors.primary} strokeWidth={1.5} />
           </View>
         </View>
       </Animated.View>
@@ -146,7 +146,7 @@ export default function LoginScreen() {
                 onChangeText={onChange}
                 value={value}
                 error={errors.email?.message}
-                leftIcon={<Mail size={18} color={colors.textMuted} strokeWidth={1.5} />}
+                leftIcon={<DynamicIcon name="Mail" size={18} color={colors.textMuted} strokeWidth={1.5} />}
               />
             )}
           />
@@ -162,7 +162,7 @@ export default function LoginScreen() {
                 onChangeText={onChange}
                 value={value}
                 error={errors.password?.message}
-                leftIcon={<Lock size={18} color={colors.textMuted} strokeWidth={1.5} />}
+                leftIcon={<DynamicIcon name="Lock" size={18} color={colors.textMuted} strokeWidth={1.5} />}
                 style={{ marginBottom: 0 }}
               />
             )}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs, usePathname, useRouter } from 'expo-router';
-import { CreditCard, History, User, Sparkles } from 'lucide-react-native';
+
 import { BlurView } from 'expo-blur';
 import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
 import Animated, {
@@ -14,12 +14,13 @@ import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNotifications } from '@/features/notifications/hooks/useNotifications';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 const TABS = [
-  { name: 'index', route: '/', icon: Sparkles, label: 'Analyze' },
-  { name: 'cards', route: '/cards', icon: CreditCard, label: 'Wallet' },
-  { name: 'history', route: '/history', icon: History, label: 'Activity' },
-  { name: 'profile', route: '/profile', icon: User, label: 'Profile' },
+  { name: 'index', route: '/', icon: 'Sparkles', label: 'Analyze' },
+  { name: 'cards', route: '/cards', icon: 'CreditCard', label: 'Wallet' },
+  { name: 'history', route: '/history', icon: 'History', label: 'Activity' },
+  { name: 'profile', route: '/profile', icon: 'User', label: 'Profile' },
 ];
 
 interface TabButtonProps {
@@ -32,7 +33,6 @@ interface TabButtonProps {
 
 function TabButton({ tab, isActive, onPress, colors, unreadCount }: TabButtonProps) {
   const scale = useSharedValue(1);
-  const Icon = tab.icon;
 
   const handlePressIn = () => {
     scale.value = withSpring(0.88, tokens.spring.snappy);
@@ -66,7 +66,8 @@ function TabButton({ tab, isActive, onPress, colors, unreadCount }: TabButtonPro
           />
         )}
         <View>
-          <Icon
+          <DynamicIcon
+            name={tab.icon}
             size={22}
             color={isActive ? colors.primary : colors.textMuted}
             strokeWidth={isActive ? 2.5 : 1.8}

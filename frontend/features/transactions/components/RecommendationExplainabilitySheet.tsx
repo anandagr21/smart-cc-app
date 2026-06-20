@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { X, Sparkles, Info } from 'lucide-react-native';
+
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -12,6 +12,7 @@ import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
 import { GlossarySheet } from './GlossarySheet';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface RecommendationExplainabilitySheetProps {
   visible: boolean;
@@ -62,8 +63,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
           <View style={styles.header}>
             <View style={styles.headerSpacer} />
             <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}>
-              {/* @ts-ignore */}
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
+              <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
           </View>
 
@@ -74,8 +74,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
 
               {/* NARRATIVE */}
               <View style={[styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.primarySoft }]}>
-                {/* @ts-ignore */}
-                <Sparkles size={18} color={colors.primary} style={{ marginBottom: 16 }} />
+                <DynamicIcon name="Sparkles" size={18} color={colors.primary} style={{ marginBottom: 16 }} />
                 <Text style={[styles.strategyTitle, { color: colors.primary }]}>
                   {humanStrategy.toUpperCase()}
                 </Text>
@@ -107,8 +106,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                         hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
                         style={{ marginLeft: 6 }}
                       >
-                        {/* @ts-ignore */}
-                        <Info size={13} color={colors.textMuted} />
+                        <DynamicIcon name="Info" size={13} color={colors.textMuted} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -151,8 +149,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                           hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
                           style={{ marginLeft: 6 }}
                         >
-                          {/* @ts-ignore */}
-                          <Info size={13} color={colors.textMuted} />
+                          <DynamicIcon name="Info" size={13} color={colors.textMuted} />
                         </TouchableOpacity>
                       </View>
                       <Text style={[styles.breakdownValue, { color: colors.primary }]}>
@@ -177,8 +174,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                             <Text style={[styles.expandedKey, { color: colors.textPrimary, marginRight: 4 }]}>
                               Value at Risk:
                             </Text>
-                            {/* @ts-ignore */}
-                            <Info size={11} color={colors.primary} />
+                            <DynamicIcon name="Info" size={11} color={colors.primary} />
                           </TouchableOpacity>
                           <Text style={[styles.expandedVal, { color: colors.textPrimary }]}>
                             {formatCurrencyIN(item.card.waiver_value_at_risk || 0)}
@@ -193,8 +189,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
                             <Text style={[styles.expandedKey, { color: colors.textPrimary, marginRight: 4 }]}>
                               Urgency Multiplier:
                             </Text>
-                            {/* @ts-ignore */}
-                            <Info size={11} color={colors.primary} />
+                            <DynamicIcon name="Info" size={11} color={colors.primary} />
                           </TouchableOpacity>
                           <Text style={[styles.expandedVal, { color: colors.textPrimary }]}>
                             {item.card.urgency_level === 'HIGH' ? '2.0x' : item.card.urgency_level === 'MEDIUM' ? '1.5x' : '1.0x'}
@@ -226,8 +221,7 @@ export const RecommendationExplainabilitySheet: React.FC<RecommendationExplainab
 
               {/* AI DISCLAIMER */}
               <View style={styles.aiDisclaimerWrap}>
-                {/* @ts-ignore */}
-                <Info size={12} color={colors.textMuted} />
+                <DynamicIcon name="Info" size={12} color={colors.textMuted} />
                 <Text style={[styles.aiDisclaimerText, { color: colors.textMuted }]}>
                   AI-generated recommendation. Verify final rewards and fees with your bank.
                 </Text>

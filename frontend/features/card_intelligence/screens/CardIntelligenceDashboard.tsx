@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, SafeAreaView, Platform } from 'react-native';
-import { FileText, PlayCircle, CheckCircle, Clock, AlertCircle, Link, CreditCard, UploadCloud, BrainCircuit } from 'lucide-react-native';
+
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useThemeStore } from '@/features/theme/store/themeStore';
@@ -9,6 +9,7 @@ import { DocumentUploadSheet } from '../components/DocumentUploadSheet';
 import { useRouter } from 'expo-router';
 import { CardIntelligenceWorkspaceV2 } from '../components/CardIntelligenceWorkspaceV2';
 import { CardSidebar } from '../components/CardSidebar';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export const CardIntelligenceDashboard: React.FC = () => {
   const colors = useThemeColors();
@@ -33,24 +34,21 @@ export const CardIntelligenceDashboard: React.FC = () => {
             style={[styles.globalUploadBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1 }]}
             onPress={() => router.push('/admin/ingestion/evaluation')}
           >
-            {/* @ts-ignore */}
-            <CheckCircle size={18} color={colors.textPrimary} />
+            <DynamicIcon name="CheckCircle" size={18} color={colors.textPrimary} />
             <Text style={[styles.uploadBtnText, { color: colors.textPrimary }]}>Eval Dashboard</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.globalUploadBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1 }]}
             onPress={() => router.push('/admin/ingestion/playground')}
           >
-            {/* @ts-ignore */}
-            <PlayCircle size={18} color={colors.textPrimary} />
+            <DynamicIcon name="PlayCircle" size={18} color={colors.textPrimary} />
             <Text style={[styles.uploadBtnText, { color: colors.textPrimary }]}>Playground</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.globalUploadBtn, { backgroundColor: colors.primary }]}
             onPress={() => setIsUploadSheetVisible(true)}
           >
-            {/* @ts-ignore */}
-            <UploadCloud size={18} color="#FFFFFF" />
+            <DynamicIcon name="UploadCloud" size={18} color="#FFFFFF" />
             <Text style={[styles.uploadBtnText, { color: '#FFFFFF' }]}>Add Source</Text>
           </TouchableOpacity>
 

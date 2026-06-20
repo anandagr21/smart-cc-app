@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { TransactionResponse } from '../types/transaction.types';
-import { Sparkles, ArrowUpRight, CheckCircle2, AlertCircle } from 'lucide-react-native';
+
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface TransactionInsightCardProps {
   transaction: TransactionResponse;
@@ -38,8 +39,7 @@ export function TransactionInsightCard({ transaction }: TransactionInsightCardPr
       {/* Reward Earned Section */}
       <View style={[styles.card, { backgroundColor: colors.successSoft, borderColor: colors.success }]}>
         <View style={styles.header}>
-          {/* @ts-ignore */}
-          <Sparkles size={16} color={colors.success} style={styles.icon} strokeWidth={2.5} />
+          <DynamicIcon name="Sparkles" size={16} color={colors.success} style={styles.icon} strokeWidth={2.5} />
           <Text style={[styles.eyebrow, { color: colors.success }]}>
             Reward Earned
           </Text>
@@ -59,8 +59,7 @@ export function TransactionInsightCard({ transaction }: TransactionInsightCardPr
       {hasMissedSavings && (
         <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.borderHighlight, marginTop: 12 }]}>
           <View style={styles.header}>
-            {/* @ts-ignore */}
-            <ArrowUpRight size={16} color={colors.warning} style={styles.icon} strokeWidth={2.5} />
+            <DynamicIcon name="ArrowUpRight" size={16} color={colors.warning} style={styles.icon} strokeWidth={2.5} />
             <Text style={[styles.eyebrow, { color: colors.warning }]}>
               Optimization Opportunity
             </Text>
@@ -77,8 +76,7 @@ export function TransactionInsightCard({ transaction }: TransactionInsightCardPr
       {/* Warnings */}
       {transaction.warnings && transaction.warnings.length > 0 && (
         <View style={[styles.warningCard, { backgroundColor: colors.warningSoft, borderColor: colors.warning, marginTop: 12 }]}>
-          {/* @ts-ignore */}
-          <AlertCircle size={16} color={colors.warning} style={styles.warningIcon} strokeWidth={2.5} />
+          <DynamicIcon name="AlertCircle" size={16} color={colors.warning} style={styles.warningIcon} strokeWidth={2.5} />
           <View style={styles.warningContent}>
             {transaction.warnings.map((warning, i) => (
               <Text key={i} style={[styles.warningText, { color: colors.warning }]}>
@@ -92,8 +90,7 @@ export function TransactionInsightCard({ transaction }: TransactionInsightCardPr
       {/* Fully Optimized State */}
       {!hasMissedSavings && (!transaction.warnings || transaction.warnings.length === 0) && (
         <View style={styles.optimizedWrap}>
-          {/* @ts-ignore */}
-          <CheckCircle2 size={14} color={colors.textMuted} style={styles.icon} strokeWidth={2.5} />
+          <DynamicIcon name="CheckCircle2" size={14} color={colors.textMuted} style={styles.icon} strokeWidth={2.5} />
           <Text style={[styles.optimizedText, { color: colors.textMuted }]}>
             Fully Optimized
           </Text>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Info, MessageSquareWarning } from 'lucide-react-native';
+
 import { FeedbackModal } from '@/features/feedback/components/FeedbackModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -11,6 +11,7 @@ import { tokens } from '@/theme/tokens';
 import { getNetworkGradient } from '@/theme/colors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { formatCurrencyIN } from '@/utils/currency';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface HeroRecommendationCardProps {
   card: UserCardResponse;
@@ -46,30 +47,25 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
   return (
     <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
       <TouchableOpacity activeOpacity={0.9} onPress={onSelect} style={styles.touchable}>
-        <LinearGradient
-          colors={[colors.surface, colors.background]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={[styles.cardBackground, { borderColor: colors.border, borderWidth: 1 }]}
-        >
-          {/* Top highlight line */}
-          <View style={[styles.topEdge, { backgroundColor: colors.glassHighlight }]} />
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {/* Left accent stripe with network gradient */}
+          <View style={styles.accentStripe}>
+            <LinearGradient colors={gradient} style={{ flex: 1 }} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
+          </View>
 
           {/* EDITORIAL TAG ROW */}
           <View style={styles.editorialRow}>
-            <View style={[styles.strategyTagWrap, { backgroundColor: colors.primarySoft, borderColor: colors.primarySoft }]}>
-              <Text style={[styles.strategyTagText, { color: colors.primary }]}>
+            <View style={[styles.strategyTag, { backgroundColor: colors.primarySoft }]}>
+              <Text style={[styles.strategyText, { color: colors.primary }]}>
                 {recommendation.confidence_label?.toUpperCase() || 'OPTIMAL'}
               </Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <TouchableOpacity hitSlop={{ top: 14, right: 14, bottom: 14, left: 14 }} onPress={() => setIsFeedbackVisible(true)}>
-                {/* @ts-ignore */}
-                <MessageSquareWarning size={16} color={colors.textSecondary} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={() => setIsFeedbackVisible(true)}>
+                <DynamicIcon name="MessageSquareWarning" size={15} color={colors.textMuted} />
               </TouchableOpacity>
-              <TouchableOpacity hitSlop={{ top: 14, right: 14, bottom: 14, left: 14 }} onPress={onInfoPress}>
-                {/* @ts-ignore */}
-                <Info size={16} color={colors.textSecondary} />
+              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress}>
+                <DynamicIcon name="Info" size={15} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
           </View>
@@ -77,43 +73,37 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
           {/* CARD IDENTITY */}
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
-              <Text style={[styles.bankName, { color: colors.textSecondary }]}>{bankName.toUpperCase()}</Text>
-              <Text style={[styles.cardName, { color: colors.textPrimary }]} numberOfLines={1} adjustsFontSizeToFit>{cardName}</Text>
+              <Text style={[styles.bankName, { color: colors.textMuted }]}>{bankName.toUpperCase()}</Text>
+              <Text style={[styles.cardName, { color: colors.textPrimary }]} numberOfLines={1}>{cardName}</Text>
             </View>
             {!!displayNetwork && (
-              <View style={[styles.miniArtWrap, { borderColor: colors.borderHighlight }]}>
-                <LinearGradient colors={gradient} style={styles.miniArt} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                  <Text style={styles.miniArtNetwork}>{displayNetwork}</Text>
+              <View style={[styles.networkBadge, { borderColor: colors.border }]}>
+                <LinearGradient colors={gradient} style={styles.networkBadgeInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <Text style={styles.networkBadgeText}>{displayNetwork}</Text>
                 </LinearGradient>
               </View>
             )}
           </View>
 
-          {/* CONCISE RATIONALE */}
-          <View style={styles.rationaleWrap}>
-            <Text style={[styles.rationaleText, { color: colors.textPrimary }]}>
-              {recommendation.explanation || 'Optimal choice for this transaction.'}
-            </Text>
-          </View>
+          {/* RATIONALE */}
+          <Text style={[styles.rationale, { color: colors.textSecondary }]} numberOfLines={2}>
+            {recommendation.explanation || 'Optimal choice for this transaction.'}
+          </Text>
 
           {/* FINANCIAL IMPACT */}
-          <View style={[styles.financialsRow, { borderColor: colors.borderHighlight }]}>
-            <View style={styles.financialItemRight}>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                <Text style={[styles.financialTotalAmount, { color: colors.success }]}>
-                  {formatCurrencyIN(recommendation.immediate_reward_value)}
-                </Text>
-                {recommendation.fee_waiver_progress_impact > 0 && (
-                  <Text style={[styles.financialTotalAmount, { fontSize: tokens.fontSize.body, marginLeft: 6, color: colors.success }]}>
-                    + {formatCurrencyIN(recommendation.fee_waiver_progress_impact)} saved
-                  </Text>
-                )}
-              </View>
-              <Text style={[styles.financialLabel, { color: colors.textSecondary }]}>TOTAL REWARD</Text>
-            </View>
+          <View style={[styles.financials, { borderTopColor: colors.border }]}>
+            <Text style={[styles.rewardValue, { color: colors.success }]}>
+              {formatCurrencyIN(recommendation.immediate_reward_value)}
+            </Text>
+            {recommendation.fee_waiver_progress_impact > 0 && (
+              <Text style={[styles.rewardExtra, { color: colors.primary }]}>
+                + {formatCurrencyIN(recommendation.fee_waiver_progress_impact)} fee waiver
+              </Text>
+            )}
+            <Text style={[styles.rewardLabel, { color: colors.textMuted }]}>EXPECTED REWARD</Text>
           </View>
 
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
 
       <FeedbackModal
@@ -138,37 +128,44 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 0,
-    borderRadius: tokens.radius.xl,
+    marginBottom: 12,
+    borderRadius: tokens.radius.lg,
     overflow: 'hidden',
   },
   touchable: {
-    borderRadius: tokens.radius.xl,
+    borderRadius: tokens.radius.lg,
   },
-  cardBackground: {
-    padding: 24,
-    borderRadius: tokens.radius.xl,
+  card: {
+    flexDirection: 'column',
+    padding: 16,
+    paddingLeft: 20,
+    borderRadius: tokens.radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  topEdge: {
-    position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+  accentStripe: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+    borderTopLeftRadius: tokens.radius.lg,
+    borderBottomLeftRadius: tokens.radius.lg,
+    overflow: 'hidden',
   },
   editorialRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
-  strategyTagWrap: {
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+  strategyTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
-  strategyTagText: {
-    color: '#A78BFA',
+  strategyText: {
     fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
@@ -177,71 +174,60 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 20,
+    marginBottom: 8,
   },
   headerLeft: {
     flex: 1,
-    paddingRight: 16,
+    paddingRight: 12,
   },
   bankName: {
-    color: 'rgba(255,255,255,0.5)',
     fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: tokens.letterSpacing.widest,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   cardName: {
-    color: '#FFFFFF',
-    fontSize: tokens.fontSize.heroSm,
-    fontWeight: tokens.fontWeight.heavy,
+    fontSize: tokens.fontSize.bodyLg,
+    fontWeight: tokens.fontWeight.bold,
   },
-  miniArtWrap: {
-    width: 52,
-    height: 34,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+  networkBadge: {
+    width: 44,
+    height: 28,
+    borderRadius: 5,
+    borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },
-  miniArt: {
+  networkBadgeInner: {
     flex: 1,
-    padding: 4,
+    padding: 3,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
   },
-  miniArtNetwork: {
-    color: 'rgba(255,255,255,0.8)',
+  networkBadgeText: {
+    color: 'rgba(255,255,255,0.85)',
     fontSize: 7,
     fontWeight: tokens.fontWeight.heavy,
   },
-  rationaleWrap: {
-    marginBottom: 24,
+  rationale: {
+    fontSize: tokens.fontSize.bodySm,
+    lineHeight: 18,
+    marginBottom: 10,
   },
-  rationaleText: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.medium,
-    lineHeight: 22,
-  },
-  financialsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
+  financials: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.1)',
-    paddingTop: 16,
+    paddingTop: 10,
   },
-  financialItemRight: {
-    flex: 1,
-  },
-  financialTotalAmount: {
-    color: '#10B981',
-    fontSize: tokens.fontSize.headline,
+  rewardValue: {
+    fontSize: tokens.fontSize.bodyLg,
     fontWeight: tokens.fontWeight.heavy,
+    marginBottom: 1,
+  },
+  rewardExtra: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.semibold,
     marginBottom: 4,
   },
-  financialLabel: {
-    color: 'rgba(255,255,255,0.4)',
+  rewardLabel: {
     fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: tokens.letterSpacing.widest,

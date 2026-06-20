@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Sparkles, CreditCard, ArrowRight } from 'lucide-react-native';
+
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useCards } from '@/features/cards/hooks/useCards';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface EmptyDashboardStateProps {
   onAddCard: () => void;
@@ -27,8 +28,7 @@ export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <View style={[styles.iconWrap, { backgroundColor: colors.primarySoft }]}>
-            {/* @ts-ignore */}
-            <Sparkles size={24} color={colors.primary} strokeWidth={1.5} />
+            <DynamicIcon name="Sparkles" size={24} color={colors.primary} strokeWidth={1.5} />
           </View>
           <Text style={[styles.title, { color: colors.textPrimary }]}>
             Your dashboard awaits

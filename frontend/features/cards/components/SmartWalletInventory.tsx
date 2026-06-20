@@ -91,7 +91,16 @@ export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ card
     );
   }
 
-  const TypedFlashList = FlashList as any;
+  const TypedFlashList = FlashList as unknown as React.ComponentType<{
+    data: any[];
+    renderItem: any;
+    ListHeaderComponent?: React.ReactElement | null;
+    keyExtractor: (item: any, index: number) => string;
+    estimatedItemSize: number;
+    getItemType?: (item: any) => string;
+    showsVerticalScrollIndicator?: boolean;
+    contentContainerStyle?: Record<string, unknown>;
+  }>;
 
   return (
     <View style={styles.container}>

@@ -4,10 +4,11 @@ import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
-import { Database, BrainCircuit, MessageSquare, ArrowRight, ShieldCheck } from 'lucide-react-native';
+
 import { AdminUsageGuide } from '@/components/admin/AdminUsageGuide';
 import { AdminWorkflowModal } from '@/components/admin/AdminWorkflowModal';
-import { Settings } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 type ModuleColorKey = 'primary' | 'accent' | 'success' | 'warning';
 
@@ -16,7 +17,7 @@ const ADMIN_MODULES = [
     id: 'operations',
     title: 'Card Operations Hub',
     description: 'Unified hub to ingest new documents, review AI parsing, and manage the live card catalog.',
-    icon: Database,
+    icon: 'Database',
     route: '/admin/operations',
     colorKey: 'primary' as ModuleColorKey,
   },
@@ -24,7 +25,7 @@ const ADMIN_MODULES = [
     id: 'feedback',
     title: 'User Feedback',
     description: 'Review and moderate community feedback, suggestions, and bug reports.',
-    icon: MessageSquare,
+    icon: 'MessageSquare',
     route: '/admin/feedback',
     colorKey: 'warning' as ModuleColorKey,
   },
@@ -57,7 +58,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <View style={styles.header}>
           <View style={[styles.iconBadge, { backgroundColor: colors.primarySoft as string }]}>
-            <ShieldCheck size={28} color={colors.primary as string} strokeWidth={2} />
+            <DynamicIcon name="ShieldCheck" size={28} color={colors.primary as string} strokeWidth={2} />
           </View>
           <Text style={[styles.title, { color: colors.textPrimary }]}>
             Admin Control Panel
@@ -69,7 +70,7 @@ export default function AdminDashboard() {
             style={styles.workflowBtn}
             onPress={() => setIsWorkflowModalVisible(true)}
           >
-            <Settings size={16} color="#F8FAFC" />
+            <DynamicIcon name="Settings" size={16} color="#F8FAFC" />
             <Text style={styles.workflowBtnText}>View Architecture & Workflow</Text>
           </TouchableOpacity>
         </View>
@@ -119,9 +120,9 @@ export default function AdminDashboard() {
                       { backgroundColor: moduleSoftBg },
                     ]}
                   >
-                    <Icon size={22} color={moduleColor} strokeWidth={2} />
+                    <DynamicIcon name={module.icon} size={22} color={moduleColor} strokeWidth={2} />
                   </View>
-                  <ArrowRight
+                  <DynamicIcon name="ArrowRight"
                     size={18}
                     color={colors.textMuted as string}
                     strokeWidth={1.5}

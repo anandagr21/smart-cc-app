@@ -27,7 +27,7 @@ class SpendAggregator:
         """
         Recalculate annual_spend and current_spend for a given card by summing
         all valid purchase transactions.
-        
+
         Future enhancement: filter transactions by billing_date and fee_cycle_start_date.
         For MVP, we aggregate all lifetime spend to ensure no data is lost and
         the aggregation matches the current naive single-value fields.
@@ -46,24 +46,50 @@ class SpendAggregator:
             .where(Transaction.transaction_type == TransactionType.PURCHASE)
             .where(Transaction.status.in_([TransactionStatus.PENDING, TransactionStatus.POSTED]))
         )
-        
+
         result = await self._session.execute(stmt)
         total_spend = result.scalar_one_or_none() or Decimal("0.00")
 
         card.current_spend = total_spend
         card.annual_spend = total_spend
-        
+
         self._session.add(card)
-        await self._session.commit()
+        await self._session.flush()
         await self._session.refresh(card)
-        
+
         return card
 
     async def rebuild_all_card_aggregates(self) -> None:
-        """Rebuild spend aggregates for all user cards in the system."""
-        stmt = select(UserCard.id)
+        """Rebuild spend aggregates for all user cards in a single batch UPDATE."""
+        from sqlalchemy import update as sa_update
+
+        valid_statuses = [TransactionStatus.PENDING, TransactionStatus.POSTED]
+
+        # Single subquery: SUM(amount) per user_card_id
+        agg_subq = (
+            select(
+                Transaction.user_card_id,
+                func.coalesce(func.sum(Transaction.amount), Decimal("0.00")).label("total_spend"),
+            )
+            .where(Transaction.transaction_type == TransactionType.PURCHASE)
+            .where(Transaction.status.in_(valid_statuses))
+            .group_by(Transaction.user_card_id)
+            .subquery()
+        )
+
+        # Batch UPDATE from the subquery
+        stmt = (
+            sa_update(UserCard)
+            .values(
+                current_spend=agg_subq.c.total_spend,
+                annual_spend=agg_subq.c.total_spend,
+            )
+            .where(UserCard.id == agg_subq.c.user_card_id)
+        )
+
         result = await self._session.execute(stmt)
-        card_ids = result.scalars().all()
-        
-        for card_id in card_ids:
-            await self.recalculate_card_spend(card_id)
+        await self._session.flush()
+
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info("Rebuilt aggregates for %d user cards", result.rowcount)

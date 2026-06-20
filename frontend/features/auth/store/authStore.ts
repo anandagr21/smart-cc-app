@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import type { UserResponse } from '@/features/auth/types/api';
 
 interface AuthState {
   token: string | null;
-  user: any | null;
+  user: UserResponse | null;
   isLoading: boolean;
-  login: (token: string, user: any) => Promise<void>;
+  login: (token: string, user: UserResponse) => Promise<void>;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
   acceptTerms: () => Promise<void>;

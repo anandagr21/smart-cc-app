@@ -4,7 +4,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Rocket, Zap, Shield, Gift } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function PublishPreviewScreen() {
   const router = useRouter();
@@ -37,8 +38,7 @@ export default function PublishPreviewScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          {/* @ts-ignore */}
-          <ArrowLeft size={24} color={colors.textPrimary} />
+          <DynamicIcon name="ArrowLeft" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <View>
           <Text style={styles.title}>Publish Preview</Text>
@@ -79,8 +79,7 @@ export default function PublishPreviewScreen() {
           
           <View style={styles.benefitRow}>
             <View style={styles.iconBox}>
-              {/* @ts-ignore */}
-              <Zap size={16} color={colors.primary} />
+              <DynamicIcon name="Zap" size={16} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.benefitTitle}>5% Cashback</Text>
@@ -90,8 +89,7 @@ export default function PublishPreviewScreen() {
 
           <View style={styles.benefitRow}>
             <View style={styles.iconBox}>
-              {/* @ts-ignore */}
-              <Shield size={16} color={colors.primary} />
+              <DynamicIcon name="Shield" size={16} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.benefitTitle}>Lounge Access</Text>
@@ -101,8 +99,7 @@ export default function PublishPreviewScreen() {
 
           <View style={styles.benefitRow}>
             <View style={styles.iconBox}>
-              {/* @ts-ignore */}
-              <Gift size={16} color={colors.primary} />
+              <DynamicIcon name="Gift" size={16} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.benefitTitle}>Fuel Surcharge</Text>
@@ -116,8 +113,7 @@ export default function PublishPreviewScreen() {
       {/* Floating Publish Button */}
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, tokens.spacing.md) }]}>
         <TouchableOpacity style={styles.publishButton} onPress={handlePublish}>
-          {/* @ts-ignore */}
-          <Rocket size={20} color="#FFFFFF" />
+          <DynamicIcon name="Rocket" size={20} color="#FFFFFF" />
           <Text style={styles.publishText}>Confirm & Publish</Text>
         </TouchableOpacity>
       </View>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Trophy, TrendingUp, Target } from 'lucide-react-native';
+
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { Card } from '@/components/ui/Card';
@@ -8,9 +8,10 @@ import { SkeletonBox } from '@/components/ui/SkeletonBox';
 import { useCards } from '@/features/cards/hooks/useCards';
 import { useTransactions } from '@/features/transactions/hooks/useTransactions';
 import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/useMonthlyIntelligence';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface SummaryRowProps {
-  icon: React.ElementType;
+  icon: string;
   label: string;
   value: string;
   subtitle?: string;
@@ -19,7 +20,7 @@ interface SummaryRowProps {
 }
 
 const SummaryRow: React.FC<SummaryRowProps> = ({
-  icon: Icon,
+  icon,
   label,
   value,
   subtitle,
@@ -51,8 +52,7 @@ const SummaryRow: React.FC<SummaryRowProps> = ({
           { backgroundColor: `${iconColor}15` },
         ]}
       >
-        {/* @ts-ignore */}
-        <Icon size={18} color={iconColor} strokeWidth={1.5} />
+        <DynamicIcon name={icon} size={18} color={iconColor} strokeWidth={1.5} />
       </View>
       <View style={styles.rowContent}>
         <Text style={[styles.rowLabel, { color: colors.textSecondary }]}>
@@ -122,7 +122,7 @@ export const ProfileSummaryCard: React.FC = () => {
       </Text>
 
       <SummaryRow
-        icon={Target}
+        icon="Target"
         label="Reward Efficiency"
         value={
           optimizationRate != null ? `${Math.round(optimizationRate)}%` : '—'
@@ -135,7 +135,7 @@ export const ProfileSummaryCard: React.FC = () => {
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
       <SummaryRow
-        icon={TrendingUp}
+        icon="TrendingUp"
         label="Lifetime Rewards"
         value={lifetimeRewards > 0 ? formatCurrency(lifetimeRewards) : '—'}
         color={colors.success}
@@ -146,7 +146,7 @@ export const ProfileSummaryCard: React.FC = () => {
         <>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <SummaryRow
-            icon={Trophy}
+            icon="Trophy"
             label="Best Card"
             value={bestCard.nickname || bestCard.card_details?.card_name || '—'}
             subtitle={

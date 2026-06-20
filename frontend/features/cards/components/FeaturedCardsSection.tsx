@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { Sparkles, ChevronRight } from 'lucide-react-native';
+
 import { UserCardResponse } from '@/features/cards/types/api';
 import { FeaturedWalletCard } from './FeaturedWalletCard';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface FeaturedCardsSectionProps {
   cards: UserCardResponse[];
@@ -41,8 +42,7 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <View style={styles.titleWrap}>
-          {/* @ts-ignore */}
-          <Sparkles size={16} color={colors.primary} />
+          <DynamicIcon name="Sparkles" size={16} color={colors.primary} />
           <Text style={[styles.titleText, { color: colors.textSecondary }]}>FEATURED FOR YOU</Text>
         </View>
       </View>

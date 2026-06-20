@@ -6,7 +6,8 @@ import { OptimizerRankedCard } from '@/features/recommendations/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
-import { Info } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface SecondaryRecommendationCardProps {
   card: UserCardResponse;
@@ -48,8 +49,7 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
             </Text>
             {onInfoPress && (
               <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress}>
-                {/* @ts-ignore */}
-                <Info size={14} color={colors.textSecondary} />
+                <DynamicIcon name="Info" size={14} color={colors.textSecondary} />
               </TouchableOpacity>
             )}
           </View>

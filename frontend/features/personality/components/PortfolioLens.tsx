@@ -5,7 +5,8 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { usePersonalityProfile, OptimizationPersonality } from '../api/personalityApi';
 import { PersonalitySelectionSheet } from './PersonalitySelectionSheet';
-import { Focus } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export const PortfolioLens = () => {
   const colors = useThemeColors();
@@ -57,8 +58,7 @@ export const PortfolioLens = () => {
           onPress={() => setSheetVisible(true)}
           style={styles.container}
         >
-          {/* @ts-ignore */}
-          <Focus size={14} color={colors.textMuted} style={styles.icon} />
+          <DynamicIcon name="Focus" size={14} color={colors.textMuted} style={styles.icon} />
           <View style={styles.textStack}>
             <Text style={[styles.lensText, { color: colors.textSecondary }]}>
               {getLensText(activePersonality)}

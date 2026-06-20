@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { Stack, useRouter as useExpoRouter } from 'expo-router';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
@@ -16,6 +16,7 @@ import { ForecastingSurface } from '@/features/monthly_intelligence/components/F
 import { ExplainabilitySheet } from '@/features/monthly_intelligence/components/ExplainabilitySheet';
 import { AnticipatoryState } from '@/features/monthly_intelligence/components/AnticipatoryState';
 import { Narrative, Forecast, Streak } from '@/features/monthly_intelligence/types/monthly_intelligence.types';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function MonthlyIntelligenceScreen() {
   const router = useExpoRouter();
@@ -77,8 +78,7 @@ export default function MonthlyIntelligenceScreen() {
       <View style={styles.header}>
         <View style={styles.navRow}>
           <TouchableOpacity onPress={handlePreviousMonth} style={styles.navBtn}>
-            {/* @ts-ignore */}
-            <ChevronLeft size={20} color={colors.textSecondary} />
+            <DynamicIcon name="ChevronLeft" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
           <Text style={[styles.periodText, { color: colors.textPrimary }]}>
             {monthName} {currentYear}
@@ -88,14 +88,12 @@ export default function MonthlyIntelligenceScreen() {
             style={[styles.navBtn, { opacity: isLatestMonth ? 0.3 : 1 }]}
             disabled={isLatestMonth}
           >
-            {/* @ts-ignore */}
-            <ChevronRight size={20} color={colors.textSecondary} />
+            <DynamicIcon name="ChevronRight" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity onPress={() => router.back()} style={[styles.closeBtn, { backgroundColor: colors.surface }]}>
-          {/* @ts-ignore */}
-          <X size={20} color={colors.textSecondary} />
+          <DynamicIcon name="X" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 

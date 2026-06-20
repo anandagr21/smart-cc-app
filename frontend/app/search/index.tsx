@@ -12,7 +12,7 @@ import {
   SafeAreaView
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Search, X, MapPin, Store, CreditCard, Tag, ArrowLeft, TrendingUp } from 'lucide-react-native';
+
 import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimated';
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
@@ -20,6 +20,7 @@ import { useDebounce } from 'use-debounce';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { apiClient } from '@/services/api/client';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 // --- API Typings (matches backend/search/schemas.py) ---
 enum SearchResultType {
@@ -107,15 +108,15 @@ export default function SearchScreen() {
   const renderIcon = (type: SearchResultType) => {
     switch (type) {
       case SearchResultType.MERCHANT:
-        return <Store size={20} color={colors.primary} />;
+        return <DynamicIcon name="Store" size={20} color={colors.primary} />;
       case SearchResultType.CATEGORY:
-        return <MapPin size={20} color={colors.primary} />;
+        return <DynamicIcon name="MapPin" size={20} color={colors.primary} />;
       case SearchResultType.CARD:
-        return <CreditCard size={20} color={colors.primary} />;
+        return <DynamicIcon name="CreditCard" size={20} color={colors.primary} />;
       case SearchResultType.OFFER:
-        return <Tag size={20} color={colors.primary} />;
+        return <DynamicIcon name="Tag" size={20} color={colors.primary} />;
       default:
-        return <Search size={20} color={colors.primary} />;
+        return <DynamicIcon name="Search" size={20} color={colors.primary} />;
     }
   };
 
@@ -153,13 +154,11 @@ export default function SearchScreen() {
         {/* Search Header */}
         <Animated.View entering={SlideInDown.springify()} style={[styles.searchHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            {/* @ts-ignore */}
-            <ArrowLeft size={24} color={colors.textPrimary} />
+            <DynamicIcon name="ArrowLeft" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           
           <View style={[styles.searchBar, { backgroundColor: colors.background }]}>
-            {/* @ts-ignore */}
-            <Search size={20} color={colors.textMuted} />
+            <DynamicIcon name="Search" size={20} color={colors.textMuted} />
             <TextInput
               ref={inputRef}
               style={[styles.input, { color: colors.textPrimary }]}
@@ -178,8 +177,7 @@ export default function SearchScreen() {
             />
             {query.length > 0 && (
               <TouchableOpacity onPress={() => setQuery('')}>
-                {/* @ts-ignore */}
-                <X size={20} color={colors.textMuted} />
+                <DynamicIcon name="X" size={20} color={colors.textMuted} />
               </TouchableOpacity>
             )}
           </View>
@@ -232,8 +230,7 @@ export default function SearchScreen() {
                     style={[styles.chip, { backgroundColor: colors.surface, borderColor: colors.border }]}
                     onPress={() => setQuery(trend)}
                   >
-                    {/* @ts-ignore */}
-                    <TrendingUp size={14} color={colors.textSecondary} />
+                    <DynamicIcon name="TrendingUp" size={14} color={colors.textSecondary} />
                     <Text style={[styles.chipText, { color: colors.textPrimary }]}>{trend}</Text>
                   </TouchableOpacity>
                 ))}
@@ -251,8 +248,7 @@ export default function SearchScreen() {
                     style={[styles.chip, { backgroundColor: colors.surface, borderColor: colors.border }]}
                     onPress={() => setQuery(cat)}
                   >
-                    {/* @ts-ignore */}
-                    <MapPin size={14} color={colors.textSecondary} />
+                    <DynamicIcon name="MapPin" size={14} color={colors.textSecondary} />
                     <Text style={[styles.chipText, { color: colors.textPrimary }]}>{cat}</Text>
                   </TouchableOpacity>
                 ))}

@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Narrative, ConfidenceLevel } from '../types/monthly_intelligence.types';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
-import { Info } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface HeroNarrativeProps {
   narrative: Narrative;
@@ -52,8 +53,7 @@ export const HeroNarrative: React.FC<HeroNarrativeProps> = ({ narrative, onPress
         </Text>
         <View style={styles.explainAction}>
           <Text style={[styles.explainText, { color: colors.primary }]}>Why?</Text>
-          {/* @ts-ignore */}
-          <Info size={14} color={colors.primary} style={{ marginLeft: 4 }} />
+          <DynamicIcon name="Info" size={14} color={colors.primary} style={{ marginLeft: 4 }} />
         </View>
       </TouchableOpacity>
     </View>

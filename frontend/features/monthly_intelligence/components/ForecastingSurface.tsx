@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { Forecast } from '../types/monthly_intelligence.types';
-import { Compass } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface ForecastingSurfaceProps {
   forecasts: Forecast[];
@@ -28,8 +29,7 @@ export const ForecastingSurface: React.FC<ForecastingSurfaceProps> = ({ forecast
             onPress={() => onPressExplain(forecast)}
           >
             <View style={styles.headerRow}>
-              {/* @ts-ignore */}
-              <Compass size={16} color={colors.textMuted} />
+              <DynamicIcon name="Compass" size={16} color={colors.textMuted} />
               <Text style={[styles.cardLabel, { color: colors.textMuted }]}>Forecast</Text>
             </View>
             <Text style={[styles.cardText, { color: colors.textPrimary }]} numberOfLines={3}>

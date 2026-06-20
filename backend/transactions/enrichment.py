@@ -27,6 +27,38 @@ from transactions.schemas import EnrichedTransactionResponse, TransactionRespons
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Per-invocation TTL cache for reward rules (read-heavy, write-rare data).
+#
+# NOTE: In Lambda, this cache survives only within a single warm invocation.
+# Cold starts re-fetch from DB, which adds ~5-10ms — acceptable since rules
+# are small and indexed. For multi-invocation caching, add ElastiCache/Redis.
+# ---------------------------------------------------------------------------
+_rules_cache: dict[str, tuple[float, list[Any]]] = {}
+_RULES_CACHE_TTL = 60  # seconds
+
+
+def _invalidate_rules_cache(card_catalog_id: str | None = None) -> None:
+    """Clear the rules cache for a specific card or all cards."""
+    if card_catalog_id:
+        _rules_cache.pop(card_catalog_id, None)
+    else:
+        _rules_cache.clear()
+
+
+async def _get_cached_rules(
+    rule_service: Any, card_catalog_id: str
+) -> list[Any]:
+    """Fetch active rules for a card, caching results with a short TTL."""
+    now = time.time()
+    if card_catalog_id in _rules_cache:
+        timestamp, rules = _rules_cache[card_catalog_id]
+        if now - timestamp < _RULES_CACHE_TTL:
+            return rules
+    rules = await rule_service.get_card_active_rules(card_catalog_id)
+    _rules_cache[card_catalog_id] = (now, rules)
+    return rules
+
 
 class TransactionEnrichmentService:
     """Orchestrates bulk enrichment of transactions with reward insights."""
@@ -54,15 +86,17 @@ class TransactionEnrichmentService:
             # If no cards, just return unenriched payload mapped to Enriched type
             return [EnrichedTransactionResponse.model_validate(t) for t in transactions]
 
-        # 2. Fetch all active rules ONCE and map them to indexes
+        # 2. Fetch all active rules ONCE per card (with per-request cache to skip re-fetches)
         bonus_index_by_card_id: dict[str, RuleIndex] = {}
         exclusions_by_card_id: dict[str, list[NormalizedRuleConfig]] = {}
-        
+
         from recommendations.utils import parse_rules_from_catalog
         for uc in user_cards:
             card_id_str = str(uc.card_catalog_id)
             if card_id_str not in bonus_index_by_card_id:
-                raw_rules = await self._reward_rule_service.get_card_active_rules(card_id_str)
+                raw_rules = await _get_cached_rules(
+                    self._reward_rule_service, card_id_str
+                )
                 if raw_rules:
                     normalized_rules = [
                         NormalizedRuleConfig(
@@ -77,7 +111,7 @@ class TransactionEnrichmentService:
                     catalog_card = get_catalog_card(uc)
                     card_name = get_card_name(uc)
                     normalized_rules = parse_rules_from_catalog(catalog_card, card_name)
-                
+
                 # Pre-compute indices and filters once per card
                 bonus_rules = filter_bonus_rules(normalized_rules)
                 bonus_index_by_card_id[card_id_str] = RuleIndex(bonus_rules)

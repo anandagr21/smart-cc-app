@@ -9,12 +9,13 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { X, Sparkles, Plane, ShieldAlert, Scale, LayoutList } from 'lucide-react-native';
+
 import { BlurView } from 'expo-blur';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { OptimizationPersonality, useUpdatePersonality } from '../api/personalityApi';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface PersonalitySelectionSheetProps {
   visible: boolean;
@@ -49,7 +50,7 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
       id: OptimizationPersonality.MAXIMIZE_REWARDS,
       title: 'Maximize Rewards',
       description: 'Focused on extracting the highest immediate return from every transaction.',
-      icon: <Sparkles size={20} color={colors.primary} />,
+      icon: <DynamicIcon name="Sparkles" size={20} color={colors.primary} />,
       color: colors.primary,
       disabled: false,
     },
@@ -57,7 +58,7 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
       id: OptimizationPersonality.FEE_MINIMIZATION,
       title: 'Fee Minimization',
       description: 'Focused on preserving fee waivers and reducing annual fee leakage.',
-      icon: <ShieldAlert size={20} color={colors.warning} />,
+      icon: <DynamicIcon name="ShieldAlert" size={20} color={colors.warning} />,
       color: colors.warning,
       disabled: false,
     },
@@ -65,7 +66,7 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
       id: OptimizationPersonality.BALANCED_INTELLIGENCE,
       title: 'Balanced Intelligence',
       description: 'Blends immediate rewards with long-term portfolio health and fee protection.',
-      icon: <Scale size={20} color={colors.textSecondary} />,
+      icon: <DynamicIcon name="Scale" size={20} color={colors.textSecondary} />,
       color: colors.textSecondary,
       disabled: false,
     },
@@ -73,7 +74,7 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
       id: OptimizationPersonality.TRAVEL_OPTIMIZATION,
       title: 'Travel Optimization',
       description: 'Focused on accelerating long-term travel milestones and premium reward unlocks.',
-      icon: <Plane size={20} color={colors.success} />,
+      icon: <DynamicIcon name="Plane" size={20} color={colors.success} />,
       color: colors.success,
       disabled: true,
     },
@@ -81,7 +82,7 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
       id: OptimizationPersonality.WALLET_SIMPLICITY,
       title: 'Wallet Simplicity',
       description: 'Minimizes cognitive load by favoring fewer cards and simpler reward structures.',
-      icon: <LayoutList size={20} color={colors.textMuted} />,
+      icon: <DynamicIcon name="LayoutList" size={20} color={colors.textMuted} />,
       color: colors.textMuted,
       disabled: true,
     },
@@ -123,7 +124,7 @@ export const PersonalitySelectionSheet: React.FC<PersonalitySelectionSheetProps>
               onPress={onClose}
               style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}
             >
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
+              <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
           </View>
 

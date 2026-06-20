@@ -1,5 +1,4 @@
 import hashlib
-from typing import List, Optional
 
 from insights.generators.base import InsightGenerator
 from insights.schemas import (
@@ -14,8 +13,8 @@ from models.user_card import UserCard
 
 class FeeWaiverGenerator(InsightGenerator):
     def generate(
-        self, user_id: str, cards: List[UserCard], transactions: List[EnrichedTransaction]
-    ) -> List[InsightResponse]:
+        self, user_id: str, cards: list[UserCard], transactions: list[EnrichedTransaction]
+    ) -> list[InsightResponse]:
         insights = []
 
         for card in cards:

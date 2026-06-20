@@ -1,23 +1,24 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { X, Bell, ShieldAlert, Zap, CreditCard, Sparkles, FolderKanban } from 'lucide-react-native';
+
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useNotifications, useMarkAsRead, useMarkAllAsRead } from '@/features/notifications/hooks/useNotifications';
 import { NotificationType } from '@/features/notifications/types/api';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
-const getIconForType = (type: NotificationType) => {
+const getIconNameForType = (type: NotificationType): string => {
   switch (type) {
-    case 'SECURITY': return ShieldAlert;
-    case 'INSIGHT': return Zap;
-    case 'CARD_INTELLIGENCE': return CreditCard;
-    case 'RECOMMENDATION': return Sparkles;
-    case 'WORKSPACE': return FolderKanban;
+    case 'SECURITY': return 'ShieldAlert';
+    case 'INSIGHT': return 'Zap';
+    case 'CARD_INTELLIGENCE': return 'CreditCard';
+    case 'RECOMMENDATION': return 'Sparkles';
+    case 'WORKSPACE': return 'FolderKanban';
     case 'SYSTEM':
-    default: return Bell;
+    default: return 'Bell';
   }
 };
 
@@ -72,8 +73,7 @@ export default function NotificationsModal() {
             onPress={() => router.back()}
             style={[styles.closeBtn, { backgroundColor: colors.surface }]}
           >
-            {/* @ts-ignore */}
-            <X size={20} color={colors.textSecondary} strokeWidth={2} />
+            <DynamicIcon name="X" size={20} color={colors.textSecondary} strokeWidth={2} />
           </TouchableOpacity>
         </View>
       </View>
@@ -84,8 +84,7 @@ export default function NotificationsModal() {
         </View>
       ) : notifications.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
-          {/* @ts-ignore */}
-          <Bell size={48} color={colors.border} style={{ marginBottom: 16 }} />
+          <DynamicIcon name="Bell" size={48} color={colors.border} style={{ marginBottom: 16 }} />
           <Text style={{ color: colors.textSecondary, fontSize: tokens.fontSize.bodyLg, textAlign: 'center' }}>
             You're all caught up!
           </Text>
@@ -97,7 +96,7 @@ export default function NotificationsModal() {
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         >
           {notifications.map((n, i) => {
-            const Icon = getIconForType(n.type);
+            const iconName = getIconNameForType(n.type);
             const { color, bg } = getColorForType(n.type, colors);
             
             return (
@@ -115,8 +114,7 @@ export default function NotificationsModal() {
                   ]}
                 >
                   <View style={[styles.iconWrap, { backgroundColor: bg }]}>
-                    {/* @ts-ignore */}
-                    <Icon size={20} color={color} />
+                    <DynamicIcon name={iconName} size={20} color={color} />
                   </View>
                   <View style={styles.content}>
                     <View style={styles.contentHeader}>

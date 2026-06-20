@@ -1,26 +1,27 @@
 import React, { useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
-import { ShoppingCart, Utensils, Plane, Film, Zap, Home, Coffee, HelpCircle, LucideIcon } from 'lucide-react-native';
+
 import { TransactionResponse } from '../types/transaction.types';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface CategoryRewardsChartProps {
   transactions: TransactionResponse[];
 }
 
-const getCategoryIcon = (category: string): LucideIcon => {
+const getCategoryIcon = (category: string): string => {
   const normalized = category.toLowerCase();
-  if (normalized.includes('grocer') || normalized.includes('supermarket')) return ShoppingCart;
-  if (normalized.includes('din') || normalized.includes('restaurant') || normalized.includes('food')) return Utensils;
-  if (normalized.includes('travel') || normalized.includes('flight') || normalized.includes('hotel')) return Plane;
-  if (normalized.includes('movie') || normalized.includes('entertain')) return Film;
-  if (normalized.includes('util') || normalized.includes('bill')) return Zap;
-  if (normalized.includes('home') || normalized.includes('rent')) return Home;
-  if (normalized.includes('coffee') || normalized.includes('cafe')) return Coffee;
-  return HelpCircle;
+  if (normalized.includes('grocer') || normalized.includes('supermarket')) return 'ShoppingCart';
+  if (normalized.includes('din') || normalized.includes('restaurant') || normalized.includes('food')) return 'Utensils';
+  if (normalized.includes('travel') || normalized.includes('flight') || normalized.includes('hotel')) return 'Plane';
+  if (normalized.includes('movie') || normalized.includes('entertain')) return 'Film';
+  if (normalized.includes('util') || normalized.includes('bill')) return 'Zap';
+  if (normalized.includes('home') || normalized.includes('rent')) return 'Home';
+  if (normalized.includes('coffee') || normalized.includes('cafe')) return 'Coffee';
+  return 'HelpCircle';
 };
 
 const AnimatedProgressBar = ({ progress, color }: { progress: number, color: string }) => {
@@ -83,7 +84,7 @@ export const CategoryRewardsChart: React.FC<CategoryRewardsChartProps> = ({ tran
             <View style={styles.headerRow}>
               <View style={styles.categoryInfo}>
                 <View style={[styles.iconWrap, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                  <item.Icon size={14} color={colors.textPrimary} />
+                  <DynamicIcon name={item.Icon} size={14} color={colors.textPrimary} />
                 </View>
                 <Text style={[styles.categoryName, { color: colors.textPrimary }]} numberOfLines={1}>
                   {item.name}

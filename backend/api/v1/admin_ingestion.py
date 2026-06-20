@@ -623,168 +623,21 @@ async def get_evaluation_dashboard(
     db: AsyncSession = Depends(get_db),
     current_admin: UserResponse = Depends(get_current_admin_user),
 ) -> Any:
-    from sqlalchemy import func, Integer
-    from models.ingestion import BenchmarkDataset, ExtractionBenchmark
-    
-    # Optional dataset filter
-    dataset_filter = []
-    if dataset_id:
-        dataset_filter.append(BenchmarkRun.dataset_id == dataset_id)
-        bench_dataset_filter = [ExtractionBenchmark.dataset_id == dataset_id]
-    else:
-        # get latest dataset
-        dataset = (await db.execute(select(BenchmarkDataset).order_by(BenchmarkDataset.created_at.desc()).limit(1))).scalar_one_or_none()
-        if dataset:
-            dataset_filter.append(BenchmarkRun.dataset_id == dataset.id)
-            bench_dataset_filter = [ExtractionBenchmark.dataset_id == dataset.id]
-        else:
-            bench_dataset_filter = []
+    """Aggregate evaluation dashboard from the admin ingestion dashboard service."""
+    from services.admin_ingestion_dashboard import (
+        get_active_job_progress,
+        get_failure_analysis,
+        get_field_accuracy,
+        get_prompt_performance,
+        get_system_health,
+        get_worst_performers,
+    )
 
-    # 1. System Health
-    total_benchmarks_query = await db.execute(select(func.count(ExtractionBenchmark.id)).where(*bench_dataset_filter))
-    total_benchmarks = total_benchmarks_query.scalar() or 0
-    
-    avg_score_query = await db.execute(select(func.avg(BenchmarkRun.score)).where(*dataset_filter))
-    avg_score = avg_score_query.scalar()
-    overall_accuracy = float(avg_score) if avg_score is not None else 0.0
-    
-    # Retrieval Precision
-    retrieval_prec_query = await db.execute(
-        select(
-            func.sum(func.cast(BenchmarkRun.correct_chunk_found == True, Integer)),
-            func.count(BenchmarkRun.id)
-        ).where(BenchmarkRun.correct_chunk_found != None, *dataset_filter)
-    )
-    retrieval_prec_result = retrieval_prec_query.one_or_none()
-    retrieval_precision = 0.0
-    if retrieval_prec_result and retrieval_prec_result[1] > 0:
-        retrieval_precision = float(retrieval_prec_result[0] or 0) / float(retrieval_prec_result[1])
-        
-    # Extraction Accuracy Given Correct Retrieval
-    ext_given_retrieval_query = await db.execute(
-        select(func.avg(BenchmarkRun.score)).where(BenchmarkRun.correct_chunk_found == True, *dataset_filter)
-    )
-    ext_given_retrieval_result = ext_given_retrieval_query.scalar()
-    extraction_accuracy_given_retrieval = float(ext_given_retrieval_result) if ext_given_retrieval_result is not None else 0.0
-    
-    # Weighted accuracy calculation
-    # We want average of (average score per field) instead of just average of all scores
-    field_avg_subq = select(
-        BenchmarkRun.field_name,
-        func.avg(BenchmarkRun.score).label('avg_field_score')
-    ).where(*dataset_filter).group_by(BenchmarkRun.field_name).subquery()
-    
-    weighted_acc_query = await db.execute(select(func.avg(field_avg_subq.c.avg_field_score)))
-    weighted_acc = weighted_acc_query.scalar()
-    weighted_accuracy = float(weighted_acc) if weighted_acc is not None else 0.0
-    
-    # Need to join BenchmarkRun -> ExtractionRun to get cost and latency
-    sys_query = await db.execute(
-        select(
-            func.avg(ExtractionRun.latency_ms),
-            func.avg(ExtractionRun.cost_usd)
-        ).select_from(BenchmarkRun).join(ExtractionRun, BenchmarkRun.extraction_run_id == ExtractionRun.id).where(*dataset_filter)
-    )
-    sys_metrics = sys_query.one_or_none()
-    avg_latency = float(sys_metrics[0]) if sys_metrics and sys_metrics[0] is not None else 0.0
-    avg_cost = float(sys_metrics[1]) if sys_metrics and sys_metrics[1] is not None else 0.0
-    
-    health = {
-        "total_benchmarks": total_benchmarks,
-        "overall_accuracy": overall_accuracy,
-        "weighted_accuracy": weighted_accuracy,
-        "retrieval_precision": retrieval_precision,
-        "extraction_accuracy_given_retrieval": extraction_accuracy_given_retrieval,
-        "avg_latency_ms": avg_latency,
-        "avg_cost_usd": avg_cost
-    }
-    
-    # 2. Field Accuracy
-    field_query = await db.execute(
-        select(
-            BenchmarkRun.field_name,
-            func.count(BenchmarkRun.id),
-            func.avg(BenchmarkRun.score)
-        )
-        .where(*dataset_filter)
-        .group_by(BenchmarkRun.field_name)
-    )
-    field_accuracy = [{"field_name": row[0] or "Unknown", "count": int(row[1]), "accuracy": float(row[2]) if row[2] is not None else 0.0} for row in field_query.all()]
-    
-    # 3. Prompt Performance (Trend)
-    prompt_query = await db.execute(
-        select(
-            PromptTemplate.name,
-            BenchmarkRun.prompt_template_version,
-            func.avg(BenchmarkRun.score)
-        )
-        .select_from(BenchmarkRun)
-        .join(PromptTemplate, BenchmarkRun.prompt_template_id == PromptTemplate.id)
-        .where(*dataset_filter)
-        .group_by(PromptTemplate.name, BenchmarkRun.prompt_template_version)
-        .order_by(PromptTemplate.name, BenchmarkRun.prompt_template_version)
-    )
-    prompt_performance = [{"prompt_name": f"{row[0]}_{row[1]}", "accuracy": float(row[2]) if row[2] is not None else 0.0} for row in prompt_query.all()]
-    
-    # 4. Failure Analysis (Group by Severity)
-    failure_query = await db.execute(
-        select(
-            BenchmarkRun.error_reason,
-            BenchmarkRun.failure_severity,
-            func.count(BenchmarkRun.id)
-        )
-        .where(BenchmarkRun.error_reason != None, *dataset_filter)
-        .group_by(BenchmarkRun.error_reason, BenchmarkRun.failure_severity)
-        .order_by(func.count(BenchmarkRun.id).desc())
-    )
-    failure_analysis = [{"error_reason": row[0], "severity": row[1], "count": int(row[2])} for row in failure_query.all()]
-    
-    # 5. Worst Performers (Bottom 10)
-    worst_query = await db.execute(
-        select(
-            ExtractionBenchmark.field_name,
-            ExtractionBenchmark.document_id,
-            BenchmarkRun.score,
-            BenchmarkRun.error_reason,
-            BenchmarkRun.failure_severity,
-            BenchmarkRun.benchmark_id
-        )
-        .select_from(BenchmarkRun)
-        .join(ExtractionBenchmark, BenchmarkRun.benchmark_id == ExtractionBenchmark.id)
-        .where(BenchmarkRun.score < 1.0, *dataset_filter)
-        .order_by(BenchmarkRun.score.asc())
-        .limit(10)
-    )
-    worst_performers = [{
-        "field_name": row[0],
-        "document_id": str(row[1]),
-        "score": float(row[2]) if row[2] is not None else 0.0,
-        "error_reason": row[3],
-        "severity": row[4],
-        "benchmark_id": str(row[5])
-    } for row in worst_query.all()]
-    
-    # Fetch active job progress
-    job_query = await db.execute(
-        select(EvaluationJob)
-        .where(EvaluationJob.status.in_(["PENDING", "RUNNING"]))
-        .order_by(EvaluationJob.created_at.desc())
-        .limit(1)
-    )
-    active_job = job_query.scalar_one_or_none()
-    job_progress = None
-    if active_job:
-        job_progress = {
-            "status": active_job.status,
-            "completed": active_job.completed_benchmarks,
-            "total": active_job.total_benchmarks
-        }
-    
     return {
-        "health": health,
-        "field_accuracy": field_accuracy,
-        "prompt_performance": prompt_performance,
-        "failure_analysis": failure_analysis,
-        "worst_performers": worst_performers,
-        "job_progress": job_progress
+        "health": await get_system_health(db, dataset_id),
+        "field_accuracy": await get_field_accuracy(db, dataset_id),
+        "prompt_performance": await get_prompt_performance(db, dataset_id),
+        "failure_analysis": await get_failure_analysis(db, dataset_id),
+        "worst_performers": await get_worst_performers(db, dataset_id),
+        "job_progress": await get_active_job_progress(db),
     }

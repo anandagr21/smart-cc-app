@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Switch } from 'react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
-import { CheckCircle, AlertTriangle } from 'lucide-react-native';
+
 import { useCardReviewData, useSubmitReviewAction, SuggestedCardData, RewardRule } from '../api/cardIntelligenceApi';
 import { router } from 'expo-router';
 import { DocumentUploadSheet } from './DocumentUploadSheet';
-import { UploadCloud } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface Props {
   cardId: string;
@@ -47,7 +48,7 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <View style={[styles.errorBox, { backgroundColor: colors.warningSoft, borderColor: colors.warning }]}>
-          <AlertTriangle size={24} color={colors.warning} />
+          <DynamicIcon name="AlertTriangle" size={24} color={colors.warning} />
           <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>
             {is404 ? 'No Ingestion Snapshot' : 'Failed to Load'}
           </Text>
@@ -61,7 +62,7 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
               style={[styles.decisionBtn, { backgroundColor: colors.primary, minWidth: 150, alignSelf: 'flex-start', marginTop: tokens.spacing.lg }]}
               onPress={() => setIsUploadSheetOpen(true)}
             >
-              <UploadCloud size={20} color="#FFF" />
+              <DynamicIcon name="UploadCloud" size={20} color="#FFF" />
               <Text style={{ color: '#FFF', fontSize: 14, fontFamily: 'Inter-SemiBold' }}>Ingest Source Now</Text>
             </TouchableOpacity>
           )}
@@ -247,7 +248,7 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
                 <ActivityIndicator size="small" color="#FFF" />
               ) : (
                 <>
-                  <CheckCircle size={20} color="#FFF" />
+                  <DynamicIcon name="CheckCircle" size={20} color="#FFF" />
                   <Text style={styles.looksCorrectBtnText}>Approve & Save</Text>
                 </>
               )}
@@ -257,7 +258,7 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
               style={[styles.decisionBtn, styles.needsCorrectionBtn, { borderColor: colors.border }]}
               onPress={handleReject}
             >
-              <AlertTriangle size={20} color={colors.textSecondary} />
+              <DynamicIcon name="AlertTriangle" size={20} color={colors.textSecondary} />
               <Text style={[styles.needsCorrectionBtnText, { color: colors.textSecondary }]}>Reject & Rescrape</Text>
             </TouchableOpacity>
 
@@ -265,7 +266,7 @@ export const CardIntelligenceWorkspaceV2: React.FC<Props> = ({ cardId }) => {
               style={[styles.decisionBtn, { backgroundColor: colors.primary, minWidth: 150 }]}
               onPress={() => setIsUploadSheetOpen(true)}
             >
-              <UploadCloud size={20} color="#FFF" />
+              <DynamicIcon name="UploadCloud" size={20} color="#FFF" />
               <Text style={{ color: '#FFF', fontSize: 14, fontFamily: 'Inter-SemiBold' }}>Re-Ingest Source</Text>
             </TouchableOpacity>
           </View>

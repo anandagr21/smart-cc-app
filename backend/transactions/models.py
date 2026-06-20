@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Optional
 from uuid import UUID, uuid4
 
-from sqlmodel import Field, SQLModel, UniqueConstraint
+from sqlmodel import Field, Index, SQLModel, UniqueConstraint
 
 from transactions.constants import Currency, PaymentMode, TransactionStatus, TransactionType
 
@@ -27,6 +27,9 @@ class Transaction(SQLModel, table=True):
     __tablename__ = "transactions"
     __table_args__ = (
         UniqueConstraint("user_id", "idempotency_key", name="uix_user_id_idempotency_key"),
+        Index("ix_transactions_user_date", "user_id", "transaction_date"),
+        Index("ix_transactions_card_date", "user_card_id", "transaction_date"),
+        Index("ix_transactions_card_type_status", "user_card_id", "transaction_type", "status"),
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)

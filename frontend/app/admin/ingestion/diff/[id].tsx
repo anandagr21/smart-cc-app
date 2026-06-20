@@ -4,7 +4,8 @@ import { useRouter } from 'expo-router';
 import { colors } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, ArrowRight } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 const MOCK_DIFF = {
   card_id: '123',
@@ -27,8 +28,7 @@ export default function VersionDiffScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          {/* @ts-ignore */}
-          <ArrowLeft size={24} color={colors.textPrimary} />
+          <DynamicIcon name="ArrowLeft" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <View>
           <Text style={styles.title}>SBI Cashback Credit Card</Text>
@@ -64,8 +64,7 @@ export default function VersionDiffScreen() {
               
               <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 {diff.is_changed && (
-                  // @ts-ignore
-                  <ArrowRight size={14} color={colors.warning} />
+                  <DynamicIcon name="ArrowRight" size={14} color={colors.warning} />
                 )}
                 <Text style={[styles.cell, diff.is_changed && styles.newValue]}>
                   {diff.new_value}

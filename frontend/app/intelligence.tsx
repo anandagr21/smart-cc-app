@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { X } from 'lucide-react-native';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { PortfolioEvolutionSurface } from '@/features/portfolio_evolution/components/PortfolioEvolutionSurface';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function IntelligenceScreen() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function IntelligenceScreen() {
           onPress={() => router.back()}
           style={[styles.closeButton, { backgroundColor: colors.glassSurface }]}
         >
-          <X size={24} color={colors.textPrimary} />
+          <DynamicIcon name="X" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
       <PortfolioEvolutionSurface />

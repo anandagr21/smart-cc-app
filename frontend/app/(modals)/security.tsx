@@ -1,20 +1,21 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { X, Lock, Smartphone, ChevronRight } from 'lucide-react-native';
+
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function SecurityModal() {
   const router = useRouter();
   const colors = useThemeColors();
 
-  const SettingsRow = ({ icon: Icon, label, RightComponent }: any) => (
+  const SettingsRow = ({ icon, label, RightComponent }: any) => (
     <View style={[styles.settingsRow, { borderBottomColor: colors.border }]}>
       <View style={[styles.settingsIconWrap, { backgroundColor: colors.surfaceElevated }]}>
-        <Icon size={18} color={colors.textSecondary} />
+        <DynamicIcon name={icon} size={18} color={colors.textSecondary} />
       </View>
       <Text style={[styles.settingsLabel, { color: colors.textPrimary }]}>
         {label}
@@ -31,8 +32,7 @@ export default function SecurityModal() {
           onPress={() => router.back()}
           style={[styles.closeBtn, { backgroundColor: colors.surface }]}
         >
-          {/* @ts-ignore */}
-          <X size={20} color={colors.textSecondary} strokeWidth={2} />
+          <DynamicIcon name="X" size={20} color={colors.textSecondary} strokeWidth={2} />
         </TouchableOpacity>
       </View>
 
@@ -41,9 +41,9 @@ export default function SecurityModal() {
           <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TouchableOpacity activeOpacity={0.7}>
               <SettingsRow
-                icon={Lock}
+                icon="Lock"
                 label="Change Password"
-                RightComponent={<ChevronRight size={18} color={colors.textMuted} />}
+                RightComponent={<DynamicIcon name="ChevronRight" size={18} color={colors.textMuted} />}
               />
             </TouchableOpacity>
           </View>
@@ -54,8 +54,7 @@ export default function SecurityModal() {
           <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.sessionRow}>
               <View style={[styles.settingsIconWrap, { backgroundColor: colors.successSoft }]}>
-                {/* @ts-ignore */}
-                <Smartphone size={18} color={colors.success} />
+                <DynamicIcon name="Smartphone" size={18} color={colors.success} />
               </View>
               <View style={styles.sessionInfo}>
                 <Text style={[styles.settingsLabel, { color: colors.textPrimary }]}>iPhone 14 Pro</Text>

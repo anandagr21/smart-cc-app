@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
-import { Activity } from 'lucide-react-native';
+
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export const AnticipatoryState: React.FC = () => {
   const colors = useThemeColors();
@@ -14,8 +15,7 @@ export const AnticipatoryState: React.FC = () => {
       style={styles.container}
     >
       <View style={[styles.iconWrap, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-        {/* @ts-ignore */}
-        <Activity size={24} color={colors.primary} strokeWidth={1.5} />
+        <DynamicIcon name="Activity" size={24} color={colors.primary} strokeWidth={1.5} />
       </View>
       <Text style={[styles.title, { color: colors.textPrimary }]}>
         Observing patterns.
