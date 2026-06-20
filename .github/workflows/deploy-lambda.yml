@@ -8,21 +8,48 @@ on:
 env:
   AWS_REGION: ap-south-1
   ECR_REPOSITORY: smart-cc-backend
-  # Note: You will need to create this Lambda function manually the first time
-  # using the image pushed by this action, then subsequent runs will update it.
   LAMBDA_FUNCTION_NAME: smart-cc-backend
-  # Replace with the actual IAM Role ARN you create for GitHub Actions
-  AWS_ROLE_ARN: arn:aws:iam::831926581302:role/GitHubActionsLambdaDeployRole
 
 permissions:
   id-token: write # Required for AWS OIDC authentication
   contents: read
 
 jobs:
+  migrate:
+    name: Run DB Migrations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          uv sync
+
+      - name: Run Migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          cd backend
+          uv run alembic upgrade head
+
   deploy:
     name: Build & Deploy
+    needs: migrate
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -30,7 +57,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -44,9 +71,7 @@ jobs:
         run: |
           cd backend
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           echo "Pushed image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
       - name: Update AWS Lambda Function Code
