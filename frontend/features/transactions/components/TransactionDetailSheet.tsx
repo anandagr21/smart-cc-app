@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { getCategoryAccent } from '../utils/categoryAccents';
 import { useCards } from '@/features/cards/hooks/useCards';
 import { useDeleteTransaction } from '../hooks/useDeleteTransaction';
-import * as Icons from 'lucide-react-native';
+import { Utensils, ShoppingBag, Plane, ShoppingCart, Zap, Film, Car, Receipt } from 'lucide-react-native';
 import { TransactionInsightCard } from './TransactionInsightCard';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
@@ -47,7 +47,8 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
 
   const accent = getCategoryAccent(transaction.category);
   // @ts-ignore
-  const IconComponent = Icons[accent.iconName] || Icons.Receipt;
+  const ICON_MAP: Record<string, React.ComponentType<any>> = { Utensils, ShoppingBag, Plane, ShoppingCart, Zap, Film, Car, Receipt };
+  const IconComponent = ICON_MAP[accent.iconName] || Receipt;
 
   const dateString = transaction.created_at 
     ? (transaction.created_at.endsWith('Z') ? transaction.created_at : `${transaction.created_at}Z`)

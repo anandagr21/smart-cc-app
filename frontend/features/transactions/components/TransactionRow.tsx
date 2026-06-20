@@ -4,7 +4,9 @@ import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } fr
 import { TransactionResponse } from '../types/transaction.types';
 import { getCategoryAccent } from '../utils/categoryAccents';
 import { useCards } from '@/features/cards/hooks/useCards';
-import * as Icons from 'lucide-react-native';
+import {
+  Utensils, ShoppingBag, Plane, ShoppingCart, Zap, Film, Car, Receipt,
+} from 'lucide-react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { RewardInsightPill } from './RewardInsightPill';
 import { tokens } from '@/theme/tokens';
@@ -30,7 +32,10 @@ export const TransactionRow = React.memo(({ transaction, onPress, index }: Trans
   
   const accent = getCategoryAccent(transaction.category);
   // @ts-ignore
-  const IconComponent = Icons[accent.iconName] || Icons.Receipt;
+  const ICON_MAP: Record<string, React.ComponentType<any>> = {
+    Utensils, ShoppingBag, Plane, ShoppingCart, Zap, Film, Car, Receipt,
+  };
+  const IconComponent = ICON_MAP[accent.iconName] || Receipt;
 
   const formatAmount = (amt: number) => {
     return new Intl.NumberFormat('en-IN', {
