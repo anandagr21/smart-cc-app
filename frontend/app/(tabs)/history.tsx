@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, SectionList, RefreshControl, StyleSheet } from 'react-native';
-import { Plus, X, BarChart3 } from 'lucide-react-native';
+
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -20,6 +20,7 @@ import { TransactionResponse } from '@/features/transactions/types/transaction.t
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function HistoryScreen() {
   const { cardId } = useLocalSearchParams<{ cardId?: string }>();
@@ -91,8 +92,7 @@ export default function HistoryScreen() {
               ]}
               activeOpacity={0.75}
             >
-              {/* @ts-ignore */}
-              <Plus size={20} color={colors.primary} strokeWidth={2.5} />
+              <DynamicIcon name="Plus" size={20} color={colors.primary} strokeWidth={2.5} />
             </TouchableOpacity>
           </Animated.View>
         )}
@@ -108,8 +108,7 @@ export default function HistoryScreen() {
             <Text style={[styles.filterText, { color: colors.primary }]}>
               {filteredCard.nickname || filteredCard.card_details?.card_name || 'Card'}
             </Text>
-            {/* @ts-ignore */}
-            <X size={14} color={colors.primary} style={{ marginLeft: 6 }} />
+            <DynamicIcon name="X" size={14} color={colors.primary} style={{ marginLeft: 6 }} />
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -168,8 +167,7 @@ export default function HistoryScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={showInsights ? 'Hide analytics' : 'Show analytics'}
                     >
-                      {/* @ts-ignore */}
-                      <BarChart3 size={16} color={showInsights ? colors.primary : colors.textSecondary} strokeWidth={1.8} />
+                      <DynamicIcon name="BarChart3" size={16} color={showInsights ? colors.primary : colors.textSecondary} strokeWidth={1.8} />
                       <Text style={[styles.insightChipText, { color: showInsights ? colors.primary : colors.textSecondary }]}>
                         {showInsights ? 'Hide Analytics' : 'Analytics'}
                       </Text>

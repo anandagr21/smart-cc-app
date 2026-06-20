@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Platform } from 'react-native';
-import { X, ArrowDown, FileText, Cpu, CheckSquare, Database, Smartphone } from 'lucide-react-native';
+
 
 import { useRouter } from 'expo-router';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface AdminWorkflowModalProps {
   visible: boolean;
@@ -28,7 +29,7 @@ const WorkflowNode = ({ icon: Icon, title, description, isLast = false, route, o
     {!isLast && (
       <View style={styles.arrowContainer}>
         <View style={styles.verticalLine} />
-        <ArrowDown size={20} color="#475569" />
+        <DynamicIcon name="ArrowDown" size={20} color="#475569" />
       </View>
     )}
   </View>
@@ -54,7 +55,7 @@ export const AdminWorkflowModal: React.FC<AdminWorkflowModalProps> = ({ visible,
           <View style={styles.header}>
             <Text style={styles.title}>Platform Architecture & Workflow</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <X size={24} color="#94A3B8" />
+              <DynamicIcon name="X" size={24} color="#94A3B8" />
             </TouchableOpacity>
           </View>
 

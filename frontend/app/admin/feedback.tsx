@@ -4,9 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
-import { ArrowLeft, MessageSquareWarning, ChevronDown, ChevronUp } from 'lucide-react-native';
+
 import { feedbackApi, FeedbackResponse } from '@/features/feedback/api';
 import { formatCurrencyIN } from '@/utils/currency';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function AdminFeedbackScreen() {
   const colors = useThemeColors();
@@ -62,7 +63,7 @@ export default function AdminFeedbackScreen() {
             else router.replace('/(tabs)/profile');
           }}
         >
-          <ArrowLeft size={24} color={colors.textPrimary} />
+          <DynamicIcon name="ArrowLeft" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Feedback Reports</Text>
       </View>
@@ -87,8 +88,7 @@ export default function AdminFeedbackScreen() {
                   <View style={{ flex: 1, gap: 4 }}>
                     <View style={styles.badgeRow}>
                       <View style={[styles.badge, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
-                        {/* @ts-ignore */}
-                        <MessageSquareWarning size={14} color="#EF4444" style={{ marginRight: 6 }} />
+                        <DynamicIcon name="MessageSquareWarning" size={14} color="#EF4444" style={{ marginRight: 6 }} />
                         <Text style={[styles.badgeText, { color: '#EF4444' }]}>{getIssueLabel(item.issue_type)}</Text>
                       </View>
                       <View style={[styles.statusBadge, { backgroundColor: item.status === 'open' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)' }]}>
@@ -101,8 +101,7 @@ export default function AdminFeedbackScreen() {
                     <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatDate(item.created_at)}</Text>
                   </View>
                   <View style={styles.expandIcon}>
-                    {/* @ts-ignore */}
-                    {isExpanded ? <ChevronUp size={20} color={colors.textSecondary} /> : <ChevronDown size={20} color={colors.textSecondary} />}
+                    {isExpanded ? <DynamicIcon name="ChevronUp" size={20} color={colors.textSecondary} /> : <DynamicIcon name="ChevronDown" size={20} color={colors.textSecondary} />}
                   </View>
                 </TouchableOpacity>
 

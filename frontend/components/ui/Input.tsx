@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, TextInputProps, StyleSheet } from 'react-native';
+import { View, TextInput, Text, TextInputProps, StyleProp, TextStyle, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -14,6 +14,9 @@ interface InputProps extends TextInputProps {
   hint?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  inputStyle?: StyleProp<TextStyle>;
+  hideBorder?: boolean;
+  hideFocusGlow?: boolean;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -50,7 +53,7 @@ export const Input: React.FC<InputProps> = ({
   const borderWidth = isFocused || error ? 1.5 : StyleSheet.hairlineWidth;
 
   return (
-    <View style={[styles.wrapper, style as any]}>
+    <View style={[styles.wrapper, style]}>
       {label && (
         <Text style={[styles.label, { color: error ? colors.danger : colors.textMuted }]}>
           {label}
@@ -61,17 +64,17 @@ export const Input: React.FC<InputProps> = ({
         style={[
           styles.inputContainer,
           {
-            backgroundColor: isFocused ? colors.surface : colors.surface,
+            backgroundColor: colors.surface,
             borderColor,
             borderWidth,
           },
         ]}
       >
-        {/* Animated focus glow */}
+        {/* Animated focus glow — behind the input, zIndex: -1 for web safety */}
         <Animated.View
           style={[
             StyleSheet.absoluteFill,
-            styles.focusGlow,
+            { zIndex: -1 },
             { backgroundColor: colors.primarySoft, borderRadius: tokens.radius.md },
             focusBorderStyle,
           ]}

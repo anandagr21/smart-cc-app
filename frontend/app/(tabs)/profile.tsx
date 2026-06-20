@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, Bell, Shield, LogOut, Moon, Sun, Monitor, ChevronRight } from 'lucide-react-native';
+
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { useAuthStore } from '@/features/auth/store/authStore';
@@ -13,6 +13,7 @@ import { SkeletonBox } from '@/components/ui/SkeletonBox';
 import { ProfileSummaryCard } from '@/features/profile/components/ProfileSummaryCard';
 import { tokens } from '@/theme/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function ProfileScreen() {
     return email ? email.substring(0, 2).toUpperCase() : 'ME';
   };
 
-  const ThemePill = ({ mode, icon: Icon, label }: { mode: 'light' | 'dark' | 'system', icon: any, label: string }) => {
+  const ThemePill = ({ mode, icon, label }: { mode: 'light' | 'dark' | 'system', icon: string, label: string }) => {
     const isActive = themeMode === mode;
     return (
       <TouchableOpacity
@@ -52,7 +53,7 @@ export default function ProfileScreen() {
           isActive && { backgroundColor: colors.primarySoft, borderColor: colors.primary, borderWidth: 1 }
         ]}
       >
-        <Icon size={14} color={isActive ? colors.primary : colors.textMuted} style={styles.themePillIcon} />
+        <DynamicIcon name={icon} size={14} color={isActive ? colors.primary : colors.textMuted} style={styles.themePillIcon} />
         <Text style={[
           styles.themePillText,
           { 
@@ -66,7 +67,7 @@ export default function ProfileScreen() {
     );
   };
 
-  const SettingsRow = ({ icon: Icon, label, onPress, danger = false }: any) => (
+  const SettingsRow = ({ icon, label, onPress, danger = false }: any) => (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
@@ -76,12 +77,12 @@ export default function ProfileScreen() {
       ]}
     >
       <View style={[styles.settingsIconWrap, { backgroundColor: danger ? colors.dangerSoft : colors.surfaceElevated }]}>
-        <Icon size={18} color={danger ? colors.danger : colors.textSecondary} />
+        <DynamicIcon name={icon} size={18} color={danger ? colors.danger : colors.textSecondary} />
       </View>
       <Text style={[styles.settingsLabel, { color: danger ? colors.danger : colors.textPrimary }]}>
         {label}
       </Text>
-      {!danger && <ChevronRight size={18} color={colors.textMuted} />}
+      {!danger && <DynamicIcon name="ChevronRight" size={18} color={colors.textMuted} />}
     </TouchableOpacity>
   );
 
@@ -132,9 +133,9 @@ export default function ProfileScreen() {
         <Animated.View entering={FadeInDown.delay(130).springify()} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Appearance</Text>
           <View style={[styles.themeRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <ThemePill mode="system" icon={Monitor} label="System" />
-            <ThemePill mode="light" icon={Sun} label="Light" />
-            <ThemePill mode="dark" icon={Moon} label="Dark" />
+            <ThemePill mode="system" icon="Monitor" label="System" />
+            <ThemePill mode="light" icon="Sun" label="Light" />
+            <ThemePill mode="dark" icon="Moon" label="Dark" />
           </View>
         </Animated.View>
 
@@ -142,9 +143,9 @@ export default function ProfileScreen() {
         <Animated.View entering={FadeInDown.delay(160).springify()} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Account</Text>
           <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <SettingsRow icon={Bell} label="Notifications" onPress={() => router.push('/notifications')} />
-            <SettingsRow icon={Settings} label="Preferences" onPress={() => router.push('/preferences')} />
-            <SettingsRow icon={Shield} label="Security" onPress={() => router.push('/security')} />
+            <SettingsRow icon="Bell" label="Notifications" onPress={() => router.push('/notifications')} />
+            <SettingsRow icon="Settings" label="Preferences" onPress={() => router.push('/preferences')} />
+            <SettingsRow icon="Shield" label="Security" onPress={() => router.push('/security')} />
           </View>
         </Animated.View>
 
@@ -153,8 +154,8 @@ export default function ProfileScreen() {
           <Animated.View entering={FadeInDown.delay(175).springify()} style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Admin</Text>
             <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <SettingsRow icon={Shield} label="Feedback Dashboard" onPress={() => router.push('/admin/feedback')} />
-              <SettingsRow icon={Monitor} label="Card Operations" onPress={() => router.push('/admin/operations')} />
+              <SettingsRow icon="Shield" label="Feedback Dashboard" onPress={() => router.push('/admin/feedback')} />
+              <SettingsRow icon="Monitor" label="Card Operations" onPress={() => router.push('/admin/operations')} />
             </View>
           </Animated.View>
         )}
@@ -162,7 +163,7 @@ export default function ProfileScreen() {
         {/* Danger Zone */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.section}>
           <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <SettingsRow icon={LogOut} label="Sign Out" onPress={handleLogout} danger />
+            <SettingsRow icon="LogOut" label="Sign Out" onPress={handleLogout} danger />
           </View>
         </Animated.View>
 

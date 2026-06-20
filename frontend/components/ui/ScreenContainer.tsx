@@ -36,8 +36,7 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
           height: width * 0.8,
           borderRadius: width * 0.4,
           backgroundColor: colors.primarySoft,
-          // @ts-ignore - expo filter API
-          filter: [{ blur: 100 }],
+          filter: [{ blur: 100 } as const],
         }}
       />
       {/* Ambient orb — bottom left, slightly accent-tinted */}
@@ -51,8 +50,7 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
           height: width * 0.6,
           borderRadius: width * 0.3,
           backgroundColor: colors.accentSoft,
-          // @ts-ignore
-          filter: [{ blur: 120 }],
+          filter: [{ blur: 120 } as const],
         }}
       />
 

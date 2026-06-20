@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
-import { Plus, Search } from 'lucide-react-native';
+
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Badge } from '@/components/ui/Badge';
@@ -18,6 +18,7 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useFuseSearch } from '@/shared/search/useFuseSearch';
 import { useDebounce } from '@/hooks/useDebounce';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 
 export default function CardsScreen() {
@@ -53,8 +54,7 @@ export default function CardsScreen() {
         
         <View style={styles.searchSection}>
           <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            {/* @ts-ignore */}
-            <Search size={18} color={colors.textMuted} />
+            <DynamicIcon name="Search" size={18} color={colors.textMuted} />
             <TextInput
               style={[styles.searchInput, { color: colors.textPrimary }]}
               placeholder="Search cards by name, bank or network..."
@@ -107,8 +107,7 @@ export default function CardsScreen() {
             ]}
             activeOpacity={0.75}
           >
-            {/* @ts-ignore */}
-            <Plus size={20} color={colors.primary} strokeWidth={2.5} />
+            <DynamicIcon name="Plus" size={20} color={colors.primary} strokeWidth={2.5} />
           </TouchableOpacity>
         )}
       </Animated.View>

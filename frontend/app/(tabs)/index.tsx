@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-nati
 import * as Sentry from '@sentry/react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
-import { Sparkles, Plus, Trophy, TrendingUp, Lightbulb } from 'lucide-react-native';
+
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useRouter } from 'expo-router';
@@ -13,6 +13,7 @@ import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/us
 import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
 
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 
 function getGreeting() {
@@ -66,8 +67,7 @@ export default function DashboardScreen() {
               router.push('/monthly-intelligence');
             }}
           >
-            {/* @ts-ignore */}
-            <Sparkles size={14} color={colors.primary} />
+            <DynamicIcon name="Sparkles" size={14} color={colors.primary} />
             <Text style={[styles.intelligenceCtaText, { color: colors.textPrimary }]}>
               Your Monthly Intelligence
             </Text>
@@ -89,8 +89,7 @@ export default function DashboardScreen() {
               {/* Optimization Score */}
               <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <View style={styles.statHeader}>
-                  {/* @ts-ignore */}
-                  <Trophy size={16} color={colors.warning} />
+                  <DynamicIcon name="Trophy" size={16} color={colors.warning} />
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Reward Efficiency</Text>
                 </View>
                 <AnimatedNumber
@@ -103,8 +102,7 @@ export default function DashboardScreen() {
               {/* Monthly Rewards */}
               <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <View style={styles.statHeader}>
-                  {/* @ts-ignore */}
-                  <TrendingUp size={16} color={colors.success} />
+                  <DynamicIcon name="TrendingUp" size={16} color={colors.success} />
                   <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rewards</Text>
                 </View>
                 <AnimatedNumber
@@ -138,8 +136,7 @@ export default function DashboardScreen() {
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>RECENT RECOMMENDATION</Text>
             <View style={[styles.insightCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.insightHeader}>
-                {/* @ts-ignore */}
-                <Lightbulb size={18} color={colors.primary} />
+                <DynamicIcon name="Lightbulb" size={18} color={colors.primary} />
                 <View style={[styles.insightBadge, { backgroundColor: primaryInsight.badge_color + '15' }]}>
                   <Text style={[styles.insightBadgeText, { color: primaryInsight.badge_color }]}>
                     {primaryInsight.badge_label}
@@ -165,8 +162,7 @@ export default function DashboardScreen() {
             activeOpacity={0.8}
             onPress={() => setFormSheetVisible(true)}
           >
-            {/* @ts-ignore */}
-            <Plus size={24} color="#FFF" strokeWidth={2.5} />
+            <DynamicIcon name="Plus" size={24} color="#FFF" strokeWidth={2.5} />
             <Text style={styles.primaryActionText}>Add Transaction</Text>
           </TouchableOpacity>
           <Text style={[styles.actionHint, { color: colors.textSecondary }]}>

@@ -4,10 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
-import { ArrowLeft, BrainCircuit, Database } from 'lucide-react-native';
+
 
 import { CardIntelligenceDashboard } from '@/features/card_intelligence/screens/CardIntelligenceDashboard';
 import { MasterCatalogDashboard } from '@/features/cards/screens/MasterCatalogDashboard';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function CardOperationsHub() {
   const colors = useThemeColors();
@@ -18,7 +19,6 @@ export default function CardOperationsHub() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Global Header & Segmented Control */}
       <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.surface }]}>
         <TouchableOpacity 
           style={styles.backBtn} 
@@ -30,7 +30,7 @@ export default function CardOperationsHub() {
             }
           }}
         >
-          <ArrowLeft size={24} color={colors.textPrimary} />
+          <DynamicIcon name="ArrowLeft" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
 
         <View style={[styles.tabContainer, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
@@ -42,7 +42,7 @@ export default function CardOperationsHub() {
             onPress={() => setActiveTab('intelligence')}
             activeOpacity={0.8}
           >
-            <BrainCircuit size={16} color={activeTab === 'intelligence' ? '#FFF' : colors.textSecondary} />
+            <DynamicIcon name="BrainCircuit" size={16} color={activeTab === 'intelligence' ? '#FFF' : colors.textSecondary} />
             <Text style={[styles.tabText, { color: activeTab === 'intelligence' ? '#FFF' : colors.textSecondary }]}>
               Intelligence Queue
             </Text>
@@ -56,16 +56,15 @@ export default function CardOperationsHub() {
             onPress={() => setActiveTab('catalog')}
             activeOpacity={0.8}
           >
-            <Database size={16} color={activeTab === 'catalog' ? '#FFF' : colors.textSecondary} />
+            <DynamicIcon name="Database" size={16} color={activeTab === 'catalog' ? '#FFF' : colors.textSecondary} />
             <Text style={[styles.tabText, { color: activeTab === 'catalog' ? '#FFF' : colors.textSecondary }]}>
               Live Catalog
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={{ width: 40 }} /> {/* Spacer to center the tabs */}
+        <View style={{ width: 40 }} />
       </View>
 
-      {/* Active View */}
       <View style={styles.content}>
         {activeTab === 'intelligence' ? <CardIntelligenceDashboard /> : <MasterCatalogDashboard />}
       </View>

@@ -4,8 +4,9 @@ import { CardIntelligenceWorkspaceV2 } from '@/features/card_intelligence/compon
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
-import { ArrowLeft } from 'lucide-react-native';
+
 import { AdminUsageGuide } from '@/components/admin/AdminUsageGuide';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function ReviewCardIntelligenceScreen() {
   const { card_id } = useLocalSearchParams<{ card_id: string }>();
@@ -21,7 +22,7 @@ export default function ReviewCardIntelligenceScreen() {
         style={[styles.backBtn, { borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}
         onPress={() => router.back()}
       >
-        <ArrowLeft size={16} color={colors.textPrimary} />
+        <DynamicIcon name="ArrowLeft" size={16} color={colors.textPrimary} />
         <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Back to Intelligence</Text>
       </TouchableOpacity>
 

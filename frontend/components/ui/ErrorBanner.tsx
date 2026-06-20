@@ -1,11 +1,18 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { AlertTriangle, AlertCircle, Info, X, RefreshCw } from 'lucide-react-native';
+
 import Animated, { SlideInDown, SlideOutUp } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 type ErrorBannerVariant = 'error' | 'warning' | 'info';
+
+const VARIANT_ICON: Record<ErrorBannerVariant, string> = {
+  error: 'AlertTriangle',
+  warning: 'AlertTriangle',
+  info: 'Info',
+};
 
 interface ErrorBannerProps {
   message: string;
@@ -13,12 +20,6 @@ interface ErrorBannerProps {
   onRetry?: () => void;
   onDismiss?: () => void;
 }
-
-const ICON_MAP = {
-  error: AlertTriangle,
-  warning: AlertCircle,
-  info: Info,
-} as const;
 
 const COLOR_MAP = {
   error: (c: ReturnType<typeof useThemeColors>) => ({
@@ -53,7 +54,6 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
 }) => {
   const colors = useThemeColors();
   const { bg, border, text, icon } = COLOR_MAP[variant](colors);
-  const Icon = ICON_MAP[variant];
 
   return (
     <Animated.View
@@ -62,8 +62,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
       style={[styles.container, { backgroundColor: bg, borderColor: border }]}
     >
       <View style={styles.content}>
-        {/* @ts-ignore */}
-        <Icon size={18} color={icon} style={styles.icon} strokeWidth={2} />
+        <DynamicIcon name={VARIANT_ICON[variant]} size={18} color={icon} style={styles.icon} strokeWidth={2} />
         <Text style={[styles.message, { color: text }]} numberOfLines={3}>
           {message}
         </Text>
@@ -78,8 +77,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
             accessibilityLabel="Retry"
             accessibilityRole="button"
           >
-            {/* @ts-ignore */}
-            <RefreshCw size={16} color={icon} strokeWidth={2} />
+            <DynamicIcon name="RefreshCw" size={16} color={icon} strokeWidth={2} />
           </TouchableOpacity>
         )}
         {onDismiss && (
@@ -90,8 +88,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
             accessibilityLabel="Dismiss"
             accessibilityRole="button"
           >
-            {/* @ts-ignore */}
-            <X size={16} color={icon} strokeWidth={2} />
+            <DynamicIcon name="X" size={16} color={icon} strokeWidth={2} />
           </TouchableOpacity>
         )}
       </View>

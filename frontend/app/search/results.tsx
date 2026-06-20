@@ -8,12 +8,13 @@ import {
   SafeAreaView
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, CheckCircle2, AlertTriangle, Info } from 'lucide-react-native';
+
 import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimated';
 
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { apiClient } from '@/services/api/client';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 // --- API Typings ---
 enum IntentType {
@@ -91,8 +92,7 @@ export default function SearchResultsScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-             {/* @ts-ignore */}
-            <ArrowLeft size={24} color={colors.textPrimary} />
+            <DynamicIcon name="ArrowLeft" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
         <View style={styles.centerContainer}>
@@ -109,8 +109,7 @@ export default function SearchResultsScreen() {
       {/* Header */}
       <Animated.View entering={SlideInDown.springify()} style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-           {/* @ts-ignore */}
-          <ArrowLeft size={24} color={colors.textPrimary} />
+          <DynamicIcon name="ArrowLeft" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]} numberOfLines={1}>
@@ -127,8 +126,7 @@ export default function SearchResultsScreen() {
         {intent && (
           <View style={[styles.intentContainer, { backgroundColor: colors.surface }]}>
             <View style={styles.intentChip}>
-              {/* @ts-ignore */}
-              <Info size={16} color={colors.primary} />
+              <DynamicIcon name="Info" size={16} color={colors.primary} />
               <Text style={[styles.intentText, { color: colors.textPrimary }]}>
                 Intent: {intent.intent_type.replace(/_/g, ' ')}
               </Text>
@@ -142,8 +140,7 @@ export default function SearchResultsScreen() {
         {/* Resolution Feedback Banner */}
         {intent?.resolution_type === 'LLM_RECOVERY' && (
           <Animated.View entering={FadeInDown.delay(100).springify()} style={[styles.banner, { backgroundColor: colors.warningSoft, borderColor: colors.warning }]}>
-             {/* @ts-ignore */}
-            <AlertTriangle size={20} color={colors.warning} />
+            <DynamicIcon name="AlertTriangle" size={20} color={colors.warning} />
             <View style={styles.bannerTextContainer}>
               <Text style={[styles.bannerTitle, { color: colors.textPrimary }]}>
                 Did you mean {intent.entity_name}?
@@ -160,8 +157,7 @@ export default function SearchResultsScreen() {
 
         {/* Main Content Area */}
         <View style={styles.placeholderContainer}>
-          {/* @ts-ignore */}
-          <CheckCircle2 size={48} color={colors.success} />
+          <DynamicIcon name="CheckCircle2" size={48} color={colors.success} />
           <Text style={[styles.placeholderTitle, { color: colors.textPrimary }]}>
             {intent?.entity_name || 'Search Results'}
           </Text>

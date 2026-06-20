@@ -4,7 +4,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, GitCommit, User, Bot } from 'lucide-react-native';
+
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 const MOCK_AUDIT_LOGS = [
   { id: '1', type: 'PUBLISH', title: 'Published Version 4', actor: 'Admin (You)', date: 'Today, 2:30 PM', isBot: false },
@@ -23,8 +24,7 @@ export default function AuditTimelineScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          {/* @ts-ignore */}
-          <ArrowLeft size={24} color={colors.textPrimary} />
+          <DynamicIcon name="ArrowLeft" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <View>
           <Text style={styles.title}>Audit Timeline</Text>
@@ -44,14 +44,11 @@ export default function AuditTimelineScreen() {
                   log.isBot ? styles.nodeBot : styles.nodeUser
                 ]}>
                   {log.type === 'PUBLISH' ? (
-                    // @ts-ignore
-                    <GitCommit size={14} color="#FFF" />
+                    <DynamicIcon name="GitCommit" size={14} color="#FFF" />
                   ) : log.isBot ? (
-                    // @ts-ignore
-                    <Bot size={14} color="#FFF" />
+                    <DynamicIcon name="Bot" size={14} color="#FFF" />
                   ) : (
-                    // @ts-ignore
-                    <User size={14} color="#FFF" />
+                    <DynamicIcon name="User" size={14} color="#FFF" />
                   )}
                 </View>
                 {index !== MOCK_AUDIT_LOGS.length - 1 && <View style={styles.line} />}
@@ -68,11 +65,9 @@ export default function AuditTimelineScreen() {
                 )}
                 <View style={styles.actorBadge}>
                   {log.isBot ? (
-                    // @ts-ignore
-                    <Bot size={12} color={colors.primary} />
+                    <DynamicIcon name="Bot" size={12} color={colors.primary} />
                   ) : (
-                    // @ts-ignore
-                    <User size={12} color={colors.textSecondary} />
+                    <DynamicIcon name="User" size={12} color={colors.textSecondary} />
                   )}
                   <Text style={[styles.actorText, log.isBot && { color: colors.primary }]}>
                     {log.actor}
