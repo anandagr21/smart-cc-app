@@ -2,18 +2,10 @@ const footerLinks = {
   Product: [
     { label: "Features",    href: "#features" },
     { label: "How It Works",href: "#how-it-works" },
-    { label: "Changelog",   href: "#" },
-  ],
-  Company: [
-    { label: "About",   href: "#" },
-    { label: "Blog",    href: "#" },
-    { label: "Careers", href: "#" },
-    { label: "Contact", href: "#" },
   ],
   Legal: [
     { label: "Privacy Policy", href: "#" },
     { label: "Terms of Service", href: "#" },
-    { label: "Cookie Policy",  href: "#" },
   ],
 };
 
