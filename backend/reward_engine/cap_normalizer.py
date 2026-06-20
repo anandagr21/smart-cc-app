@@ -13,7 +13,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from reward_engine.cap_exceptions import CapInvalidConfigException, InvalidCapScopeError, InvalidCapTypeError
+from reward_engine.cap_exceptions import CapInvalidConfigError, InvalidCapScopeError, InvalidCapTypeError
 from reward_engine.cap_schemas import CapConfigInput, CapRule
 from reward_engine.constants import (
     CAP_SCOPE_MAP,
@@ -62,7 +62,7 @@ def normalize_cap_config(config: dict[str, Any] | list[dict[str, Any]]) -> list[
     Raises:
         InvalidCapTypeError: If a cap type string is unrecognized.
         InvalidCapScopeError: If a scope string is unrecognized.
-        CapInvalidConfigException: If config is empty, limit is missing/invalid, or
+        CapInvalidConfigError: If config is empty, limit is missing/invalid, or
             limit is not a valid number.
     """
     # Path 1: Direct list input — parse each entry
@@ -89,7 +89,7 @@ def normalize_cap_config(config: dict[str, Any] | list[dict[str, Any]]) -> list[
         return _parse_cap_entry(config)
 
     # Nothing matched — raise for invalid config
-    raise CapInvalidConfigException(reason="empty or invalid cap configuration")
+    raise CapInvalidConfigError(reason="empty or invalid cap configuration")
 
 
 def cap_input_to_rule(input_data: CapConfigInput) -> CapRule:
@@ -238,15 +238,15 @@ def _validate_cap_entry(config: dict[str, Any]) -> None:
         config: Cap entry dict to validate.
 
     Raises:
-        CapInvalidConfigException: If limit is missing, zero, negative, or not a valid number.
+        CapInvalidConfigError: If limit is missing, zero, negative, or not a valid number.
     """
     raw_limit = config.get("limit")
     if raw_limit is None:
-        raise CapInvalidConfigException(reason="missing 'limit' key", key="limit", value="")
+        raise CapInvalidConfigError(reason="missing 'limit' key", key="limit", value="")
 
     limit = _safe_decimal(raw_limit)
     if limit <= ZERO_DECIMAL:
-        raise CapInvalidConfigException(
+        raise CapInvalidConfigError(
             reason="limit must be positive", key="limit", value=str(raw_limit)
         )
 

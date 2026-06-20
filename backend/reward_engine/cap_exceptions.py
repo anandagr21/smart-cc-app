@@ -52,11 +52,7 @@ class CapExhaustedError(CapEngineError):
 # Aliases expected by test suite
 # ---------------------------------------------------------------------------
 
-# Alias for CapExhaustedError (test imports CapExhaustedException)
-CapExhaustedException = CapExhaustedError
-
-
-class CapInvalidConfigException(CapEngineError):
+class CapInvalidConfigError(CapEngineError):
     """Raised when a cap configuration dict is invalid or incomplete."""
 
     def __init__(self, reason: str = "Invalid cap configuration", key: str = "", value: str = "") -> None:
@@ -66,7 +62,7 @@ class CapInvalidConfigException(CapEngineError):
         super().__init__(f"Invalid cap config: {reason}" + (f" ({key}={value})" if key else ""))
 
 
-class CapNotFoundException(CapEngineError):
+class CapNotFoundError(CapEngineError):
     """Raised when a requested cap type is not found in the rule set."""
 
     def __init__(self, cap_type: str = "unknown") -> None:
@@ -74,7 +70,7 @@ class CapNotFoundException(CapEngineError):
         super().__init__(f"Cap not found: {cap_type}")
 
 
-class CapNotApplicableException(CapEngineError):
+class CapNotApplicableError(CapEngineError):
     """Raised when a cap rule does not apply to the given transaction context."""
 
     def __init__(self, cap_type: str = "", merchant: str = "", reason: str = "") -> None:

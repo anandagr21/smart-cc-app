@@ -27,7 +27,7 @@ import pytest
 # Imports under test
 # ---------------------------------------------------------------------------
 from reward_engine.cap_exceptions import (
-    CapExhaustedException,
+    CapExhaustedError,
     CapInvalidConfigException,
     CapNotFoundException,
     CapNotApplicableException,
@@ -232,7 +232,7 @@ class TestCapExceptions:
     """Tests for cap engine exceptions."""
 
     def test_cap_exhausted_exception(self):
-        exc = CapExhaustedException(cap_type="monthly_cap", limit=Decimal("1500"))
+        exc = CapExhaustedError(cap_type="monthly_cap", limit=Decimal("1500"))
         assert exc.cap_type == "monthly_cap"
         assert exc.limit == Decimal("1500")
         assert "Exhausted" in exc.message
