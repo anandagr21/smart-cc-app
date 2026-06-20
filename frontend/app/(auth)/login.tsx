@@ -75,25 +75,30 @@ export default function LoginScreen() {
       await login(token, user);
     } catch (error: any) {
       if (error.response?.status === 401 || error.response?.status === 404) {
+        // Auto-register: user doesn't exist yet
         try {
           const regResponse = await apiClient.post('/auth/register', {
             email: data.email,
             password: data.password,
             full_name: 'Smart CC User',
           });
-          const token = regResponse.data.data.access_token;
-          const user = regResponse.data.data.user;
+          const token = regResponse?.data?.data?.access_token;
+          const user = regResponse?.data?.data?.user;
+          if (!token || !user) {
+            setError('email', { message: 'Registration succeeded but response was unexpected. Please try signing in.' });
+            return;
+          }
           await login(token, user);
         } catch (regError: any) {
-          const detail = regError.response?.data?.detail;
-          const msg = Array.isArray(detail) ? detail[0].msg : detail;
+          const detail = regError?.response?.data?.detail;
+          const msg = Array.isArray(detail) ? detail[0]?.msg : detail;
           setError('email', { message: msg || 'Registration failed. Try again.' });
         }
       } else if (!error.response) {
         setError('email', { message: 'Cannot connect to server. Please check your connection.' });
       } else {
         const detail = error.response?.data?.detail;
-        const msg = Array.isArray(detail) ? detail[0].msg : detail;
+        const msg = Array.isArray(detail) ? detail[0]?.msg : detail;
         setError('email', { message: msg || 'Authentication failed' });
       }
     }

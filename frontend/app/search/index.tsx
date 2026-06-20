@@ -61,9 +61,10 @@ export default function SearchScreen() {
 
   useEffect(() => {
     // Focus search input immediately
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       inputRef.current?.focus();
     }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const { data: suggestionsData, isFetching } = useQuery({

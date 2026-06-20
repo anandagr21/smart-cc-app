@@ -41,11 +41,17 @@ export function useGoogleAuth(): UseGoogleAuthReturn {
     if (window.google?.accounts?.id) {
       init();
     } else {
-      // Poll for GIS script load
+      // Poll for GIS script load (max 10 seconds)
+      let attempts = 0;
+      const MAX_ATTEMPTS = 50; // 50 × 200ms = 10 seconds
       const interval = setInterval(() => {
+        attempts += 1;
         if (window.google?.accounts?.id) {
           clearInterval(interval);
           init();
+        } else if (attempts >= MAX_ATTEMPTS) {
+          clearInterval(interval);
+          console.error("Google Identity Services failed to load after 10 seconds");
         }
       }, 200);
       return () => clearInterval(interval);

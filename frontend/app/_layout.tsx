@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, Text, TouchableOpacity, View } from 'react-native';
 import { Stack, useRouter, useSegments, useNavigationContainerRef, useRootNavigationState } from 'expo-router';
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
 import axios from 'axios';
@@ -58,6 +58,48 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// ---------------------------------------------------------------------------
+// Error boundary fallback — shown when an uncaught error crashes the React tree.
+// Renders a helpful message + retry button instead of a blank white screen.
+// ---------------------------------------------------------------------------
+function ErrorFallback({ error, onRetry }: { error: Error; onRetry?: () => void }) {
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#0f0f0f',
+        padding: 32,
+      }}
+    >
+      <Text style={{ color: '#ef4444', fontSize: 18, fontWeight: '700', marginBottom: 12 }}>
+        Something went wrong
+      </Text>
+      <Text
+        style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', marginBottom: 24, lineHeight: 20 }}
+      >
+        {error?.message ?? 'An unexpected error occurred. Please try again.'}
+      </Text>
+      {onRetry && (
+        <TouchableOpacity
+          onPress={onRetry}
+          accessibilityLabel="Retry"
+          accessibilityRole="button"
+          style={{
+            backgroundColor: '#7c3aed',
+            paddingHorizontal: 28,
+            paddingVertical: 12,
+            borderRadius: 12,
+          }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600', fontSize: 15 }}>Try Again</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
 
 export default Sentry.wrap(function RootLayout() {
   const { initializeAuth, token, user, isLoading: isAuthLoading } = useAuthStore();
@@ -120,7 +162,9 @@ export default Sentry.wrap(function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
-      <Sentry.ErrorBoundary fallback={null}>
+      <Sentry.ErrorBoundary fallback={({error, retry}) => (
+        <ErrorFallback error={error} onRetry={retry} />
+      )}>
         <QueryClientProvider client={queryClient}>
           <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
