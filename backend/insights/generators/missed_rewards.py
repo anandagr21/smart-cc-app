@@ -21,32 +21,41 @@ class MissedRewardsGenerator(InsightGenerator):
         self, user_id: str, cards: List[UserCard], transactions: List[EnrichedTransaction]
     ) -> List[InsightResponse]:
         insights = []
-        
+
         if len(cards) < 2 or not transactions:
             return insights
 
         # Analyze the most recent 10 transactions to find missed rewards
         recent_txns = sorted(transactions, key=lambda t: t.date, reverse=True)[:10]
 
-        for tx in recent_txns:
-            if not tx.card_id:
-                continue
-                
-            # Create a recommendation request for this past transaction
-            req = RecommendationRequest(
-                merchant_name=tx.original_merchant_name,
-                amount=tx.amount
+        # Batch evaluate all recent transactions in a single pass to avoid
+        # N× full recommendation pipeline runs (merchant resolution, card fetch,
+        # reward engine, ranking, audit logging). Uses pre-normalized data.
+        import uuid
+        user_uuid = uuid.UUID(user_id)
+
+        eval_requests = [
+            RecommendationRequest(
+                merchant_name=t.original_merchant_name,
+                amount=t.amount,
             )
-            
-            # Evaluate using the central reward engine
-            import uuid
-            resp = await self.recommendation_service.evaluate(uuid.UUID(user_id), req)
-            
+            for t in recent_txns if t.card_id
+        ]
+
+        # Single lightweight batch evaluation — skips audit logging
+        # compared to N individual evaluate() calls
+        batch_results = await self.recommendation_service.evaluate_batch(
+            user_uuid, eval_requests
+        ) if eval_requests else []
+
+        for tx, resp in zip(
+            [t for t in recent_txns if t.card_id], batch_results
+        ):
             if not resp.all_ranked_cards or len(resp.all_ranked_cards) < 2:
                 continue
-                
+
             optimal_card = resp.all_ranked_cards[0]
-            
+
             # Find the card they actually used in the ranking
             used_card_result = next((c for c in resp.all_ranked_cards if str(c.card_id) == tx.card_id), None)
             
