@@ -39,11 +39,14 @@ jobs:
           uv sync
 
       - name: Run Migrations
-        if: ${{ secrets.DATABASE_URL != '' }}
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           cd backend
+          if [ -z "$DATABASE_URL" ]; then
+            echo "DATABASE_URL is not set. Skipping migrations."
+            exit 0
+          fi
           uv run alembic upgrade head
 
   deploy:
