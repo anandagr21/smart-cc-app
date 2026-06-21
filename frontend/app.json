@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Card Optimizer",
-    "slug": "card-optimizer",
+    "slug": "smart-cc",
     "version": "1.0.0",
     "scheme": "smartcc",
     "orientation": "portrait",
