@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "temp_expo",
-    "slug": "temp_expo",
+    "name": "Card Optimizer",
+    "slug": "card-optimizer",
     "version": "1.0.0",
     "scheme": "smartcc",
     "orientation": "portrait",
@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0f172a"
     },
     "ios": {
       "supportsTablet": true,
@@ -21,7 +21,7 @@
       "package": "com.smartcc.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0f172a"
       },
       "edgeToEdgeEnabled": true
     },
