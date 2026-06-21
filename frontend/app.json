@@ -46,6 +46,13 @@
           "organization": "smart-cc"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7786ffcf-fcca-45ed-9429-516afdbf8a50"
+      }
+    },
+    "owner": "akaovia-org"
   }
 }
