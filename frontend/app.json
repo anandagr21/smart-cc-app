@@ -53,6 +53,12 @@
         "projectId": "18741011-a88f-42ff-b38b-02ceabdc13c8"
       }
     },
-    "owner": "akaovia-org"
+    "owner": "akaovia-org",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/18741011-a88f-42ff-b38b-02ceabdc13c8"
+    }
   }
 }
