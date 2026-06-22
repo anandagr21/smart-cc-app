@@ -5,6 +5,7 @@ Responsibility: Pure helpers for recommendations orchestration.
 
 from __future__ import annotations
 
+import json
 from datetime import date
 from typing import Any
 
@@ -72,12 +73,31 @@ def parse_rules_from_catalog(catalog_card: Any, card_name: str) -> list[Normaliz
         
     normalized_rules = []
     raw_rules = getattr(catalog_card, "reward_rules_json", []) or []
-    if isinstance(raw_rules, dict) and "rules" in raw_rules:
-        raw_rules = raw_rules["rules"]
-        
+
+    # Parse JSON string if stored as unparsed text
+    if isinstance(raw_rules, str):
+        try:
+            raw_rules = json.loads(raw_rules)
+        except (json.JSONDecodeError, TypeError):
+            return []
+
+    # Unwrap dict envelope (e.g. {"rules": [...]})
+    if isinstance(raw_rules, dict):
+        if "rules" in raw_rules:
+            raw_rules = raw_rules["rules"]
+        else:
+            return []
+
+    # Bail out if we don't have a list after all parsing
+    if not isinstance(raw_rules, list):
+        return []
+
     base_point_value = float(getattr(catalog_card, "base_point_value", 1.0) or 1.0)
-        
+
     for r in raw_rules:
+        # Skip entries that aren't proper rule dicts
+        if not isinstance(r, dict):
+            continue
         category = str(r.get("category_name", "other"))
         r_type = str(r.get("reward_type", "cashback")).lower()
         
