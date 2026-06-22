@@ -121,46 +121,68 @@ def parse_rules_from_catalog(catalog_card: Any, card_name: str) -> list[Normaliz
             "scope": "monthly" if r.get("cap_cycle") == "monthly" else "transaction",
             "excluded_merchants": r.get("merchant_exclusions", []),
         }
+        explicit_rule_type = r.get("rule_type")
+        explicit_merchant = r.get("merchant")
+        explicit_category = r.get("category")
         
-        category_lower = category.lower()
-        is_base = any(b in category_lower for b in ["catch", "other", "base", "all spend", "any spend", "default"])
-        
-        rule_type = "category_bonus" if not is_base else "base_reward"
-        priority = 10 if not is_base else 100
-        
-        if not is_base:
-            # Determine if this is a strict merchant rule vs a broader category rule with examples
-            is_category = any(w in category_lower for w in ["online", "shopping", "spends", "category", "etc"])
-            
-            merchant_keywords = ["amazon", "flipkart", "myntra", "zomato", "swiggy", "makemytrip", "cleartrip", "bigbasket"]
-            found_merchants = [m for m in merchant_keywords if m in category_lower]
-            
-            if found_merchants and not is_category:
-                config["merchant"] = found_merchants[0]
-                rule_type = "merchant_bonus"
+        if explicit_rule_type:
+            rule_type = explicit_rule_type
+            if explicit_merchant:
+                config["merchant"] = explicit_merchant
                 priority = 1
+                rule_name = f"{card_name} - {explicit_merchant.title()}"
+            elif explicit_category:
+                config["category"] = explicit_category
+                priority = 10
+                rule_name = f"{card_name} - {explicit_category.title()}"
+            elif explicit_rule_type == "base_reward":
+                priority = 100
+                rule_name = f"{card_name} - Base Reward"
             else:
-                # Map LLM human-readable strings to canonical categories
-                if any(w in category_lower for w in ["dining", "restaurant"]):
-                    config["category"] = "dining"
-                elif "food" in category_lower:
-                    config["category"] = "food"
-                elif any(w in category_lower for w in ["travel", "flight", "hotel"]):
-                    config["category"] = "travel"
-                elif any(w in category_lower for w in ["fuel", "petrol", "gas"]):
-                    config["category"] = "fuel"
-                elif any(w in category_lower for w in ["grocery", "groceries", "supermarket"]):
-                    config["category"] = "grocery"
-                elif any(w in category_lower for w in ["utility", "utilities", "bill"]):
-                    config["category"] = "utilities"
-                elif any(w in category_lower for w in ["online", "shopping"]):
-                    config["category"] = "ecommerce"
+                priority = 10
+                rule_name = f"{card_name} - Custom Rule"
+        else:
+            # Fallback to heuristic parsing if no explicit rule_type is defined
+            category_lower = category.lower()
+            is_base = any(b in category_lower for b in ["catch", "other", "base", "all spend", "any spend", "default"])
+            
+            rule_type = "category_bonus" if not is_base else "base_reward"
+            priority = 10 if not is_base else 100
+            rule_name = f"{card_name} - {category}"
+            
+            if not is_base:
+                # Determine if this is a strict merchant rule vs a broader category rule with examples
+                is_category = any(w in category_lower for w in ["online", "shopping", "spends", "category", "etc"])
+                
+                merchant_keywords = ["amazon", "flipkart", "myntra", "zomato", "swiggy", "makemytrip", "cleartrip", "bigbasket", "uber", "pvr", "tata play", "cult.fit"]
+                found_merchants = [m for m in merchant_keywords if m in category_lower]
+                
+                if found_merchants and not is_category:
+                    config["merchant"] = found_merchants[0]
+                    rule_type = "merchant_bonus"
+                    priority = 1
                 else:
-                    config["category"] = category
+                    # Map LLM human-readable strings to canonical categories
+                    if any(w in category_lower for w in ["dining", "restaurant"]):
+                        config["category"] = "dining"
+                    elif "food" in category_lower:
+                        config["category"] = "food"
+                    elif any(w in category_lower for w in ["travel", "flight", "hotel"]):
+                        config["category"] = "travel"
+                    elif any(w in category_lower for w in ["fuel", "petrol", "gas"]):
+                        config["category"] = "fuel"
+                    elif any(w in category_lower for w in ["grocery", "groceries", "supermarket"]):
+                        config["category"] = "grocery"
+                    elif any(w in category_lower for w in ["utility", "utilities", "bill"]):
+                        config["category"] = "utilities"
+                    elif any(w in category_lower for w in ["online", "shopping"]):
+                        config["category"] = "ecommerce"
+                    else:
+                        config["category"] = category
         
         normalized_rules.append(
             NormalizedRuleConfig(
-                rule_name=f"{card_name} - {category}",
+                rule_name=rule_name,
                 rule_type=rule_type,
                 priority=priority,
                 config=config,
