@@ -25,7 +25,7 @@ import { DynamicIcon } from '@/components/DynamicIcon';
 export default function HistoryScreen() {
   const { cardId } = useLocalSearchParams<{ cardId?: string }>();
   const router = useRouter();
-  
+
   const { data: cards } = useCards();
   const filteredCard = cards?.find(c => c.id === cardId);
 
@@ -33,7 +33,7 @@ export default function HistoryScreen() {
   const [isFormSheetVisible, setFormSheetVisible] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<TransactionResponse | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
-  const [showInsights, setShowInsights] = useState(false);
+  const [activeTab, setActiveTab] = useState<'activity' | 'insights'>('activity');
   const [reduceMotion, setReduceMotion] = useState(false);
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
@@ -105,13 +105,36 @@ export default function HistoryScreen() {
             </Animated.View>
           )}
         </View>
+
+        {/* Segmented Control */}
+        {allTransactions.length > 0 && (
+          <View style={styles.segmentedControlWrap}>
+            <View style={[styles.segmentedControl, { backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.05)' }]}>
+              <TouchableOpacity
+                style={[styles.segment, activeTab === 'activity' && [styles.activeSegment, { backgroundColor: colors.surfaceElevated, shadowColor: colors.shadow }]]}
+                onPress={() => setActiveTab('activity')}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.segmentText, { color: activeTab === 'activity' ? colors.textPrimary : colors.textSecondary }]}>Activity</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.segment, activeTab === 'insights' && [styles.activeSegment, { backgroundColor: colors.surfaceElevated, shadowColor: colors.shadow }]]}
+                onPress={() => setActiveTab('insights')}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.segmentText, { color: activeTab === 'insights' ? colors.textPrimary : colors.textSecondary }]}>Insights</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         <View style={[styles.headerHighlight, { backgroundColor: colors.border }]} />
       </View>
 
       {cardId && filteredCard && (
         <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(80).springify()} style={[styles.filterWrap, { paddingTop: HEADER_HEIGHT }]}>
-          <TouchableOpacity 
-            style={[styles.filterPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} 
+          <TouchableOpacity
+            style={[styles.filterPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
             onPress={handleClearFilter}
             activeOpacity={0.7}
           >
@@ -144,7 +167,7 @@ export default function HistoryScreen() {
           ) : (
             <EmptyTransactionState onAddPress={handleOpenAdd} />
           )
-        ) : (
+        ) : activeTab === 'activity' ? (
           <SectionList
             sections={groupedTransactions}
             keyExtractor={(item) => item.id}
@@ -160,7 +183,10 @@ export default function HistoryScreen() {
                 intensity={80}
                 style={[
                   styles.sectionHeader,
-                  { backgroundColor: colors.glassSurface, borderBottomColor: colors.glassBorder },
+                  {
+                    backgroundColor: colors.glassSurface,
+                    borderBottomColor: colors.glassBorder,
+                  },
                 ]}
               >
                 <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
@@ -169,36 +195,6 @@ export default function HistoryScreen() {
             ListHeaderComponent={
               <View style={styles.summaryWrap}>
                 <SavingsSummaryCard transactions={allTransactions} />
-                
-                {allTransactions.length > 0 && (
-                  <View style={styles.insightToggleWrap}>
-                    <TouchableOpacity
-                      onPress={() => setShowInsights(!showInsights)}
-                      style={[
-                        styles.insightChip,
-                        {
-                          backgroundColor: showInsights ? colors.primary + '1A' : colors.surfaceElevated,
-                          borderColor: showInsights ? colors.primary + '33' : colors.border,
-                        },
-                      ]}
-                      activeOpacity={0.7}
-                      accessibilityRole="button"
-                      accessibilityLabel={showInsights ? 'Hide analytics' : 'Show analytics'}
-                    >
-                      <DynamicIcon name="BarChart3" size={16} color={showInsights ? colors.primary : colors.textSecondary} strokeWidth={1.8} />
-                      <Text style={[styles.insightChipText, { color: showInsights ? colors.primary : colors.textSecondary }]}>
-                        {showInsights ? 'Hide Analytics' : 'Analytics'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                {showInsights && (
-                  <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.springify()}>
-                    <CategoryRewardsChart transactions={allTransactions} />
-                    <RewardLeakageCard transactions={allTransactions} />
-                  </Animated.View>
-                )}
               </View>
             }
             contentContainerStyle={[styles.scrollContent, !cardId && { paddingTop: HEADER_HEIGHT }]}
@@ -215,6 +211,18 @@ export default function HistoryScreen() {
               />
             }
           />
+        ) : null}
+
+        {/* Insights Tab */}
+        {activeTab === 'insights' && allTransactions.length > 0 && (
+          <Animated.ScrollView
+            entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.springify()}
+            contentContainerStyle={[styles.scrollContent, { paddingTop: HEADER_HEIGHT + 24 }]}
+            showsVerticalScrollIndicator={false}
+          >
+            <CategoryRewardsChart transactions={allTransactions} />
+            <RewardLeakageCard transactions={allTransactions} />
+          </Animated.ScrollView>
         )}
       </View>
 
@@ -235,7 +243,7 @@ export default function HistoryScreen() {
 }
 
 const ITEM_HEIGHT = 88; // TransactionRow: 76px content + 12px marginBottom
-const HEADER_HEIGHT = 130; // Sticky header: safe area + title + subtitle + padding
+const HEADER_HEIGHT = 150; // Sticky header: safe area + title + subtitle + padding
 
 const styles = StyleSheet.create({
   headerAbsolute: {
@@ -252,7 +260,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: tokens.layout.screenPadding,
-    paddingTop: 60, // approximate safe area + spacing
+    paddingTop: 16,
     paddingBottom: 16,
   },
   title: {
@@ -335,24 +343,30 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
   },
-  insightToggleWrap: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 24,
+  segmentedControlWrap: {
+    paddingHorizontal: tokens.layout.screenPadding,
+    paddingBottom: 16,
   },
-  insightChip: {
+  segmentedControl: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
     borderRadius: tokens.radius.full,
-    borderWidth: 1,
+    padding: 4,
   },
-  insightChipText: {
-    fontSize: tokens.fontSize.caption,
+  segment: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: tokens.radius.full,
+  },
+  activeSegment: {
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  segmentText: {
+    fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
-    letterSpacing: 0.3,
   },
 });
