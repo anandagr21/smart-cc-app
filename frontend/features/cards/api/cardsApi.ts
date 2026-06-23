@@ -19,7 +19,7 @@ export const fetchUserCards = async (): Promise<UserCardResponse[]> => {
   const response = await apiClient.get<PaginatedResponse<UserCardResponse>>('/cards', {
     params: { limit: 100 }
   });
-  return response.data.data;
+  return response.data.data.filter(c => c.card_status !== 'DELETED');
 };
 
 export const updateCardCatalog = async (
