@@ -19,11 +19,13 @@ TODO:
 - Add card benefit rules schema when reward engine integration is needed.
 """
 
+import json
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -142,6 +144,16 @@ class CardCatalogResponse(BaseModel):
     updated_at: datetime
     reward_rules_json: list[dict] | dict | None = None
     milestones_json: list[dict] | dict | None = None
+
+    @field_validator("reward_rules_json", "milestones_json", mode="before")
+    @classmethod
+    def parse_json_strings(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return None
+        return v
 
     model_config = ConfigDict(from_attributes=True, extra="forbid")
 
