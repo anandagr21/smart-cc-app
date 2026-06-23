@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Narrative, ConfidenceLevel } from '../types/monthly_intelligence.types';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { DynamicIcon } from '@/components/DynamicIcon';
 
@@ -23,45 +24,60 @@ export const HeroNarrative: React.FC<HeroNarrativeProps> = ({ narrative, onPress
     }
   };
 
-  const getConfidenceColor = (level: ConfidenceLevel) => {
+  const getConfidenceColor = () => {
     if (narrative.type === 'INEFFICIENCY') return colors.warning;
-    return colors.success; // Emerald identity
+    return colors.success;
   };
+
+  const glowColor = getConfidenceColor() + '15'; // 8% opacity hex approx
+  const pillBg = getConfidenceColor() + '1A'; // 10% opacity
+  const pillBorder = getConfidenceColor() + '33'; // 20% opacity
 
   return (
     <View style={styles.container}>
-      <View style={styles.pillRow}>
-        <View style={[styles.confidencePill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-          <View style={[styles.indicatorDot, { backgroundColor: getConfidenceColor(narrative.confidence) }]} />
-          <Text style={[styles.pillText, { color: colors.textSecondary }]}>
-            {getConfidenceText(narrative.confidence)}
-          </Text>
+      <LinearGradient
+        colors={[glowColor, 'transparent']}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+      
+      <View style={styles.contentWrap}>
+        <View style={styles.pillRow}>
+          <View style={[styles.confidencePill, { backgroundColor: pillBg, borderColor: pillBorder }]}>
+            <View style={[styles.indicatorDot, { backgroundColor: getConfidenceColor() }]} />
+            <Text style={[styles.pillText, { color: getConfidenceColor() }]}>
+              {getConfidenceText(narrative.confidence)}
+            </Text>
+          </View>
         </View>
-      </View>
 
-      <Text style={[styles.narrativeText, { color: colors.textPrimary }]}>
-        {narrative.text}
-      </Text>
-
-      <TouchableOpacity 
-        style={styles.reasoningBtn} 
-        onPress={() => onPressExplain(narrative)}
-        activeOpacity={0.7}
-      >
-        <Text style={[styles.reasoningPreview, { color: colors.textMuted }]} numberOfLines={2}>
-          {narrative.reasoning}
+        <Text style={[styles.narrativeText, { color: colors.textPrimary }]}>
+          {narrative.text}
         </Text>
-        <View style={styles.explainAction}>
-          <Text style={[styles.explainText, { color: colors.primary }]}>Why?</Text>
-          <DynamicIcon name="Info" size={14} color={colors.primary} style={{ marginLeft: 4 }} />
-        </View>
-      </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.reasoningBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+          onPress={() => onPressExplain(narrative)}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.reasoningPreview, { color: colors.textSecondary }]} numberOfLines={2}>
+            {narrative.reasoning}
+          </Text>
+          <View style={[styles.explainAction, { backgroundColor: colors.primarySoft }]}>
+            <Text style={[styles.explainText, { color: colors.primary }]}>Why?</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    position: 'relative',
+  },
+  contentWrap: {
     paddingHorizontal: 24,
     paddingTop: 32,
     paddingBottom: 40,
@@ -73,11 +89,11 @@ const styles = StyleSheet.create({
   confidencePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: tokens.radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 6,
+    borderWidth: 1,
+    gap: 8,
   },
   indicatorDot: {
     width: 6,
@@ -86,19 +102,24 @@ const styles = StyleSheet.create({
   },
   pillText: {
     fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.medium,
+    fontWeight: tokens.fontWeight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   narrativeText: {
-    fontSize: 28,
+    fontSize: tokens.fontSize.display,
     fontWeight: tokens.fontWeight.heavy,
-    lineHeight: 36,
+    lineHeight: 40,
     letterSpacing: -0.5,
     marginBottom: 24,
   },
   reasoningBtn: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 16,
+    padding: 16,
+    borderRadius: tokens.radius.card,
+    borderWidth: 1,
   },
   reasoningPreview: {
     flex: 1,
@@ -106,9 +127,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   explainAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 2,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: tokens.radius.full,
   },
   explainText: {
     fontSize: tokens.fontSize.caption,

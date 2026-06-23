@@ -10,15 +10,13 @@ interface OptimizationTimelineProps {
   onPressExplain: (item: any) => void;
 }
 
-export const OptimizationTimeline: React.FC<OptimizationTimelineProps> = ({ 
-  narratives, 
+export const OptimizationTimeline: React.FC<OptimizationTimelineProps> = ({
+  narratives,
   streaks,
-  onPressExplain 
+  onPressExplain
 }) => {
   const colors = useThemeColors();
 
-  // Combine and sort. Since they are monthly summaries, we don't have exact timestamps.
-  // We'll interleave them to create a narrative flow.
   const timelineItems = [
     ...narratives.map(n => ({ ...n, _kind: 'NARRATIVE' as const })),
     ...streaks.map(s => ({ ...s, _kind: 'STREAK' as const }))
@@ -29,13 +27,13 @@ export const OptimizationTimeline: React.FC<OptimizationTimelineProps> = ({
   return (
     <View style={styles.container}>
       <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>BEHAVIORAL EVOLUTION</Text>
-      
+
       <View style={styles.timeline}>
         <View style={[styles.connector, { backgroundColor: colors.border }]} />
-        
-        {timelineItems.map((item, index) => (
-          <TouchableOpacity 
-            key={item.id} 
+
+        {timelineItems.map((item) => (
+          <TouchableOpacity
+            key={item.id}
             style={styles.timelineItem}
             activeOpacity={0.7}
             onPress={() => onPressExplain(item)}
@@ -43,7 +41,7 @@ export const OptimizationTimeline: React.FC<OptimizationTimelineProps> = ({
             <View style={[styles.marker, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
               <View style={[styles.innerMarker, { backgroundColor: item._kind === 'STREAK' ? colors.primary : colors.textMuted }]} />
             </View>
-            
+
             <View style={styles.content}>
               <Text style={[styles.itemText, { color: colors.textPrimary }]} numberOfLines={3}>
                 {item.text}
@@ -62,8 +60,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   sectionTitle: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 20,
   },
@@ -83,6 +81,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 24,
     alignItems: 'flex-start',
+    minHeight: 44,
   },
   marker: {
     width: 12,
@@ -90,7 +89,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 2,
     marginRight: 16,
-    marginTop: 4,
+    marginTop: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -101,6 +100,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    justifyContent: 'center',
   },
   itemText: {
     fontSize: tokens.fontSize.body,

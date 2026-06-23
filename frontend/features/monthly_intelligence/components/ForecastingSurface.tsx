@@ -19,11 +19,11 @@ export const ForecastingSurface: React.FC<ForecastingSurfaceProps> = ({ forecast
   return (
     <View style={styles.container}>
       <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>TRAJECTORY</Text>
-      
+
       <View style={styles.grid}>
         {forecasts.map((forecast) => (
-          <TouchableOpacity 
-            key={forecast.id} 
+          <TouchableOpacity
+            key={forecast.id}
             style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
             activeOpacity={0.7}
             onPress={() => onPressExplain(forecast)}
@@ -48,8 +48,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   sectionTitle: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 16,
   },

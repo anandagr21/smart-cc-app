@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, AccessibilityInfo } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
@@ -13,10 +13,16 @@ interface OptimizationVisualsProps {
 
 export const OptimizationVisuals: React.FC<OptimizationVisualsProps> = ({ summary }) => {
   const colors = useThemeColors();
+  const hasAnimated = useRef(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+  }, []);
 
   const captured = summary.total_rewards_optimized || 0;
   const missed = summary.missed_opportunity_value || 0;
-  
+
   if (captured === 0 && missed === 0) return null;
 
   const pieData = [
@@ -31,10 +37,19 @@ export const OptimizationVisuals: React.FC<OptimizationVisualsProps> = ({ summar
     },
   ];
 
+  // Animate pie chart only on first render, not on month navigation
+  const shouldAnimate = !hasAnimated.current;
+  if (!hasAnimated.current) {
+    hasAnimated.current = true;
+  }
+
   return (
-    <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.container}>
+    <Animated.View
+      entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(100).springify()}
+      style={styles.container}
+    >
       <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>OPTIMIZATION BREAKDOWN</Text>
-      
+
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.chartContainer}>
           <PieChart
@@ -52,8 +67,8 @@ export const OptimizationVisuals: React.FC<OptimizationVisualsProps> = ({ summar
                 </Text>
               </View>
             )}
-            animationDuration={1000}
-            isAnimated
+            animationDuration={shouldAnimate ? 1000 : 0}
+            isAnimated={shouldAnimate}
           />
         </View>
 
@@ -69,7 +84,7 @@ export const OptimizationVisuals: React.FC<OptimizationVisualsProps> = ({ summar
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.legendItem}>
             <View style={[styles.dot, { backgroundColor: colors.danger }]} />
             <View>
@@ -93,8 +108,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   sectionTitle: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 16,
   },

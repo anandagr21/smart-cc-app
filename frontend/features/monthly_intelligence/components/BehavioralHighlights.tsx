@@ -1,26 +1,24 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { MonthlySummaryResponse } from '../types/monthly_intelligence.types';
 
 interface BehavioralHighlightsProps {
   summary: MonthlySummaryResponse;
+  onPressExplain?: (item: any) => void;
 }
 
-export const BehavioralHighlights: React.FC<BehavioralHighlightsProps> = ({ summary }) => {
+export const BehavioralHighlights: React.FC<BehavioralHighlightsProps> = ({ summary, onPressExplain }) => {
   const colors = useThemeColors();
 
-  // Extract 2-4 key metrics. 
-  // We want sentences, not just raw KPIs.
-  
   const highlights = [];
 
   if (summary.optimization_rate > 0) {
     highlights.push({
       id: 'opt',
       title: 'Overall Optimization',
-      text: summary.optimization_rate > 70 
+      text: summary.optimization_rate > 70
         ? 'Most purchases were optimized effectively this month.'
         : 'There is room for optimization in your daily spending.',
       metric: `${summary.optimization_rate.toFixed(1)}%`,
@@ -57,10 +55,20 @@ export const BehavioralHighlights: React.FC<BehavioralHighlightsProps> = ({ summ
   return (
     <View style={styles.container}>
       <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>BEHAVIORAL HIGHLIGHTS</Text>
-      
+
       <View style={styles.grid}>
         {highlights.slice(0, 4).map((h) => (
-          <View key={h.id} style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+          <TouchableOpacity
+            key={h.id}
+            style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+            activeOpacity={onPressExplain ? 0.8 : 1}
+            disabled={!onPressExplain}
+            onPress={() => onPressExplain?.({
+              text: h.title,
+              reasoning: h.text,
+              metrics: { [h.title]: h.metric }
+            })}
+          >
             <Text style={[styles.cardTitle, { color: colors.textMuted }]}>{h.title}</Text>
             <Text style={[styles.cardText, { color: colors.textPrimary }]} numberOfLines={3}>
               {h.text}
@@ -68,7 +76,7 @@ export const BehavioralHighlights: React.FC<BehavioralHighlightsProps> = ({ summ
             <Text style={[styles.cardMetric, { color: colors.textSecondary }]}>
               {h.metric}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     </View>
@@ -81,18 +89,23 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   sectionTitle: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 16,
   },
   grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   card: {
+    width: '48%',
+    flexGrow: 1,
     padding: 16,
-    borderRadius: tokens.radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: tokens.radius.card,
+    borderWidth: 1,
+    justifyContent: 'space-between',
   },
   cardTitle: {
     fontSize: tokens.fontSize.caption,
@@ -101,13 +114,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardText: {
-    fontSize: tokens.fontSize.body,
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
-    lineHeight: 22,
-    marginBottom: 12,
+    lineHeight: 18,
+    marginBottom: 16,
   },
   cardMetric: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.bold,
+    fontSize: tokens.fontSize.title,
+    fontWeight: tokens.fontWeight.heavy,
   },
 });

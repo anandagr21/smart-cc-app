@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, AccessibilityInfo } from 'react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 
@@ -8,10 +8,19 @@ import { DynamicIcon } from '@/components/DynamicIcon';
 
 export const AnticipatoryState: React.FC = () => {
   const colors = useThemeColors();
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+  }, []);
+
+  const enteringAnim = reduceMotion
+    ? FadeInDown.duration(0)
+    : FadeInDown.duration(800).springify();
 
   return (
-    <Animated.View 
-      entering={FadeInDown.duration(800).springify()} 
+    <Animated.View
+      entering={enteringAnim}
       style={styles.container}
     >
       <View style={[styles.iconWrap, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
@@ -43,7 +52,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   title: {
-    fontSize: 28,
+    fontSize: tokens.fontSize.display,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: -0.5,
     marginBottom: 16,
