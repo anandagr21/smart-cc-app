@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, AccessibilityInfo } from 'react-native';
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { NarrativeObservation } from '../api/evolutionApi';
@@ -13,11 +13,28 @@ interface Props {
 
 export function PortfolioEvolutionTimeline({ observations }: Props) {
   const colors = useThemeColors();
+  const [reduceMotion, setReduceMotion] = useState(false);
 
-  if (!observations || observations.length === 0) return null;
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+  }, []);
+
+  if (!observations || observations.length === 0) {
+    return (
+      <Animated.View entering={reduceMotion ? FadeIn.duration(0) : FadeInDown.duration(800).delay(400)} style={styles.container}>
+        <View style={styles.header}>
+          <DynamicIcon name="Clock" size={16} color={colors.textMuted} />
+          <Text style={[styles.title, { color: colors.textMuted }]}>EVOLUTION TIMELINE</Text>
+        </View>
+        <View style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.emptyText, { color: colors.textMuted }]}>Not enough history yet to construct an evolution timeline.</Text>
+        </View>
+      </Animated.View>
+    );
+  }
 
   return (
-    <Animated.View entering={FadeInDown.duration(800).delay(400)} style={styles.container}>
+    <Animated.View entering={reduceMotion ? FadeIn.duration(0) : FadeInDown.duration(800).delay(400)} style={styles.container}>
       <View style={styles.header}>
         <DynamicIcon name="Clock" size={16} color={colors.textMuted} />
         <Text style={[styles.title, { color: colors.textMuted }]}>EVOLUTION TIMELINE</Text>
@@ -84,5 +101,16 @@ const styles = StyleSheet.create({
   narrative: {
     fontSize: tokens.fontSize.bodyLg,
     lineHeight: 24,
+  },
+  emptyState: {
+    padding: 24,
+    borderRadius: tokens.radius.xl,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: tokens.fontSize.body,
+    textAlign: 'center',
   },
 });

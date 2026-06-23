@@ -17,10 +17,19 @@ export default function IntelligenceScreen() {
       <View style={[styles.headerRow, { paddingTop: Math.max(insets.top, 20) }]}>
         <View style={{ flex: 1 }} />
         <TouchableOpacity 
-          onPress={() => router.back()}
-          style={[styles.closeButton, { backgroundColor: colors.glassSurface }]}
+          style={[styles.iconButton, { backgroundColor: colors.glassSurface, marginRight: 12 }]}
+          accessibilityLabel="Filter insights"
+          accessibilityRole="button"
         >
-          <DynamicIcon name="X" size={24} color={colors.textPrimary} />
+          <DynamicIcon name="Filter" size={20} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => router.back()}
+          style={[styles.iconButton, { backgroundColor: colors.glassSurface }]}
+          accessibilityLabel="Close"
+          accessibilityRole="button"
+        >
+          <DynamicIcon name="X" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
       <PortfolioEvolutionSurface />
@@ -37,10 +46,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 12,
   },
-  closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
