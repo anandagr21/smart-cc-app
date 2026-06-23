@@ -8,6 +8,8 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
+  Platform,
+  Alert,
 } from 'react-native';
 
 import { BlurView } from 'expo-blur';
@@ -24,7 +26,6 @@ import { getNetworkGradient } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
 import { ComingSoonSheet } from './ComingSoonSheet';
 import { useUpdateCard } from '../hooks/useUpdateCard';
-import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
 import { EditAnnualFeeSheet } from './EditAnnualFeeSheet';
 import { EditSpendSheet } from './EditSpendSheet';
 import { EditFeeCycleSheet } from './EditFeeCycleSheet';
@@ -51,9 +52,17 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const [isFeeCycleEditVisible, setIsFeeCycleEditVisible] = useState(false);
   const [isCardDetailsEditVisible, setIsCardDetailsEditVisible] = useState(false);
 
+  // Local state for instant toggle feedback
+  const [localIsActive, setLocalIsActive] = useState<boolean | null>(null);
+
   const { mutate: updateCard } = useUpdateCard(card?.id || '');
 
-  // Log breadcrumb if card has fee waiver logic and sheet is opened
+  React.useEffect(() => {
+    if (card) {
+      setLocalIsActive(card.card_status === 'ACTIVE');
+    }
+  }, [card?.card_status]);
+
   React.useEffect(() => {
     if (card && card.effective_fee_waiver_threshold && card.effective_fee_waiver_threshold > 0) {
       Sentry.addBreadcrumb({
@@ -73,7 +82,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const bankName = card.card_details?.bank_name || 'Bank';
   const network = card.network_override || card.card_details?.network || 'VISA';
   const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' ? '' : network.toUpperCase();
-  const isActive = card.card_status === 'ACTIVE';
+  const isActive = localIsActive !== null ? localIsActive : card.card_status === 'ACTIVE';
 
   const gradient = getNetworkGradient(network, isDark) as [string, string];
 
@@ -93,14 +102,12 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   const intelligenceChips = [];
   const cNameLow = cardName.toLowerCase();
 
-  // 1. Health
   if (hasWaiver && waiverPercent >= 75 && waiverPercent < 100) {
     intelligenceChips.push({ label: 'Near Fee Waiver', icon: 'Activity', color: colors.warning });
   } else if (card.annual_spend > 50000) {
     intelligenceChips.push({ label: 'Frequently Used', icon: 'Zap', color: colors.primary });
   }
 
-  // 2. Categories
   if (cNameLow.includes('travel') || cNameLow.includes('miles') || cNameLow.includes('club')) {
     intelligenceChips.push({ label: 'Travel Optimized', icon: 'Plane', color: '#0EA5E9' });
   }
@@ -113,19 +120,40 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   if (cNameLow.includes('dine') || cNameLow.includes('swiggy')) {
     intelligenceChips.push({ label: 'Dining Benefits', icon: 'Utensils', color: '#EC4899' });
   }
-
-  // Trim to max 4 chips to prevent visual overload
   const finalChips = intelligenceChips.slice(0, 4);
 
-  const handleToggleStatus = () => {
-    updateCard({ card_status: isActive ? 'INACTIVE' : 'ACTIVE' });
+  const handleToggleStatus = (newValue: boolean) => {
+    setLocalIsActive(newValue);
+    updateCard({ card_status: newValue ? 'ACTIVE' : 'INACTIVE' });
   };
 
   const handleViewTransactions = () => {
     onClose();
-    // Navigate to history and pass the cardId to auto-filter
     router.push(`/history?cardId=${card.id}`);
   };
+
+  const handleRemoveCard = () => {
+    Alert.alert(
+      "Remove Card",
+      "Are you sure you want to remove this card from your wallet?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Remove", 
+          style: "destructive",
+          onPress: () => {
+            updateCard({ card_status: 'DELETED' });
+            onClose();
+          }
+        }
+      ]
+    );
+  };
+
+  const bentoBoxStyle = [
+    styles.bentoBox,
+    { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF', borderColor: colors.glassBorder }
+  ];
 
   return (
     <Modal visible={!!card} animationType="slide" transparent onRequestClose={onClose}>
@@ -137,8 +165,8 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
             style={[
               StyleSheet.absoluteFill,
               {
-                borderTopLeftRadius: tokens.radius.sheet,
-                borderTopRightRadius: tokens.radius.sheet,
+                borderTopLeftRadius: 32,
+                borderTopRightRadius: 32,
                 backgroundColor: colors.glassSurface,
                 borderWidth: 1,
                 borderColor: colors.glassBorder,
@@ -146,314 +174,254 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
               },
             ]}
           />
-          {/* Top highlight */}
           <View style={[styles.topHighlight, { backgroundColor: colors.glassHighlight }]} />
 
-          {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerSpacer} />
-            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.glassSurface }]}>
-              <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2} />
+            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+              <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2.5} />
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-
-            {/* Section 1: Hero Card */}
-            <Animated.View entering={FadeInUp.duration(400).delay(50)}>
+            
+            {/* ROW 1: Hero Card */}
+            <Animated.View entering={FadeInUp.duration(500).delay(50)}>
               <LinearGradient
                 colors={gradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
               >
-                <View style={[styles.heroTopEdge, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.4)' }]} />
+                <View style={[styles.heroTopEdge, { backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+                <View style={styles.heroGlare} />
+                
                 <View style={styles.heroHeader}>
-                  <Text style={[styles.heroBankName, { color: colors.textSecondary }]} numberOfLines={1}>{bankName}</Text>
-                  <View style={[styles.statusPill, { backgroundColor: isActive ? colors.successSoft : colors.warningSoft }]}>
-                    <Text style={[styles.statusText, { color: isActive ? colors.success : colors.warning }]}>
-                      {isActive ? 'Active' : 'Inactive'}
-                    </Text>
+                  <Text style={styles.heroBankName} numberOfLines={1}>{bankName}</Text>
+                  <View style={[styles.statusPill, { backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)' }]}>
+                    <Text style={[styles.statusText, { color: '#FFF' }]}>{isActive ? 'ACTIVE' : 'INACTIVE'}</Text>
                   </View>
                 </View>
-                <Text style={[styles.heroCardName, { color: colors.textPrimary }]} numberOfLines={1}>{cardName}</Text>
-                {card.last_4_digits && (
-                  <Text style={{ color: colors.textSecondary, fontSize: tokens.fontSize.body, marginTop: 4, letterSpacing: 2 }}>
-                    •••• {card.last_4_digits}
-                  </Text>
-                )}
+                
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <DynamicIcon name="Wifi" size={28} color="rgba(255,255,255,0.6)" style={{ transform: [{ rotate: '90deg' }], marginBottom: 16 }} />
+                  <Text style={styles.heroCardName} numberOfLines={1}>{cardName}</Text>
+                  {card.last_4_digits && (
+                    <Text style={styles.heroCardNumber}>•••• •••• •••• {card.last_4_digits}</Text>
+                  )}
+                </View>
 
                 <View style={styles.heroFooter}>
                   <View>
-                    <Text style={[styles.heroFeeLabel, { color: colors.textMuted }]}>Annual Fee</Text>
-                    <Text style={[styles.heroFeeValue, { color: colors.textPrimary }]}>
+                    <Text style={styles.heroFeeLabel}>ANNUAL FEE</Text>
+                    <Text style={styles.heroFeeValue}>
                       {card.effective_annual_fee ? formatCurrencyIN(card.effective_annual_fee) : 'Free'}
                     </Text>
                   </View>
-                  {!!displayNetwork && <Text style={[styles.heroNetwork, { color: colors.textSecondary }]}>{displayNetwork}</Text>}
+                  {!!displayNetwork && <Text style={styles.heroNetwork}>{displayNetwork}</Text>}
                 </View>
               </LinearGradient>
             </Animated.View>
 
-            {/* Section 2: Fee Waiver Progress */}
-            {hasWaiver && (
-              <Animated.View entering={FadeInUp.duration(400).delay(150)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                <View style={styles.sectionTitleRow}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginRight: 8 }]}>FEE WAIVER PROGRESS</Text>
-                    <DynamicIcon name="Sparkles" size={14} color={colors.primary} />
-                  </View>
-                  <TouchableOpacity onPress={() => setIsSpendEditVisible(true)} style={styles.sectionEditBtn}>
-                    <Text style={[styles.sectionEditText, { color: colors.textSecondary }]}>Edit</Text>
+            {/* BENTO GRID */}
+            <View style={styles.bentoGrid}>
+              
+              {/* ROW 2: Fee Waiver (Full Width) */}
+              {hasWaiver && (
+                <Animated.View entering={FadeInUp.duration(500).delay(100)} style={[{ width: '100%' }]}>
+                  <TouchableOpacity activeOpacity={0.8} onPress={() => setIsSpendEditVisible(true)} style={bentoBoxStyle}>
+                    <View style={styles.bentoHeader}>
+                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>FEE WAIVER PROGRESS</Text>
+                      <DynamicIcon name="Sparkles" size={14} color={colors.primary} />
+                    </View>
+                    
+                    <View style={styles.waiverNumbersRow}>
+                      <Text style={[styles.waiverCurrent, { color: colors.success }]}>
+                        ₹{card.annual_spend.toLocaleString('en-IN')}
+                      </Text>
+                      <Text style={[styles.waiverTarget, { color: colors.textMuted }]}>
+                        {' / '}₹{waiverTarget.toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+
+                    <View style={[styles.progressTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
+                      <View style={[styles.progressFill, { width: `${Math.min(waiverPercent, 100)}%`, backgroundColor: colors.success }]} />
+                    </View>
+
+                    <View style={styles.bentoFooter}>
+                      <Text style={[styles.bentoFooterText, { color: colors.textSecondary }]} numberOfLines={1}>
+                        {card.waiver_achieved ? 'Waiver achieved' : `₹${remainingSpend.toLocaleString('en-IN')} remaining`}
+                      </Text>
+                      <View style={[styles.miniPill, { backgroundColor: colors.borderHighlight }]}>
+                        <Text style={[styles.miniPillText, { color: colors.textPrimary }]}>{Math.min(waiverPercent, 100).toFixed(0)}%</Text>
+                      </View>
+                    </View>
                   </TouchableOpacity>
-                </View>
-
-                <View style={styles.waiverNumbersRow}>
-                  <Text style={[styles.waiverCurrent, { color: colors.success }]}>
-                    ₹{card.annual_spend.toLocaleString('en-IN')}
-                  </Text>
-                  <Text style={[styles.waiverTarget, { color: colors.textMuted }]}>
-                    {' / '}₹{waiverTarget.toLocaleString('en-IN')}
-                  </Text>
-                  <Text style={[styles.waiverPercent, { color: colors.success }]}>
-                    {Math.min(waiverPercent, 100).toFixed(0)}%
-                  </Text>
-                </View>
-
-                <View style={[styles.progressTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
-                  <View style={[styles.progressFill, { width: `${Math.min(waiverPercent, 100)}%`, backgroundColor: colors.success }]} />
-                </View>
-
-                <View style={styles.waiverFooter}>
-                  <Text style={[styles.waiverRemaining, { color: colors.textSecondary }]}>
-                    {card.waiver_achieved ? 'Waiver achieved' : `₹${remainingSpend.toLocaleString('en-IN')} more to achieve fee waiver`}
-                  </Text>
-                  <View style={[styles.milestonePill, { backgroundColor: colors.borderHighlight }]}>
-                    <Text style={[styles.milestoneText, { color: colors.textPrimary }]}>{waiverMilestone}</Text>
-                  </View>
-                </View>
-              </Animated.View>
-            )}
-
-            {/* Section 2.2: Milestones Progress */}
-            {card.milestone_progress && card.milestone_progress.length > 0 && (
-              <Animated.View entering={FadeInUp.duration(400).delay(175)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                <View style={styles.sectionTitleRow}>
-                  <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>MILESTONE PROGRESS</Text>
-                  <DynamicIcon name="Sparkles" size={14} color={colors.primary} />
-                </View>
-                
-                {isPremium ? card.milestone_progress.map((milestone, idx) => (
-                  <View key={idx} style={{ marginBottom: idx < card.milestone_progress!.length - 1 ? 20 : 0 }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.medium }}>
-                        {milestone.target_type === 'TRANSACTION_COUNT' ? 'Monthly Transactions' : 'Spend Threshold'}
-                      </Text>
-                      <Text style={{ color: colors.success, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.bold }}>
-                        {milestone.target_type === 'TRANSACTION_COUNT' 
-                          ? `${milestone.current_value} / ${milestone.target_value}`
-                          : `₹${milestone.current_value.toLocaleString('en-IN')} / ₹${milestone.target_value.toLocaleString('en-IN')}`
-                        }
-                      </Text>
-                    </View>
-                    <View style={[styles.progressTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', height: 6, marginBottom: 8 }]}>
-                      <View style={[styles.progressFill, { width: `${milestone.progress_percentage}%`, backgroundColor: colors.success }]} />
-                    </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ color: colors.textSecondary, fontSize: tokens.fontSize.micro }}>
-                        {milestone.target_type === 'TRANSACTION_COUNT' && milestone.min_transaction_amount 
-                          ? `Min ₹${milestone.min_transaction_amount} per txn` 
-                          : `Resets ${milestone.period.toLowerCase()}`}
-                      </Text>
-                      <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.micro, fontWeight: tokens.fontWeight.medium }}>
-                        Reward: {milestone.bonus_points ? `${milestone.bonus_points} Pts` : milestone.fee_waiver ? 'Fee Waiver' : 'Milestone'}
-                      </Text>
-                    </View>
-                  </View>
-                )) : (
-                  <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-                    <DynamicIcon name="Zap" size={24} color={colors.primary} style={{ marginBottom: 12, opacity: 0.8 }} />
-                    <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.medium, marginBottom: 4 }}>
-                      Unlock Premium
-                    </Text>
-                    <Text style={{ color: colors.textMuted, fontSize: tokens.fontSize.caption, textAlign: 'center' }}>
-                      Track your monthly transaction and spend milestones live.
-                    </Text>
-                  </View>
-                )}
-              </Animated.View>
-            )}
-
-            {/* Section 2.5: Annual Fee */}
-            <Animated.View entering={FadeInUp.duration(400).delay(200)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-              <View style={styles.sectionTitleRow}>
-                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>ANNUAL FEE</Text>
-                <TouchableOpacity onPress={() => setIsAnnualFeeEditVisible(true)} style={styles.sectionEditBtn}>
-                  <Text style={[styles.sectionEditText, { color: colors.textSecondary }]}>Edit</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.feeIntelligenceRow}>
-                <View style={styles.feeIntelligenceInfo}>
-                  <Text style={[styles.feeIntelligenceValue, { color: colors.textPrimary }]}>
-                    {card.effective_annual_fee ? `${formatCurrencyIN(card.effective_annual_fee)}` : 'Free'}
-                  </Text>
-                  <Text style={[styles.feeIntelligenceSource, { color: colors.textSecondary }]}>
-                    {card.fee_confidence === 'USER_CALIBRATED' ? 'Custom fee applied' : 'Estimated from catalog'}
-                  </Text>
-                </View>
-              </View>
-            </Animated.View>
-
-            {/* Section 2.6: Fee Cycle */}
-            <Animated.View entering={FadeInUp.duration(400).delay(210)} style={[styles.section, styles.cardBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-              <View style={styles.sectionTitleRow}>
-                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>FEE CYCLE</Text>
-                <TouchableOpacity onPress={() => setIsFeeCycleEditVisible(true)} style={styles.sectionEditBtn}>
-                  <Text style={[styles.sectionEditText, { color: colors.textSecondary }]}>Edit</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.feeIntelligenceRow}>
-                <View style={styles.feeIntelligenceInfo}>
-                  <Text style={[styles.feeIntelligenceValue, { color: colors.textPrimary, fontSize: tokens.fontSize.body }]}>
-                    {card.annual_fee_debit_date ? 
-                      card.annual_fee_debit_date.split('-').reverse().join('/') 
-                      : 'Not set'}
-                  </Text>
-                  <Text style={[styles.feeIntelligenceSource, { color: colors.textSecondary }]}>
-                    {card.days_until_renewal !== null && card.days_until_renewal !== undefined ? `Debits in ${card.days_until_renewal} days` : 'Set a date for accurate projections'}
-                  </Text>
-                </View>
-              </View>
-            </Animated.View>
-
-            {/* Section 2.75: Optimization Potential */}
-            <Animated.View entering={FadeInUp.duration(400).delay(225)} style={[styles.section, styles.cardBox, { backgroundColor: 'rgba(139, 92, 246, 0.05)', borderColor: 'rgba(139, 92, 246, 0.2)' }]}>
-              <View style={styles.sectionTitleRow}>
-                <Text style={[styles.sectionTitle, { color: '#8B5CF6' }]}>OPTIMIZATION POTENTIAL</Text>
-                <DynamicIcon name="Sparkles" size={14} color="#8B5CF6" />
-              </View>
-              {hasWaiver && card.explanation_text ? (
-                <Text style={[styles.feeIntelligenceSource, { color: colors.textPrimary, lineHeight: 20 }]}>
-                  {card.explanation_text}
-                </Text>
-              ) : (
-                <Text style={[styles.feeIntelligenceSource, { color: colors.textPrimary, lineHeight: 20 }]}>
-                  Best used for {cNameLow.includes('travel') || cNameLow.includes('miles') ? 'travel & milestone acceleration' : 'maximizing immediate cashback on daily spends'}.
-                </Text>
+                </Animated.View>
               )}
-            </Animated.View>
 
-            {/* Section 3: Reward Intelligence */}
-            {finalChips.length > 0 && (
-              <Animated.View entering={FadeInUp.duration(400).delay(250)} style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginBottom: 16 }]}>CARD INTELLIGENCE</Text>
-                <View style={styles.chipsContainer}>
-                  {finalChips.map((chip, idx) => (
-                    <View key={idx} style={[styles.intelligenceChip, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                      <DynamicIcon name={chip.icon} size={16} color={chip.color} style={{ marginBottom: 8 }} />
-                      <Text style={[styles.chipLabel, { color: colors.textPrimary }]}>{chip.label}</Text>
+              {/* ROW 3: Annual Fee & Fee Cycle (2 Columns) */}
+              <View style={styles.bentoRow}>
+                <Animated.View entering={FadeInUp.duration(500).delay(150)} style={{ flex: 1 }}>
+                  <TouchableOpacity activeOpacity={0.8} onPress={() => setIsAnnualFeeEditVisible(true)} style={[bentoBoxStyle, { height: 110, justifyContent: 'space-between' }]}>
+                    <View style={styles.bentoHeader}>
+                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>ANNUAL FEE</Text>
+                      <DynamicIcon name="Pencil" size={12} color={colors.textMuted} />
                     </View>
-                  ))}
+                    <View>
+                      <Text style={[styles.bentoMassiveValue, { color: colors.textPrimary }]} adjustsFontSizeToFit numberOfLines={1}>
+                        {card.effective_annual_fee ? `${formatCurrencyIN(card.effective_annual_fee)}` : 'Free'}
+                      </Text>
+                      <Text style={[styles.bentoSubText, { color: colors.textSecondary }]} numberOfLines={1}>
+                        {card.fee_confidence === 'USER_CALIBRATED' ? 'Custom fee' : 'Estimated'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+
+                <Animated.View entering={FadeInUp.duration(500).delay(200)} style={{ flex: 1 }}>
+                  <TouchableOpacity activeOpacity={0.8} onPress={() => setIsFeeCycleEditVisible(true)} style={[bentoBoxStyle, { height: 110, justifyContent: 'space-between' }]}>
+                    <View style={styles.bentoHeader}>
+                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>FEE CYCLE</Text>
+                      <DynamicIcon name="Calendar" size={12} color={colors.textMuted} />
+                    </View>
+                    <View>
+                      <Text style={[styles.bentoMassiveValue, { color: colors.textPrimary }]} adjustsFontSizeToFit numberOfLines={1}>
+                        {card.annual_fee_debit_date ? 
+                          card.annual_fee_debit_date.split('-').reverse().join('/') 
+                          : 'Not set'}
+                      </Text>
+                      <Text style={[styles.bentoSubText, { color: colors.textSecondary }]} numberOfLines={1}>
+                        {card.days_until_renewal !== null && card.days_until_renewal !== undefined ? `${card.days_until_renewal} days left` : 'Add date'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
+
+              {/* ROW 4: Milestone Progress (If Premium) */}
+              {card.milestone_progress && card.milestone_progress.length > 0 && (
+                <Animated.View entering={FadeInUp.duration(500).delay(250)} style={[{ width: '100%' }]}>
+                  <View style={bentoBoxStyle}>
+                    <View style={styles.bentoHeader}>
+                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>MILESTONES</Text>
+                      <DynamicIcon name="Trophy" size={14} color={colors.primary} />
+                    </View>
+                    
+                    {isPremium ? card.milestone_progress.map((milestone, idx) => (
+                      <View key={idx} style={{ marginTop: idx > 0 ? 16 : 8 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.bold }}>
+                            {milestone.target_type === 'TRANSACTION_COUNT' ? 'Monthly Txns' : 'Spend Goal'}
+                          </Text>
+                          <Text style={{ color: colors.success, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.bold }}>
+                            {milestone.target_type === 'TRANSACTION_COUNT' 
+                              ? `${milestone.current_value} / ${milestone.target_value}`
+                              : `₹${milestone.current_value.toLocaleString('en-IN')} / ₹${milestone.target_value.toLocaleString('en-IN')}`
+                            }
+                          </Text>
+                        </View>
+                        <View style={[styles.progressTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', height: 6, marginBottom: 8 }]}>
+                          <View style={[styles.progressFill, { width: `${milestone.progress_percentage}%`, backgroundColor: colors.success }]} />
+                        </View>
+                        <Text style={{ color: colors.textSecondary, fontSize: tokens.fontSize.micro }}>
+                          Reward: {milestone.bonus_points ? `${milestone.bonus_points} Pts` : milestone.fee_waiver ? 'Fee Waiver' : 'Milestone'}
+                        </Text>
+                      </View>
+                    )) : (
+                      <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                        <DynamicIcon name="Zap" size={20} color={colors.primary} style={{ marginBottom: 8, opacity: 0.8 }} />
+                        <Text style={{ color: colors.textPrimary, fontSize: tokens.fontSize.body, fontWeight: tokens.fontWeight.medium }}>Unlock Premium</Text>
+                      </View>
+                    )}
+                  </View>
+                </Animated.View>
+              )}
+
+              {/* ROW 5: Card Intelligence (Merged) */}
+              <Animated.View entering={FadeInUp.duration(500).delay(300)} style={[{ width: '100%' }]}>
+                <View style={[bentoBoxStyle, { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.05)' : 'rgba(139, 92, 246, 0.02)', borderColor: 'rgba(139, 92, 246, 0.2)' }]}>
+                  <View style={styles.bentoHeader}>
+                    <Text style={[styles.bentoTitle, { color: '#8B5CF6' }]}>INTELLIGENCE</Text>
+                    <DynamicIcon name="BrainCircuit" size={14} color="#8B5CF6" />
+                  </View>
+                  
+                  <Text style={[styles.intelligenceText, { color: colors.textPrimary }]}>
+                    {hasWaiver && card.explanation_text 
+                      ? card.explanation_text 
+                      : `Best used for ${cNameLow.includes('travel') || cNameLow.includes('miles') ? 'travel & milestone acceleration' : 'maximizing immediate cashback on daily spends'}.`}
+                  </Text>
+
+                  {finalChips.length > 0 && (
+                    <View style={styles.chipsContainer}>
+                      {finalChips.map((chip, idx) => (
+                        <View key={idx} style={[styles.miniChip, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#FFF', borderColor: colors.border }]}>
+                          <DynamicIcon name={chip.icon} size={12} color={chip.color} style={{ marginRight: 6 }} />
+                          <Text style={[styles.miniChipLabel, { color: colors.textPrimary }]}>{chip.label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
                 </View>
               </Animated.View>
-            )}
 
-            {/* Section 4: Quick Actions */}
-            <Animated.View entering={FadeInUp.duration(400).delay(350)} style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginBottom: 16 }]}>QUICK ACTIONS</Text>
-              <View style={[styles.actionsBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+              {/* ROW 6: Settings / Quick Actions */}
+              <Animated.View entering={FadeInUp.duration(500).delay(350)} style={[{ width: '100%', marginTop: 8 }]}>
+                <View style={[styles.iosGroupedList, { borderColor: colors.glassBorder, backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : '#FFFFFF' }]}>
+                  
+                  <TouchableOpacity style={styles.iosRow} onPress={handleViewTransactions}>
+                    <View style={[styles.iosIconBox, { backgroundColor: colors.borderHighlight }]}>
+                      <DynamicIcon name="FileText" size={16} color={colors.textPrimary} />
+                    </View>
+                    <Text style={[styles.iosLabel, { color: colors.textPrimary }]}>View Transactions</Text>
+                    <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
+                  <View style={[styles.iosDivider, { backgroundColor: colors.glassBorder }]} />
 
-                {/* View Transactions (Real Action) */}
-                <TouchableOpacity style={styles.actionRow} onPress={handleViewTransactions}>
-                  <View style={[styles.actionIconWrap, { backgroundColor: colors.borderHighlight }]}>
-                    <DynamicIcon name="FileText" size={18} color={colors.textPrimary} />
-                  </View>
-                  <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>View Transactions</Text>
-                  <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
-                </TouchableOpacity>
-                <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
+                  <TouchableOpacity style={styles.iosRow} onPress={() => setIsCardDetailsEditVisible(true)}>
+                    <View style={[styles.iosIconBox, { backgroundColor: colors.borderHighlight }]}>
+                      <DynamicIcon name="CreditCard" size={16} color={colors.textPrimary} />
+                    </View>
+                    <Text style={[styles.iosLabel, { color: colors.textPrimary }]}>Edit Card Details</Text>
+                    <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
+                  <View style={[styles.iosDivider, { backgroundColor: colors.glassBorder }]} />
 
-                {/* Toggle Status (Real Action) */}
-                <View style={styles.actionRow}>
-                  <View style={styles.actionIconWrap}>
-                    <DynamicIcon name="Activity" size={18} color={colors.textPrimary} />
+                  <View style={styles.iosRow}>
+                    <View style={[styles.iosIconBox, { backgroundColor: isActive ? colors.successSoft : colors.borderHighlight }]}>
+                      <DynamicIcon name="Activity" size={16} color={isActive ? colors.success : colors.textPrimary} />
+                    </View>
+                    <Text style={[styles.iosLabel, { color: colors.textPrimary }]}>Active in Wallet</Text>
+                    <Switch
+                      value={isActive}
+                      onValueChange={handleToggleStatus}
+                      trackColor={{ false: 'rgba(255,255,255,0.1)', true: colors.success }}
+                    />
                   </View>
-                  <View style={styles.actionTextWrap}>
-                    <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Card Status</Text>
-                    <Text style={[styles.actionSub, { color: colors.textMuted }]}>{isActive ? 'Active in Wallet' : 'Inactive in Wallet'}</Text>
-                  </View>
-                  <Switch
-                    value={isActive}
-                    onValueChange={handleToggleStatus}
-                    trackColor={{ false: 'rgba(255,255,255,0.1)', true: colors.success }}
-                  />
+                  <View style={[styles.iosDivider, { backgroundColor: colors.glassBorder }]} />
+
+                  <TouchableOpacity style={styles.iosRow} onPress={handleRemoveCard}>
+                    <View style={[styles.iosIconBox, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
+                      <DynamicIcon name="Trash2" size={16} color="#EF4444" />
+                    </View>
+                    <Text style={[styles.iosLabel, { color: '#EF4444' }]}>Remove Card</Text>
+                    <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
+
                 </View>
-                <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
+              </Animated.View>
 
-                {/* Edit Card Details */}
-                <TouchableOpacity style={styles.actionRow} onPress={() => setIsCardDetailsEditVisible(true)}>
-                  <View style={[styles.actionIconWrap, { backgroundColor: colors.borderHighlight }]}>
-                    <DynamicIcon name="Pencil" size={18} color={colors.textPrimary} />
-                  </View>
-                  <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Edit Card Details</Text>
-                  <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
-                </TouchableOpacity>
-                <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
-
-                {/* Update Spend (Real Action) */}
-                <TouchableOpacity style={styles.actionRow} onPress={() => setIsSpendEditVisible(true)}>
-                  <View style={[styles.actionIconWrap, { backgroundColor: colors.borderHighlight }]}>
-                    <DynamicIcon name="SlidersHorizontal" size={18} color={colors.textPrimary} />
-                  </View>
-                  <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Update Annual Spend</Text>
-                  <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
-                </TouchableOpacity>
-                <View style={[styles.actionDivider, { backgroundColor: colors.border }]} />
-
-                {/* Remove Card (Mocked) */}
-                <TouchableOpacity style={styles.actionRow} onPress={() => setMockActionTitle("Remove Card")}>
-                  <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
-                    <DynamicIcon name="Trash2" size={18} color="#EF4444" />
-                  </View>
-                  <Text style={[styles.actionLabel, { color: '#EF4444' }]}>Remove Card</Text>
-                  <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
-                </TouchableOpacity>
-
-              </View>
-            </Animated.View>
-
-            {/* Bottom Spacer for safe area */}
-            <View style={{ height: 40 }} />
+            </View>
+            <View style={{ height: 60 }} />
           </ScrollView>
         </View>
       </View>
 
-      <ComingSoonSheet
-        visible={!!mockActionTitle}
-        onClose={() => setMockActionTitle(null)}
-        title={mockActionTitle || "Coming Soon"}
-      />
-
-      <EditAnnualFeeSheet
-        visible={isAnnualFeeEditVisible}
-        onClose={() => setIsAnnualFeeEditVisible(false)}
-        card={card}
-      />
-      <EditSpendSheet
-        visible={isSpendEditVisible}
-        onClose={() => setIsSpendEditVisible(false)}
-        card={card}
-      />
-      <EditFeeCycleSheet
-        visible={isFeeCycleEditVisible}
-        onClose={() => setIsFeeCycleEditVisible(false)}
-        card={card}
-      />
-      <EditCardDetailsSheet
-        visible={isCardDetailsEditVisible}
-        onClose={() => setIsCardDetailsEditVisible(false)}
-        card={card}
-      />
+      <ComingSoonSheet visible={!!mockActionTitle} onClose={() => setMockActionTitle(null)} title={mockActionTitle || "Coming Soon"} />
+      <EditAnnualFeeSheet visible={isAnnualFeeEditVisible} onClose={() => setIsAnnualFeeEditVisible(false)} card={card} />
+      <EditSpendSheet visible={isSpendEditVisible} onClose={() => setIsSpendEditVisible(false)} card={card} />
+      <EditFeeCycleSheet visible={isFeeCycleEditVisible} onClose={() => setIsFeeCycleEditVisible(false)} card={card} />
+      <EditCardDetailsSheet visible={isCardDetailsEditVisible} onClose={() => setIsCardDetailsEditVisible(false)} card={card} />
     </Modal>
   );
 };
@@ -466,8 +434,8 @@ const styles = StyleSheet.create({
   },
   sheet: {
     height: '92%',
-    borderTopLeftRadius: tokens.radius.sheet,
-    borderTopRightRadius: tokens.radius.sheet,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     overflow: 'hidden',
   },
   topHighlight: {
@@ -479,7 +447,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 8,
+    paddingBottom: 4,
   },
   headerSpacer: { width: 36 },
   closeBtn: {
@@ -487,26 +455,31 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingTop: 12,
   },
+  
+  // Hero Card
   heroCard: {
     width: '100%',
-    height: 220,
-    borderRadius: tokens.radius.xl,
+    aspectRatio: 1.58,
+    borderRadius: 20,
     padding: 24,
-    justifyContent: 'space-between',
-    marginBottom: 32,
+    marginBottom: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: 'transparent',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    elevation: 12,
+    overflow: 'hidden',
   },
   heroTopEdge: {
     position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+  },
+  heroGlare: {
+    position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    transform: [{ rotate: '45deg' }],
   },
   heroHeader: {
     flexDirection: 'row',
@@ -514,10 +487,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroBankName: {
-    fontSize: tokens.fontSize.caption,
+    fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
     textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.8)',
     flex: 1,
   },
   statusPill: {
@@ -526,14 +500,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusText: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
+    fontSize: 9,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: 1,
   },
   heroCardName: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: tokens.fontWeight.heavy,
-    marginTop: 8,
-    marginBottom: 'auto',
+    color: '#FFF',
+    letterSpacing: 0.5,
+  },
+  heroCardNumber: {
+    fontSize: 14,
+    fontWeight: tokens.fontWeight.medium,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 3,
+    marginTop: 6,
   },
   heroFooter: {
     flexDirection: 'row',
@@ -541,165 +523,160 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   heroFeeLabel: {
-    fontSize: tokens.fontSize.micro,
+    fontSize: 9,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.6)',
     marginBottom: 2,
   },
   heroFeeValue: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.bold,
+    fontSize: 16,
+    fontWeight: tokens.fontWeight.heavy,
+    color: '#FFF',
   },
   heroNetwork: {
-    fontSize: tokens.fontSize.title,
+    fontSize: 18,
     fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.widest,
+    letterSpacing: 2,
+    color: 'rgba(255,255,255,0.9)',
   },
-  section: {
-    marginBottom: 32,
+
+  // Bento Grid
+  bentoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
-  sectionTitleRow: {
+  bentoRow: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: 12,
+  },
+  bentoBox: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+    width: '100%',
+  },
+  bentoHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  sectionTitle: {
-    fontSize: tokens.fontSize.micro,
+  bentoTitle: {
+    fontSize: 10,
     fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.widest,
+    letterSpacing: 1.5,
   },
-  cardBox: {
-    padding: 20,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
+  bentoMassiveValue: {
+    fontSize: 26,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
+  bentoSubText: {
+    fontSize: 12,
+    fontWeight: tokens.fontWeight.medium,
+  },
+
+  // Waiver
   waiverNumbersRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     marginBottom: 12,
   },
   waiverCurrent: {
-    fontSize: tokens.fontSize.title,
+    fontSize: 24,
     fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: -0.5,
   },
   waiverTarget: {
-    fontSize: tokens.fontSize.body,
+    fontSize: 14,
     fontWeight: tokens.fontWeight.medium,
-  },
-  waiverPercent: {
-    marginLeft: 'auto',
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.heavy,
+    marginLeft: 4,
   },
   progressTrack: {
     height: 8,
     borderRadius: 4,
     overflow: 'hidden',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   progressFill: {
     height: '100%',
     borderRadius: 4,
   },
-  waiverFooter: {
+  bentoFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  waiverRemaining: {
-    fontSize: tokens.fontSize.caption,
+  bentoFooterText: {
+    fontSize: 12,
+    fontWeight: tokens.fontWeight.medium,
     flex: 1,
   },
-  milestonePill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 4,
+  miniPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
-  milestoneText: {
-    fontSize: tokens.fontSize.micro,
+  miniPillText: {
+    fontSize: 10,
+    fontWeight: tokens.fontWeight.bold,
+  },
+
+  // Intelligence
+  intelligenceText: {
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: tokens.fontWeight.medium,
+    marginBottom: 16,
   },
   chipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 8,
   },
-  intelligenceChip: {
-    width: '48%',
-    padding: 16,
-    borderRadius: tokens.radius.lg,
+  miniChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
     borderWidth: 1,
   },
-  chipLabel: {
-    fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.medium,
-    lineHeight: 18,
+  miniChipLabel: {
+    fontSize: 11,
+    fontWeight: tokens.fontWeight.bold,
   },
-  actionsBox: {
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
+
+  // iOS List
+  iosGroupedList: {
+    borderRadius: 20,
     overflow: 'hidden',
+    borderWidth: 1,
   },
-  actionRow: {
+  iosRow: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
   },
-  actionIconWrap: {
-    width: 36, height: 36,
+  iosIconBox: {
+    width: 32,
+    height: 32,
     borderRadius: 8,
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 16,
   },
-  actionTextWrap: {
-    flex: 1,
-  },
-  actionLabel: {
-    fontSize: tokens.fontSize.body,
+  iosLabel: {
+    fontSize: 15,
     fontWeight: tokens.fontWeight.medium,
     flex: 1,
   },
-  actionSub: {
-    fontSize: tokens.fontSize.micro,
-    marginTop: 2,
-  },
-  actionDivider: {
+  iosDivider: {
     height: 1,
-    marginLeft: 68,
-  },
-  feeIntelligenceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  feeIntelligenceInfo: {
-    flex: 1,
-  },
-  feeIntelligenceValue: {
-    fontSize: tokens.fontSize.title,
-    fontWeight: tokens.fontWeight.bold,
-    marginBottom: 4,
-  },
-  feeIntelligenceSource: {
-    fontSize: tokens.fontSize.caption,
-  },
-  editFeeBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: tokens.radius.full,
-    borderWidth: 1,
-  },
-  editFeeBtnText: {
-    fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.medium,
-  },
-  sectionEditBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  sectionEditText: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.medium,
+    marginLeft: 64,
   },
 });
