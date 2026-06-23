@@ -109,7 +109,7 @@ export default function HistoryScreen() {
       </View>
 
       {cardId && filteredCard && (
-        <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(80).springify()} style={[styles.filterWrap, { paddingTop: 100 }]}>
+        <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(80).springify()} style={[styles.filterWrap, { paddingTop: HEADER_HEIGHT }]}>
           <TouchableOpacity 
             style={[styles.filterPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} 
             onPress={handleClearFilter}
@@ -201,13 +201,18 @@ export default function HistoryScreen() {
                 )}
               </View>
             }
-            contentContainerStyle={[styles.scrollContent, !cardId && { paddingTop: 100 }]}
+            contentContainerStyle={[styles.scrollContent, !cardId && { paddingTop: HEADER_HEIGHT }]}
             stickySectionHeadersEnabled={true}
             showsVerticalScrollIndicator={false}
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.5}
             refreshControl={
-              <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />
+              <RefreshControl
+                refreshing={isRefetching}
+                onRefresh={refetch}
+                tintColor={colors.primary}
+                progressViewOffset={HEADER_HEIGHT - 20}
+              />
             }
           />
         )}
@@ -230,6 +235,7 @@ export default function HistoryScreen() {
 }
 
 const ITEM_HEIGHT = 88; // TransactionRow: 76px content + 12px marginBottom
+const HEADER_HEIGHT = 130; // Sticky header: safe area + title + subtitle + padding
 
 const styles = StyleSheet.create({
   headerAbsolute: {

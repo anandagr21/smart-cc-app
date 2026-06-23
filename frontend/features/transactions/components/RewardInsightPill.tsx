@@ -38,7 +38,7 @@ export function RewardInsightPill({ rewardEarned, rewardType, missedSavings }: R
       {hasMissedSavings ? (
         <View style={[styles.pill, { backgroundColor: colors.surfaceElevated, borderColor: colors.borderHighlight, marginLeft: 6 }]}>
           <DynamicIcon name="ArrowUpRight" size={10} color={colors.textMuted} style={styles.icon} strokeWidth={2.5} />
-          <Text style={[styles.text, { color: colors.textMuted }]}>
+          <Text style={[styles.text, { color: colors.textMuted }]} numberOfLines={1}>
             could be ₹{(numericReward + numericMissed).toFixed(0)}
           </Text>
         </View>
@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 4,
+    flexWrap: 'wrap',
   },
   pill: {
     flexDirection: 'row',
@@ -60,13 +61,16 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: tokens.radius.full,
     borderWidth: StyleSheet.hairlineWidth,
+    flexShrink: 1,
   },
   icon: {
     marginRight: 4,
+    flexShrink: 0,
   },
   text: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: 0.2,
+    flexShrink: 1,
   },
 });

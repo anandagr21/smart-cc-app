@@ -86,7 +86,7 @@ export const TransactionRow = React.memo(({ transaction, onPress, index }: Trans
                 {transaction.normalized_merchant}
               </Text>
               <View style={styles.metaRow}>
-                <Text style={[styles.metaText, { color: colors.textSecondary }]}>{cardName}</Text>
+                <Text style={[styles.metaText, { color: colors.textSecondary }]} numberOfLines={1}>{cardName}</Text>
                 {isDifferent && (
                   <Text style={[styles.rawMerchantText, { color: colors.textMuted }]} numberOfLines={1}>
                     • {transaction.merchant_name}
@@ -138,6 +138,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    minWidth: 0, // allow flex shrink below content size
   },
   iconWrap: {
     width: 44,
@@ -145,11 +146,13 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginRight: 12,
     borderWidth: StyleSheet.hairlineWidth,
+    flexShrink: 0,
   },
   merchantInfo: {
     flex: 1,
+    minWidth: 0,
   },
   merchantName: {
     fontSize: tokens.fontSize.bodyLg,
@@ -161,24 +164,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 2,
     marginBottom: 4,
+    minWidth: 0,
   },
   metaText: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
+    flexShrink: 1,
   },
   rawMerchantText: {
     fontSize: tokens.fontSize.caption,
     marginLeft: 4,
+    flexShrink: 1,
   },
   amountWrap: {
     alignItems: 'flex-end',
     justifyContent: 'flex-start',
-    paddingLeft: 12,
+    paddingLeft: 8,
+    flexShrink: 0,
+    maxWidth: '35%',
   },
   amountText: {
     fontSize: tokens.fontSize.bodyLg,
     fontWeight: tokens.fontWeight.bold,
-    // Tabular numbers for currency alignment
     fontVariant: ['tabular-nums'],
   },
 });

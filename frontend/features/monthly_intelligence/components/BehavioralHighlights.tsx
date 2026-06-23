@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { MonthlySummaryResponse } from '../types/monthly_intelligence.types';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface BehavioralHighlightsProps {
   summary: MonthlySummaryResponse;
@@ -68,14 +69,30 @@ export const BehavioralHighlights: React.FC<BehavioralHighlightsProps> = ({ summ
               reasoning: h.text,
               metrics: { [h.title]: h.metric }
             })}
+            accessibilityRole="button"
+            accessibilityHint="Tap to view detailed reasoning"
           >
-            <Text style={[styles.cardTitle, { color: colors.textMuted }]}>{h.title}</Text>
+            <View style={styles.cardHeader}>
+              <Text style={[styles.cardTitle, { color: colors.textMuted }]}>{h.title}</Text>
+              {onPressExplain && (
+                <View style={[styles.affordanceWrap, { backgroundColor: colors.primary + '1A' }]}>
+                  <DynamicIcon name="Sparkles" size={12} color={colors.primary} />
+                </View>
+              )}
+            </View>
             <Text style={[styles.cardText, { color: colors.textPrimary }]} numberOfLines={3}>
               {h.text}
             </Text>
-            <Text style={[styles.cardMetric, { color: colors.textSecondary }]}>
-              {h.metric}
-            </Text>
+            <View style={styles.metricRow}>
+              <Text style={[styles.cardMetric, { color: colors.textSecondary }]}>
+                {h.metric}
+              </Text>
+              {onPressExplain && (
+                <View style={[styles.chevronWrap, { backgroundColor: colors.primarySoft }]}>
+                  <DynamicIcon name="ChevronRight" size={12} color={colors.primary} strokeWidth={2.5} />
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -107,20 +124,52 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: 'space-between',
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   cardTitle: {
     fontSize: tokens.fontSize.caption,
     textTransform: 'uppercase',
     letterSpacing: tokens.letterSpacing.wide,
-    marginBottom: 8,
+  },
+  affordanceWrap: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardText: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
     lineHeight: 18,
     marginBottom: 16,
+    flex: 1,
+  },
+  metricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   cardMetric: {
     fontSize: tokens.fontSize.title,
     fontWeight: tokens.fontWeight.heavy,
+  },
+  chevronWrap: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tapHint: {
+    fontSize: 10,
+    fontWeight: tokens.fontWeight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    opacity: 0.9,
   },
 });

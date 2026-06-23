@@ -81,17 +81,21 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
           You optimized
         </Text>
         
-        <AnimatedText
-          editable={false}
-          animatedProps={animatedProps}
-          style={[styles.valueText, { color: colors.textPrimary }]}
-        />
+        <View style={styles.valueContainer}>
+          <AnimatedText
+            editable={false}
+            animatedProps={animatedProps}
+            style={[styles.valueText, { color: colors.textPrimary }]}
+            numberOfLines={1}
+          />
+        </View>
 
         {maxCategoryReward > 0 && (
           <View style={[styles.bestCategoryPill, { backgroundColor: colors.successSoft, borderColor: colors.success }]}>
             <DynamicIcon name="TrendingUp" size={12} color={colors.success} style={styles.trendIcon} />
-            <Text style={[styles.bestCategoryText, { color: colors.success }]}>
-              Best optimization: <Text style={styles.bestCategoryBold}>{bestCategory}</Text>
+            <Text style={[styles.bestCategoryText, { color: colors.success }]} numberOfLines={1}>
+              Best optimization:{' '}
+              <Text style={styles.bestCategoryBold} numberOfLines={1}>{bestCategory}</Text>
             </Text>
           </View>
         )}
@@ -136,12 +140,16 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.bodyLg,
     marginBottom: 4,
   },
+  valueContainer: {
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
   valueText: {
     fontSize: tokens.fontSize.hero,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.tightest,
-    marginBottom: 20,
     padding: 0,
+    width: '100%',
   },
   bestCategoryPill: {
     flexDirection: 'row',
@@ -151,13 +159,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: tokens.radius.full,
     borderWidth: StyleSheet.hairlineWidth,
+    maxWidth: '100%',
   },
   trendIcon: {
     marginRight: 6,
+    flexShrink: 0,
   },
   bestCategoryText: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
+    flexShrink: 1,
   },
   bestCategoryBold: {
     fontWeight: tokens.fontWeight.bold,
