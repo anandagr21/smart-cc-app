@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, AccessibilityInfo } from 'react-native';
+import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { TransactionResponse } from '../types/transaction.types';
 import { getCategoryAccent } from '../utils/categoryAccents';
 import { useCards } from '@/features/cards/hooks/useCards';
@@ -22,7 +22,12 @@ export const TransactionRow = React.memo(({ transaction, onPress, index }: Trans
   const { data: cardsData } = useCards();
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
+  const [reduceMotion, setReduceMotion] = useState(false);
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+  }, []);
 
   const card = cardsData?.find((c) => c.id === transaction.user_card_id);
   const cardName = card?.nickname || card?.card_details?.card_name || 'Card';
@@ -40,18 +45,18 @@ export const TransactionRow = React.memo(({ transaction, onPress, index }: Trans
     }).format(amt);
   };
 
-  const scale = useSharedValue(1);
-  const handlePressIn = () => { scale.value = withSpring(0.97, tokens.spring.snappy); };
-  const handlePressOut = () => { scale.value = withSpring(1, tokens.spring.calm); };
+  const pressOpacity = useSharedValue(1);
+  const handlePressIn = () => { pressOpacity.value = withTiming(0.6, { duration: 150 }); };
+  const handlePressOut = () => { pressOpacity.value = withTiming(1, { duration: 250 }); };
   
   const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    opacity: pressOpacity.value,
   }));
 
   const gradient = getNetworkGradient(network, isDark);
 
   return (
-    <Animated.View entering={FadeInDown.delay(index * 50).springify()}>
+    <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(index * 50).springify()}>
       <TouchableOpacity
         onPress={() => onPress(transaction)}
         onPressIn={handlePressIn}
@@ -162,7 +167,7 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.medium,
   },
   rawMerchantText: {
-    fontSize: tokens.fontSize.micro,
+    fontSize: tokens.fontSize.caption,
     marginLeft: 4,
   },
   amountWrap: {

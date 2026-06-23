@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, AccessibilityInfo } from 'react-native';
 
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { TransactionResponse } from '../types/transaction.types';
@@ -14,6 +14,11 @@ interface RewardLeakageCardProps {
 
 export const RewardLeakageCard: React.FC<RewardLeakageCardProps> = ({ transactions }) => {
   const colors = useThemeColors();
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+  }, []);
 
   const leakageTransactions = useMemo(() => {
     return transactions
@@ -25,8 +30,8 @@ export const RewardLeakageCard: React.FC<RewardLeakageCardProps> = ({ transactio
   if (leakageTransactions.length === 0) return null;
 
   return (
-    <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>REWARD LEAKAGE</Text>
+    <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(150).springify()} style={styles.container}>
+      <Text style={[styles.eyebrow, { color: colors.textMuted }]}>REWARD LEAKAGE</Text>
       
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         {leakageTransactions.map((tx, index) => (
@@ -66,9 +71,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: tokens.fontSize.micro,
+  eyebrow: {
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
+    textTransform: 'uppercase',
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 16,
   },

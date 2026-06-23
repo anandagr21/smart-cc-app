@@ -65,9 +65,8 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   text: {
-    fontSize: tokens.fontSize.micro,
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
-    textTransform: 'uppercase',
-    letterSpacing: tokens.letterSpacing.wider,
+    letterSpacing: 0.2,
   },
 });

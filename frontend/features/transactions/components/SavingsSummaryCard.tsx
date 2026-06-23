@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, AccessibilityInfo } from 'react-native';
 
 import Animated, { FadeInDown, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import { TextInput } from 'react-native';
@@ -18,6 +18,11 @@ interface SavingsSummaryCardProps {
 export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
   const colors = useThemeColors();
   const animatedValue = useSharedValue(0);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+  }, []);
 
   const totalRewards = (transactions || []).reduce((sum, tx) => {
     if (!tx) return sum;
@@ -57,10 +62,10 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
   }
 
   return (
-    <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.container}>
+    <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(50).springify()} style={styles.container}>
       <LinearGradient
         colors={[colors.surfaceElevated, colors.surface]}
-        style={styles.card}
+        style={[styles.card, { borderColor: colors.border }]}
       >
         {/* Top Highlight */}
         <View style={[styles.topHighlight, { backgroundColor: colors.glassHighlight }]} />
@@ -105,7 +110,6 @@ const styles = StyleSheet.create({
     padding: 24,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
   topHighlight: {
     position: 'absolute',

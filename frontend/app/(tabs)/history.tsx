@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, SectionList, RefreshControl, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, SectionList, RefreshControl, StyleSheet, AccessibilityInfo, ScrollView } from 'react-native';
 
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
@@ -34,9 +34,14 @@ export default function HistoryScreen() {
   const [transactionToEdit, setTransactionToEdit] = useState<TransactionResponse | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
   const [showInsights, setShowInsights] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+  }, []);
 
   const handleOpenAdd = () => {
     setTransactionToEdit(null);
@@ -73,33 +78,38 @@ export default function HistoryScreen() {
 
   return (
     <ScreenContainer noPadding>
-      <View style={styles.header}>
-        <Animated.View entering={FadeInDown.delay(50).springify()}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Activity</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Your spending intelligence
-          </Text>
-        </Animated.View>
-
-        {allTransactions.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(100).springify()}>
-            <TouchableOpacity
-              testID="add-tx-btn"
-              onPress={handleOpenAdd}
-              style={[
-                styles.addBtn,
-                { backgroundColor: colors.surfaceElevated, borderColor: colors.borderHighlight },
-              ]}
-              activeOpacity={0.75}
-            >
-              <DynamicIcon name="Plus" size={20} color={colors.primary} strokeWidth={2.5} />
-            </TouchableOpacity>
+      {/* Sticky Glass Header */}
+      <View style={styles.headerAbsolute}>
+        <BlurView intensity={isDark ? 80 : 100} tint={isDark ? 'dark' : 'light'} style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? 'rgba(10,14,23,0.5)' : 'rgba(255,255,255,0.7)' }]} />
+        <View style={styles.headerInner}>
+          <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(50).springify()}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Activity</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Your spending intelligence
+            </Text>
           </Animated.View>
-        )}
+
+          {allTransactions.length > 0 && (
+            <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(100).springify()}>
+              <TouchableOpacity
+                testID="add-tx-btn"
+                onPress={handleOpenAdd}
+                style={[
+                  styles.addBtn,
+                  { backgroundColor: colors.surfaceElevated, borderColor: colors.borderHighlight },
+                ]}
+                activeOpacity={0.75}
+              >
+                <DynamicIcon name="Plus" size={20} color={colors.primary} strokeWidth={2.5} />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+        </View>
+        <View style={[styles.headerHighlight, { backgroundColor: colors.border }]} />
       </View>
 
       {cardId && filteredCard && (
-        <Animated.View entering={FadeInDown.delay(80).springify()} style={styles.filterWrap}>
+        <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(80).springify()} style={[styles.filterWrap, { paddingTop: 100 }]}>
           <TouchableOpacity 
             style={[styles.filterPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} 
             onPress={handleClearFilter}
@@ -120,14 +130,17 @@ export default function HistoryScreen() {
           </View>
         ) : allTransactions.length === 0 ? (
           cardId ? (
-            <View style={styles.filteredEmptyState}>
+            <ScrollView
+              contentContainerStyle={styles.filteredEmptyState}
+              refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
+            >
               <Text style={[styles.emptyFilteredText, { color: colors.textSecondary }]}>
                 No transactions found for {filteredCard?.nickname || filteredCard?.card_details?.card_name || 'this card'} yet.
               </Text>
               <TouchableOpacity onPress={handleClearFilter} style={styles.clearBtn}>
                 <Text style={[styles.clearBtnText, { color: colors.primary }]}>Clear Filter</Text>
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           ) : (
             <EmptyTransactionState onAddPress={handleOpenAdd} />
           )
@@ -136,6 +149,11 @@ export default function HistoryScreen() {
             sections={groupedTransactions}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
+            getItemLayout={(_, index) => ({
+              length: ITEM_HEIGHT,
+              offset: ITEM_HEIGHT * index,
+              index,
+            })}
             renderSectionHeader={({ section: { title } }) => (
               <BlurView
                 tint={isDark ? 'dark' : 'light'}
@@ -159,8 +177,8 @@ export default function HistoryScreen() {
                       style={[
                         styles.insightChip,
                         {
-                          backgroundColor: showInsights ? colors.primarySoft : colors.surface,
-                          borderColor: showInsights ? colors.primary : colors.border,
+                          backgroundColor: showInsights ? colors.primary + '1A' : colors.surfaceElevated,
+                          borderColor: showInsights ? colors.primary + '33' : colors.border,
                         },
                       ]}
                       activeOpacity={0.7}
@@ -176,14 +194,14 @@ export default function HistoryScreen() {
                 )}
 
                 {showInsights && (
-                  <Animated.View entering={FadeInDown.springify()}>
+                  <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.springify()}>
                     <CategoryRewardsChart transactions={allTransactions} />
                     <RewardLeakageCard transactions={allTransactions} />
                   </Animated.View>
                 )}
               </View>
             }
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, !cardId && { paddingTop: 100 }]}
             stickySectionHeadersEnabled={true}
             showsVerticalScrollIndicator={false}
             onEndReached={handleEndReached}
@@ -211,14 +229,25 @@ export default function HistoryScreen() {
   );
 }
 
+const ITEM_HEIGHT = 88; // TransactionRow: 76px content + 12px marginBottom
+
 const styles = StyleSheet.create({
-  header: {
+  headerAbsolute: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    zIndex: 100,
+  },
+  headerHighlight: {
+    height: StyleSheet.hairlineWidth,
+    width: '100%',
+  },
+  headerInner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: tokens.layout.screenPadding,
-    marginTop: 16,
-    marginBottom: 20,
+    paddingTop: 60, // approximate safe area + spacing
+    paddingBottom: 16,
   },
   title: {
     fontSize: tokens.fontSize.display,
@@ -233,8 +262,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   addBtn: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: tokens.radius.full,
     borderWidth: 1,
     alignItems: 'center',
@@ -275,14 +304,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   filterText: {
-    fontSize: tokens.fontSize.micro,
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
   },
   filteredEmptyState: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
+    paddingTop: 64,
     paddingBottom: 64,
   },
   emptyFilteredText: {

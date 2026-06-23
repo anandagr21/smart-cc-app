@@ -8,6 +8,7 @@ import Animated, {
   withSequence,
   withTiming,
   FadeIn,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { Button } from '@/components/ui/Button';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
@@ -36,6 +37,11 @@ const Pulse: React.FC<{ delay: number }> = ({ delay }) => {
       -1,
       false
     );
+    
+    return () => {
+      cancelAnimation(scale);
+      cancelAnimation(opacity);
+    };
   }, []);
 
   const animStyle = useAnimatedStyle(() => ({
@@ -64,7 +70,7 @@ export const EmptyTransactionState: React.FC<EmptyTransactionStateProps> = ({ on
   return (
     <Animated.View entering={FadeIn.delay(100)} style={styles.container}>
       <View style={styles.iconWrap}>
-        {[0, 1, 2].map((i) => (
+        {[0].map((i) => (
           <Pulse key={i} delay={i} />
         ))}
         <View

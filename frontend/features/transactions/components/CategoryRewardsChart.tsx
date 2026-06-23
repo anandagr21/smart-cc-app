@@ -1,5 +1,5 @@
-import React, { useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useMemo, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, AccessibilityInfo } from 'react-native';
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
 import { TransactionResponse } from '../types/transaction.types';
@@ -35,8 +35,10 @@ const AnimatedProgressBar = ({ progress, color }: { progress: number, color: str
     width: `${widthAnim.value}%`,
   }));
 
+  const colors = useThemeColors();
+
   return (
-    <View style={styles.track}>
+    <View style={[styles.track, { backgroundColor: colors.border }]}>
       <Animated.View style={[styles.fill, animatedStyle, { backgroundColor: color }]} />
     </View>
   );
@@ -44,6 +46,11 @@ const AnimatedProgressBar = ({ progress, color }: { progress: number, color: str
 
 export const CategoryRewardsChart: React.FC<CategoryRewardsChartProps> = ({ transactions }) => {
   const colors = useThemeColors();
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+  }, []);
 
   const categoryData = useMemo(() => {
     const categoryMap: Record<string, number> = {};
@@ -76,7 +83,7 @@ export const CategoryRewardsChart: React.FC<CategoryRewardsChartProps> = ({ tran
   if (categoryData.length === 0) return null;
 
   return (
-    <Animated.View entering={FadeInDown.delay(150).springify()} style={styles.container}>
+    <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(150).springify()} style={styles.container}>
       <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>REWARDS BY CATEGORY</Text>
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         {categoryData.map((item, index) => (
@@ -108,7 +115,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: tokens.fontSize.micro,
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 16,
@@ -154,7 +161,6 @@ const styles = StyleSheet.create({
   },
   track: {
     height: 6,
-    backgroundColor: 'rgba(150, 150, 150, 0.15)',
     borderRadius: 3,
     overflow: 'hidden',
     width: '100%',
