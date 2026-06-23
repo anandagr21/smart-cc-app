@@ -1,11 +1,16 @@
-export function formatCurrencyIN(value: number): string {
-  if (value < 1000) {
-    return `₹${value.toLocaleString('en-IN')}`;
+export function formatCurrencyIN(value: number | null | undefined): string {
+  if (value == null || isNaN(Number(value))) {
+    return '₹0';
   }
   
-  if (value < 100000) {
+  const numValue = Number(value);
+  if (numValue < 1000) {
+    return `₹${numValue.toLocaleString('en-IN')}`;
+  }
+  
+  if (numValue < 100000) {
     // Convert to k
-    let kValue = (value / 1000).toFixed(2);
+    let kValue = (numValue / 1000).toFixed(2);
     // Remove trailing .00 or 0 if present
     if (kValue.endsWith('.00')) {
       kValue = kValue.slice(0, -3);
@@ -16,7 +21,7 @@ export function formatCurrencyIN(value: number): string {
   }
   
   // Convert to L (Lakhs)
-  let lValue = (value / 100000).toFixed(2);
+  let lValue = (numValue / 100000).toFixed(2);
   // Remove trailing zeros
   if (lValue.endsWith('.00')) {
     lValue = lValue.slice(0, -3);

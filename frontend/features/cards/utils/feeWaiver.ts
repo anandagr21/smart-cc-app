@@ -10,9 +10,9 @@ export interface FeeWaiverPresentation {
 }
 
 export function deriveFeeWaiverProgress(card: UserCardResponse): FeeWaiverPresentation {
-  const target = card.effective_fee_waiver_threshold || 0;
+  const target = Number(card.effective_fee_waiver_threshold) || 0;
   
-  if (!target) {
+  if (target <= 0 || isNaN(target)) {
     return {
       hasWaiver: false,
       target: 0,
