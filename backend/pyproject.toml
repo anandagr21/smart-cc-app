@@ -34,6 +34,10 @@ dependencies = [
     "rapidfuzz>=3.6.0",
     "sentry-sdk[fastapi]>=2.63.0",
     "gunicorn>=26.0.0",
+    "langgraph>=1.2.2",
+    "duckduckgo-search>=8.1.1",
+    "langchain-community>=0.4.2",
+    "ddgs>=9.14.4",
 ]
 
 [project.optional-dependencies]
