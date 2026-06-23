@@ -81,12 +81,14 @@ const mapPersonalityToIntent = (personality?: OptimizationPersonality) => {
 interface TransactionFormSheetProps {
   visible: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   initialData?: TransactionResponse | null;
 }
 
 export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   visible,
   onClose,
+  onSuccess,
   initialData,
 }) => {
   const colors = useThemeColors();
@@ -287,6 +289,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
         idempotencyKey.current = Crypto.randomUUID();
       }
       triggerHaptic('success');
+      onSuccess?.();
       onClose();
     } catch {
       triggerHaptic('error');

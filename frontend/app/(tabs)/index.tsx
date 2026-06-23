@@ -1,8 +1,20 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  RefreshControl,
+  AccessibilityInfo,
+} from 'react-native';
 import * as Sentry from '@sentry/react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useQueryClient } from '@tanstack/react-query';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { SkeletonBox } from '@/components/ui/SkeletonBox';
+import { ErrorBanner } from '@/components/ui/ErrorBanner';
+import { showToast } from '@/components/ui/Toast';
 
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
@@ -11,10 +23,10 @@ import { TransactionFormSheet } from '@/features/transactions/components/Transac
 import { EmptyDashboardState } from '@/features/transactions/components/EmptyDashboardState';
 import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/useMonthlyIntelligence';
 import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
+import { QueryKeys } from '@/features/core/api/queryKeys';
 
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 import { DynamicIcon } from '@/components/DynamicIcon';
-
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -26,39 +38,76 @@ function getGreeting() {
 export default function DashboardScreen() {
   const colors = useThemeColors();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isFormSheetVisible, setFormSheetVisible] = useState(false);
+  const [isRefreshing, setRefreshing] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  // Check reduced motion preference
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+  }, []);
 
   // Load existing intelligence data
   const now = new Date();
-  const { data: monthlySummary } = useMonthlyIntelligence(now.getFullYear(), now.getMonth() + 1);
-  const { primaryInsight } = useSpendInsights();
+  const {
+    data: monthlySummary,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useMonthlyIntelligence(now.getFullYear(), now.getMonth() + 1);
+  const {
+    primaryInsight,
+    isLoading: insightsLoading,
+  } = useSpendInsights();
 
+  const isLoading = statsLoading || insightsLoading;
   const hasStats = monthlySummary && (monthlySummary.total_rewards_optimized > 0 || monthlySummary.optimization_rate > 0);
+
+  // ── Pull-to-refresh ──────────────────────────────────────────────────────────
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: QueryKeys.monthlyIntelligence.summary(now.getFullYear(), now.getMonth() + 1) }),
+        queryClient.invalidateQueries({ queryKey: QueryKeys.insights.all }),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // ── Animation helper: instant fade when reduced motion, springified otherwise
+  const maybeAnimated = (delay: number) =>
+    reduceMotion
+      ? FadeInDown.delay(delay).duration(0)
+      : FadeInDown.delay(delay).springify();
 
   return (
     <ScreenContainer>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
-        {/* Header */}
-        <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.header}>
-          <Text style={[styles.greeting, { color: colors.textMuted }]}>
-            {getGreeting()} · Smart CC
-          </Text>
-
+        {/* ── Header ──────────────────────────────────────────────────────── */}
+        <Animated.View entering={maybeAnimated(50)} style={styles.header}>
           <Text style={[styles.heroText, { color: colors.textPrimary }]}>
-            Dashboard
+            {getGreeting()}
           </Text>
           <Text style={[styles.subText, { color: colors.textSecondary }]}>
             Your proactive financial assistant.
           </Text>
 
-
-
           <TouchableOpacity
-            style={[styles.intelligenceCta, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            activeOpacity={0.7}
+            style={[styles.intelligenceBanner, { backgroundColor: colors.primarySoft, borderColor: colors.border }]}
+            activeOpacity={0.8}
             onPress={() => {
               Sentry.addBreadcrumb({
                 category: 'navigation',
@@ -67,24 +116,75 @@ export default function DashboardScreen() {
               router.push('/monthly-intelligence');
             }}
           >
-            <DynamicIcon name="Sparkles" size={14} color={colors.primary} />
-            <Text style={[styles.intelligenceCtaText, { color: colors.textPrimary }]}>
-              Your Monthly Intelligence
-            </Text>
+            <View style={[styles.intelligenceIconWrap, { backgroundColor: colors.surfaceElevated }]}>
+              <DynamicIcon name="Sparkles" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.intelligenceBannerText}>
+              <Text style={[styles.intelligenceBannerTitle, { color: colors.textPrimary }]}>
+                Monthly Intelligence
+              </Text>
+              <Text style={[styles.intelligenceBannerSub, { color: colors.textSecondary }]}>
+                Tap to view your detailed portfolio analysis
+              </Text>
+            </View>
+            <DynamicIcon name="ChevronRight" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Empty Dashboard State */}
-        {!hasStats && !primaryInsight && (
+        {/* ── Error Banner ────────────────────────────────────────────────── */}
+        {statsError && !isLoading && (
+          <ErrorBanner
+            message="Unable to load dashboard data. Check your connection and try again."
+            variant="error"
+            onRetry={handleRefresh}
+            onDismiss={() => {}}
+          />
+        )}
+
+        {/* ── Loading Skeleton ────────────────────────────────────────────── */}
+        {isLoading && (
+          <View style={styles.skeletonContainer}>
+            {/* Stat cards row */}
+            <View style={styles.statsRow}>
+              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <SkeletonBox height={12} width="60%" borderRadius={6} />
+                <View style={{ height: 12 }} />
+                <SkeletonBox height={28} width="40%" borderRadius={8} />
+              </View>
+              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <SkeletonBox height={12} width="50%" borderRadius={6} />
+                <View style={{ height: 12 }} />
+                <SkeletonBox height={28} width="50%" borderRadius={8} />
+              </View>
+            </View>
+            {/* Best Category skeleton */}
+            <View style={[styles.fullWidthCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <SkeletonBox height={14} width="40%" borderRadius={6} />
+              <View style={{ height: 8 }} />
+              <SkeletonBox height={20} width="30%" borderRadius={8} />
+            </View>
+            {/* Insight card skeleton */}
+            <View style={[styles.insightCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <SkeletonBox height={12} width="35%" borderRadius={6} />
+              <View style={{ height: 16 }} />
+              <SkeletonBox height={16} width="90%" borderRadius={8} />
+              <View style={{ height: 8 }} />
+              <SkeletonBox height={12} width="70%" borderRadius={6} />
+            </View>
+          </View>
+        )}
+
+        {/* ── Empty Dashboard State ───────────────────────────────────────── */}
+        {!isLoading && !hasStats && !primaryInsight && (
           <EmptyDashboardState
             onAddCard={() => router.push('/cards')}
             onAddTransaction={() => setFormSheetVisible(true)}
           />
         )}
 
-        {/* Intelligence Cards Section */}
-        {hasStats && (
-          <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.statsContainer}>
+        {/* ── Intelligence Cards Section ──────────────────────────────────── */}
+        {!isLoading && hasStats && (
+          <Animated.View entering={maybeAnimated(100)} style={styles.statsContainer}>
             <View style={styles.statsRow}>
               {/* Optimization Score */}
               <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -99,49 +199,77 @@ export default function DashboardScreen() {
                 />
               </View>
 
-              {/* Monthly Rewards */}
-              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              {/* Monthly Rewards (Hero Bento) */}
+              <View style={[styles.statCard, { backgroundColor: colors.successSoft, borderColor: colors.success + '30' }]}>
                 <View style={styles.statHeader}>
                   <DynamicIcon name="TrendingUp" size={16} color={colors.success} />
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rewards</Text>
+                  <Text style={[styles.statLabel, { color: colors.textPrimary }]}>Rewards</Text>
                 </View>
                 <AnimatedNumber
                   value={monthlySummary?.total_rewards_optimized || 0}
                   prefix="₹"
-                  style={[styles.statValue, { color: colors.textPrimary }]}
+                  style={[styles.statValue, { color: colors.success }]}
                 />
               </View>
             </View>
 
-            {/* Best Category card */}
+            {/* Best Category card — now interactive */}
             {!!monthlySummary?.strongest_category && (
-              <View style={[styles.fullWidthCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={styles.fullWidthRow}>
-                  <Text style={[styles.fullWidthLabel, { color: colors.textSecondary }]}>Best Category</Text>
-                  <Text style={[styles.fullWidthValue, { color: colors.success, backgroundColor: colors.successSoft }]}>
-                    {monthlySummary.strongest_category}
-                  </Text>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  Sentry.addBreadcrumb({
+                    category: 'navigation',
+                    message: 'Best Category → Monthly Intelligence',
+                  });
+                  router.push('/monthly-intelligence');
+                }}
+              >
+                <View style={[styles.fullWidthCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={styles.fullWidthRow}>
+                    <Text style={[styles.fullWidthLabel, { color: colors.textSecondary }]}>Best Category</Text>
+                    <View style={styles.fullWidthValueRow}>
+                      <Text style={[styles.fullWidthValue, { color: colors.success, backgroundColor: colors.successSoft }]}>
+                        {monthlySummary.strongest_category}
+                      </Text>
+                      <DynamicIcon name="ChevronRight" size={16} color={colors.textSecondary} />
+                    </View>
+                  </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             )}
           </Animated.View>
         )}
 
-        {/* Recent Recommendation Section */}
-        {primaryInsight && (
+        {/* ── Recent Recommendation Section ──────────────────────────────── */}
+        {!isLoading && primaryInsight && (
           <Animated.View
-            entering={FadeInDown.delay(150).springify()}
+            entering={maybeAnimated(150)}
             style={styles.insightSection}
           >
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>RECENT RECOMMENDATION</Text>
-            <View style={[styles.insightCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={[
+                styles.insightCard,
+                {
+                  backgroundColor: primaryInsight.badge_color + '0A',
+                  borderColor: colors.border,
+                  borderLeftWidth: 4,
+                  borderLeftColor: primaryInsight.badge_color,
+                },
+              ]}
+            >
               <View style={styles.insightHeader}>
-                <DynamicIcon name="Lightbulb" size={18} color={colors.primary} />
-                <View style={[styles.insightBadge, { backgroundColor: primaryInsight.badge_color + '15' }]}>
-                  <Text style={[styles.insightBadgeText, { color: primaryInsight.badge_color }]}>
-                    {primaryInsight.badge_label}
-                  </Text>
+                <View style={styles.insightHeaderLeft}>
+                  <DynamicIcon name="Lightbulb" size={18} color={primaryInsight.badge_color} />
+                  <View style={[styles.insightBadge, { backgroundColor: primaryInsight.badge_color + '15' }]}>
+                    <Text style={[styles.insightBadgeText, { color: primaryInsight.badge_color }]}>
+                      {primaryInsight.badge_label}
+                    </Text>
+                  </View>
                 </View>
+                <DynamicIcon name="ChevronRight" size={18} color={colors.textSecondary} />
               </View>
               <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>
                 {primaryInsight.title}
@@ -149,14 +277,15 @@ export default function DashboardScreen() {
               <Text style={[styles.insightSummary, { color: colors.textSecondary }]}>
                 {primaryInsight.summary}
               </Text>
-            </View>
+            </TouchableOpacity>
           </Animated.View>
         )}
 
-
-
-        {/* Primary Action Button */}
-        <Animated.View entering={FadeInDown.delay(250).springify()} style={[styles.actionContainer, { backgroundColor: colors.primarySoft, borderColor: colors.primarySoft }]}>
+        {/* ── Primary Action Button ───────────────────────────────────────── */}
+        <Animated.View
+          entering={maybeAnimated(250)}
+          style={styles.actionContainer}
+        >
           <TouchableOpacity
             style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
             activeOpacity={0.8}
@@ -174,6 +303,13 @@ export default function DashboardScreen() {
       <TransactionFormSheet
         visible={isFormSheetVisible}
         onClose={() => setFormSheetVisible(false)}
+        onSuccess={() => {
+          showToast('Transaction logged successfully');
+          // Refresh dashboard data to reflect the new transaction
+          setTimeout(() => {
+            handleRefresh();
+          }, 600);
+        }}
         initialData={null}
       />
     </ScreenContainer>
@@ -185,42 +321,51 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 32,
   },
-  greeting: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.semibold,
-    letterSpacing: tokens.letterSpacing.wider,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-
   heroText: {
-    fontSize: tokens.fontSize.heroXl,
+    fontSize: tokens.fontSize.title * 1.5,
     fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.tightest,
-    lineHeight: tokens.fontSize.heroXl * 1.05,
-    marginBottom: 10,
+    letterSpacing: tokens.letterSpacing.tight,
+    marginBottom: 6,
   },
   subText: {
-    fontSize: tokens.fontSize.bodyLg,
+    fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.medium,
-    lineHeight: tokens.fontSize.bodyLg * 1.55,
   },
-  intelligenceCta: {
+  intelligenceBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: tokens.radius.full,
+    gap: 16,
+    marginTop: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: tokens.radius.card,
     borderWidth: 1,
-    alignSelf: 'flex-start',
   },
-  intelligenceCtaText: {
-    fontSize: tokens.fontSize.caption,
+  intelligenceIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  intelligenceBannerText: {
+    flex: 1,
+    gap: 2,
+  },
+  intelligenceBannerTitle: {
+    fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
-    letterSpacing: tokens.letterSpacing.wide,
   },
+  intelligenceBannerSub: {
+    fontSize: tokens.fontSize.caption,
+  },
+
+  // ── Skeleton ─────────────────────────────────────────────────────────────
+  skeletonContainer: {
+    gap: 12,
+  },
+
+  // ── Stats ────────────────────────────────────────────────────────────────
   statsContainer: {
     marginBottom: 28,
     gap: 12,
@@ -266,6 +411,11 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.semibold,
   },
+  fullWidthValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   fullWidthValue: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
@@ -274,11 +424,13 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.full,
     textTransform: 'capitalize',
   },
+
+  // ── Insight ──────────────────────────────────────────────────────────────
   insightSection: {
     marginBottom: 28,
   },
   sectionTitle: {
-    fontSize: tokens.fontSize.micro,
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 12,
@@ -294,6 +446,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  insightHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   insightBadge: {
     paddingHorizontal: 8,
@@ -316,12 +473,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
+  // ── CTA ─────────────────────────────────────────────────────────────────
   actionContainer: {
     alignItems: 'center',
     marginTop: 8,
-    padding: 24,
-    borderRadius: tokens.radius.card,
-    borderWidth: 1,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
   },
   primaryActionBtn: {
     flexDirection: 'row',

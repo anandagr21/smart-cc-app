@@ -34,14 +34,14 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
           pointerEvents="none"
           style={{
             position: 'absolute',
-            top: -height * 0.12,
-            right: -width * 0.25,
-            width: Math.min(width * 0.8, 400),
-            height: Math.min(width * 0.8, 400),
-            borderRadius: Math.min(width * 0.4, 200),
+            top: -height * 0.08,
+            right: -width * 0.15,
+            width: Math.min(width * 0.7, 340),
+            height: Math.min(width * 0.7, 340),
+            borderRadius: Math.min(width * 0.35, 170),
             backgroundColor: colors.primarySoft,
-            ...(Platform.OS === 'web' ? { filter: 'blur(100px)' } as any : { filter: [{ blur: 100 } as any] }),
-            opacity: 0.6,
+            ...(Platform.OS === 'web' ? { filter: 'blur(40px)' } as any : { filter: [{ blur: 40 } as any] }),
+            opacity: 0.35,
           }}
         />
         {/* Ambient orb — bottom left, slightly accent-tinted */}
@@ -49,14 +49,14 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
           pointerEvents="none"
           style={{
             position: 'absolute',
-            bottom: -height * 0.1,
-            left: -width * 0.2,
-            width: Math.min(width * 0.6, 300),
-            height: Math.min(width * 0.6, 300),
-            borderRadius: Math.min(width * 0.3, 150),
+            bottom: -height * 0.06,
+            left: -width * 0.12,
+            width: Math.min(width * 0.5, 260),
+            height: Math.min(width * 0.5, 260),
+            borderRadius: Math.min(width * 0.25, 130),
             backgroundColor: colors.accentSoft,
-            ...(Platform.OS === 'web' ? { filter: 'blur(120px)' } as any : { filter: [{ blur: 120 } as any] }),
-            opacity: 0.6,
+            ...(Platform.OS === 'web' ? { filter: 'blur(48px)' } as any : { filter: [{ blur: 48 } as any] }),
+            opacity: 0.35,
           }}
         />
 

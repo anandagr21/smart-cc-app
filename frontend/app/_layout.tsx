@@ -11,6 +11,7 @@ import { useThemeStore } from '@/features/theme/store/themeStore';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { StatusBar } from 'expo-status-bar';
 import { TermsDisclaimerModal } from '@/components/TermsDisclaimerModal';
+import { ToastOverlay } from '@/components/ui/Toast';
 import { useOnboardingStore } from '@/features/onboarding/store/onboardingStore';
 import { OnboardingModal } from '@/features/onboarding/components/OnboardingModal';
 import '@/global.css';
@@ -175,6 +176,7 @@ export default Sentry.wrap(function RootLayout() {
           </Stack>
           {token && !hasSeenOnboarding && <OnboardingModal />}
           <TermsDisclaimerModal />
+          <ToastOverlay />
         </QueryClientProvider>
       </Sentry.ErrorBoundary>
     </GestureHandlerRootView>

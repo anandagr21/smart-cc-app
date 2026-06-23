@@ -5,10 +5,10 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withTiming,
+  cancelAnimation,
   Easing,
   interpolate,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 
 interface SkeletonBoxProps {
@@ -20,6 +20,7 @@ interface SkeletonBoxProps {
 
 /**
  * Premium shimmering skeleton box.
+ * Animation is cleaned up on unmount to prevent GPU waste.
  */
 export const SkeletonBox: React.FC<SkeletonBoxProps> = ({
   height,
@@ -33,10 +34,11 @@ export const SkeletonBox: React.FC<SkeletonBoxProps> = ({
 
   useEffect(() => {
     animValue.value = withRepeat(
-      withTiming(1, { duration: 1200, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }),
+      withTiming(1, { duration: 1500, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }),
       -1,
-      false
+      false,
     );
+    return () => cancelAnimation(animValue);
   }, []);
 
   const onLayout = (event: LayoutChangeEvent) => {
@@ -63,7 +65,7 @@ export const SkeletonBox: React.FC<SkeletonBoxProps> = ({
           height,
           width,
           borderRadius,
-          backgroundColor: colors.borderHighlight, // Base subtle color
+          backgroundColor: colors.borderHighlight,
           overflow: 'hidden',
         },
         style,
@@ -71,15 +73,14 @@ export const SkeletonBox: React.FC<SkeletonBoxProps> = ({
     >
       {layoutWidth > 0 && (
         <Animated.View style={[StyleSheet.absoluteFill, animStyle]}>
-          <LinearGradient
-            colors={[
-              'rgba(255, 255, 255, 0)',
-              'rgba(255, 255, 255, 0.2)',
-              'rgba(255, 255, 255, 0)',
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: colors.glassHighlight,
+                opacity: 0.4,
+              },
             ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={StyleSheet.absoluteFill}
           />
         </Animated.View>
       )}
