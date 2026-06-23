@@ -23,7 +23,17 @@ import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function CardsScreen() {
   const router = useRouter();
-  const { data: cards, isLoading } = useCards();
+  const { data: cards, isLoading, refetch } = useCards();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
   const [isSheetVisible, setSheetVisible] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const colors = useThemeColors();
@@ -135,6 +145,8 @@ export default function CardsScreen() {
             cards={filteredCards} 
             ListHeaderComponent={renderHeaderComponent()} 
             onSelectCard={(card) => setSelectedCardId(card.id)}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
           />
         </View>
       ) : (

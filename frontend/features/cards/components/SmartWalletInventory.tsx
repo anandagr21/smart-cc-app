@@ -11,9 +11,11 @@ interface SmartWalletInventoryProps {
   cards: UserCardResponse[];
   ListHeaderComponent?: React.ReactElement | null;
   onSelectCard: (card: UserCardResponse) => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
-export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ cards, ListHeaderComponent, onSelectCard }) => {
+export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ cards, ListHeaderComponent, onSelectCard, refreshing, onRefresh }) => {
   const colors = useThemeColors();
   const isGroupingEnabled = FeatureFlags.wallet?.bank_grouping?.enabled ?? false;
 
@@ -100,6 +102,8 @@ export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ card
     getItemType?: (item: any) => string;
     showsVerticalScrollIndicator?: boolean;
     contentContainerStyle?: Record<string, unknown>;
+    refreshing?: boolean;
+    onRefresh?: () => void;
   }>;
 
   return (
@@ -116,6 +120,8 @@ export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ card
         getItemType={(item: any) => (!isGroupingEnabled ? 'card' : item.type)}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }} // safe area for bottom tabs
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       />
     </View>
   );

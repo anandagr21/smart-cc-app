@@ -114,14 +114,13 @@ export const EditCardDetailsSheet: React.FC<EditCardDetailsSheetProps> = ({ visi
 
 const styles = StyleSheet.create({
   content: {
-    flex: 1,
     paddingTop: 12,
   },
   inputWrap: {
     marginBottom: 24,
   },
   actionRow: {
-    marginTop: 'auto',
+    marginTop: 24,
     paddingBottom: 40,
   },
   saveBtn: {

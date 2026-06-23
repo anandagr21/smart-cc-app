@@ -156,7 +156,8 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   ];
 
   return (
-    <Modal visible={!!card} animationType="slide" transparent onRequestClose={onClose}>
+    <>
+      <Modal visible={!!card} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
           <BlurView
@@ -417,12 +418,14 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
         </View>
       </View>
 
+      </Modal>
+
       <ComingSoonSheet visible={!!mockActionTitle} onClose={() => setMockActionTitle(null)} title={mockActionTitle || "Coming Soon"} />
       <EditAnnualFeeSheet visible={isAnnualFeeEditVisible} onClose={() => setIsAnnualFeeEditVisible(false)} card={card} />
       <EditSpendSheet visible={isSpendEditVisible} onClose={() => setIsSpendEditVisible(false)} card={card} />
       <EditFeeCycleSheet visible={isFeeCycleEditVisible} onClose={() => setIsFeeCycleEditVisible(false)} card={card} />
       <EditCardDetailsSheet visible={isCardDetailsEditVisible} onClose={() => setIsCardDetailsEditVisible(false)} card={card} />
-    </Modal>
+    </>
   );
 };
 
