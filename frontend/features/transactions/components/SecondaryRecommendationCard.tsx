@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Animated, { FadeIn, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated';
 import { UserCardResponse } from '@/features/cards/types/api';
 import { OptimizerRankedCard } from '@/features/recommendations/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
@@ -27,97 +27,118 @@ export const SecondaryRecommendationCard: React.FC<SecondaryRecommendationCardPr
   const colors = useThemeColors();
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
-  const estimatedRewardValue = recommendation.immediate_reward_value + recommendation.fee_waiver_progress_impact;
-
+  
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: withSpring(isActive ? 1.02 : 1, { damping: 20, stiffness: 200 }) }],
-      borderColor: withSpring(isActive ? colors.primary : colors.border),
-      backgroundColor: withSpring(isActive ? colors.primarySoft : colors.surfaceElevated),
+      backgroundColor: withTiming(isActive ? colors.primarySoft : colors.surfaceElevated, { duration: 200 }),
+      borderColor: withTiming(isActive ? colors.primary : colors.border, { duration: 200 }),
+      transform: [{ scale: withSpring(isActive ? 1.02 : 1, { damping: 15, stiffness: 150 }) }]
     };
   });
 
   return (
-    <Animated.View entering={FadeIn.duration(300)} style={[styles.container, animatedStyle]}>
-      <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={styles.touchable}>
-        <View style={styles.cardContent}>
-          
-          {/* Strategy Tag */}
-          <View style={styles.strategyRow}>
-            <Text style={[styles.strategyText, { color: isActive ? colors.primary : colors.textMuted }]} numberOfLines={1}>
-              {recommendation.confidence_label?.toUpperCase() || 'ALTERNATIVE'}
-            </Text>
-            {onInfoPress && (
-              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress}>
-                <DynamicIcon name="Info" size={14} color={colors.textSecondary} />
-              </TouchableOpacity>
-            )}
-          </View>
-          
-          {/* Card Name */}
-          <Text style={[styles.cardName, { color: colors.textPrimary }]} numberOfLines={2}>
-            {cardName}
-          </Text>
-
-          {/* Value */}
-          <View style={[styles.valueRow, { flexDirection: 'row', alignItems: 'baseline' }]}>
-            <Text style={[styles.rewardAmount, { color: colors.success }]} numberOfLines={1}>
-              {formatCurrencyIN(recommendation.immediate_reward_value)}
-            </Text>
-            {recommendation.fee_waiver_progress_impact > 0 && (
-              <Text style={[styles.rewardAmount, { fontSize: tokens.fontSize.micro, marginLeft: 4, color: colors.primary }]} numberOfLines={1}>
-                + {formatCurrencyIN(recommendation.fee_waiver_progress_impact)}
+    <Animated.View entering={FadeIn.duration(300)}>
+      <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
+        <Animated.View style={[styles.cardWrap, animatedStyle]}>
+          <View style={styles.leftContent}>
+            <View style={[styles.iconWrap, { backgroundColor: isActive ? colors.primarySoft : colors.surfaceElevated }]}>
+              <DynamicIcon name="CreditCard" size={16} color={isActive ? colors.primary : colors.textMuted} />
+            </View>
+            <View style={styles.textStack}>
+              <Text style={[styles.strategyText, { color: isActive ? colors.primary : colors.textMuted }]} numberOfLines={1}>
+                {recommendation.confidence_label?.toUpperCase() || 'ALTERNATIVE'}
               </Text>
-            )}
+              <Text style={[styles.cardName, { color: isActive ? colors.primary : colors.textPrimary }]} numberOfLines={1}>
+                {cardName}
+              </Text>
+            </View>
           </View>
 
-        </View>
+          <View style={styles.rightContent}>
+            <View style={{ alignItems: 'flex-end', marginRight: 12 }}>
+              <Text style={[styles.rewardAmount, { color: colors.success }]} numberOfLines={1}>
+                {formatCurrencyIN(recommendation.immediate_reward_value)}
+              </Text>
+              {recommendation.fee_waiver_progress_impact > 0 && (
+                <Text style={[styles.feeAmount, { color: colors.primary }]} numberOfLines={1}>
+                  + {formatCurrencyIN(recommendation.fee_waiver_progress_impact)}
+                </Text>
+              )}
+            </View>
+            
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {onInfoPress && (
+                <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress} style={{ marginRight: 12 }}>
+                  <DynamicIcon name="Info" size={16} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+              <View style={[styles.checkCircle, { borderColor: isActive ? colors.primary : colors.border, backgroundColor: isActive ? colors.primary : 'transparent' }]}>
+                {isActive && <DynamicIcon name="Check" size={12} color="#FFF" />}
+              </View>
+            </View>
+          </View>
+        </Animated.View>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    width: 140, // More compact
-    height: 106, // Increased height to fit 2 lines of text cleanly
-    marginRight: 12,
-    overflow: 'hidden',
-  },
-  touchable: {
-    flex: 1,
-    padding: 12,
-  },
-  cardContent: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  strategyRow: {
-    marginBottom: 4,
+  cardWrap: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  leftContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 12,
+  },
+  iconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  textStack: {
+    flex: 1,
   },
   strategyText: {
-    flex: 1,
-    fontSize: tokens.fontSize.micro - 1,
+    fontSize: 10,
     fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.widest,
+    letterSpacing: 1.5,
+    marginBottom: 2,
   },
   cardName: {
-    fontSize: tokens.fontSize.caption,
+    fontSize: 14,
     fontWeight: tokens.fontWeight.bold,
-    lineHeight: 16,
-    marginBottom: 4,
   },
-  valueRow: {
-    marginTop: 'auto',
-    alignItems: 'flex-start',
+  rightContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   rewardAmount: {
-    fontSize: tokens.fontSize.body,
+    fontSize: 14,
     fontWeight: tokens.fontWeight.heavy,
+  },
+  feeAmount: {
+    fontSize: 10,
+    fontWeight: tokens.fontWeight.bold,
+    marginTop: 2,
+  },
+  checkCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

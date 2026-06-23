@@ -8,6 +8,7 @@ import {
   Platform,
   StyleSheet,
   ScrollView,
+  Pressable,
 } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { BlurView } from 'expo-blur';
@@ -36,6 +37,7 @@ import { DynamicIcon } from '@/components/DynamicIcon';
 import { SearchSection } from './SearchSection';
 import { RecommendationBanner } from './RecommendationBanner';
 import { CardSelector } from './CardSelector';
+import { OverrideReasonSelector } from './OverrideReasonSelector';
 import { RecommendationExplainabilitySheet } from '../RecommendationExplainabilitySheet';
 
 const triggerHaptic = async (type: 'selection' | 'success' | 'error') => {
@@ -205,6 +207,18 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   useEffect(() => {
     if (!visible) {
       setHasInitialized(false);
+      setShowCorrection(false);
+      setResolvedMerchantName(null);
+      setResolutionConfidence(null);
+      setIsUndoDisabled(false);
+      getRecommendation.reset();
+      reset({
+        merchant_name: '',
+        amount: undefined,
+        user_card_id: cardsData?.[0]?.id || '',
+        payment_mode: 'ONLINE',
+        intent: mapPersonalityToIntent(personalityProfile?.active_personality),
+      });
       return;
     }
     
@@ -342,6 +356,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
       <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
         <FormProvider {...methods}>
           <View style={styles.backdrop}>
+            <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
               <BlurView
                 tint={isDark ? 'dark' : 'light'}
@@ -362,9 +377,9 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
 
               <View style={styles.header}>
                 <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
-                  {isEditing ? 'Edit Transaction' : 'Add Transaction'}
+                  {isEditing ? 'Edit Transaction' : 'New Transaction'}
                 </Text>
-                <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.surface }]}>
+                <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.surfaceElevated }]}>
                   <DynamicIcon name="X" size={18} color={colors.textSecondary} strokeWidth={2} />
                 </TouchableOpacity>
               </View>
@@ -394,12 +409,12 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                   inactiveCards={inactiveCards}
                   rankedCards={rankedCards}
                   selectedCardId={selectedCardId}
-                  isOverride={isOverride}
                   triggerHaptic={triggerHaptic}
                 />
               </ScrollView>
 
-              <View style={[styles.stickyCtaWrap, { backgroundColor: colors.glassSurface, borderColor: colors.glassBorder, paddingBottom: Math.max(insets.bottom, 24) }]}>
+              <View style={[styles.stickyCtaWrap, { backgroundColor: colors.glassSurface, borderColor: colors.border, paddingBottom: Math.max(insets.bottom, 24) }]}>
+                <OverrideReasonSelector isVisible={isOverride} triggerHaptic={triggerHaptic} />
                 <LinearGradient
                   colors={['#8B5CF6', '#6D28D9']} // Primary Purple
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
@@ -424,6 +439,9 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                           )
                       }
                     </Text>
+                    {!(isSubmitting || addTx.isPending || updateTx.isPending) && (
+                      <DynamicIcon name="CheckCircle2" size={20} color="#FFF" style={{ marginLeft: 8 }} />
+                    )}
                   </TouchableOpacity>
                 </LinearGradient>
               </View>
@@ -462,7 +480,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 24,
-    paddingBottom: 16,
+    paddingBottom: 0,
     zIndex: 10,
   },
   headerTitle: {
@@ -476,6 +494,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 40,
   },
   stickyCtaWrap: {
@@ -486,9 +505,15 @@ const styles = StyleSheet.create({
   },
   ctaGradient: {
     borderRadius: tokens.radius.full,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   ctaInner: {
-    paddingVertical: 16,
+    flexDirection: 'row',
+    paddingVertical: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },

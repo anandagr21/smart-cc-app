@@ -1,25 +1,87 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView } from 'react-native';
 import { Controller, useFormContext } from 'react-hook-form';
-import Animated, { FadeOut, SlideInDown } from 'react-native-reanimated';
+import Animated, { FadeOut, SlideInDown, FadeIn, useSharedValue, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
 import { Input } from '@/components/ui/Input';
 import { DynamicIcon } from '@/components/DynamicIcon';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { FeatureFlags } from '@/config/features';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const PAYMENT_MODES = [
-  { label: 'Online', value: 'ONLINE' },
-  { label: 'Offline', value: 'OFFLINE' },
-  { label: 'Intl', value: 'INTERNATIONAL' },
+  { label: 'Online', value: 'ONLINE', icon: 'Globe' },
+  { label: 'Offline', value: 'OFFLINE', icon: 'Store' },
+  { label: 'International', value: 'INTERNATIONAL', icon: 'Plane' },
 ];
 
 const INTENT_OPTIONS = [
-  { label: 'Max Rewards', value: 'MAX_REWARDS', disabled: false },
-  { label: 'Save Fee', value: 'SAVE_FEE_WAIVER', disabled: false },
-  { label: 'Balanced', value: 'BALANCED', disabled: false },
-  { label: 'Simplify', value: 'SIMPLIFY_DECISIONS', disabled: true }
+  { label: 'Max Rewards', value: 'MAX_REWARDS', icon: 'Sparkles', color: '#8B5CF6' },
+  { label: 'Save Fee', value: 'SAVE_FEE_WAIVER', icon: 'ShieldCheck', color: '#10B981' },
+  { label: 'Balanced', value: 'BALANCED', icon: 'Scale', color: '#3B82F6' },
+  { label: 'Simplify', value: 'SIMPLIFY_DECISIONS', icon: 'Zap', color: '#F59E0B' }
 ];
+
+const DebouncedAmountInput = ({ value, onChange, colors, ...props }: any) => {
+  const [localValue, setLocalValue] = useState(value?.toString() || '');
+  
+  useEffect(() => {
+    if (value?.toString() !== localValue) {
+      setLocalValue(value?.toString() || '');
+    }
+  }, [value]);
+
+  const debouncedValue = useDebounce(localValue, 400);
+
+  useEffect(() => {
+    if (debouncedValue !== (value?.toString() || '')) {
+      onChange(debouncedValue);
+    }
+  }, [debouncedValue]);
+
+  return (
+    <View style={styles.amountInputRow}>
+      <Text style={[styles.currencySymbol, { color: localValue ? colors.textPrimary : colors.textMuted }]}>₹</Text>
+      <TextInput
+        {...props}
+        value={localValue}
+        onChangeText={setLocalValue}
+        style={[styles.heroInput, { color: colors.textPrimary }]}
+        adjustsFontSizeToFit
+        minimumFontScale={0.5}
+        numberOfLines={1}
+      />
+    </View>
+  );
+};
+
+const DebouncedMerchantInput = ({ value, onChange, onBlur, colors, ...props }: any) => {
+  const [localValue, setLocalValue] = useState(value || '');
+  
+  useEffect(() => {
+    if (value !== localValue) {
+      setLocalValue(value || '');
+    }
+  }, [value]);
+
+  const debouncedValue = useDebounce(localValue, 400);
+
+  useEffect(() => {
+    if (debouncedValue !== (value || '')) {
+      onChange(debouncedValue);
+    }
+  }, [debouncedValue]);
+
+  return (
+    <TextInput
+      {...props}
+      value={localValue}
+      onChangeText={setLocalValue}
+      onBlur={onBlur}
+      style={[styles.merchantInput, { color: colors.textPrimary }]}
+    />
+  );
+};
 
 interface SearchSectionProps {
   showCorrection: boolean;
@@ -37,165 +99,147 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
   triggerHaptic
 }) => {
   const colors = useThemeColors();
-  const { control, formState: { errors } } = useFormContext<any>();
+  const { control, formState: { errors }, watch } = useFormContext<any>();
+  
+  const currentIntentValue = watch('intent');
+  const currentIntent = INTENT_OPTIONS.find(i => i.value === currentIntentValue) || INTENT_OPTIONS[2];
+
+  const amountShake = useSharedValue(0);
+  const merchantShake = useSharedValue(0);
+
+  useEffect(() => {
+    if (errors.amount?.message) {
+      amountShake.value = withSequence(
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(-10, { duration: 50 }),
+        withTiming(0, { duration: 50 })
+      );
+      triggerHaptic('error');
+    }
+  }, [errors.amount?.message]);
+
+  useEffect(() => {
+    if (errors.merchant_name?.message) {
+      merchantShake.value = withSequence(
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(-10, { duration: 50 }),
+        withTiming(0, { duration: 50 })
+      );
+      triggerHaptic('error');
+    }
+  }, [errors.merchant_name?.message]);
+
+  const amountStyle = useAnimatedStyle(() => ({ transform: [{ translateX: amountShake.value }] }));
+  const merchantStyle = useAnimatedStyle(() => ({ transform: [{ translateX: merchantShake.value }] }));
 
   return (
     <>
-      <View style={styles.amountHeroWrap}>
-        <Controller
-          control={control}
-          name="amount"
-          render={({ field: { onChange, value } }) => (
-            <View style={styles.amountInputRow}>
-              <Text style={[styles.currencySymbol, { color: value ? colors.textPrimary : colors.textMuted }]}>₹</Text>
-              <Input
-                testID="amount-input"
-                placeholder="0"
-                keyboardType="numeric"
-                value={value?.toString() || ''}
-                onChangeText={onChange}
-                style={styles.heroInputContainer}
-                inputStyle={[styles.heroInput, { color: colors.textPrimary }] as const}
-                hideBorder
-                hideFocusGlow
-                autoFocus
-              />
-            </View>
-          )}
-        />
-        {errors.amount?.message && (
-          <Text style={[styles.errorText, { color: colors.danger, textAlign: 'center' }]}>
-            {errors.amount.message as string}
-          </Text>
-        )}
-      </View>
-
-      <View>
-        <Controller
-          control={control}
-          name="merchant_name"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              testID="merchant-input"
-              label="Merchant"
-              placeholder="Amazon, Uber, Starbucks..."
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-              error={errors.merchant_name?.message as string}
-              leftIcon={<DynamicIcon name="Store" size={18} color={colors.textMuted} />}
-            />
-          )}
-        />
-        {showCorrection && resolvedMerchantName && (
-          <Animated.View 
-            entering={SlideInDown.springify().mass(0.8).damping(15)}
-            exiting={FadeOut.duration(150)}
-            style={styles.correctionContainer}
-          >
-            <View style={styles.correctionLeft}>
-              {resolutionConfidence && resolutionConfidence >= 0.95 ? (
-                <DynamicIcon name="CheckCircle2" size={16} color={colors.success} />
-              ) : (
-                <DynamicIcon name="AlertTriangle" size={16} color={colors.warning} />
-              )}
-              <Text style={[styles.correctionText, { color: colors.textSecondary }]}>
-                {resolutionConfidence && resolutionConfidence >= 0.95 ? 'Using ' : 'Recognized as '}
-                <Text style={{ color: colors.textPrimary, fontWeight: tokens.fontWeight.bold }}>
-                  {resolvedMerchantName}
-                </Text>
-              </Text>
-            </View>
-            <TouchableOpacity onPress={onUndoCorrection} style={styles.undoBtn} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-              <Text style={[styles.undoText, { color: colors.primary }]}>Undo</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-      </View>
-
-      <View style={styles.sectionWrap}>
-        <Controller
-          control={control}
-          name="payment_mode"
-          render={({ field: { onChange, value } }) => (
-            <View style={[styles.segmentRow, { backgroundColor: colors.background }]}>
-              {PAYMENT_MODES.map((mode) => {
-                const isActive = value === mode.value;
-                return (
-                  <TouchableOpacity
-                    key={mode.value}
-                    onPress={() => {
-                      triggerHaptic('selection');
-                      onChange(mode.value);
-                    }}
-                    activeOpacity={0.7}
-                    style={[
-                      styles.segmentBtn,
-                      isActive && { 
-                        backgroundColor: colors.surfaceElevated,
-                        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 
-                      }
-                    ]}
-                  >
-                    <Text style={[
-                      styles.segmentText,
-                      { 
-                        color: isActive ? colors.primary : colors.textMuted,
-                        fontWeight: isActive ? tokens.fontWeight.bold : tokens.fontWeight.medium
-                      }
-                    ]}>
-                      {mode.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-        />
-      </View>
-
-      {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && (
-        <View style={styles.sectionWrap}>
-          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Optimization Intent</Text>
+      <Animated.View style={styles.heroWrap} entering={FadeIn.duration(400)}>
+        <View style={[styles.heroGlow, { backgroundColor: currentIntent.color }]} />
+        
+        <Animated.View style={[styles.amountHeroWrap, amountStyle]}>
           <Controller
             control={control}
-            name="intent"
+            name="amount"
             render={({ field: { onChange, value } }) => (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                {INTENT_OPTIONS.map((option) => {
-                  const isActive = value === option.value;
+              <DebouncedAmountInput
+                value={value}
+                onChange={onChange}
+                colors={colors}
+                testID="amount-input"
+                placeholder="0"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="numeric"
+                autoFocus
+              />
+            )}
+          />
+          {errors.amount?.message && (
+            <Text style={[styles.errorText, { color: colors.danger }]}>
+              {errors.amount.message as string}
+            </Text>
+          )}
+        </Animated.View>
+
+        <Animated.View style={[styles.merchantHeroWrap, merchantStyle]}>
+          <Controller
+            control={control}
+            name="merchant_name"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <DebouncedMerchantInput
+                value={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                colors={colors}
+                testID="merchant-input"
+                placeholder="Add Merchant..."
+                placeholderTextColor={colors.textSecondary}
+              />
+            )}
+          />
+          {errors.merchant_name?.message && (
+            <Text style={[styles.errorText, { color: colors.danger, marginTop: 4 }]}>
+              {errors.merchant_name.message as string}
+            </Text>
+          )}
+        </Animated.View>
+      </Animated.View>
+
+      {showCorrection && resolvedMerchantName && (
+        <Animated.View 
+          entering={SlideInDown.springify().mass(0.8).damping(15)}
+          exiting={FadeOut.duration(150)}
+          style={[styles.correctionContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        >
+          <View style={styles.correctionLeft}>
+            {resolutionConfidence && resolutionConfidence >= 0.95 ? (
+              <DynamicIcon name="CheckCircle2" size={16} color={colors.success} />
+            ) : (
+              <DynamicIcon name="AlertTriangle" size={16} color={colors.warning} />
+            )}
+            <Text style={[styles.correctionText, { color: colors.textSecondary }]}>
+              {resolutionConfidence && resolutionConfidence >= 0.95 ? 'Using ' : 'Recognized as '}
+              <Text style={{ color: colors.textPrimary, fontWeight: tokens.fontWeight.bold }}>
+                {resolvedMerchantName}
+              </Text>
+            </Text>
+          </View>
+          <TouchableOpacity onPress={onUndoCorrection} style={styles.undoBtn} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+            <Text style={[styles.undoText, { color: colors.primary }]}>Undo</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
+      <View style={styles.controlsWrap}>
+        <View style={styles.controlSection}>
+          <Text style={[styles.controlLabel, { color: colors.textMuted }]}>PAYMENT MODE</Text>
+          <Controller
+            control={control}
+            name="payment_mode"
+            render={({ field: { onChange, value } }) => (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
+                {PAYMENT_MODES.map(mode => {
+                  const isActive = value === mode.value;
                   return (
                     <TouchableOpacity
-                      key={option.value}
-                      onPress={() => {
-                        if (!option.disabled) {
-                          triggerHaptic('selection');
-                          onChange(option.value);
-                        }
-                      }}
+                      key={mode.value}
                       activeOpacity={0.7}
-                      disabled={option.disabled}
+                      onPress={() => {
+                        triggerHaptic('selection');
+                        onChange(mode.value);
+                      }}
                       style={[
-                        styles.segmentBtn,
-                        { paddingHorizontal: 16, backgroundColor: colors.background },
-                        isActive && { 
-                          backgroundColor: colors.surfaceElevated,
-                          shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 
-                        },
-                        option.disabled && { opacity: 0.4 }
+                        styles.chip,
+                        { backgroundColor: isActive ? colors.primarySoft : 'rgba(255,255,255,0.03)' },
+                        isActive ? { borderColor: colors.primary } : { borderColor: colors.border }
                       ]}
                     >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <Text style={[
-                          styles.segmentText,
-                          { 
-                            color: isActive ? colors.primary : colors.textMuted,
-                            fontWeight: isActive ? tokens.fontWeight.bold : tokens.fontWeight.medium
-                          }
-                        ]}>
-                          {option.label}
-                        </Text>
-                      </View>
+                      <DynamicIcon name={mode.icon} size={14} color={isActive ? colors.primary : colors.textMuted} style={{ marginRight: 6 }} />
+                      <Text style={[styles.chipText, { color: isActive ? colors.primary : colors.textPrimary }]}>
+                        {mode.label}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -203,56 +247,120 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
             )}
           />
         </View>
-      )}
+
+        {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && (
+          <View style={styles.controlSection}>
+            <Text style={[styles.controlLabel, { color: colors.textMuted }]}>AI STRATEGY</Text>
+            <Controller
+              control={control}
+              name="intent"
+              render={({ field: { onChange, value } }) => (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
+                  {INTENT_OPTIONS.map(intent => {
+                    const isActive = value === intent.value;
+                    return (
+                      <TouchableOpacity
+                        key={intent.value}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                          triggerHaptic('selection');
+                          onChange(intent.value);
+                        }}
+                        style={[
+                          styles.chip,
+                          { backgroundColor: isActive ? colors.primarySoft : 'rgba(255,255,255,0.03)' },
+                          isActive ? { borderColor: intent.color } : { borderColor: colors.border }
+                        ]}
+                      >
+                        <DynamicIcon name={intent.icon} size={14} color={isActive ? intent.color : colors.textMuted} style={{ marginRight: 6 }} />
+                        <Text style={[styles.chipText, { color: isActive ? intent.color : colors.textPrimary }]}>
+                          {intent.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              )}
+            />
+          </View>
+        )}
+      </View>
     </>
   );
 };
 
 const styles = StyleSheet.create({
+  heroWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+    marginBottom: 16,
+    position: 'relative',
+  },
+  heroGlow: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    opacity: 0.05,
+    borderRadius: 100,
+    transform: [{ scaleX: 1.5 }, { scaleY: 0.8 }],
+    top: -20,
+    filter: 'blur(30px)',
+  },
   amountHeroWrap: {
-    alignItems: 'flex-start',
-    marginBottom: 32,
-    marginTop: 8,
+    alignItems: 'center',
+    marginBottom: 8,
+    zIndex: 2,
   },
   amountInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
   },
   currencySymbol: {
-    fontSize: tokens.fontSize.heroXl,
+    fontSize: 40,
     fontWeight: tokens.fontWeight.heavy,
-    marginRight: 8,
-  },
-  heroInputContainer: {
-    marginBottom: 0,
-    minHeight: 0,
-    width: 'auto',
-    minWidth: 100,
+    marginRight: 4,
   },
   heroInput: {
-    fontSize: 56, // Massive Apple Wallet size
+    fontSize: 52,
     fontWeight: tokens.fontWeight.heavy,
-    height: 80,
-    letterSpacing: -2,
-    paddingVertical: 0,
-    textAlign: 'left',
+    letterSpacing: -1,
+    textAlign: 'center',
+    minWidth: 60,
+    maxWidth: '85%',
+  },
+  merchantHeroWrap: {
+    alignItems: 'center',
+    zIndex: 2,
+    width: '100%',
+  },
+  merchantInput: {
+    fontSize: 22,
+    fontWeight: tokens.fontWeight.medium,
+    textAlign: 'center',
+    paddingVertical: 8,
+    minWidth: 200,
+    maxWidth: '100%',
   },
   errorText: {
     fontSize: tokens.fontSize.caption,
+    textAlign: 'center',
   },
   correctionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 8,
-    marginBottom: 16,
-    paddingHorizontal: 4,
+    padding: 12,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 24,
   },
   correctionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   correctionText: {
     fontSize: tokens.fontSize.body,
@@ -264,32 +372,32 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
   },
-  sectionWrap: {
+  controlsWrap: {
     marginBottom: 24,
+    gap: 20,
   },
-  sectionLabel: {
-    fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.bold,
-    textTransform: 'uppercase',
-    letterSpacing: tokens.letterSpacing.widest,
-    marginBottom: 10,
+  controlSection: {
+    gap: 8,
+  },
+  controlLabel: {
+    fontSize: 10,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: 1.5,
     marginLeft: 2,
   },
-  segmentRow: {
-    flexDirection: 'row',
-    borderRadius: tokens.radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 4,
-    gap: 4,
+  chipsScroll: {
+    gap: 8,
   },
-  segmentBtn: {
-    flex: 1,
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: tokens.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1,
   },
-  segmentText: {
+  chipText: {
     fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.bold,
   },
 });

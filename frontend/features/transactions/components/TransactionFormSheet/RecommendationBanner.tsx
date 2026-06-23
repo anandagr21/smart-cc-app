@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useFormContext } from 'react-hook-form';
 
 import { DynamicIcon } from '@/components/DynamicIcon';
@@ -48,8 +48,8 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
       </View>
 
       {!hasValidInput && !isPending && winningWalletCards.length === 0 && (
-        <Animated.View entering={FadeIn} style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={[styles.emptyIconWrap, { backgroundColor: colors.background }]}>
+        <Animated.View entering={FadeIn} style={[styles.emptyState, { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: colors.border }]}>
+          <View style={[styles.emptyIconWrap, { backgroundColor: colors.surfaceElevated }]}>
             <DynamicIcon name="Sparkles" size={24} color={colors.primary} />
           </View>
           <Text style={[styles.emptyStateTitle, { color: colors.textPrimary }]}>
@@ -62,43 +62,41 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
       )}
 
       {isPending && hasValidInput && (
-        <Animated.View entering={FadeIn} style={[styles.thinkingState, { backgroundColor: colors.surface }]}>
-          <DynamicIcon name="Sparkles" size={16} color={colors.primary} style={styles.pulseIcon} />
+        <Animated.View entering={FadeIn} style={[styles.thinkingState, { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: colors.border, borderWidth: 1 }]}>
+          <DynamicIcon name="Sparkles" size={28} color={colors.primary} style={styles.pulseIcon} />
           <Text style={[styles.thinkingStateText, { color: colors.textPrimary }]}>
-            Analyzing your portfolio...
+            Calculating best rewards...
           </Text>
         </Animated.View>
       )}
 
       {!isPending && winningWalletCards.length > 0 && (
         <Animated.View entering={FadeInUp.springify().damping(20).stiffness(150)}>
-          <HeroRecommendationCard
-            card={winningWalletCards[0].card}
-            recommendation={winningWalletCards[0].recommendation}
-            onSelect={() => {
-              triggerHaptic('selection');
-              setValue('user_card_id', winningWalletCards[0].card.id);
-            }}
-            onInfoPress={() => onExplainPress(winningWalletCards[0].card.id)}
-            merchantName={debouncedMerchant}
-            amount={Number(debouncedAmount) || 1000}
-            calculationId={calculationId}
-          />
+          <Animated.View entering={ZoomIn.duration(400).springify()}>
+            <HeroRecommendationCard
+              card={winningWalletCards[0].card}
+              recommendation={winningWalletCards[0].recommendation}
+              onSelect={() => {
+                triggerHaptic('selection');
+                setValue('user_card_id', winningWalletCards[0].card.id);
+              }}
+              onInfoPress={() => onExplainPress(winningWalletCards[0].card.id)}
+              merchantName={debouncedMerchant}
+              amount={Number(debouncedAmount) || 1000}
+              calculationId={calculationId}
+            />
+          </Animated.View>
 
           {winningWalletCards.length > 1 && (
             <View style={styles.alternativesWrap}>
               <Text style={[styles.alternativesTitle, { color: colors.textMuted }]}>
                 OTHER STRATEGIC OPTIONS
               </Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.alternativesScrollContent}
-              >
-                <Animated.View style={styles.alternativesInnerRow} entering={FadeInUp.springify().damping(20).stiffness(150)}>
-                  {winningWalletCards.slice(1).map(({ card, recommendation }) => (
+              
+              <View>
+                {winningWalletCards.slice(1).map(({ card, recommendation }, idx) => (
+                  <View key={card.id}>
                     <SecondaryRecommendationCard
-                      key={card.id}
                       card={card}
                       recommendation={recommendation}
                       isActive={selectedCardId === card.id}
@@ -108,9 +106,9 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
                       }}
                       onInfoPress={() => onExplainPress(card.id)}
                     />
-                  ))}
-                </Animated.View>
-              </ScrollView>
+                  </View>
+                ))}
+              </View>
             </View>
           )}
 
@@ -147,8 +145,8 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
     paddingHorizontal: 24,
     alignItems: 'center',
-    borderRadius: tokens.radius.xl,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 20,
+    borderWidth: 1,
   },
   emptyIconWrap: {
     width: 56,
@@ -171,10 +169,11 @@ const styles = StyleSheet.create({
   thinkingState: {
     paddingVertical: 32,
     alignItems: 'center',
-    borderRadius: tokens.radius.xl,
-    flexDirection: 'row',
+    borderRadius: 20,
+    flexDirection: 'column',
     justifyContent: 'center',
-    gap: 8,
+    gap: 12,
+    minHeight: 180,
   },
   thinkingStateText: {
     fontSize: tokens.fontSize.body,
@@ -191,12 +190,12 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: tokens.letterSpacing.widest,
     marginBottom: 12,
+    marginLeft: 2,
   },
-  alternativesScrollContent: {
-    paddingBottom: 8,
-  },
-  alternativesInnerRow: {
-    flexDirection: 'row',
+  iosGroupedList: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
   },
   aiDisclaimerWrap: {
     flexDirection: 'row',

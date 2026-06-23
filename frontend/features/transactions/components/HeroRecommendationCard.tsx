@@ -47,7 +47,12 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
   return (
     <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
       <TouchableOpacity activeOpacity={0.9} onPress={onSelect} style={styles.touchable}>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <LinearGradient 
+          colors={isDark ? ['rgba(79, 54, 255, 0.15)', 'rgba(79, 54, 255, 0.03)'] : ['rgba(79, 54, 255, 0.08)', 'rgba(255, 255, 255, 0.8)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.card, { borderColor: colors.primary }]}
+        >
           {/* Left accent stripe with network gradient */}
           <View style={styles.accentStripe}>
             <LinearGradient colors={gradient} style={{ flex: 1 }} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
@@ -103,7 +108,7 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
             <Text style={[styles.rewardLabel, { color: colors.textMuted }]}>EXPECTED REWARD</Text>
           </View>
 
-        </View>
+        </LinearGradient>
       </TouchableOpacity>
 
       <FeedbackModal
