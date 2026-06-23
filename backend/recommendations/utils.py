@@ -110,6 +110,17 @@ def parse_rules_from_catalog(catalog_card: Any, card_name: str) -> list[Normaliz
             
         spend_unit = float(r.get("spend_unit", 100))
         
+        caps = r.get("caps", [])
+        if not caps and r.get("has_cap"):
+            cap_limit = float(r.get("cap_limit", 0) or 0)
+            if cap_limit > 0:
+                is_monthly = r.get("cap_cycle") == "monthly"
+                caps.append({
+                    "cap_type": "monthly_cap" if is_monthly else "transaction_cap",
+                    "limit": cap_limit,
+                    "scope": "monthly" if is_monthly else "per_transaction"
+                })
+
         config = {
             "reward_type": r_type,
             "reward_rate": rate,
@@ -117,9 +128,8 @@ def parse_rules_from_catalog(catalog_card: Any, card_name: str) -> list[Normaliz
             "rupee_value": base_point_value,
             "spend_unit": spend_unit,
             "payment_mode": "any",
-            "cap": float(r.get("cap_limit", 0) or 0) if r.get("has_cap") else 0.0,
-            "scope": "monthly" if r.get("cap_cycle") == "monthly" else "transaction",
             "excluded_merchants": r.get("merchant_exclusions", []),
+            "caps": caps,
         }
         explicit_rule_type = r.get("rule_type")
         explicit_merchant = r.get("merchant")
