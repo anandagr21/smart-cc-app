@@ -33,7 +33,7 @@ export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ card
         acc[bank] = { bank, cards: [], totalSpend: 0, nearWaiverCount: 0 };
       }
       acc[bank].cards.push(card);
-      acc[bank].totalSpend += card.annual_spend || 0;
+      acc[bank].totalSpend += Number(card.annual_spend) || 0;
       
       const waiverPercent = card.fee_waiver_progress_percent || 0;
       if (waiverPercent >= 75 && waiverPercent < 100) {
@@ -61,9 +61,10 @@ export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ card
     }
 
     if (item.type === 'header') {
-      const totalSpendFormatted = item.totalSpend >= 100000 
-        ? `₹${(item.totalSpend / 100000).toFixed(1)}L` 
-        : `₹${(item.totalSpend / 1000).toFixed(0)}k`;
+      const spendNum = Number(item.totalSpend) || 0;
+      const totalSpendFormatted = spendNum >= 100000 
+        ? `₹${(spendNum / 100000).toFixed(1)}L` 
+        : spendNum > 0 ? `₹${(spendNum / 1000).toFixed(0)}k` : '₹0';
 
       return (
         <View style={styles.groupHeader}>
