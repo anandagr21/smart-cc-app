@@ -1,12 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, AccessibilityInfo } from 'react-native';
 
-import Animated, { FadeInDown, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  useAnimatedProps,
+  useSharedValue,
+  withTiming,
+  withSequence,
+  useAnimatedStyle,
+  Easing,
+} from 'react-native-reanimated';
 import { TextInput } from 'react-native';
 import { TransactionResponse } from '../types/transaction.types';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
-import { LinearGradient } from 'expo-linear-gradient';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
 const AnimatedText = Animated.createAnimatedComponent(TextInput);
@@ -20,6 +27,10 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
   const animatedValue = useSharedValue(0);
   const [reduceMotion, setReduceMotion] = useState(false);
 
+  // Pulse ring for the "Reward Pulse" signature element
+  const pulseScale = useSharedValue(1);
+  const pulseOpacity = useSharedValue(0);
+
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
   }, []);
@@ -31,16 +42,36 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
   }, 0);
 
   useEffect(() => {
-    animatedValue.value = withTiming(totalRewards, { duration: 1500 });
+    animatedValue.value = withTiming(totalRewards, { duration: reduceMotion ? 0 : 1500 });
+  }, [totalRewards]);
+
+  // Pulse animation for the ring — runs once on mount
+  useEffect(() => {
+    if (reduceMotion || totalRewards === 0) return;
+    pulseScale.value = withSequence(
+      withTiming(1.6, { duration: 1200, easing: Easing.out(Easing.exp) }),
+      withTiming(1.6, { duration: 400 }),
+      withTiming(1, { duration: 0 }),
+    );
+    pulseOpacity.value = withSequence(
+      withTiming(0.3, { duration: 800, easing: Easing.out(Easing.exp) }),
+      withTiming(0, { duration: 800 }),
+      withTiming(0, { duration: 0 }),
+    );
   }, [totalRewards]);
 
   const animatedProps = useAnimatedProps(() => {
+    const val = Math.round(animatedValue.value);
     return {
-      text: `₹${Math.round(animatedValue.value).toString()}`,
-      // Workaround for Android/iOS text input behavior
-      defaultValue: `₹${Math.round(animatedValue.value).toString()}`,
+      text: `₹${val.toLocaleString('en-IN')}`,
+      defaultValue: `₹${val.toLocaleString('en-IN')}`,
     } as any;
   });
+
+  const pulseAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+    opacity: pulseOpacity.value,
+  }));
 
   if (!transactions || transactions.length === 0 || totalRewards === 0) return null;
 
@@ -63,43 +94,52 @@ export function SavingsSummaryCard({ transactions }: SavingsSummaryCardProps) {
 
   return (
     <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(50).springify()} style={styles.container}>
-      <LinearGradient
-        colors={[colors.surfaceElevated, colors.surface]}
-        style={[styles.card, { borderColor: colors.border }]}
-      >
-        {/* Top Highlight */}
-        <View style={[styles.topHighlight, { backgroundColor: colors.glassHighlight }]} />
+      {/* Pulse ring — the signature "Reward Pulse" */}
+      <Animated.View
+        style={[
+          styles.pulseRing,
+          { borderColor: colors.success },
+          pulseAnimStyle,
+        ]}
+        pointerEvents="none"
+      />
 
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {/* Top gradient glow */}
+        <View style={[styles.glowBar, { backgroundColor: colors.success }]} />
+
+        {/* Header row */}
         <View style={styles.header}>
-          <DynamicIcon name="Trophy" size={16} color={colors.warning} style={styles.icon} />
-          <Text style={[styles.eyebrow, { color: colors.warning }]}>
-            Optimization Summary
-          </Text>
+          <View style={[styles.trophyWrap, { backgroundColor: colors.successSoft }]}>
+            <DynamicIcon name="Trophy" size={14} color={colors.success} strokeWidth={2} />
+          </View>
+          <Text style={[styles.eyebrow, { color: colors.success }]}>Optimization Summary</Text>
         </View>
 
-        <Text style={[styles.label, { color: colors.textSecondary }]}>
-          You optimized
-        </Text>
-        
-        <View style={styles.valueContainer}>
-          <AnimatedText
-            editable={false}
-            animatedProps={animatedProps}
-            style={[styles.valueText, { color: colors.textPrimary }]}
-            numberOfLines={1}
-          />
+        {/* Hero value — the centerpiece */}
+        <View style={styles.valueSection}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>You optimized</Text>
+          <View style={styles.valueRow}>
+            <AnimatedText
+              editable={false}
+              animatedProps={animatedProps}
+              style={[styles.valueText, { color: colors.textPrimary }]}
+              numberOfLines={1}
+            />
+          </View>
         </View>
 
+        {/* Best category pill */}
         {maxCategoryReward > 0 && (
-          <View style={[styles.bestCategoryPill, { backgroundColor: colors.successSoft, borderColor: colors.success }]}>
+          <View style={[styles.bestCategoryPill, { backgroundColor: colors.successSoft, borderColor: colors.success + '40' }]}>
             <DynamicIcon name="TrendingUp" size={12} color={colors.success} style={styles.trendIcon} />
             <Text style={[styles.bestCategoryText, { color: colors.success }]} numberOfLines={1}>
               Best optimization:{' '}
-              <Text style={styles.bestCategoryBold} numberOfLines={1}>{bestCategory}</Text>
+              <Text style={styles.bestCategoryBold}>{bestCategory}</Text>
             </Text>
           </View>
         )}
-      </LinearGradient>
+      </View>
     </Animated.View>
   );
 }
@@ -108,41 +148,62 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: 24,
     marginBottom: 24,
+    position: 'relative',
+    alignItems: 'center',
+  },
+  pulseRing: {
+    position: 'absolute',
+    top: -12,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    zIndex: 0,
   },
   card: {
+    width: '100%',
     borderRadius: tokens.radius.card,
     padding: 24,
+    borderWidth: 1,
     overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
+    position: 'relative',
   },
-  topHighlight: {
+  glowBar: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 1,
+    height: 3,
+    opacity: 0.7,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    gap: 8,
   },
-  icon: {
-    marginRight: 8,
+  trophyWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   eyebrow: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
     textTransform: 'uppercase',
-    letterSpacing: tokens.letterSpacing.widest,
+    letterSpacing: tokens.letterSpacing.wide,
+  },
+  valueSection: {
+    marginBottom: 20,
   },
   label: {
     fontSize: tokens.fontSize.bodyLg,
     marginBottom: 4,
   },
-  valueContainer: {
+  valueRow: {
     overflow: 'hidden',
-    marginBottom: 20,
   },
   valueText: {
     fontSize: tokens.fontSize.hero,
@@ -158,7 +219,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: tokens.radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     maxWidth: '100%',
   },
   trendIcon: {
