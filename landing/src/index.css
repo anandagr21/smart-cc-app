@@ -161,20 +161,22 @@ body {
 /* ─── Hero floating chips — CSS keyframes ─────────────────── */
 /* JS motion was scheduling 120 fps updates; CSS runs on compositor thread */
 @keyframes float-slow {
-  0%, 100% { transform: translateY(0px);  }
-  50%       { transform: translateY(-10px); }
+  0%, 100% { transform: translateY(0px) translateZ(0);  }
+  50%       { transform: translateY(-10px) translateZ(0); }
 }
 @keyframes float-fast {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-7px); }
+  0%, 100% { transform: translateY(0px) translateZ(0); }
+  50%       { transform: translateY(-7px) translateZ(0); }
 }
 .hero-float-slow {
-  animation: float-slow 5s ease-in-out infinite;
+  animation: float-slow 5s linear infinite;
   will-change: transform;
+  backface-visibility: hidden;
 }
 .hero-float-fast {
-  animation: float-fast 4s ease-in-out infinite 1.5s;
+  animation: float-fast 4s linear infinite 1.5s;
   will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* ─── Scroll cue ──────────────────────────────────────────── */
