@@ -15,7 +15,7 @@ const steps = [
     iconBg: "bg-brand-500/10 border-brand-500/20",
     accentColor: "#F59E0B",
     title: "Add Your Cards",
-    desc: "Enter card name, bank, and network. We fetch the rest from our database of 500+ card profiles — automatically.",
+    desc: "Enter card name, bank, and network. We fetch the rest from our database of 60+ card profiles — automatically.",
     detail: "Takes under 30 seconds per card",
   },
   {

@@ -3,7 +3,7 @@ import { ArrowRightIcon } from "./Icons";
 
 const stats = [
   { value: "₹2.4L", label: "Avg savings / year" },
-  { value: "500+",  label: "Card profiles" },
+  { value: "60+",  label: "Card profiles" },
   { value: "2 min", label: "Setup time" },
 ];
 
