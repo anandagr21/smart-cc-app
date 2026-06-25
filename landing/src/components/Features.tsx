@@ -151,7 +151,7 @@ export default function Features() {
                     />
                   ))}
                   <div className="w-12 h-8 rounded-lg glass border-2 border-white/10 flex items-center justify-center text-white/50 text-xs font-bold">
-                    +494
+                    +55
                   </div>
                 </div>
               </div>
