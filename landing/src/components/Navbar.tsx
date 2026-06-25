@@ -32,12 +32,9 @@ export default function Navbar() {
         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2.5 group" aria-label="Smart CC home">
-          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 via-brand-400 to-accent-500 flex items-center justify-center font-extrabold text-sm text-surface-950 shadow-lg shadow-brand-500/30 group-hover:shadow-brand-500/50 transition-shadow duration-300">
-            SC
-            <div className="absolute inset-0 rounded-xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-          </div>
-          <span className="font-bold text-base tracking-tight text-white">Smart CC</span>
+        <a href="#" className="flex items-center gap-2.5 group" aria-label="Card Optimizer home">
+          <img src="/favicon.png" alt="Card Optimizer" className="w-9 h-9 rounded-xl shadow-lg shadow-brand-500/30 group-hover:shadow-brand-500/50 transition-shadow duration-300" />
+          <span className="font-bold text-base tracking-tight text-white">Card Optimizer</span>
         </a>
 
         {/* Desktop links */}

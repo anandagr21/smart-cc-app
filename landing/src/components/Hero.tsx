@@ -63,7 +63,7 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.32, duration: 0.5 }}
             >
-              Stop juggling spreadsheets and missing due dates. Smart CC tracks every card,
+              Stop juggling spreadsheets and missing due dates. Card Optimizer tracks every card,
               predicts fee waivers, and maximises rewards — powered by AI.
             </motion.p>
 
@@ -144,7 +144,7 @@ export default function Hero() {
                 {/* Top bar */}
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <p className="text-white/40 text-xs font-semibold tracking-widest uppercase mb-0.5">Smart CC Dashboard</p>
+                    <p className="text-white/40 text-xs font-semibold tracking-widest uppercase mb-0.5">Card Optimizer Dashboard</p>
                     <p className="text-white font-bold text-lg">My Card Portfolio</p>
                   </div>
                   <div className="flex items-center gap-1.5 glass rounded-full px-3 py-1.5">

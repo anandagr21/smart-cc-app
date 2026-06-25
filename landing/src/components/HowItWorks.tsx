@@ -37,7 +37,7 @@ const steps = [
     iconBg: "bg-green-500/10 border-green-500/20",
     accentColor: "#10B981",
     title: "Get AI-Powered Insights",
-    desc: "Smart CC starts optimising immediately — suggesting which card to use, tracking waiver progress, and alerting you to savings opportunities.",
+    desc: "Card Optimizer starts optimising immediately — suggesting which card to use, tracking waiver progress, and alerting you to savings opportunities.",
     detail: "Real-time, always-on AI",
   },
 ];
