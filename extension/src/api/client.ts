@@ -111,12 +111,26 @@ export async function getCardDetail(cardId: string) {
   return data.data
 }
 
+export async function getCardCatalog() {
+  console.log("[Smart CC API] getCardCatalog")
+  const response = await fetch(`${API_URL}/cards/catalog?page_size=100`, {
+    headers: await getAuthHeaders(),
+  })
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`Failed to fetch card catalog: ${err}`)
+  }
+  const data = await response.json()
+  const cards = data.data || []
+  console.log(`[Smart CC API] getCardCatalog — fetched ${cards.length} cards`)
+  return cards
+}
+
 export async function addCard(request: {
-  card_name: string
-  bank_name?: string
-  network?: string
-  annual_fee?: number
+  card_catalog_id: string
   nickname?: string
+  last_4_digits?: string
+  network_override?: string
 }) {
   const response = await fetch(`${API_URL}/cards`, {
     method: "POST",
@@ -168,14 +182,20 @@ export async function fetchRecommendations(
 
 // ── Transactions ────────────────────────────────────────────────────────────
 
-export async function getTransactions() {
-  console.log("[Smart CC API] getTransactions")
-  const response = await fetch(`${API_URL}/transactions`, {
+export async function getTransactions(page: number = 1, pageSize: number = 20) {
+  console.log(`[Smart CC API] getTransactions page=${page} size=${pageSize}`)
+  const response = await fetch(`${API_URL}/transactions?page=${page}&page_size=${pageSize}`, {
     headers: await getAuthHeaders(),
   })
   if (!response.ok) throw new Error("Failed to fetch transactions")
   const data = await response.json()
-  return data.data
+  // Return both the items array and pagination metadata
+  return {
+    data: Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []),
+    total: data.total ?? data.count ?? undefined,
+    page: data.page ?? page,
+    page_size: data.page_size ?? pageSize,
+  }
 }
 
 // ── Intelligence ───────────────────────────────────────────────────────────
