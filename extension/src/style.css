@@ -1,0 +1,39 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fix popup dimensions — Chrome sizes popup window to match body */
+html, body, #__plasmo {
+  width: 360px !important;
+  min-width: 360px;
+  height: 550px !important;
+  min-height: 550px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Content script shadow host + container — full viewport overlay */
+plasmo-csui,
+#plasmo-shadow-container {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  pointer-events: none !important;
+  z-index: 2147483647 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  display: block !important;
+}
+
+/* Allow interaction on the actual content elements */
+#plasmo-shadow-container > *,
+plasmo-csui > * {
+  pointer-events: auto !important;
+}
