@@ -17,7 +17,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <img src="/favicon.png" alt="Card Optimizer" className="w-9 h-9 rounded-xl shadow-lg shadow-brand-500/20" />
+              <div className="w-9 h-9 rounded-xl bg-white/10 p-0.5 shadow-lg shadow-brand-500/20"><img src="/favicon.png" alt="Card Optimizer" className="w-full h-full rounded-lg" /></div>
               <span className="font-bold text-base text-white">Card Optimizer</span>
             </div>
             <p className="text-white/30 text-sm leading-relaxed max-w-[200px]">

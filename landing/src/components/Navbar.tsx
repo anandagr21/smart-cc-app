@@ -33,7 +33,7 @@ export default function Navbar() {
       >
         {/* Logo */}
         <a href="#" className="flex items-center gap-2.5 group" aria-label="Card Optimizer home">
-          <img src="/favicon.png" alt="Card Optimizer" className="w-9 h-9 rounded-xl shadow-lg shadow-brand-500/30 group-hover:shadow-brand-500/50 transition-shadow duration-300" />
+          <div className="w-9 h-9 rounded-xl bg-white/10 p-0.5 shadow-lg shadow-brand-500/30 group-hover:shadow-brand-500/50 transition-shadow duration-300"><img src="/favicon.png" alt="Card Optimizer" className="w-full h-full rounded-lg" /></div>
           <span className="font-bold text-base tracking-tight text-white">Card Optimizer</span>
         </a>
 
