@@ -327,146 +327,119 @@ function SmartCCOrb() {
 
       {/* Expanded Drawer */}
       <div style={{
-        position: "fixed", top: 0, right: 0, height: "100vh", width: 400, maxWidth: "100vw",
+        position: "fixed", top: 0, right: 0, height: "100vh", width: 360, maxWidth: "100vw",
         background: "#FFFFFF", boxShadow: "-8px 0 40px rgba(20,20,43,0.15)",
         borderLeft: "1px solid #E7E8F0", zIndex: 2147483648,
         transform: isExpanded ? "translateX(0)" : "translateX(100%)",
         transition: "transform 0.3s cubic-bezier(0.22,1,0.36,1)",
         overflow: "hidden", display: "flex", flexDirection: "column",
       }}>
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid #E7E8F0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Sparkles size={20} color="#4F36FF" />
-            <span style={{ fontWeight: 600, fontSize: 16, color: "#14142B" }}>Smart CC</span>
+        <div style={{ padding: "14px 18px", borderBottom: "1px solid #E7E8F0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Sparkles size={16} color="#4F36FF" />
+            <span style={{ fontWeight: 600, fontSize: 14, color: "#14142B" }}>Smart CC</span>
           </div>
-          <button onClick={() => setIsExpanded(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#666A80" }}>✕</button>
+          <button onClick={() => setIsExpanded(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#666A80", padding: 0, lineHeight: 1 }}>✕</button>
         </div>
-        <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
+        <div style={{ padding: 16, overflowY: "auto", flex: 1 }}>
           {/* Merchant info */}
-          <div style={{ background: "#F8F8FC", borderRadius: 16, padding: 16, display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-            <div><p style={{ fontWeight: 600, fontSize: 16, textTransform: "capitalize" }}>{merchant?.name}</p><p style={{ fontSize: 12, color: "#666A80" }}>Merchant detected</p></div>
-            <div style={{ textAlign: "right" }}><p style={{ fontWeight: 700, fontSize: 16 }}>₹{cartAmount}</p><p style={{ fontSize: 12, color: "#666A80" }}>Amount</p></div>
+          <div style={{ background: "#F8F8FC", borderRadius: 12, padding: 12, display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+            <div><p style={{ fontWeight: 600, fontSize: 14, textTransform: "capitalize", margin: "0 0 2px" }}>{merchant?.name}</p><p style={{ fontSize: 11, color: "#666A80", margin: 0 }}>Merchant detected</p></div>
+            <div style={{ textAlign: "right" }}><p style={{ fontWeight: 700, fontSize: 14, margin: "0 0 2px" }}>₹{cartAmount}</p><p style={{ fontSize: 11, color: "#666A80", margin: 0 }}>Amount</p></div>
           </div>
           {isLoading && !recommendation ? (
-            <div style={{ textAlign: "center", padding: 40 }}><Loader2 size={32} color="#4F36FF" style={{ animation: "smart-cc-spin 1s linear infinite" }} /><p style={{ color: "#666A80", marginTop: 12 }}>Analyzing your cards...</p></div>
+            <div style={{ textAlign: "center", padding: 30 }}><Loader2 size={28} color="#4F36FF" style={{ animation: "smart-cc-spin 1s linear infinite" }} /><p style={{ color: "#666A80", marginTop: 10, fontSize: 13 }}>Analyzing your cards...</p></div>
           ) : bestCard ? (
             <>
-              {/* Best Card Hero (Matching Expo App) */}
-              <div style={{ marginBottom: 20 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#666A80", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Best Card</span>
-                <div style={{ 
+              {/* Best Card Hero */}
+              <div style={{ marginBottom: 16 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#666A80", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Best Card</span>
+                <div style={{
                   position: "relative",
-                  border: "1px solid rgba(79,54,255,0.3)", 
-                  background: "linear-gradient(to bottom right, rgba(79, 54, 255, 0.1), rgba(255, 255, 255, 0.9))", 
-                  borderRadius: 16, 
-                  padding: "16px 16px 16px 20px",
+                  border: "1px solid rgba(79,54,255,0.3)",
+                  background: "linear-gradient(to bottom right, rgba(79, 54, 255, 0.1), rgba(255, 255, 255, 0.9))",
+                  borderRadius: 14,
+                  padding: "12px 12px 12px 16px",
                   overflow: "hidden",
                   boxShadow: "0 2px 8px rgba(0,0,0,0.02)"
                 }}>
-                  {/* Left accent stripe */}
-                  <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 6, background: "linear-gradient(to bottom, #4F36FF, #FF8A3D)" }} />
-
-                  {/* Editorial Tag Row */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <div style={{ background: "rgba(79,54,255,0.1)", padding: "2px 8px", borderRadius: 4 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: "#4F36FF", letterSpacing: 1, textTransform: "uppercase" }}>
-                        {bestCard.confidence_label || "OPTIMAL"}
-                      </span>
+                  <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 5, background: "linear-gradient(to bottom, #4F36FF, #FF8A3D)" }} />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div style={{ background: "rgba(79,54,255,0.1)", padding: "2px 6px", borderRadius: 4 }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: "#4F36FF", letterSpacing: 1, textTransform: "uppercase" }}>{bestCard.confidence_label || "OPTIMAL"}</span>
                     </div>
                   </div>
-
-                  {/* Identity */}
-                  <div style={{ marginBottom: 12 }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, color: "#666A80", textTransform: "uppercase", letterSpacing: 1, margin: "0 0 2px" }}>
-                      {bestCard.bank_name || "BANK"}
-                    </p>
-                    <p style={{ fontWeight: 700, fontSize: 18, color: "#14142B", margin: 0 }}>
-                      {bestCard.card_name}
-                    </p>
+                  <div style={{ marginBottom: 8 }}>
+                    <p style={{ fontSize: 9, fontWeight: 700, color: "#666A80", textTransform: "uppercase", letterSpacing: 1, margin: "0 0 2px" }}>{bestCard.bank_name || "BANK"}</p>
+                    <p style={{ fontWeight: 700, fontSize: 15, color: "#14142B", margin: 0 }}>{bestCard.card_name}</p>
                   </div>
-
-                  {/* Rationale */}
-                  <p style={{ fontSize: 13, color: "#666A80", margin: "0 0 16px", lineHeight: 1.5 }}>
-                    {bestCard.explanation || "Optimal choice for this transaction."}
-                  </p>
-
-                  {/* Financials */}
-                  <div style={{ borderTop: "1px solid #E7E8F0", paddingTop: 12, marginTop: 4 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontSize: 24, fontWeight: 700, color: "#22C55E" }}>₹{safeRound(bestCard.immediate_reward_value)}</span>
-                      {bestCard.fee_waiver_progress_impact > 0 && (
-                        <span style={{ fontSize: 12, fontWeight: 600, color: "#4F36FF" }}>
-                          + ₹{safeRound(bestCard.fee_waiver_progress_impact)} fee waiver
-                        </span>
-                      )}
+                  <p style={{ fontSize: 12, color: "#666A80", margin: "0 0 12px", lineHeight: 1.4 }}>{bestCard.explanation || "Optimal choice for this transaction."}</p>
+                  <div style={{ borderTop: "1px solid #E7E8F0", paddingTop: 10 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                      <span style={{ fontSize: 20, fontWeight: 700, color: "#22C55E" }}>₹{safeRound(bestCard.immediate_reward_value)}</span>
+                      {bestCard.fee_waiver_progress_impact > 0 && <span style={{ fontSize: 11, fontWeight: 600, color: "#4F36FF" }}>+ ₹{safeRound(bestCard.fee_waiver_progress_impact)} fee waiver</span>}
                     </div>
-                    <p style={{ fontSize: 10, fontWeight: 700, color: "#666A80", textTransform: "uppercase", letterSpacing: 1, margin: "4px 0 0" }}>Expected Reward</p>
+                    <p style={{ fontSize: 9, fontWeight: 700, color: "#666A80", textTransform: "uppercase", letterSpacing: 1, margin: "2px 0 0" }}>Expected Reward</p>
                   </div>
                 </div>
               </div>
 
               {/* Rewards breakdown */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-                <div style={{ background: bestCard.cashback_amount > 0 ? "rgba(34,197,94,0.08)" : "#F8F8FC", borderRadius: 12, padding: 14 }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, color: "#666A80", textTransform: "uppercase", marginBottom: 6, marginTop: 0 }}>Cashback</p>
-                  <p style={{ fontSize: 20, fontWeight: 700, color: "#22C55E", margin: 0 }}>₹{safeRound(bestCard.cashback_amount)}</p>
-                  <p style={{ fontSize: 10, color: "#666A80", margin: "4px 0 0" }}>Instant savings</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                <div style={{ background: bestCard.cashback_amount > 0 ? "rgba(34,197,94,0.08)" : "#F8F8FC", borderRadius: 10, padding: 12 }}>
+                  <p style={{ fontSize: 9, fontWeight: 600, color: "#666A80", textTransform: "uppercase", marginBottom: 4, marginTop: 0 }}>Cashback</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: "#22C55E", margin: 0 }}>₹{safeRound(bestCard.cashback_amount)}</p>
+                  <p style={{ fontSize: 9, color: "#666A80", margin: "2px 0 0" }}>Instant savings</p>
                 </div>
-                <div style={{ background: bestCard.reward_points > 0 ? "rgba(139,92,246,0.08)" : "#F8F8FC", borderRadius: 12, padding: 14 }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, color: "#666A80", textTransform: "uppercase", marginBottom: 6, marginTop: 0 }}>Reward Points</p>
-                  <p style={{ fontSize: 20, fontWeight: 700, color: "#8B5CF6", margin: 0 }}>{bestCard.reward_points ? safeRound(bestCard.reward_points) : "—"}</p>
-                  <p style={{ fontSize: 10, color: "#666A80", margin: "4px 0 0" }}>Points earned</p>
+                <div style={{ background: bestCard.reward_points > 0 ? "rgba(139,92,246,0.08)" : "#F8F8FC", borderRadius: 10, padding: 12 }}>
+                  <p style={{ fontSize: 9, fontWeight: 600, color: "#666A80", textTransform: "uppercase", marginBottom: 4, marginTop: 0 }}>Reward Points</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: "#8B5CF6", margin: 0 }}>{bestCard.reward_points ? safeRound(bestCard.reward_points) : "—"}</p>
+                  <p style={{ fontSize: 9, color: "#666A80", margin: "2px 0 0" }}>Points earned</p>
                 </div>
-                <div style={{ background: "#F8F8FC", borderRadius: 12, padding: 14 }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, color: "#666A80", textTransform: "uppercase", marginBottom: 6, marginTop: 0 }}>Reward Rate</p>
-                  <p style={{ fontSize: 20, fontWeight: 700, color: "#4F36FF", margin: 0 }}>
-                    {cartAmount > 0 ? `${((bestCard.immediate_reward_value / cartAmount) * 100).toFixed(1)}%` : "—"}
-                  </p>
-                  <p style={{ fontSize: 10, color: "#666A80", margin: "4px 0 0" }}>Of purchase amount</p>
+                <div style={{ background: "#F8F8FC", borderRadius: 10, padding: 12 }}>
+                  <p style={{ fontSize: 9, fontWeight: 600, color: "#666A80", textTransform: "uppercase", marginBottom: 4, marginTop: 0 }}>Reward Rate</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: "#4F36FF", margin: 0 }}>{cartAmount > 0 ? `${((bestCard.immediate_reward_value / cartAmount) * 100).toFixed(1)}%` : "—"}</p>
+                  <p style={{ fontSize: 9, color: "#666A80", margin: "2px 0 0" }}>Of purchase amount</p>
                 </div>
-                <div style={{ background: "#F8F8FC", borderRadius: 12, padding: 14 }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, color: "#666A80", textTransform: "uppercase", marginBottom: 6, marginTop: 0 }}>Annual Fee Help</p>
-                  <div style={{ width: "100%", height: 4, background: "#E7E8F0", borderRadius: 2, overflow: "hidden", marginBottom: 6 }}>
+                <div style={{ background: "#F8F8FC", borderRadius: 10, padding: 12 }}>
+                  <p style={{ fontSize: 9, fontWeight: 600, color: "#666A80", textTransform: "uppercase", marginBottom: 4, marginTop: 0 }}>Annual Fee Help</p>
+                  <div style={{ width: "100%", height: 3, background: "#E7E8F0", borderRadius: 2, overflow: "hidden", marginBottom: 4 }}>
                     <div style={{ height: "100%", background: "#22C55E", borderRadius: 2, width: `${Math.min(100, safeRound(bestCard.fee_waiver_progress_impact * 100))}%` }} />
                   </div>
-                  <p style={{ fontSize: 10, color: "#666A80", margin: 0 }}>
-                    {bestCard.fee_waiver_progress_impact > 0 ? `+${safeRound(bestCard.fee_waiver_progress_impact * 100)}% toward fee waiver` : "No waiver progress"}
-                  </p>
+                  <p style={{ fontSize: 9, color: "#666A80", margin: 0 }}>{bestCard.fee_waiver_progress_impact > 0 ? `+${safeRound(bestCard.fee_waiver_progress_impact * 100)}% toward fee waiver` : "No waiver progress"}</p>
                 </div>
               </div>
 
               {/* Engine explanations */}
               {bestCard.engine_explanations?.length > 0 && (
-                <div style={{ background: "#F8F8FC", borderRadius: 12, padding: 16, marginBottom: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                    <TrendingUp size={16} color="#4F36FF" />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#14142B", textTransform: "uppercase" }}>Why this card</span>
+                <div style={{ background: "#F8F8FC", borderRadius: 10, padding: 12, marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                    <TrendingUp size={14} color="#4F36FF" />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#14142B", textTransform: "uppercase" }}>Why this card</span>
                   </div>
                   {bestCard.engine_explanations.map((exp: string, i: number) => (
-                    <p key={i} style={{ fontSize: 13, color: "#666A80", lineHeight: 1.7, margin: "4px 0", paddingLeft: 12, borderLeft: "2px solid rgba(79,54,255,0.2)" }}>{exp}</p>
+                    <p key={i} style={{ fontSize: 12, color: "#666A80", lineHeight: 1.6, margin: "3px 0", paddingLeft: 10, borderLeft: "2px solid rgba(79,54,255,0.2)" }}>{exp}</p>
                   ))}
                 </div>
               )}
 
               {/* Alternative cards */}
               {altCards.length > 0 && (
-                <div style={{ marginBottom: 20 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#666A80", textTransform: "uppercase", marginBottom: 12, display: "block" }}>Alternatives</span>
+                <div style={{ marginBottom: 16 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#666A80", textTransform: "uppercase", marginBottom: 10, display: "block" }}>Alternatives</span>
                   {altCards.map((alt: any, i: number) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 14, background: "#F8F8FC", borderRadius: 12, marginBottom: 8, border: "1px solid transparent" }}>
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 12, background: "#F8F8FC", borderRadius: 10, marginBottom: 6 }}>
                       <div style={{ flex: 1 }}>
-                        <span style={{ fontSize: 14, fontWeight: 500, color: "#14142B" }}>{alt.card_name}</span>
-                        <div style={{ display: "flex", gap: 10, marginTop: 4, fontSize: 11 }}>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: "#14142B" }}>{alt.card_name}</span>
+                        <div style={{ display: "flex", gap: 8, marginTop: 3, fontSize: 10 }}>
                           <span style={{ color: "#666A80", textTransform: "capitalize" }}>{alt.reward_type}</span>
                           {alt.cashback_amount > 0 && <span style={{ color: "#22C55E" }}>₹{safeRound(alt.cashback_amount)} cashback</span>}
                           {alt.reward_points > 0 && <span style={{ color: "#8B5CF6" }}>{safeRound(alt.reward_points)} pts</span>}
                         </div>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <span style={{ fontSize: 18, fontWeight: 700, color: "#14142B" }}>₹{safeRound(alt.immediate_reward_value)}</span>
-                        <p style={{ fontSize: 10, color: "#666A80", margin: 0 }}>
-                          {cartAmount > 0 ? `${((alt.immediate_reward_value / cartAmount) * 100).toFixed(1)}%` : ""}
-                        </p>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: "#14142B" }}>₹{safeRound(alt.immediate_reward_value)}</span>
+                        <p style={{ fontSize: 9, color: "#666A80", margin: 0 }}>{cartAmount > 0 ? `${((alt.immediate_reward_value / cartAmount) * 100).toFixed(1)}%` : ""}</p>
                       </div>
                     </div>
                   ))}
@@ -474,43 +447,43 @@ function SmartCCOrb() {
               )}
             </>
           ) : recommendation ? (
-            <div style={{ textAlign: "center", padding: 40 }}>
-              <AlertTriangle size={40} color="#FF8A3D" />
-              <p style={{ fontWeight: 500, marginTop: 12, fontSize: 16 }}>No optimized card found</p>
-              <p style={{ fontSize: 14, color: "#666A80" }}>Consider adding a card for {merchant?.name}</p>
+            <div style={{ textAlign: "center", padding: 30 }}>
+              <AlertTriangle size={32} color="#FF8A3D" />
+              <p style={{ fontWeight: 500, marginTop: 10, fontSize: 14 }}>No optimized card found</p>
+              <p style={{ fontSize: 12, color: "#666A80" }}>Consider adding a card for {merchant?.name}</p>
             </div>
           ) : null}
         </div>
       </div>
 
-      {/* Floating Capsule — hidden when drawer is open */}
+      {/* Floating Capsule */}
       {!isExpanded && (
-      <div style={{ position: "fixed", top: "50%", right: 16, transform: "translateY(-50%)", zIndex: 2147483647 }}>
+      <div style={{ position: "fixed", top: "50%", right: 12, transform: "translateY(-50%)", zIndex: 2147483647 }}>
         <button
           onClick={() => setIsExpanded(true)}
           style={{
-            height: 48, minWidth: 48, padding: "0 16px", borderRadius: 9999,
+            height: 42, minWidth: 42, padding: "0 14px", borderRadius: 9999,
             background: "rgba(255,255,255,0.9)", backdropFilter: "blur(20px)",
             border: "1px solid rgba(79,54,255,0.1)",
             boxShadow: "0 4px 24px rgba(79,54,255,0.15)",
-            cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+            cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
             transition: "transform 0.2s, box-shadow 0.2s",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
           onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
           {isLoading && !recommendation ? (
-            <Loader2 size={20} color="#4F36FF" style={{ animation: "smart-cc-spin 1s linear infinite" }} />
+            <Loader2 size={18} color="#4F36FF" style={{ animation: "smart-cc-spin 1s linear infinite" }} />
           ) : recommendation ? (
             bestCard ? (
-              <span style={{ fontWeight: 700, fontSize: 18, color: "#4F36FF" }}>₹{safeRound(bestCard.immediate_reward_value)}</span>
+              <span style={{ fontWeight: 700, fontSize: 15, color: "#4F36FF" }}>₹{safeRound(bestCard.immediate_reward_value)}</span>
             ) : (
-              <span style={{ fontWeight: 700, fontSize: 18, color: "#FF8A3D" }}>+₹0</span>
+              <span style={{ fontWeight: 700, fontSize: 15, color: "#FF8A3D" }}>+₹0</span>
             )
           ) : (
-            <Sparkles size={20} color="#4F36FF" />
+            <Sparkles size={18} color="#4F36FF" />
           )}
-          {bestCard && <ChevronRight size={16} color="rgba(79,54,255,0.5)" />}
+          {bestCard && <ChevronRight size={14} color="rgba(79,54,255,0.5)" />}
         </button>
       </div>
       )}
