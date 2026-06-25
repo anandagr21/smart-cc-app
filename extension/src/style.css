@@ -6,13 +6,26 @@
 
 /* Fix popup dimensions — Chrome sizes popup window to match body */
 html, body, #__plasmo {
-  width: 360px !important;
-  min-width: 360px;
-  height: 550px !important;
-  min-height: 550px;
+  width: 400px !important;
+  min-width: 400px;
+  height: 600px !important;
+  min-height: 600px;
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+/* Tab pages — constrain to mobile-like width on desktop */
+html.tab-page body,
+html.tab-page #__plasmo,
+body.tab-page #__plasmo {
+  max-width: 400px;
+  margin: 0 auto;
+  height: 100vh !important;
+  min-height: 100vh;
+  width: 100% !important;
+  min-width: 0;
+  overflow: auto;
 }
 
 /* Content script shadow host + container — full viewport overlay */
