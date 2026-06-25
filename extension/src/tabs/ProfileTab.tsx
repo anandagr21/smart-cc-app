@@ -358,7 +358,7 @@ export function ProfileTab({ onLogout }: { onLogout: () => void }) {
 
       {/* ── Version ─────────────────────────────────────────────────────── */}
       <p className="plasmo-text-center plasmo-text-caption plasmo-font-medium plasmo-uppercase plasmo-tracking-widest plasmo-text-text-muted plasmo-mt-5 plasmo-mb-10">
-        Smart CC OS • v1.0.0
+        Card Optimizer • v1.0.0
       </p>
     </div>
   )

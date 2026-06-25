@@ -566,7 +566,7 @@ export function ActivityTab() {
                     </p>
                     <p className="plasmo-text-caption plasmo-text-warning/70">
                       {transactions.length - txWithRewards} transactions not optimized. Use
-                      Smart CC recommendations.
+                      Card Optimizer recommendations.
                     </p>
                   </div>
                 </div>

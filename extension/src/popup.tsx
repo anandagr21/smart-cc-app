@@ -16,6 +16,7 @@ const storage = new Storage()
 function IndexPopup() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>("home")
+  const [floatingEnabled, setFloatingEnabled] = useState(true)
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -36,8 +37,23 @@ function IndexPopup() {
         setIsAuthenticated(false)
       })
 
+    // Load floating button preference
+    try {
+      chrome.storage?.local?.get("floating_enabled", (result: any) => {
+        if (result?.floating_enabled !== undefined) {
+          setFloatingEnabled(result.floating_enabled === true)
+        }
+      })
+    } catch {}
+
     return () => clearTimeout(timeout)
   }, [])
+
+  const toggleFloating = () => {
+    const next = !floatingEnabled
+    setFloatingEnabled(next)
+    try { chrome.storage?.local?.set({ floating_enabled: next }) } catch {}
+  }
 
   const handleLogout = async () => {
     await storage.remove("access_token")
@@ -64,13 +80,22 @@ function IndexPopup() {
   // ── Main app ─────────────────────────────────────────────────────────────
   return (
     <div className="plasmo-flex plasmo-flex-col plasmo-w-[400px] plasmo-h-[600px] plasmo-bg-[#F8F8FC] plasmo-text-[#14142B] plasmo-font-sans">
-      <div className="plasmo-flex plasmo-items-center plasmo-justify-center plasmo-p-4 plasmo-bg-white plasmo-border-b plasmo-border-[#E7E8F0]">
+      <div className="plasmo-flex plasmo-items-center plasmo-justify-between plasmo-p-3 plasmo-bg-white plasmo-border-b plasmo-border-[#E7E8F0]">
         <div className="plasmo-flex plasmo-items-center plasmo-gap-2">
           <div className="plasmo-bg-[#4F36FF]/10 plasmo-p-1.5 plasmo-rounded-lg">
             <CreditCard className="plasmo-w-5 plasmo-h-5 plasmo-text-[#4F36FF]" />
           </div>
-          <h1 className="plasmo-text-lg plasmo-font-bold plasmo-tracking-tight plasmo-text-[#14142B]">Smart CC</h1>
+          <h1 className="plasmo-text-lg plasmo-font-bold plasmo-tracking-tight plasmo-text-[#14142B]">Card Optimizer</h1>
         </div>
+        <button
+          onClick={toggleFloating}
+          className={`plasmo-relative plasmo-w-9 plasmo-h-5 plasmo-rounded-full plasmo-transition-colors plasmo-cursor-pointer ${floatingEnabled ? "plasmo-bg-primary" : "plasmo-bg-[#E7E8F0]"}`}
+          style={{ border: "none", padding: 0 }}
+          aria-label={floatingEnabled ? "Hide floating button" : "Show floating button"}
+          title={floatingEnabled ? "Floating button visible" : "Floating button hidden"}
+        >
+          <div className={`plasmo-absolute plasmo-top-0.5 plasmo-w-4 plasmo-h-4 plasmo-rounded-full plasmo-bg-white plasmo-shadow-sm plasmo-transition-transform ${floatingEnabled ? "plasmo-translate-x-4" : "plasmo-translate-x-0.5"}`} />
+        </button>
       </div>
 
       <div className="plasmo-flex-1 plasmo-overflow-hidden plasmo-flex plasmo-flex-col">

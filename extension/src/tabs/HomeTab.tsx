@@ -115,7 +115,7 @@ export function HomeTab({ onTabChange }: HomeTabProps) {
             </div>
             <h3 className="plasmo-text-title plasmo-font-bold plasmo-tracking-tight plasmo-text-text-primary plasmo-mb-2.5">Your dashboard awaits</h3>
             <p className="plasmo-text-body plasmo-text-text-secondary plasmo-max-w-xs plasmo-mx-auto plasmo-leading-relaxed">
-              Add a credit card and log your first transaction. Smart CC will analyze your portfolio and recommend the best card for every purchase — automatically.
+              Add a credit card and log your first transaction. Card Optimizer will analyze your portfolio and recommend the best card for every purchase — automatically.
             </p>
           </div>
           <div className="plasmo-space-y-2">

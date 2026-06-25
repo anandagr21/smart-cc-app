@@ -56,7 +56,7 @@ function scanCartTotal(): number | null {
   // Medium-priority labels
   const totalLabels = /\bgrand total\b|\border total\b|\bcart total\b|\bbasket total\b|\bcombined total\b/i
   // Labels to AVOID (subtotals, MRP, pre-discount)
-  const avoidLabels = /\bmrp\b|\bsubtotal\b|\bsub total\b|\boriginal\b|\blist price\b|\bmarked price\b|\bproduct total\b/i
+  const avoidLabels = /\bmrp\b|\bsubtotal\b|\bsub total\b|\boriginal\b|\blist price\b|\bmarked price\b|\bproduct total\b|\bbag total\b/i
 
   const candidates: { amount: number; score: number }[] = []
   const elements = document.querySelectorAll("div, span, p, td, th, li, dt, strong, b, h1, h2, h3, h4")
@@ -202,6 +202,25 @@ const EXTRACTORS: Record<string, () => number | null> = {
   makemytrip: () => trySelectors([".totalFare", ".fareSummaryTotal", ".totalPrice", ".rupeeTotal"]),
   bigbasket: () => trySelectors([".total-price", ".Pricing__total", "[data-qa='totalAmount']"]),
   cleartrip: () => trySelectors([".totalFare", ".total-amount", ".fare-summary-total"]),
+  tatacliq: () => {
+    // TataCliq: Bag Subtotal minus discounts = actual payable
+    let subtotal = 0
+    let discount = 0
+    const allDivs = document.querySelectorAll("div, span, p, td, th")
+    for (const el of allDivs) {
+      const text = (el.textContent || "").trim()
+      const subMatch = text.match(/bag\s*subtotal.*?₹\s*([\d,]+\.?\d{0,2})/i)
+      if (subMatch) { subtotal = parseAmount(subMatch[1]); continue }
+      const discMatch = text.match(/product\s*discount.*?₹\s*([\d,]+\.?\d{0,2})/i)
+      if (discMatch) { discount = parseAmount(discMatch[1]); continue }
+    }
+    if (subtotal > 0 && discount > 0) {
+      const final = subtotal - discount
+      console.log("[Smart CC] TataCliq: subtotal", subtotal, "- discount", discount, "=", final)
+      return final > 0 ? final : subtotal
+    }
+    return null
+  },
   goibibo: () => trySelectors([".totalFare", ".fareSummaryTotal", ".total-price"]),
   irctc: () => trySelectors(["#total_fare", ".totalFare", ".cart-total"]),
   uber: () => trySelectors(["[data-testid='fare-estimate']", ".fare-price"]),
@@ -222,6 +241,7 @@ function getMerchantConfig(hostname: string) {
     "cleartrip.com": { name: "Cleartrip", key: "cleartrip" },
     "goibibo.com": { name: "Goibibo", key: "goibibo" },
     "irctc.co.in": { name: "IRCTC", key: "irctc" },
+    "tatacliq.com": { name: "TataCliq", key: "tatacliq" },
   }
   for (const [domain, config] of Object.entries(known)) {
     if (hostname.includes(domain.replace("www.", ""))) return config
@@ -263,6 +283,25 @@ function SmartCCOrb() {
   const [cartAmount, setCartAmount] = useState<number>(0)
   const [recommendation, setRecommendation] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [orbEnabled, setOrbEnabled] = useState(true)
+
+  // Load floating button preference
+  useEffect(() => {
+    try {
+      chrome.storage?.local?.get(["floating_enabled"], (result: any) => {
+        const val = result?.floating_enabled
+        if (val !== undefined) setOrbEnabled(val === true)
+      })
+    } catch {}
+    // Listen for changes (chrome.storage.onChanged, not .local.onChanged)
+    const listener = (changes: any, areaName: string) => {
+      if (areaName === "local" && changes?.floating_enabled?.newValue !== undefined) {
+        setOrbEnabled(changes.floating_enabled.newValue === true)
+      }
+    }
+    try { chrome.storage?.onChanged?.addListener(listener) } catch {}
+    return () => { try { chrome.storage?.onChanged?.removeListener(listener) } catch {} }
+  }, [])
 
   useEffect(() => {
     const hostname = window.location.hostname
@@ -307,10 +346,11 @@ function SmartCCOrb() {
   const bestCard = recommendation?.best_balanced_card
   const altCards = recommendation?.all_ranked_cards?.slice(1, 3) || []
 
-  // Only show orb on: cart/checkout pages, or known merchants with real amounts
-  const isKnown = !!getMerchantConfig(window.location.hostname)
-  const onCartPage = isCartPage()
-  if (!onCartPage && !isKnown) return null
+  // Respect user toggle — hide completely if disabled
+  if (!orbEnabled) return null
+
+  // Don't show if no amount detected on page
+  if (!cartAmount || cartAmount <= 0) return null
 
   return (
     <div style={{ fontFamily: "IBM Plex Sans, sans-serif" }}>
@@ -337,7 +377,7 @@ function SmartCCOrb() {
         <div style={{ padding: "14px 18px", borderBottom: "1px solid #E7E8F0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <Sparkles size={16} color="#4F36FF" />
-            <span style={{ fontWeight: 600, fontSize: 14, color: "#14142B" }}>Smart CC</span>
+            <span style={{ fontWeight: 600, fontSize: 14, color: "#14142B" }}>Card Optimizer</span>
           </div>
           <button onClick={() => setIsExpanded(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#666A80", padding: 0, lineHeight: 1 }}>✕</button>
         </div>
