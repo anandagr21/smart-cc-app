@@ -49,7 +49,7 @@ function IndexPopup() {
   // ── Loading spinner ──────────────────────────────────────────────────────
   if (isAuthenticated === null) {
     return (
-      <div className="plasmo-flex plasmo-flex-col plasmo-items-center plasmo-justify-center plasmo-w-[360px] plasmo-h-[550px] plasmo-bg-[#F8F8FC] plasmo-text-[#14142B] plasmo-font-sans">
+      <div className="plasmo-flex plasmo-flex-col plasmo-items-center plasmo-justify-center plasmo-w-[400px] plasmo-h-[600px] plasmo-bg-[#F8F8FC] plasmo-text-[#14142B] plasmo-font-sans">
         <Loader2 className="plasmo-w-8 plasmo-h-8 plasmo-text-[#4F36FF] plasmo-animate-spin plasmo-mb-3" />
         <p className="plasmo-text-sm plasmo-text-[#666A80]">Loading Smart CC...</p>
       </div>
@@ -63,7 +63,7 @@ function IndexPopup() {
 
   // ── Main app ─────────────────────────────────────────────────────────────
   return (
-    <div className="plasmo-flex plasmo-flex-col plasmo-w-[360px] plasmo-h-[550px] plasmo-bg-[#F8F8FC] plasmo-text-[#14142B] plasmo-font-sans">
+    <div className="plasmo-flex plasmo-flex-col plasmo-w-[400px] plasmo-h-[600px] plasmo-bg-[#F8F8FC] plasmo-text-[#14142B] plasmo-font-sans">
       <div className="plasmo-flex plasmo-items-center plasmo-justify-center plasmo-p-4 plasmo-bg-white plasmo-border-b plasmo-border-[#E7E8F0]">
         <div className="plasmo-flex plasmo-items-center plasmo-gap-2">
           <div className="plasmo-bg-[#4F36FF]/10 plasmo-p-1.5 plasmo-rounded-lg">
@@ -74,7 +74,7 @@ function IndexPopup() {
       </div>
 
       <div className="plasmo-flex-1 plasmo-overflow-hidden plasmo-flex plasmo-flex-col">
-        {activeTab === "home" && <HomeTab />}
+        {activeTab === "home" && <HomeTab onTabChange={(tab) => setActiveTab(tab as Tab)} />}
         {activeTab === "wallet" && <WalletTab />}
         {activeTab === "activity" && <ActivityTab />}
         {activeTab === "profile" && <ProfileTab onLogout={handleLogout} />}

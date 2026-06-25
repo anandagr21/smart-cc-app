@@ -74,31 +74,31 @@ export function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => void }) 
   }
 
   return (
-    <div className="plasmo-flex plasmo-flex-col plasmo-items-center plasmo-justify-center plasmo-h-[500px] plasmo-p-6 plasmo-bg-[#F8F8FC] plasmo-text-center plasmo-overflow-y-auto plasmo-font-sans">
-      <div className="plasmo-w-16 plasmo-h-16 plasmo-bg-[#4F36FF]/10 plasmo-rounded-full plasmo-flex plasmo-items-center plasmo-justify-center plasmo-mb-6">
-        <Sparkles className="plasmo-w-8 plasmo-h-8 plasmo-text-[#4F36FF]" />
+    <div className="plasmo-flex plasmo-flex-col plasmo-items-center plasmo-justify-center plasmo-w-[400px] plasmo-h-[600px] plasmo-p-4 plasmo-bg-[#F8F8FC] plasmo-text-center plasmo-overflow-y-auto plasmo-font-sans">
+      <div className="plasmo-w-12 plasmo-h-12 plasmo-bg-[#4F36FF]/10 plasmo-rounded-full plasmo-flex plasmo-items-center plasmo-justify-center plasmo-mb-4">
+        <Sparkles className="plasmo-w-6 plasmo-h-6 plasmo-text-[#4F36FF]" />
       </div>
-      <h1 className="plasmo-text-2xl plasmo-font-bold plasmo-text-[#14142B] plasmo-mb-2">
+      <h1 className="plasmo-text-xl plasmo-font-bold plasmo-text-[#14142B] plasmo-mb-2">
         Smart CC
       </h1>
-      <p className="plasmo-text-[#666A80] plasmo-text-sm plasmo-mb-6">
+      <p className="plasmo-text-[#666A80] plasmo-text-xs plasmo-mb-4">
         Log in to sync your wallet and get personalized recommendations.
       </p>
 
       {error && (
-        <div className="plasmo-bg-red-500/10 plasmo-border plasmo-border-red-500/30 plasmo-rounded-lg plasmo-p-3 plasmo-mb-4 plasmo-w-full plasmo-text-left">
+        <div className="plasmo-bg-red-500/10 plasmo-border plasmo-border-red-500/30 plasmo-rounded-lg plasmo-p-2.5 plasmo-mb-3 plasmo-w-full plasmo-text-left">
           <div className="plasmo-flex plasmo-items-start plasmo-gap-2">
             <AlertCircle className="plasmo-w-4 plasmo-h-4 plasmo-text-red-600 plasmo-shrink-0 plasmo-mt-0.5" />
-            <p className="plasmo-text-red-600 plasmo-text-xs">{error}</p>
+            <p className="plasmo-text-red-600 plasmo-text-[10px]">{error}</p>
           </div>
         </div>
       )}
 
       {/* Manual Token Login — shown by default for dev */}
-      <div className="plasmo-w-full plasmo-mb-4 plasmo-p-4 plasmo-bg-white plasmo-shadow-sm plasmo-border plasmo-border-[#E7E8F0] plasmo-rounded-xl">
+      <div className="plasmo-w-full plasmo-mb-3 plasmo-p-3 plasmo-bg-white plasmo-shadow-sm plasmo-border plasmo-border-[#E7E8F0] plasmo-rounded-xl">
         <div className="plasmo-flex plasmo-items-center plasmo-gap-2 plasmo-mb-3">
           <Key className="plasmo-w-4 plasmo-h-4 plasmo-text-[#4F36FF]" />
-          <p className="plasmo-text-sm plasmo-font-semibold plasmo-text-[#14142B]">
+          <p className="plasmo-text-xs plasmo-font-semibold plasmo-text-[#14142B]">
             Paste your JWT token
           </p>
         </div>
@@ -107,24 +107,24 @@ export function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => void }) 
           value={manualToken}
           onChange={(e) => setManualToken(e.target.value)}
           placeholder="eyJhbGciOi..."
-          className="plasmo-w-full plasmo-bg-[#F8F8FC] plasmo-border plasmo-border-[#E7E8F0] plasmo-rounded-lg plasmo-p-2.5 plasmo-text-xs plasmo-text-[#14142B] placeholder:plasmo-text-[#666A80] focus:plasmo-outline-none focus:plasmo-border-[#4F36FF] plasmo-mb-3"
+          className="plasmo-w-full plasmo-bg-[#F8F8FC] plasmo-border plasmo-border-[#E7E8F0] plasmo-rounded-lg plasmo-p-2 plasmo-text-[10px] plasmo-text-[#14142B] placeholder:plasmo-text-[#666A80] focus:plasmo-outline-none focus:plasmo-border-[#4F36FF] plasmo-mb-2"
         />
         <button
           onClick={handleDevLogin}
           disabled={isLoading || !manualToken.trim()}
-          className="plasmo-w-full plasmo-bg-[#FF8A3D] hover:plasmo-bg-[#FF8A3D]/90 disabled:plasmo-opacity-50 plasmo-text-white plasmo-py-3 plasmo-rounded-lg plasmo-font-semibold plasmo-text-sm plasmo-cursor-pointer plasmo-transition-colors plasmo-duration-200 focus:plasmo-outline-none focus:plasmo-ring-2 focus:plasmo-ring-[#FF8A3D]/50 focus:plasmo-ring-offset-1 focus:plasmo-ring-offset-white"
+          className="plasmo-w-full plasmo-bg-[#FF8A3D] hover:plasmo-bg-[#FF8A3D]/90 disabled:plasmo-opacity-50 plasmo-text-white plasmo-py-2.5 plasmo-rounded-lg plasmo-font-semibold plasmo-text-xs plasmo-cursor-pointer plasmo-transition-colors plasmo-duration-200 focus:plasmo-outline-none focus:plasmo-ring-2 focus:plasmo-ring-[#FF8A3D]/50 focus:plasmo-ring-offset-1 focus:plasmo-ring-offset-white"
         >
           {isLoading ? "Logging in..." : "Login"}
         </button>
-        <p className="plasmo-text-[10px] plasmo-text-[#666A80] plasmo-mt-3 plasmo-text-left">
+        <p className="plasmo-text-[9px] plasmo-text-[#666A80] plasmo-mt-2 plasmo-text-left">
           Login via your Expo app, copy the JWT token, and paste it here.
         </p>
       </div>
 
       {/* Divider */}
-      <div className="plasmo-flex plasmo-items-center plasmo-gap-3 plasmo-w-full plasmo-mb-4">
+      <div className="plasmo-flex plasmo-items-center plasmo-gap-3 plasmo-w-full plasmo-mb-3">
         <div className="plasmo-flex-1 plasmo-h-px plasmo-bg-[#E7E8F0]" />
-        <span className="plasmo-text-[10px] plasmo-text-[#666A80] plasmo-uppercase plasmo-font-semibold">or</span>
+        <span className="plasmo-text-[9px] plasmo-text-[#666A80] plasmo-uppercase plasmo-font-semibold">or</span>
         <div className="plasmo-flex-1 plasmo-h-px plasmo-bg-[#E7E8F0]" />
       </div>
 
@@ -132,7 +132,7 @@ export function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => void }) 
       <button
         onClick={handleGoogleLogin}
         disabled={isLoading}
-        className="plasmo-w-full plasmo-bg-white plasmo-border plasmo-border-[#E7E8F0] plasmo-text-[#14142B] plasmo-py-3 plasmo-rounded-xl plasmo-font-semibold plasmo-text-sm plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-3 hover:plasmo-bg-gray-50 plasmo-shadow-sm plasmo-cursor-pointer plasmo-transition-colors plasmo-duration-200 focus:plasmo-outline-none focus:plasmo-ring-2 focus:plasmo-ring-[#E7E8F0] focus:plasmo-ring-offset-1 focus:plasmo-ring-offset-white disabled:plasmo-opacity-50"
+        className="plasmo-w-full plasmo-bg-white plasmo-border plasmo-border-[#E7E8F0] plasmo-text-[#14142B] plasmo-py-2.5 plasmo-rounded-xl plasmo-font-semibold plasmo-text-xs plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-3 hover:plasmo-bg-gray-50 plasmo-shadow-sm plasmo-cursor-pointer plasmo-transition-colors plasmo-duration-200 focus:plasmo-outline-none focus:plasmo-ring-2 focus:plasmo-ring-[#E7E8F0] focus:plasmo-ring-offset-1 focus:plasmo-ring-offset-white disabled:plasmo-opacity-50"
       >
         <img
           src="https://www.google.com/favicon.ico"
