@@ -3,10 +3,7 @@ name: Deploy Landing Page to Cloudflare Pages
 on:
   push:
     branches:
-      - main
       - 'land_release_*'
-    paths:
-      - 'landing/**'
 
 env:
   PROJECT_NAME: smart-cc-landing
