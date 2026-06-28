@@ -107,7 +107,7 @@ class Settings(BaseSettings):
     log_format: Literal["json", "text"] = "json"
 
     # ---- CORS ----
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:19006", "http://localhost:8081", "http://localhost:8082"]
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:19006", "http://localhost:8081", "http://localhost:8082", "https://akaovia.com", "https://api.akaovia.com"]
 
     # ---- API ----
     api_v1_prefix: str = "/api/v1"
