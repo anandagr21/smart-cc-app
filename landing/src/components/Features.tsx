@@ -27,7 +27,7 @@ const features = [
     tag: "Never pay again",
     tagColor: "text-brand-400 bg-brand-500/10 border-brand-500/20",
     featured: false,
-    metric: "₹45K",
+    metric: "₹15K",
     metricLabel: "avg annual fee saved",
   },
   {
