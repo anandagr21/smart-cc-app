@@ -10,13 +10,13 @@ const proofs = [
     scenario: "Amazon Purchase",
     amount: "₹5,000",
     before: {
-      label: "Without Smart CC",
+      label: "Without Card Optimizer",
       card: "HDFC Card",
       reward: "₹50 rewards",
       color: "text-white/40",
     },
     after: {
-      label: "With Smart CC",
+      label: "With Card Optimizer",
       card: "Amazon Pay ICICI",
       reward: "₹250 rewards",
       color: "text-green-400",
@@ -82,7 +82,7 @@ export default function ProductProof() {
               Product Proof
             </SectionBadge>
             <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-white">
-              How Smart CC <span className="text-gradient">saves money</span>
+              How Card Optimizer <span className="text-gradient">saves money</span>
             </h2>
             <p className="text-white/40 text-lg max-w-xl mx-auto">
               We don't rely on fake reviews. Here's exactly how the math works in your favor.

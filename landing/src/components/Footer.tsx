@@ -17,10 +17,8 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center font-extrabold text-sm text-surface-950 shadow-lg shadow-brand-500/20">
-                SC
-              </div>
-              <span className="font-bold text-base text-white">Smart CC</span>
+              <div className="w-9 h-9 rounded-xl bg-white/10 p-0.5 shadow-lg shadow-brand-500/20"><img src="/favicon.png" alt="Card Optimizer" className="w-full h-full rounded-lg" /></div>
+              <span className="font-bold text-base text-white">Card Optimizer</span>
             </div>
             <p className="text-white/30 text-sm leading-relaxed max-w-[200px]">
               AI-powered credit card management for India's power users.
@@ -68,7 +66,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/20 text-xs">
-            © {new Date().getFullYear()} Smart CC · Built for card enthusiasts, by card enthusiasts.
+            © {new Date().getFullYear()} Card Optimizer · Built for card enthusiasts, by card enthusiasts.
           </p>
           <div className="flex items-center gap-2 text-white/20 text-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />

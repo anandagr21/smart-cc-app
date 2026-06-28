@@ -3,6 +3,7 @@ import Hero from "./components/Hero";
 import Features from "./components/Features";
 import HowItWorks from "./components/HowItWorks";
 import ProductProof from "./components/ProductProof";
+import Extension from "./components/Extension";
 import CTA from "./components/CTA";
 import Footer from "./components/Footer";
 
@@ -49,6 +50,7 @@ export default function App() {
       <TickerStrip />
       <Features />
       <ProductProof />
+      {/* <Extension /> */}
       <HowItWorks />
       <CTA />
       <Footer />

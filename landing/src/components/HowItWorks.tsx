@@ -15,7 +15,7 @@ const steps = [
     iconBg: "bg-brand-500/10 border-brand-500/20",
     accentColor: "#F59E0B",
     title: "Add Your Cards",
-    desc: "Enter card name, bank, and network. We fetch the rest from our database of 500+ card profiles — automatically.",
+    desc: "Enter card name, bank, and network. We fetch the rest from our database of 60+ card profiles — automatically.",
     detail: "Takes under 30 seconds per card",
   },
   {
@@ -37,7 +37,7 @@ const steps = [
     iconBg: "bg-green-500/10 border-green-500/20",
     accentColor: "#10B981",
     title: "Get AI-Powered Insights",
-    desc: "Smart CC starts optimising immediately — suggesting which card to use, tracking waiver progress, and alerting you to savings opportunities.",
+    desc: "Card Optimizer starts optimising immediately — suggesting which card to use, tracking waiver progress, and alerting you to savings opportunities.",
     detail: "Real-time, always-on AI",
   },
 ];
