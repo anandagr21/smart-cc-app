@@ -1,25 +1,20 @@
-import { motion, useMotionValueEvent, useScroll, AnimatePresence } from "motion/react";
-import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { useState, useEffect } from "react";
 
 const links = [
   { href: "#features",     label: "Features"     },
-  // { href: "#extension",    label: "Extension"    },
   { href: "#how-it-works", label: "How It Works" },
 ];
 
 export default function Navbar() {
-  const [hidden, setHidden]       = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
   const [scrolled, setScrolled]   = useState(false);
-  const prevScrollY = useRef(0);
-  const { scrollY } = useScroll();
 
-  useMotionValueEvent(scrollY, "change", (latest: number) => {
-    setScrolled(latest > 40);
-    if (latest > 120 && latest > prevScrollY.current) setHidden(true);
-    else setHidden(false);
-    prevScrollY.current = latest;
-  });
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <>
@@ -28,7 +23,7 @@ export default function Navbar() {
           scrolled ? "glass-strong shadow-2xl shadow-black/40" : "glass"
         }`}
         initial={{ y: -80, opacity: 0 }}
-        animate={{ y: hidden ? -120 : 0, opacity: hidden ? 0 : 1 }}
+        animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         {/* Logo */}
