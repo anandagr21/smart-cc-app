@@ -3,7 +3,10 @@ name: Deploy Landing Page to Cloudflare Pages
 on:
   push:
     branches:
+      - main
       - 'land_release_*'
+    paths:
+      - 'landing/**'
 
 env:
   PROJECT_NAME: smart-cc-landing
@@ -30,7 +33,7 @@ jobs:
           node-version: 22
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build
         run: npx vite build
@@ -40,5 +43,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name ${{ env.PROJECT_NAME }} --branch main
-          workingDirectory: landing
+          command: pages deploy dist --project-name ${{ env.PROJECT_NAME }}
