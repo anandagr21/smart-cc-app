@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import ScrollReveal from "./ScrollReveal";
 import SectionBadge from "./SectionBadge";
-import { ZapIcon, SparklesIcon, TrendingUpIcon, BellIcon } from "./Icons";
+import { ZapIcon, SparklesIcon, TrendingUpIcon } from "./Icons";
 
 const features = [
   {
@@ -42,19 +42,6 @@ const features = [
     featured: false,
     metric: "60+",
     metricLabel: "card profiles",
-  },
-  {
-    icon: BellIcon,
-    iconColor: "text-rose-400",
-    iconBg: "bg-rose-500/10 border-rose-500/20",
-    glowColor: "rgba(244,63,94,0.12)",
-    title: "Smart Reminders",
-    desc: "Due dates, renewal deadlines, milestone targets — we track it all so you never miss a thing.",
-    tag: "Zero missed dates",
-    tagColor: "text-rose-400 bg-rose-500/10 border-rose-500/20",
-    featured: false,
-    metric: "100%",
-    metricLabel: "on-time reminders",
   },
 ];
 
