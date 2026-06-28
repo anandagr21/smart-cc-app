@@ -50,7 +50,7 @@ export default function App() {
       <TickerStrip />
       <Features />
       <ProductProof />
-      <Extension />
+      {/* <Extension /> */}
       <HowItWorks />
       <CTA />
       <Footer />
