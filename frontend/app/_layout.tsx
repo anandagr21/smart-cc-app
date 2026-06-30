@@ -14,7 +14,6 @@ import { TermsDisclaimerModal } from '@/components/TermsDisclaimerModal';
 import { ToastOverlay } from '@/components/ui/Toast';
 import { useOnboardingStore } from '@/features/onboarding/store/onboardingStore';
 import { OnboardingModal } from '@/features/onboarding/components/OnboardingModal';
-import { ObserveRoot, markInteractive } from 'expo-observe';
 import '@/global.css';
 
 const routingIntegration = Sentry.reactNavigationIntegration();
