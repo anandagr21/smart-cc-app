@@ -20,10 +20,10 @@ export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
   const { themeMode, setThemeMode } = useThemeStore();
   const colors = useThemeColors();
-  
+
   const { data: cards, isLoading: isLoadingCards } = useCards();
   const { data: transactionsData, isLoading: isLoadingTransactions } = useTransactions();
-  
+
   const cardCount = cards?.length || 0;
   const txCount = transactionsData?.pages.flatMap((page) => page.data).length || 0;
 
@@ -56,7 +56,7 @@ export default function ProfileScreen() {
         <DynamicIcon name={icon} size={14} color={isActive ? colors.primary : colors.textMuted} style={styles.themePillIcon} />
         <Text style={[
           styles.themePillText,
-          { 
+          {
             color: isActive ? colors.primary : colors.textMuted,
             fontWeight: isActive ? tokens.fontWeight.bold : tokens.fontWeight.medium
           }
@@ -102,7 +102,7 @@ export default function ProfileScreen() {
           <Text style={[styles.userEmail, { color: colors.textPrimary }]}>
             {user?.full_name || user?.email || 'User'}
           </Text>
-          
+
           <View style={[styles.statsBar, { backgroundColor: colors.surface, borderColor: colors.borderHighlight }]}>
             <View style={styles.statItem}>
               {isLoadingCards ? (
@@ -168,7 +168,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Text style={[styles.versionText, { color: colors.textMuted }]}>
-          Smart CC OS • v1.0.0
+          Smart CC OS • v1.0.2
         </Text>
       </ScrollView>
     </ScreenContainer>
