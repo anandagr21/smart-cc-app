@@ -45,7 +45,8 @@
           "project": "smart-cc-app",
           "organization": "smart-cc"
         }
-      ]
+      ],
+      "expo-updates"
     ],
     "extra": {
       "router": {},
