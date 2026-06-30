@@ -14,6 +14,7 @@ import { TermsDisclaimerModal } from '@/components/TermsDisclaimerModal';
 import { ToastOverlay } from '@/components/ui/Toast';
 import { useOnboardingStore } from '@/features/onboarding/store/onboardingStore';
 import { OnboardingModal } from '@/features/onboarding/components/OnboardingModal';
+import { ObserveRoot, markInteractive } from 'expo-observe';
 import '@/global.css';
 
 const routingIntegration = Sentry.reactNavigationIntegration();
@@ -140,7 +141,10 @@ export default Sentry.wrap(function RootLayout() {
 
   useEffect(() => {
     if (!rootNavigationState?.key) return;
-    if (isAuthLoading || !isThemeHydrated) return;
+    if (isAuthLoading || !isThemeHydrated || isOnboardingLoading) return;
+
+    // Mark the app as interactive for Expo Observe metrics
+    markInteractive();
 
     const inAuthGroup = segments[0] === '(auth)';
 
@@ -157,30 +161,32 @@ export default Sentry.wrap(function RootLayout() {
     } else if (token && user) {
       Sentry.setUser({ id: user.id });
     }
-  }, [token, user, isAuthLoading, isThemeHydrated, segments]);
+  }, [token, user, isAuthLoading, isThemeHydrated, isOnboardingLoading, segments]);
 
   if (isAuthLoading || !isThemeHydrated || isOnboardingLoading) {
     return null;
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
-      <Sentry.ErrorBoundary fallback={({error, retry}) => (
-        <ErrorFallback error={error} onRetry={retry} />
-      )}>
-        <QueryClientProvider client={queryClient}>
-          <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-            <Stack.Screen name="(auth)/login" options={{ animation: 'fade' }} />
-            <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-            <Stack.Screen name="monthly-intelligence" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="intelligence" options={{ presentation: 'modal', animation: 'fade' }} />
-          </Stack>
-          {token && !hasSeenOnboarding && <OnboardingModal />}
-          <TermsDisclaimerModal />
-          <ToastOverlay />
-        </QueryClientProvider>
-      </Sentry.ErrorBoundary>
-    </GestureHandlerRootView>
+    <ObserveRoot>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+        <Sentry.ErrorBoundary fallback={({error, retry}) => (
+          <ErrorFallback error={error} onRetry={retry} />
+        )}>
+          <QueryClientProvider client={queryClient}>
+            <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+              <Stack.Screen name="(auth)/login" options={{ animation: 'fade' }} />
+              <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+              <Stack.Screen name="monthly-intelligence" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="intelligence" options={{ presentation: 'modal', animation: 'fade' }} />
+            </Stack>
+            {token && !hasSeenOnboarding && <OnboardingModal />}
+            <TermsDisclaimerModal />
+            <ToastOverlay />
+          </QueryClientProvider>
+        </Sentry.ErrorBoundary>
+      </GestureHandlerRootView>
+    </ObserveRoot>
   );
 });
