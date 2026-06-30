@@ -168,7 +168,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Text style={[styles.versionText, { color: colors.textMuted }]}>
-          Smart CC OS • v1.0.2
+          Smart CC OS • v1.0.3
         </Text>
       </ScrollView>
     </ScreenContainer>

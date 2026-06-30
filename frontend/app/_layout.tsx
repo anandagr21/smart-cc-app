@@ -146,11 +146,13 @@ export default Sentry.wrap(function RootLayout() {
 
     if (!token && !inAuthGroup) {
       Sentry.setUser(null);
+      queryClient.clear();
       router.replace('/(auth)/login');
     } else if (token && inAuthGroup) {
       if (user) {
         Sentry.setUser({ id: user.id });
       }
+      queryClient.clear();
       router.replace('/(tabs)');
     } else if (token && user) {
       Sentry.setUser({ id: user.id });
