@@ -131,11 +131,6 @@ def create_app() -> FastAPI:
     # API routes — all versioned under /api/v1
     app.include_router(api_router)
 
-    if not settings.is_production:
-        @app.get("/api/sentry-debug", tags=["Debug"])
-        async def trigger_error():
-            division_by_zero = 1 / 0
-
     return app
 
 
