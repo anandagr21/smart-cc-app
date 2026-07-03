@@ -23,6 +23,8 @@ import { TransactionFormSheet } from '@/features/transactions/components/Transac
 import { EmptyDashboardState } from '@/features/transactions/components/EmptyDashboardState';
 import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/useMonthlyIntelligence';
 import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
+import { useCards } from '@/features/cards/hooks/useCards';
+import { useTransactions } from '@/features/transactions/hooks/useTransactions';
 import { QueryKeys } from '@/features/core/api/queryKeys';
 
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
@@ -40,6 +42,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isFormSheetVisible, setFormSheetVisible] = useState(false);
+  const [quickStartData, setQuickStartData] = useState<{ merchant_name: string; amount: string } | null>(null);
   const [isRefreshing, setRefreshing] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
 
@@ -59,9 +62,44 @@ export default function DashboardScreen() {
     primaryInsight,
     isLoading: insightsLoading,
   } = useSpendInsights();
+  const { data: cardsData } = useCards();
 
   const isLoading = statsLoading || insightsLoading;
   const hasStats = monthlySummary && (monthlySummary.total_rewards_optimized > 0 || monthlySummary.optimization_rate > 0);
+
+  // ── Fee Waiver Alerts ────────────────────────────────────────────────────────
+  const feeWaiverAlerts = (cardsData || [])
+    .filter(c => c.effective_fee_waiver_threshold && c.effective_fee_waiver_threshold > 0 && !c.waiver_achieved)
+    .sort((a, b) => {
+      const urgencyOrder: Record<string, number> = { HIGH: 0, ELEVATED: 1, MODERATE: 2, LOW: 3 };
+      return (urgencyOrder[a.urgency_level || 'LOW'] ?? 3) - (urgencyOrder[b.urgency_level || 'LOW'] ?? 3);
+    })
+    .slice(0, 3);
+
+  // ── Best Card Pairings (Cheat Sheet) ─────────────────────────────────────────
+  const { data: transactionsPages } = useTransactions();
+  const bestPairings: { category: string; cardName: string; txCount: number }[] = (() => {
+    if (!transactionsPages || !cardsData) return [];
+    const allTxs = transactionsPages.pages.flatMap(p => p.data);
+    if (!allTxs.length) return [];
+    const cardMap = new Map(cardsData.map(c => [c.id, c.card_details?.card_name || 'Unknown Card']));
+    const categoryStats: Record<string, Record<string, number>> = {};
+    allTxs.forEach((tx) => {
+      if (!tx.category || !tx.user_card_id || tx.category === 'UNKNOWN') return;
+      const cat = tx.category;
+      const cardName = cardMap.get(tx.user_card_id);
+      if (!cardName) return;
+      if (!categoryStats[cat]) categoryStats[cat] = {};
+      categoryStats[cat][cardName] = (categoryStats[cat][cardName] || 0) + 1;
+    });
+    return Object.entries(categoryStats)
+      .flatMap(([category, cardCounts]) => {
+        const best = Object.entries(cardCounts).sort((a, b) => b[1] - a[1])[0];
+        return best ? [{ category, cardName: best[0], txCount: best[1] }] : [];
+      })
+      .sort((a, b) => b.txCount - a.txCount)
+      .slice(0, 5);
+  })();
 
   // ── Pull-to-refresh ──────────────────────────────────────────────────────────
   const handleRefresh = async () => {
@@ -178,7 +216,14 @@ export default function DashboardScreen() {
         {!isLoading && !hasStats && !primaryInsight && (
           <EmptyDashboardState
             onAddCard={() => router.push('/cards')}
-            onAddTransaction={() => setFormSheetVisible(true)}
+            onAddTransaction={() => {
+              setQuickStartData(null);
+              setFormSheetVisible(true);
+            }}
+            onQuickStart={(merchant, amount) => {
+              setQuickStartData({ merchant_name: merchant, amount: String(amount) });
+              setFormSheetVisible(true);
+            }}
           />
         )}
 
@@ -241,6 +286,90 @@ export default function DashboardScreen() {
           </Animated.View>
         )}
 
+        {/* ── Fee Waiver Alerts ────────────────────────────────────────────── */}
+        {!isLoading && feeWaiverAlerts.length > 0 && (
+          <Animated.View entering={maybeAnimated(130)} style={{ marginBottom: 28 }}>
+            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>FEE WAIVER ALERTS</Text>
+            <View style={{ gap: 8 }}>
+              {feeWaiverAlerts.map((card) => {
+                const isUrgent = card.urgency_level === 'HIGH' || card.urgency_level === 'ELEVATED';
+                const urgencyColor = isUrgent ? colors.warning : colors.textSecondary;
+                const cardName = card.card_details?.card_name || 'Unknown Card';
+                const remaining = card.remaining_spend_for_waiver || 0;
+                const monthsLeft = card.days_until_renewal ? Math.max(1, Math.round(card.days_until_renewal / 30)) : null;
+                const monthlyTarget = monthsLeft ? Math.round(remaining / monthsLeft) : null;
+
+                return (
+                  <TouchableOpacity
+                    key={card.id}
+                    activeOpacity={0.8}
+                    onPress={() => router.push('/cards')}
+                    style={[
+                      styles.statCard,
+                      {
+                        backgroundColor: isUrgent ? colors.warning + '0A' : colors.surface,
+                        borderColor: isUrgent ? colors.warning + '30' : colors.border,
+                        borderLeftWidth: 3,
+                        borderLeftColor: urgencyColor,
+                      },
+                    ]}
+                  >
+                    <View style={styles.statHeader}>
+                      <DynamicIcon
+                        name={isUrgent ? 'AlertTriangle' : 'Clock'}
+                        size={16}
+                        color={urgencyColor}
+                      />
+                      <Text style={[styles.statLabel, { color: colors.textPrimary, flex: 1 }]} numberOfLines={1}>
+                        {cardName}
+                      </Text>
+                    </View>
+                    <Text style={[styles.feeWaiverBody, { color: colors.textSecondary }]}>
+                      ₹{remaining.toLocaleString('en-IN')} more to waive ₹{(card.effective_fee_waiver_threshold || 0).toLocaleString('en-IN')} fee
+                    </Text>
+                    {monthsLeft && monthlyTarget && (
+                      <Text style={[styles.feeWaiverHint, { color: colors.textMuted }]}>
+                        {monthsLeft} month{monthsLeft > 1 ? 's' : ''} remaining · Spend ₹{monthlyTarget.toLocaleString('en-IN')}/month
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </Animated.View>
+        )}
+
+        {/* ── Best Card Pairings (Cheat Sheet) ────────────────────────────── */}
+        {!isLoading && bestPairings.length > 0 && (
+          <Animated.View entering={maybeAnimated(140)} style={{ marginBottom: 28 }}>
+            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>YOUR BEST PAIRINGS</Text>
+            <View style={[styles.fullWidthCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              {bestPairings.map((pairing, idx) => (
+                <View
+                  key={pairing.category}
+                  style={[
+                    styles.pairingRow,
+                    idx < bestPairings.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingBottom: 10, marginBottom: 10 },
+                  ]}
+                >
+                  <DynamicIcon
+                    name={pairing.category === 'FOOD' || pairing.category === 'DINING' ? 'Utensils' : pairing.category === 'FUEL' ? 'Fuel' : pairing.category === 'ECOMMERCE' ? 'ShoppingBag' : pairing.category === 'TRAVEL' ? 'Plane' : pairing.category === 'GROCERY' ? 'ShoppingCart' : 'Tag'}
+                    size={16}
+                    color={colors.textSecondary}
+                  />
+                  <Text style={[styles.pairingCategory, { color: colors.textPrimary }]}>
+                    {pairing.category.charAt(0) + pairing.category.slice(1).toLowerCase()}
+                  </Text>
+                  <DynamicIcon name="ArrowRight" size={14} color={colors.textMuted} />
+                  <Text style={[styles.pairingCard, { color: colors.primary }]} numberOfLines={1}>
+                    {pairing.cardName}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </Animated.View>
+        )}
+
         {/* ── Recent Recommendation Section ──────────────────────────────── */}
         {!isLoading && primaryInsight && (
           <Animated.View
@@ -289,7 +418,10 @@ export default function DashboardScreen() {
           <TouchableOpacity
             style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
             activeOpacity={0.8}
-            onPress={() => setFormSheetVisible(true)}
+            onPress={() => {
+              setQuickStartData(null);
+              setFormSheetVisible(true);
+            }}
           >
             <DynamicIcon name="Plus" size={24} color="#FFF" strokeWidth={2.5} />
             <Text style={styles.primaryActionText}>Add Transaction</Text>
@@ -302,7 +434,11 @@ export default function DashboardScreen() {
 
       <TransactionFormSheet
         visible={isFormSheetVisible}
-        onClose={() => setFormSheetVisible(false)}
+        onClose={() => {
+          setFormSheetVisible(false);
+          // Small delay before clearing to prevent UI jump during sheet closing animation
+          setTimeout(() => setQuickStartData(null), 300);
+        }}
         onSuccess={() => {
           showToast('Transaction logged successfully');
           // Refresh dashboard data to reflect the new transaction
@@ -310,7 +446,7 @@ export default function DashboardScreen() {
             handleRefresh();
           }, 600);
         }}
-        initialData={null}
+        initialData={quickStartData}
       />
     </ScreenContainer>
   );
@@ -471,6 +607,34 @@ const styles = StyleSheet.create({
   insightSummary: {
     fontSize: tokens.fontSize.body,
     lineHeight: 20,
+  },
+
+  // ── Best Pairings ──────────────────────────────────────────────────────
+  pairingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  pairingCategory: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.semibold,
+    flex: 1,
+  },
+  pairingCard: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.semibold,
+    maxWidth: '50%',
+  },
+
+  // ── Fee Waiver ──────────────────────────────────────────────────────────
+  feeWaiverBody: {
+    fontSize: tokens.fontSize.body,
+    lineHeight: 20,
+    marginTop: 4,
+  },
+  feeWaiverHint: {
+    fontSize: tokens.fontSize.caption,
+    marginTop: 4,
   },
 
   // ── CTA ─────────────────────────────────────────────────────────────────

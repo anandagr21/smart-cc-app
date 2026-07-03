@@ -31,6 +31,7 @@ import { tokens } from '@/theme/tokens';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useFuseSearch } from '@/shared/search/useFuseSearch';
 import { usePersonalityProfile, OptimizationPersonality } from '@/features/personality/api/personalityApi';
+import { useOnboardingStore } from '@/features/onboarding/store/onboardingStore';
 import { FeatureFlags } from '@/config/features';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
@@ -82,7 +83,7 @@ interface TransactionFormSheetProps {
   visible: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  initialData?: TransactionResponse | null;
+  initialData?: TransactionResponse | { merchant_name: string; amount: number } | null;
 }
 
 export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
@@ -100,15 +101,21 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
 
   const { data: cardsData } = useCards();
   const { data: personalityProfile } = usePersonalityProfile();
+  const onboardingPersona = useOnboardingStore((s) => s.persona);
   const addTx = useCreateTransaction();
   const updateTx = useUpdateTransaction();
   const getRecommendation = useRecommendation();
-  
+
+  // Default intent: onboarding persona > personality profile > balanced
+  const defaultIntent = onboardingPersona ||
+    mapPersonalityToIntent(personalityProfile?.active_personality) ||
+    'BALANCED';
+
   const isEditing = !!initialData;
 
   const methods = useForm<any>({
     resolver: zodResolver(formSchema),
-    defaultValues: { merchant_name: '', user_card_id: '', payment_mode: 'ONLINE', intent: 'BALANCED' },
+    defaultValues: { merchant_name: '', user_card_id: '', payment_mode: 'ONLINE', intent: defaultIntent },
   });
 
   const { watch, reset, setValue, handleSubmit, formState: { isSubmitting } } = methods;

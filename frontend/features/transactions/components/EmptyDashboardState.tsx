@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
@@ -12,11 +12,13 @@ import { DynamicIcon } from '@/components/DynamicIcon';
 interface EmptyDashboardStateProps {
   onAddCard: () => void;
   onAddTransaction: () => void;
+  onQuickStart?: (merchant: string, amount: number) => void;
 }
 
 export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
   onAddCard,
   onAddTransaction,
+  onQuickStart,
 }) => {
   const colors = useThemeColors();
   const { data: cards } = useCards();
@@ -57,6 +59,37 @@ export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
             />
           </View>
         )}
+        
+        {/* Quick Start Chips */}
+        {hasCards && onQuickStart && (
+          <View style={styles.quickStartSection}>
+            <Text style={[styles.quickStartLabel, { color: colors.textSecondary }]}>
+              Try your first recommendation:
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
+              {[
+                { label: 'Swiggy', amount: 500, icon: 'Utensils' },
+                { label: 'Amazon', amount: 1000, icon: 'ShoppingBag' },
+                { label: 'Fuel', amount: 2000, icon: 'Fuel' },
+                { label: 'Zomato', amount: 500, icon: 'Utensils' },
+                { label: 'Flipkart', amount: 1000, icon: 'ShoppingBag' },
+              ].map(m => (
+                <TouchableOpacity
+                  key={m.label}
+                  activeOpacity={0.7}
+                  onPress={() => onQuickStart(m.label, m.amount)}
+                  style={[
+                    styles.chip,
+                    { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: colors.border }
+                  ]}
+                >
+                  <DynamicIcon name={m.icon as any} size={14} color={colors.textMuted} style={{ marginRight: 6 }} />
+                  <Text style={[styles.chipText, { color: colors.textPrimary }]}>{m.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </Card>
     </Animated.View>
   );
@@ -93,5 +126,29 @@ const styles = StyleSheet.create({
   },
   cta: {
     width: '100%',
+  },
+  quickStartSection: {
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  quickStartLabel: {
+    fontSize: tokens.fontSize.body,
+    marginBottom: 12,
+  },
+  chipsScroll: {
+    gap: 8,
+    paddingHorizontal: 4,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: tokens.radius.full,
+    borderWidth: 1,
+  },
+  chipText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.bold,
   },
 });

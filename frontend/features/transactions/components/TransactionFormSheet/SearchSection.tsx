@@ -99,7 +99,7 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
   triggerHaptic
 }) => {
   const colors = useThemeColors();
-  const { control, formState: { errors }, watch } = useFormContext<any>();
+  const { control, formState: { errors }, watch, setValue } = useFormContext<any>();
   
   const currentIntentValue = watch('intent');
   const currentIntent = INTENT_OPTIONS.find(i => i.value === currentIntentValue) || INTENT_OPTIONS[2];
@@ -213,6 +213,36 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
       )}
 
       <View style={styles.controlsWrap}>
+        {/* Merchant Quick Select */}
+        <View style={styles.controlSection}>
+          <Text style={[styles.controlLabel, { color: colors.textMuted }]}>QUICK SELECT</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
+            {[
+              { label: 'Swiggy', icon: 'Utensils' },
+              { label: 'Zomato', icon: 'Utensils' },
+              { label: 'Amazon', icon: 'ShoppingBag' },
+              { label: 'Flipkart', icon: 'ShoppingBag' },
+              { label: 'Fuel', icon: 'Fuel' },
+            ].map(m => (
+              <TouchableOpacity
+                key={m.label}
+                activeOpacity={0.7}
+                onPress={() => {
+                  triggerHaptic('selection');
+                  setValue('merchant_name', m.label);
+                }}
+                style={[
+                  styles.chip,
+                  { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: colors.border }
+                ]}
+              >
+                <DynamicIcon name={m.icon as any} size={14} color={colors.textMuted} style={{ marginRight: 6 }} />
+                <Text style={[styles.chipText, { color: colors.textPrimary }]}>{m.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
         <View style={styles.controlSection}>
           <Text style={[styles.controlLabel, { color: colors.textMuted }]}>PAYMENT MODE</Text>
           <Controller
