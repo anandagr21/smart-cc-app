@@ -8,6 +8,7 @@ import uuid
 from uuid import UUID
 import shutil
 
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +18,9 @@ from sqlalchemy.orm import selectinload
 from auth.dependencies import get_current_admin_user
 from auth.schemas import UserResponse
 from core.database import get_db
+from core.exceptions import BadRequestException, InternalServerException
+
+logger = logging.getLogger(__name__)
 from models.ingestion import (
     CardCatalogVersion,
     CardIngestionSession,
@@ -427,6 +431,11 @@ async def upload_source_document(
     
     return doc
 
+def _escape_like(value: str) -> str:
+    """Escape LIKE wildcard characters to prevent pattern-injection DoS."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 @router.get(
     "/sources/{document_id}/search",
     response_model=list[SourceChunkResponse],
@@ -438,11 +447,12 @@ async def search_source_chunks(
     db: AsyncSession = Depends(get_db),
     current_admin: UserResponse = Depends(get_current_admin_user),
 ) -> Any:
+    safe_q = _escape_like(q)
     stmt = (
         select(SourceChunk)
         .where(
             SourceChunk.document_id == document_id,
-            SourceChunk.chunk_text.ilike(f"%{q}%")
+            SourceChunk.chunk_text.ilike(f"%{safe_q}%")
         )
         .order_by(SourceChunk.page_number)
     )
@@ -506,11 +516,12 @@ async def api_extract_field(
             
         return response
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+        logger.warning("Field extraction validation failed: %s", e)
+        raise BadRequestException(message="Field extraction failed. Check the field name and document ID.")
+    except Exception:
         import sentry_sdk
-        sentry_sdk.capture_message(f"ingestion_failure: Extraction error for {request.field_name} - {str(e)}", level="error")
-        raise HTTPException(status_code=500, detail=f"Extraction error: {str(e)}")
+        sentry_sdk.capture_exception()
+        raise InternalServerException()
 
 from models.ingestion import ExtractionBenchmark
 
