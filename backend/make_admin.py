@@ -10,6 +10,7 @@ import asyncio
 import sys
 
 from core.database import async_session_factory
+from core.config import get_settings
 from models.enums import UserRole
 from models.user import User
 from sqlmodel import select
@@ -17,6 +18,11 @@ from sqlmodel import select
 
 async def make_all_users_admin() -> None:
     """Promote EVERY user in the database to ADMIN. Requires explicit confirmation."""
+    settings = get_settings()
+    if settings.is_production:
+        print("❌ REFUSING to run in production. Set ENVIRONMENT=development to use this script.")
+        sys.exit(1)
+
     print("⚠️  WARNING: This will promote ALL users to ADMIN. This is a dev-only operation.")
     confirm = input("Type 'yes' to confirm: ").strip()
     if confirm != "yes":
@@ -36,6 +42,11 @@ async def make_all_users_admin() -> None:
 
 async def make_user_admin(email: str) -> None:
     """Promote a single user to ADMIN by email address."""
+    settings = get_settings()
+    if settings.is_production:
+        print("❌ REFUSING to run in production. Set ENVIRONMENT=development to use this script.")
+        sys.exit(1)
+
     async with async_session_factory() as session:
         result = await session.execute(select(User).where(User.email == email))
         user = result.scalar_one_or_none()

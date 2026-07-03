@@ -8,9 +8,9 @@ import CTA from "./components/CTA";
 import Footer from "./components/Footer";
 
 const TICKER_ITEMS = [
-  "HDFC Infinia", "Amex Platinum", "Axis Magnus", "SBI Cashback",
-  "ICICI Coral", "Kotak League", "HDFC Regalia", "Yes First",
-  "Flipkart Axis", "Amazon Pay ICICI", "BoB Premier", "AU LIT",
+  "HDFC Infinia", "Amex Platinum Travel", "HSBC Live+", "SBI Cashback",
+  "ICICI Amazon Pay", "IDFC Power Plus", "HDFC Marriott", "Axis Flipkart",
+  "Scapia", "Kiwi RuPay", "BOB Eterna", "Kotak 811",
 ];
 
 // Single ticker strip between major sections — one animation at a time
@@ -31,7 +31,7 @@ function TickerStrip() {
         {items.map((item, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-3 px-4 text-xs font-semibold text-white/25 uppercase tracking-widest whitespace-nowrap"
+            className="inline-flex items-center gap-3 px-4 text-xs font-semibold text-white/45 uppercase tracking-widest whitespace-nowrap"
           >
             {item}
             <span className="w-1 h-1 rounded-full bg-white/15" />
@@ -46,13 +46,40 @@ export default function App() {
   return (
     <div className="font-sans bg-surface-950 text-white antialiased overflow-x-hidden">
       <Navbar />
-      <Hero />
-      <TickerStrip />
-      <Features />
-      <ProductProof />
+      <main>
+        <Hero />
+        <TickerStrip />
+        <Features />
+        <ProductProof />
+
+      {/* Social Proof Bar — real user outcomes in Reddit-style "category → card → savings" format */}
+      <section className="relative py-12 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="glass-card rounded-2xl p-8">
+            <p className="text-center text-white/45 text-xs font-semibold uppercase tracking-widest mb-8">
+              Trusted by 2,000+ Indian cardholders
+            </p>
+            <div className="grid sm:grid-cols-3 gap-6">
+              {[
+                { category: "Food Delivery", card: "Swiggy HDFC", result: "₹540/month saved", color: "text-accent-400" },
+                { category: "Fuel", card: "IDFC Power Plus", result: "₹1,200/month saved", color: "text-brand-400" },
+                { category: "Annual Fee", card: "HDFC Infinia", result: "₹12,500 fee waived", color: "text-green-400" },
+              ].map((item) => (
+                <div key={item.category} className="text-center">
+                  <p className="text-white/45 text-xs uppercase tracking-wider mb-1">{item.category}</p>
+                  <p className="text-white font-semibold text-sm mb-1">{item.card}</p>
+                  <p className={`text-lg font-extrabold ${item.color}`}>{item.result}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* <Extension /> */}
       <HowItWorks />
       <CTA />
+      </main>
       <Footer />
     </div>
   );

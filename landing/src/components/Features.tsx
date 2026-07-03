@@ -10,7 +10,7 @@ const features = [
     iconBg: "bg-accent-500/10 border-accent-500/20",
     glowColor: "rgba(139,92,246,0.15)",
     title: "AI Spending Insights",
-    desc: "Personalised recommendations on which card to use for every purchase. The AI learns your patterns and maximises rewards automatically.",
+    desc: "At checkout, open the app, enter the merchant, and instantly see which card earns the most rewards. No more guessing between your HDFC and Amex.",
     tag: "Powered by AI",
     tagColor: "text-accent-400 bg-accent-500/10 border-accent-500/20",
     featured: true,
@@ -67,7 +67,7 @@ export default function Features() {
               <span className="text-gradient">dominate your wallet</span>
             </h2>
             <p className="text-white/40 text-lg max-w-2xl mx-auto">
-              Built for power users who carry 5+ cards. Track, optimise, and save — automatically.
+              Whether you carry 2 cards or 12. Track, optimise, and save — automatically.
             </p>
           </ScrollReveal>
         </div>
