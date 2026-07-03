@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.deps import get_db
-from auth.dependencies import get_current_user
+from auth.dependencies import get_current_admin_user
 from merchants.models import PendingReviewStatus
 from merchants.pending_review_repository import MetricsRepository, PendingReviewRepository
 from merchants.schemas import (
@@ -29,11 +29,6 @@ from merchants.schemas import (
 router = APIRouter(prefix="/admin/merchants", tags=["merchant-admin"])
 
 
-def _require_admin(current_user=Depends(get_current_user)):
-    """Dependency: require the current user to have admin role."""
-    if not getattr(current_user, "is_admin", False) and getattr(current_user, "role", "") != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required.")
-    return current_user
 
 
 # ------------------------------------------------------------------
@@ -46,7 +41,7 @@ async def list_pending_merchants(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
-    _admin=Depends(_require_admin),
+    _admin=Depends(get_current_admin_user),
 ) -> list[PendingMerchantResponse]:
     """List merchants awaiting admin review.
 
@@ -63,7 +58,7 @@ async def approve_pending_merchant(
     review_id: UUID,
     request: PendingApprovalRequest,
     db: AsyncSession = Depends(get_db),
-    _admin=Depends(_require_admin),
+    _admin=Depends(get_current_admin_user),
 ) -> PendingMerchantResponse:
     """Approve a pending merchant and create a canonical merchant record.
 
@@ -92,7 +87,7 @@ async def reject_pending_merchant(
     review_id: UUID,
     request: PendingRejectionRequest,
     db: AsyncSession = Depends(get_db),
-    _admin=Depends(_require_admin),
+    _admin=Depends(get_current_admin_user),
 ) -> PendingMerchantResponse:
     """Reject a pending merchant review.
 
@@ -120,7 +115,7 @@ async def reject_pending_merchant(
 async def get_resolution_metrics(
     days: int = Query(default=30, ge=1, le=365, description="Look-back window in days"),
     db: AsyncSession = Depends(get_db),
-    _admin=Depends(_require_admin),
+    _admin=Depends(get_current_admin_user),
 ) -> ResolutionMetricsSummary:
     """Get merchant resolution metrics for the admin dashboard.
 
