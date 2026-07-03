@@ -82,19 +82,18 @@ export default function CTA() {
                 viewport={{ once: true }}
               >
                 <span className="relative w-2 h-2">
-                  <span className="absolute inset-0 rounded-full bg-brand-500 animate-ping opacity-75" />
                   <span className="relative block w-2 h-2 rounded-full bg-brand-500" />
                 </span>
                 Limited Early Access — Spots Filling Fast
               </motion.div>
 
               <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-white">
-                Start optimizing your{" "}
-                <span className="text-gradient">cards today.</span>
+                Which card should you use for{" "}
+                <span className="text-gradient">tonight's Swiggy order?</span>
               </h2>
               <p className="text-white/50 text-lg max-w-lg mx-auto mb-10">
-                Join 2,000+ cardholders already saving on fees and maximising rewards.
-                Early access is free — no credit card needed.
+                Join 2,000+ cardholders who stopped guessing and started optimizing.
+                No bank linking. Setup takes 2 minutes. Early access is free.
               </p>
 
               {status === "error" && (

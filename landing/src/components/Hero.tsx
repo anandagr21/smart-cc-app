@@ -4,7 +4,7 @@ import { ArrowRightIcon } from "./Icons";
 const stats = [
   { value: "₹2.4L", label: "Avg savings / year" },
   { value: "60+",  label: "Card profiles" },
-  { value: "2 min", label: "Setup time" },
+  { value: "Auto", label: "Rule updates" },
 ];
 
 const cards = [
@@ -38,7 +38,6 @@ export default function Hero() {
               transition={{ delay: 0.1, duration: 0.5 }}
             >
               <span className="relative w-2 h-2">
-                <span className="absolute inset-0 rounded-full bg-brand-500 animate-ping opacity-75" />
                 <span className="relative block w-2 h-2 rounded-full bg-brand-500" />
               </span>
               100% Free During Early Access
@@ -51,9 +50,9 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-              Your cards,
+              Which card for Swiggy? Fuel? Amazon?
               <br />
-              <span className="text-gradient">finally smart.</span>
+              <span className="text-gradient">Stop guessing.</span>
             </motion.h1>
 
             {/* Sub */}
@@ -63,8 +62,8 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.32, duration: 0.5 }}
             >
-              Stop juggling spreadsheets and missing due dates. Card Optimizer tracks every card,
-              predicts fee waivers, and maximises rewards — powered by AI.
+              Card Optimizer remembers every reward rule so you don't have to.
+              No spreadsheets. No emails to yourself. Just the best card for every purchase.
             </motion.p>
 
             {/* CTAs */}
@@ -148,7 +147,7 @@ export default function Hero() {
                     <p className="text-white font-bold text-lg">My Card Portfolio</p>
                   </div>
                   <div className="flex items-center gap-1.5 glass rounded-full px-3 py-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                     <span className="text-xs text-white/60 font-medium">Live</span>
                   </div>
                 </div>

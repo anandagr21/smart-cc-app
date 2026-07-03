@@ -27,18 +27,18 @@ const steps = [
     ),
     iconBg: "bg-accent-500/10 border-accent-500/20",
     accentColor: "#8B5CF6",
-    title: "Set Spend Targets",
-    desc: "We auto-detect fee waiver thresholds and milestone requirements from our card database. Adjust if needed, or let AI handle it.",
-    detail: "AI pre-fills most settings",
+    title: "Track Fee Waivers",
+    desc: "We auto-detect your cards' annual fee waiver thresholds. See exactly how much more to spend on each card to avoid paying the fee — before the deadline hits.",
+    detail: "Never pay an annual fee again",
   },
   {
     num: "03",
     icon: <SparklesIcon className="w-7 h-7 text-green-400" />,
     iconBg: "bg-green-500/10 border-green-500/20",
     accentColor: "#10B981",
-    title: "Get AI-Powered Insights",
-    desc: "Card Optimizer starts optimising immediately — suggesting which card to use, tracking waiver progress, and alerting you to savings opportunities.",
-    detail: "Real-time, always-on AI",
+    title: "Know Which Card to Use",
+    desc: "Open the app at checkout, enter the merchant, and instantly see your best card. Track fee waivers, milestone progress, and missed savings — all in one place.",
+    detail: "One tap at checkout",
   },
 ];
 
@@ -150,6 +150,57 @@ export default function HowItWorks() {
             <StepCard key={step.num} step={step} index={i} />
           ))}
         </div>
+
+        {/* Why Not Excel? comparison */}
+        <ScrollReveal delay={0.3}>
+          <div className="mt-14 glass-card rounded-2xl p-8 relative overflow-hidden">
+            <div className="grid md:grid-cols-2 gap-10 items-center">
+              {/* Left: The old way */}
+              <div>
+                <p className="text-xs font-bold text-rose-400 uppercase tracking-widest mb-4">
+                  The Excel Approach
+                </p>
+                <div className="space-y-3">
+                  {[
+                    "One column for Swiggy. One for fuel. One for Amazon.",
+                    "Manually update every time a bank changes a reward rate.",
+                    "Miss a quarterly cap because you forgot to check your sheet.",
+                    "Card devalued? Hope you read the 30-page T&C PDF.",
+                  ].map((text, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-rose-400/60 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span className="text-white/40 text-sm">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: Card Optimizer way */}
+              <div>
+                <p className="text-xs font-bold text-green-400 uppercase tracking-widest mb-4">
+                  Card Optimizer
+                </p>
+                <div className="space-y-3">
+                  {[
+                    "Supports 79 Indian cards. We update when banks do.",
+                    "Auto-detects reward caps, exclusions, and category limits.",
+                    "One tap to see your best card for any purchase.",
+                    "Fee waiver deadlines? Tracked. Milestones? Tracked.",
+                  ].map((text, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-white/70 text-sm">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
 
         {/* Bottom trust bar */}
         <ScrollReveal delay={0.4}>

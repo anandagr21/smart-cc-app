@@ -18,11 +18,15 @@ from auth.schemas import (
     UserRegisterRequest,
     UserResponse,
     GoogleLoginRequest,
+    RefreshTokenRequest,
 )
 from auth.service import AuthService
 from repositories.user_repository import UserRepository
 from schemas.common import SingleResponse
+from core.config import get_settings
 from core.rate_limit import limiter
+
+settings = get_settings()
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -44,7 +48,7 @@ async def _get_auth_service(user_repo: UserRepository = Depends(get_user_repo)) 
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user",
 )
-@limiter.limit("3/minute")
+@limiter.limit(settings.rate_limit_register)
 async def register(
     request: Request,
     payload: UserRegisterRequest,
@@ -65,7 +69,7 @@ async def register(
     status_code=status.HTTP_200_OK,
     summary="Log in with email and password",
 )
-@limiter.limit("5/minute")
+@limiter.limit(settings.rate_limit_login)
 async def login(
     request: Request,
     payload: UserLoginRequest,
@@ -85,7 +89,7 @@ async def login(
     status_code=status.HTTP_200_OK,
     summary="Log in or register with Google",
 )
-@limiter.limit("5/minute")
+@limiter.limit(settings.rate_limit_login)
 async def google_login(
     request: Request,
     payload: GoogleLoginRequest,
@@ -117,6 +121,29 @@ async def get_me(
     Requires a valid Bearer token in the Authorization header.
     """
     return {"data": current_user}
+
+
+@router.post(
+    "/refresh",
+    response_model=SingleResponse[TokenResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Refresh access token using a refresh token",
+)
+@limiter.limit(settings.rate_limit_refresh)
+async def rotate_token(
+    request: Request,
+    payload: RefreshTokenRequest,
+    auth_service: AuthService = Depends(_get_auth_service),
+) -> dict:
+    """Exchange a refresh token for a new access + refresh token pair.
+
+    The old refresh token is invalidated (single-use rotation).
+    Returns a new access token and a new refresh token.
+    If a previously-used refresh token is replayed, the entire token
+    family is revoked for security.
+    """
+    result = await auth_service.refresh_token(payload.refresh_token)
+    return {"data": result}
 
 
 @router.patch(

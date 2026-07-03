@@ -10,7 +10,7 @@ Architectural Boundaries:
 """
 
 from datetime import datetime, timedelta, timezone
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import bcrypt
 import jwt
@@ -67,6 +67,7 @@ def create_access_token(user_id: UUID) -> str:
         "exp": now + timedelta(minutes=settings.access_token_expire_minutes),
         "iat": now,
         "type": "access",
+        "jti": str(uuid4()),  # Unique token ID for potential revocation
     }
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
 
@@ -79,5 +80,46 @@ def decode_access_token(token: str) -> dict:
     Raises:
         jwt.ExpiredSignatureError: If the token has expired.
         jwt.InvalidTokenError: If the token is invalid (bad signature, malformed, etc.).
+    """
+    return jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+
+
+def create_refresh_token(user_id: UUID, token_family: str | None = None) -> tuple[str, str]:
+    """Create a signed JWT refresh token and return (encoded_token, jti, family).
+
+    The refresh token includes:
+    - sub: user UUID
+    - exp: long expiration (default 30 days)
+    - iat: issued-at timestamp
+    - type: "refresh"
+    - jti: unique token ID (used for single-use lookup in DB)
+    - family: token family ID (groups tokens in a rotation chain)
+
+    Returns:
+        Tuple of (encoded_token, jti, token_family).
+    """
+    jti = str(uuid4())
+    family = token_family or str(uuid4())
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": str(user_id),
+        "exp": now + timedelta(days=settings.refresh_token_expire_days),
+        "iat": now,
+        "type": "refresh",
+        "jti": jti,
+        "family": family,
+    }
+    token = jwt.encode(payload, settings.secret_key, algorithm="HS256")
+    return token, jti, family
+
+
+def decode_refresh_token(token: str) -> dict:
+    """Decode and verify a refresh JWT.
+
+    Returns the token payload as a dictionary.
+
+    Raises:
+        jwt.ExpiredSignatureError: If the token has expired.
+        jwt.InvalidTokenError: If the token is invalid.
     """
     return jwt.decode(token, settings.secret_key, algorithms=["HS256"])

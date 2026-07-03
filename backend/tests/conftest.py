@@ -26,6 +26,7 @@ VALID_USER_UUID = uuid.UUID("12345678-1234-5678-1234-567812345678")
 VALID_USER_EMAIL = "test@example.com"
 VALID_USER_NAME = "Test User"
 VALID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.valid_token_payload"
+VALID_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiJ9.mock_refresh_token"
 
 
 @pytest.fixture
@@ -43,6 +44,7 @@ def sample_token_response(sample_user_response: UserResponse) -> TokenResponse:
     """Return a sample TokenResponse for test assertions."""
     return TokenResponse(
         access_token=VALID_TOKEN,
+        refresh_token=VALID_REFRESH_TOKEN,
         user=sample_user_response,
     )
 
@@ -61,6 +63,7 @@ def mock_auth_service(mock_user_repo: AsyncMock, sample_token_response: TokenRes
     service._user_repo = mock_user_repo
     service.register = AsyncMock(return_value=sample_token_response)
     service.login = AsyncMock(return_value=sample_token_response)
+    service.refresh_token = AsyncMock(return_value=sample_token_response)
     service.get_current_user = AsyncMock(return_value=sample_user_response)
     return service
 
@@ -74,8 +77,10 @@ def app_with_mocked_auth(
     """Build a FastAPI test app with the auth router and overridden dependencies."""
     from api.v1.auth import _get_auth_service, router
     from api.deps import get_user_repo
+    from core.rate_limit import limiter
 
     app = FastAPI()
+    app.state.limiter = limiter
     app.include_router(router)
 
     # Override auth service provider

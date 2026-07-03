@@ -20,8 +20,8 @@ export default function Footer() {
               <div className="w-9 h-9 rounded-xl bg-white/10 p-0.5 shadow-lg shadow-brand-500/20"><img src="/favicon.png" alt="Card Optimizer" className="w-full h-full rounded-lg" /></div>
               <span className="font-bold text-base text-white">Card Optimizer</span>
             </div>
-            <p className="text-white/30 text-sm leading-relaxed max-w-[200px]">
-              AI-powered credit card management for India's power users.
+            <p className="text-white/45 text-sm leading-relaxed max-w-[200px]">
+              AI-powered credit card optimization for every Indian cardholder.
             </p>
             {/* Social icons */}
             <div className="flex gap-3 mt-5">
@@ -33,7 +33,7 @@ export default function Footer() {
                   key={s.label}
                   href="#"
                   aria-label={s.label}
-                  className="w-8 h-8 rounded-lg glass flex items-center justify-center text-white/30 hover:text-white/80 hover:bg-white/10 transition-colors duration-200 cursor-pointer"
+                  className="w-8 h-8 rounded-lg glass flex items-center justify-center text-white/45 hover:text-white/80 hover:bg-white/10 transition-colors duration-200 cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d={s.path} />
@@ -52,7 +52,7 @@ export default function Footer() {
                   <li key={l.label}>
                     <a
                       href={l.href}
-                      className="text-white/30 hover:text-white/70 text-sm transition-colors duration-150 cursor-pointer"
+                      className="text-white/45 hover:text-white/70 text-sm transition-colors duration-150 cursor-pointer"
                     >
                       {l.label}
                     </a>
@@ -65,10 +65,10 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-white/20 text-xs">
+          <p className="text-white/40 text-xs">
             © {new Date().getFullYear()} Card Optimizer · Built for card enthusiasts, by card enthusiasts.
           </p>
-          <div className="flex items-center gap-2 text-white/20 text-xs">
+          <div className="flex items-center gap-2 text-white/40 text-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
             All systems operational
           </div>

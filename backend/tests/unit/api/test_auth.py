@@ -67,6 +67,7 @@ def _build_test_app(mock_service: MagicMock, mock_user_repo: AsyncMock = None, *
     from api.v1.auth import _get_auth_service, router
     from api.deps import get_user_repo
     from core.exceptions import AppException
+    from core.rate_limit import limiter
     from starlette.requests import Request
     from starlette.responses import JSONResponse
 
@@ -80,6 +81,7 @@ def _build_test_app(mock_service: MagicMock, mock_user_repo: AsyncMock = None, *
     )
 
     app = FastAPI()
+    app.state.limiter = limiter
 
     # Register global exception handler — converts AppException to HTTP responses
     @app.exception_handler(AppException)
@@ -131,6 +133,7 @@ def mock_auth_service() -> MagicMock:
     )
     sample_token = TokenResponse(
         access_token=VALID_TOKEN,
+        refresh_token="mock_refresh_token",
         user=sample_user,
     )
 
@@ -162,6 +165,7 @@ def client_no_auth_override() -> AsyncClient:
     )
     sample_token = TokenResponse(
         access_token=VALID_TOKEN,
+        refresh_token="mock_refresh_token",
         user=sample_user,
     )
 
@@ -413,3 +417,143 @@ class TestGetMeTokenValidation:
         )
 
         assert response.status_code == 401
+
+
+# =============================================================================
+# POST /auth/refresh
+# =============================================================================
+
+
+VALID_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiJ9.mock_refresh_token"
+NEW_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiJ9.new_access_token"
+NEW_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiJ9.new_refresh_token"
+
+
+class TestRefreshTokenRoute:
+    """Tests for POST /auth/refresh — token rotation and error handling."""
+
+    @pytest.mark.asyncio
+    async def test_refresh_returns_200_with_new_tokens(
+        self, mock_auth_service: MagicMock
+    ):
+        """A valid refresh token returns 200 with new access + refresh tokens."""
+        sample_user = UserResponse(
+            id=VALID_USER_UUID, email=VALID_EMAIL, full_name=VALID_NAME
+        )
+        rotated = TokenResponse(
+            access_token=NEW_ACCESS_TOKEN,
+            refresh_token=NEW_REFRESH_TOKEN,
+            user=sample_user,
+        )
+        mock_auth_service.refresh_token = AsyncMock(return_value=rotated)
+
+        app = _build_test_app(mock_auth_service, override_get_current_user=True)
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            response = await ac.post(
+                "/auth/refresh",
+                json={"refresh_token": VALID_REFRESH_TOKEN},
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["data"]["access_token"] == NEW_ACCESS_TOKEN
+        assert data["data"]["refresh_token"] == NEW_REFRESH_TOKEN
+        assert data["data"]["token_type"] == "bearer"
+        assert data["data"]["user"]["email"] == VALID_EMAIL
+
+        mock_auth_service.refresh_token.assert_awaited_once_with(VALID_REFRESH_TOKEN)
+
+    @pytest.mark.asyncio
+    async def test_refresh_with_invalid_token_returns_401(
+        self, mock_auth_service: MagicMock
+    ):
+        """An invalid/expired refresh token returns 401."""
+        mock_auth_service.refresh_token = AsyncMock(
+            side_effect=UnauthorizedException(
+                message="Invalid refresh token.",
+                code="INVALID_REFRESH_TOKEN",
+            )
+        )
+
+        app = _build_test_app(mock_auth_service, override_get_current_user=True)
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            response = await ac.post(
+                "/auth/refresh",
+                json={"refresh_token": "bad_token"},
+            )
+
+        assert response.status_code == 401
+        data = response.json()
+        assert data["error"]["code"] == "INVALID_REFRESH_TOKEN"
+
+    @pytest.mark.asyncio
+    async def test_refresh_reuse_detection_returns_401(
+        self, mock_auth_service: MagicMock
+    ):
+        """Token reuse (theft detection) returns 401 with TOKEN_REUSE_DETECTED code."""
+        mock_auth_service.refresh_token = AsyncMock(
+            side_effect=UnauthorizedException(
+                message="Security alert: Token reuse detected.",
+                code="TOKEN_REUSE_DETECTED",
+            )
+        )
+
+        app = _build_test_app(mock_auth_service, override_get_current_user=True)
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            response = await ac.post(
+                "/auth/refresh",
+                json={"refresh_token": VALID_REFRESH_TOKEN},
+            )
+
+        assert response.status_code == 401
+        data = response.json()
+        assert data["error"]["code"] == "TOKEN_REUSE_DETECTED"
+
+    @pytest.mark.asyncio
+    async def test_refresh_with_missing_body_returns_422(self, client: AsyncClient):
+        """Missing the refresh_token field triggers 422 validation."""
+        response = await client.post("/auth/refresh", json={})
+
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_refresh_with_empty_token_returns_422(self, client: AsyncClient):
+        """An empty refresh_token triggers 422 validation."""
+        response = await client.post(
+            "/auth/refresh", json={"refresh_token": ""}
+        )
+
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_login_response_includes_refresh_token(
+        self, client: AsyncClient, mock_auth_service: MagicMock
+    ):
+        """Login response includes both access_token and refresh_token."""
+        payload = _make_login_payload()
+
+        response = await client.post("/auth/login", json=payload)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "access_token" in data["data"]
+        assert "refresh_token" in data["data"]
+        assert len(data["data"]["refresh_token"]) > 0
+
+    @pytest.mark.asyncio
+    async def test_register_response_includes_refresh_token(
+        self, client: AsyncClient, mock_auth_service: MagicMock
+    ):
+        """Register response includes both access_token and refresh_token."""
+        payload = _make_register_payload()
+
+        response = await client.post("/auth/register", json=payload)
+
+        assert response.status_code == 201
+        data = response.json()
+        assert "access_token" in data["data"]
+        assert "refresh_token" in data["data"]
+        assert len(data["data"]["refresh_token"]) > 0

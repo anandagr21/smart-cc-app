@@ -4,64 +4,64 @@ import { ZapIcon, WalletIcon, TrendingUpIcon } from "./Icons";
 
 const proofs = [
   {
-    title: "Best Card Recommendation",
+    title: "Swiggy / Zomato",
     icon: <ZapIcon className="w-5 h-5 text-accent-400" />,
     gradient: "from-accent-500/20 to-brand-500/10",
-    scenario: "Amazon Purchase",
-    amount: "₹5,000",
+    scenario: "Food Delivery Order",
+    amount: "₹600",
     before: {
-      label: "Without Card Optimizer",
-      card: "HDFC Card",
-      reward: "₹50 rewards",
+      label: "Regular Card",
+      card: "HDFC Millennia",
+      reward: "1% (₹6)",
       color: "text-white/40",
     },
     after: {
-      label: "With Card Optimizer",
-      card: "Amazon Pay ICICI",
-      reward: "₹250 rewards",
+      label: "Best Card",
+      card: "Swiggy HDFC",
+      reward: "10% (₹60)",
       color: "text-green-400",
     },
-    difference: "+₹200",
+    difference: "10× rewards",
   },
   {
-    title: "Fee Waiver Protection",
+    title: "Fuel Fill-Up",
     icon: <WalletIcon className="w-5 h-5 text-brand-400" />,
     gradient: "from-brand-500/20 to-green-500/10",
-    scenario: "Annual Fee Alert",
-    amount: "₹1,500 at risk",
+    scenario: "Petrol Pump",
+    amount: "₹2,000",
+    before: {
+      label: "Regular Card",
+      card: "Any Card",
+      reward: "1% (₹20)",
+      color: "text-white/40",
+    },
+    after: {
+      label: "Best Card",
+      card: "IDFC Power Plus",
+      reward: "7.5% (₹150)",
+      color: "text-green-400",
+    },
+    difference: "7.5× rewards",
+  },
+  {
+    title: "Fee Waiver Rescue",
+    icon: <TrendingUpIcon className="w-5 h-5 text-cyan-400" />,
+    gradient: "from-green-500/20 to-cyan-500/10",
+    scenario: "Annual Fee Deadline",
+    amount: "₹12,500 at risk",
     before: {
       label: "Current Spend",
-      card: "HDFC Infinia",
-      reward: "₹1,87,000",
+      card: "₹1,87,000 spent",
+      reward: "HDFC Infinia",
       color: "text-white/40",
     },
     after: {
       label: "Waiver Target",
-      card: "Required",
-      reward: "₹2,00,000",
-      color: "text-white/90",
+      card: "2 months remaining",
+      reward: "₹2,00,000 needed",
+      color: "text-brand-400",
     },
-    difference: "Spend ₹13k more",
-  },
-  {
-    title: "Portfolio Optimization",
-    icon: <TrendingUpIcon className="w-5 h-5 text-cyan-400" />,
-    gradient: "from-green-500/20 to-cyan-500/10",
-    scenario: "Dining Spends",
-    amount: "₹15,000 / month",
-    before: {
-      label: "Current Usage",
-      card: "Card X (Too Often)",
-      reward: "1% back",
-      color: "text-rose-400",
-    },
-    after: {
-      label: "AI Suggestion",
-      card: "Shift to Card Y",
-      reward: "10% back",
-      color: "text-green-400",
-    },
-    difference: "+₹4,200/yr",
+    difference: "Save ₹12,500",
   },
 ];
 
@@ -79,13 +79,13 @@ export default function ProductProof() {
           <ScrollReveal>
             <SectionBadge>
               <ZapIcon className="w-3.5 h-3.5" />
-              Product Proof
+              Real Examples
             </SectionBadge>
             <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-white">
-              How Card Optimizer <span className="text-gradient">saves money</span>
+              The right card <span className="text-gradient">pays for itself</span>
             </h2>
             <p className="text-white/40 text-lg max-w-xl mx-auto">
-              We don't rely on fake reviews. Here's exactly how the math works in your favor.
+              Real scenarios from Indian credit card users. The math doesn't lie.
             </p>
           </ScrollReveal>
         </div>
