@@ -31,24 +31,57 @@ const setItem = async (value: boolean): Promise<void> => {
   }
 };
 
+const PERSONA_KEY = 'smartcc_onboarding_persona';
+
+const getPersona = async (): Promise<string | null> => {
+  try {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(PERSONA_KEY);
+    }
+    const { getItemAsync } = require('expo-secure-store');
+    return await getItemAsync(PERSONA_KEY);
+  } catch {
+    return null;
+  }
+};
+
+const setPersonaItem = async (value: string): Promise<void> => {
+  try {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(PERSONA_KEY, value);
+      return;
+    }
+    const { setItemAsync } = require('expo-secure-store');
+    await setItemAsync(PERSONA_KEY, value);
+  } catch {
+    // Silently fail
+  }
+};
+
 interface OnboardingState {
   hasSeenOnboarding: boolean;
   isLoading: boolean;
-  completeOnboarding: () => Promise<void>;
+  persona: string | null;
+  completeOnboarding: (persona?: string) => Promise<void>;
   initializeOnboarding: () => Promise<void>;
 }
 
 export const useOnboardingStore = create<OnboardingState>((set) => ({
   hasSeenOnboarding: false,
   isLoading: true,
+  persona: null,
 
-  completeOnboarding: async () => {
+  completeOnboarding: async (persona?: string) => {
+    if (persona) {
+      await setPersonaItem(persona);
+      set({ persona });
+    }
     await setItem(true);
     set({ hasSeenOnboarding: true });
   },
 
   initializeOnboarding: async () => {
-    const seen = await getItem();
-    set({ hasSeenOnboarding: seen, isLoading: false });
+    const [seen, persona] = await Promise.all([getItem(), getPersona()]);
+    set({ hasSeenOnboarding: seen, isLoading: false, persona });
   },
 }));

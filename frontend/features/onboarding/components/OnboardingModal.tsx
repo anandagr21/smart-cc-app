@@ -23,6 +23,7 @@ export const OnboardingModal: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const { width } = useWindowDimensions();
+  const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
 
   const handleNext = () => {
     if (activeIndex < SLIDES.length - 1) {
@@ -33,11 +34,17 @@ export const OnboardingModal: React.FC = () => {
   };
 
   const handleGetStarted = async () => {
-    await completeOnboarding();
+    await completeOnboarding(selectedPersona ?? undefined);
   };
 
   const handleSkip = async () => {
     await completeOnboarding();
+  };
+
+  const handleSelectPersona = async (value: string) => {
+    setSelectedPersona(value);
+    // Auto-complete onboarding when persona is selected
+    await completeOnboarding(value);
   };
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
@@ -47,6 +54,7 @@ export const OnboardingModal: React.FC = () => {
   }).current;
 
   const isLastSlide = activeIndex === SLIDES.length - 1;
+  const isPersonaSlide = activeIndex === SLIDES.length - 1;
 
   return (
     <Animated.View
@@ -78,7 +86,7 @@ export const OnboardingModal: React.FC = () => {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         renderItem={({ item, index }) => (
           <View style={{ width }}>
-            <OnboardingSlide slide={item} index={index} />
+            <OnboardingSlide slide={item} index={index} onSelectPersona={handleSelectPersona} />
           </View>
         )}
       />

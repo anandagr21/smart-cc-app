@@ -31,7 +31,7 @@ const getItemAsync = async (key: string) => {
 };
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  themeMode: 'system',
+  themeMode: 'light',
   isHydrated: false,
 
   setThemeMode: async (mode: ThemeMode) => {
