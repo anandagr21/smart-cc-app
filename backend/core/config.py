@@ -64,9 +64,17 @@ class Settings(BaseSettings):
 
     # ---- Auth ----
     secret_key: str = DEFAULT_SECRET_KEY_MARKER
-    access_token_expire_minutes: int = 43200  # 30 days for smoother local dev
+    access_token_expire_minutes: int = 60  # 1 hour — industry standard; refresh tokens handle the rest
+    refresh_token_expire_days: int = 30  # Refresh tokens last 30 days with rotation on each use
     google_client_id: str = ""
     google_client_ids_raw: str = ""  # Comma-separated list of all Google OAuth client IDs (web, iOS, Android)
+
+    # ---- Rate Limiting ----
+    rate_limit_register: str = "3/minute"
+    rate_limit_login: str = "5/minute"
+    rate_limit_insights: str = "10/minute"
+    rate_limit_portfolio_evolution: str = "5/minute"
+    rate_limit_refresh: str = "10/minute"
 
     @model_validator(mode="after")
     def _enforce_secure_defaults(self) -> "Settings":

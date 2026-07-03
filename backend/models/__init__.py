@@ -22,6 +22,7 @@ from .feedback import Feedback
 from .recommendation_audit import RecommendationAudit
 from .notification import Notification
 from .waitlist import WaitlistEntry
+from .refresh_token import RefreshToken
 from .ingestion import (
     CardCatalogVersion,
     CardIngestionSession,
@@ -68,4 +69,5 @@ __all__ = [
     "RecommendationAudit",
     "Notification",
     "WaitlistEntry",
+    "RefreshToken",
 ]

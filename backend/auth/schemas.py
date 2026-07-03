@@ -63,10 +63,19 @@ class UserResponse(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    """Response schema containing JWT access token and user info."""
+    """Response schema containing JWT access token, refresh token, and user info."""
 
-    access_token: str = Field(..., description="Signed JWT access token.")
+    access_token: str = Field(..., description="Signed JWT access token (short-lived).")
+    refresh_token: str = Field(..., description="Signed JWT refresh token (long-lived, single-use rotation).")
     token_type: str = Field(default="bearer", description="Token type.")
     user: UserResponse = Field(..., description="Authenticated user data.")
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class RefreshTokenRequest(BaseModel):
+    """Request schema for POST /auth/refresh."""
+
+    refresh_token: str = Field(..., min_length=1, description="The refresh token to exchange for new tokens.")
 
     model_config = ConfigDict(extra="forbid")
