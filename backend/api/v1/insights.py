@@ -1,12 +1,16 @@
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from auth.dependencies import get_current_user
 from auth.schemas import UserResponse
+from core.config import get_settings
 from core.database import get_db
+from core.rate_limit import limiter
+
+settings = get_settings()
 from api.deps import get_user_card_repo
 from services.card_service import UserCardService
 from insights.enrichment.transaction_enrichment import TransactionEnrichmentService
@@ -56,7 +60,9 @@ def get_insight_orchestrator(
     )
 
 @router.get("/", response_model=List[InsightResponse])
+@limiter.limit(settings.rate_limit_insights)
 async def get_insights(
+    request: Request,
     current_user: UserResponse = Depends(get_current_user),
     orchestrator: InsightOrchestrator = Depends(get_insight_orchestrator)
 ):
