@@ -286,6 +286,58 @@ export default function DashboardScreen() {
           </Animated.View>
         )}
 
+        {/* ── Primary Action: Add Transaction / Add First Card ──────────────── */}
+        {cardsData && cardsData.length > 0 && (
+          <Animated.View
+            entering={maybeAnimated(120)}
+            style={styles.actionContainer}
+          >
+            <TouchableOpacity
+              style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
+              activeOpacity={0.8}
+              onPress={() => {
+                setQuickStartData(null);
+                setFormSheetVisible(true);
+              }}
+            >
+              <DynamicIcon name="Plus" size={24} color="#FFF" strokeWidth={2.5} />
+              <Text style={styles.primaryActionText}>Add Transaction</Text>
+            </TouchableOpacity>
+            <Text style={[styles.actionHint, { color: colors.textSecondary }]}>
+              Get instant, live recommendations based on your portfolio.
+            </Text>
+          </Animated.View>
+        )}
+        {cardsData && cardsData.length === 0 && (
+          <Animated.View
+            entering={maybeAnimated(120)}
+            style={styles.actionContainer}
+          >
+            <View style={[styles.addCardCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[styles.addCardIconWrap, { backgroundColor: colors.primarySoft }]}>
+                <DynamicIcon name="CreditCard" size={28} color={colors.primary} strokeWidth={1.5} />
+              </View>
+              <Text style={[styles.addCardTitle, { color: colors.textPrimary }]}>
+                Add your first card
+              </Text>
+              <Text style={[styles.addCardBody, { color: colors.textSecondary }]}>
+                Connect your credit cards to unlock AI-powered reward optimization and real-time recommendations.
+              </Text>
+              <TouchableOpacity
+                style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
+                activeOpacity={0.8}
+                onPress={() => router.push('/cards')}
+              >
+                <DynamicIcon name="Plus" size={24} color="#FFF" strokeWidth={2.5} />
+                <Text style={styles.primaryActionText}>Add a Card</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.actionHint, { color: colors.textSecondary }]}>
+              We support 60+ Indian credit cards across 14 banks.
+            </Text>
+          </Animated.View>
+        )}
+
         {/* ── Fee Waiver Alerts ────────────────────────────────────────────── */}
         {!isLoading && feeWaiverAlerts.length > 0 && (
           <Animated.View entering={maybeAnimated(130)} style={{ marginBottom: 28 }}>
@@ -407,60 +459,6 @@ export default function DashboardScreen() {
                 {primaryInsight.summary}
               </Text>
             </TouchableOpacity>
-          </Animated.View>
-        )}
-
-        {/* ── Primary Action Button ───────────────────────────────────────── */}
-        {cardsData && cardsData.length > 0 && (
-          <Animated.View
-            entering={maybeAnimated(250)}
-            style={styles.actionContainer}
-          >
-          <TouchableOpacity
-            style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
-            activeOpacity={0.8}
-            onPress={() => {
-              setQuickStartData(null);
-              setFormSheetVisible(true);
-            }}
-          >
-            <DynamicIcon name="Plus" size={24} color="#FFF" strokeWidth={2.5} />
-            <Text style={styles.primaryActionText}>Add Transaction</Text>
-          </TouchableOpacity>
-          <Text style={[styles.actionHint, { color: colors.textSecondary }]}>
-            Get instant, live recommendations based on your portfolio.
-          </Text>
-        </Animated.View>
-        )}
-
-        {/* ── Add First Card Prompt (no cards) ──────────────────────────────── */}
-        {cardsData && cardsData.length === 0 && (
-          <Animated.View
-            entering={maybeAnimated(250)}
-            style={styles.actionContainer}
-          >
-            <View style={[styles.addCardCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={[styles.addCardIconWrap, { backgroundColor: colors.primarySoft }]}>
-                <DynamicIcon name="CreditCard" size={28} color={colors.primary} strokeWidth={1.5} />
-              </View>
-              <Text style={[styles.addCardTitle, { color: colors.textPrimary }]}>
-                Add your first card
-              </Text>
-              <Text style={[styles.addCardBody, { color: colors.textSecondary }]}>
-                Connect your credit cards to unlock AI-powered reward optimization and real-time recommendations.
-              </Text>
-              <TouchableOpacity
-                style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
-                activeOpacity={0.8}
-                onPress={() => router.push('/cards')}
-              >
-                <DynamicIcon name="Plus" size={24} color="#FFF" strokeWidth={2.5} />
-                <Text style={styles.primaryActionText}>Add a Card</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={[styles.actionHint, { color: colors.textSecondary }]}>
-              We support 60+ Indian credit cards across 14 banks.
-            </Text>
           </Animated.View>
         )}
       </ScrollView>
