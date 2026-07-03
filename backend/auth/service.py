@@ -60,7 +60,7 @@ class AuthService:
             user_id=user_id,
             token_family=token_family,
             jti=jti,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days),
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=settings.refresh_token_expire_days),
         )
         self._user_repo.session.add(record)
         await self._user_repo.session.flush()
@@ -307,7 +307,7 @@ class AuthService:
 
         # 5. Check expiry (defense-in-depth — JWT also has exp, but DB record
         #    may outlive if clock skew or timezone issues)
-        if token_record.expires_at and token_record.expires_at < datetime.now(timezone.utc):
+        if token_record.expires_at and token_record.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
             raise UnauthorizedException(
                 message="Refresh token has expired. Please log in again.",
                 code="REFRESH_TOKEN_EXPIRED",
