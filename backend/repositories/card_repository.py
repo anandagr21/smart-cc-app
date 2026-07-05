@@ -72,11 +72,14 @@ class UserCardRepository(BaseRepository[UserCard, dict, dict]):
         if catalog_result.scalar_one_or_none() is None:
             raise CardCatalogNotFoundException(card_id=str(card_catalog_id))
 
-        # Prevent duplicate card addition for the same user
+        # Prevent duplicate card addition — block if an active or inactive
+        # card already exists. Only CLOSED (intentionally removed) cards
+        # should allow re-adding.
         duplicate_result = await self.session.execute(
             select(UserCard).where(
                 UserCard.user_id == user_id,
                 UserCard.card_catalog_id == card_catalog_id,
+                UserCard.card_status.in_(["ACTIVE", "INACTIVE"]),
             )
         )
         if duplicate_result.scalar_one_or_none() is not None:
@@ -96,10 +99,17 @@ class UserCardRepository(BaseRepository[UserCard, dict, dict]):
         Uses selectinload to avoid N+1 queries when accessing the related
         card catalog data in responses.
         """
-        # Query with eager load of the related card catalog
+        # Query with eager load of the related card catalog.
+        # Only return cards visible in wallet — excludes DELETED/CLOSED/EXPIRED.
+        from cards.enums import is_card_visible_in_wallet
+
+        visible_statuses = ["ACTIVE", "INACTIVE", "LOCKED"]
         query = (
             select(UserCard)
-            .where(UserCard.user_id == user_id)
+            .where(
+                UserCard.user_id == user_id,
+                UserCard.card_status.in_(visible_statuses),
+            )
             .options(selectinload(UserCard.card_catalog))
         )
 
@@ -107,7 +117,10 @@ class UserCardRepository(BaseRepository[UserCard, dict, dict]):
         count_query = (
             select(func.count())
             .select_from(UserCard)
-            .where(UserCard.user_id == user_id)
+            .where(
+                UserCard.user_id == user_id,
+                UserCard.card_status.in_(visible_statuses),
+            )
         )
         total_result = await self.session.execute(count_query)
         total = total_result.scalar_one()

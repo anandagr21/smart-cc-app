@@ -20,7 +20,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.deps import get_db, get_merchant_service
 from auth.dependencies import get_current_admin_user
 from auth.schemas import UserResponse
-from merchants.resolution_engine import resolve as run_resolution
 from merchants.schemas import (
     AliasConfirmRequest,
     AliasConfirmResponse,
@@ -63,6 +62,7 @@ async def resolve_merchant(
 
     Examples: "flipcart" → Flipkart, "swigy" → Swiggy, "flpkrt" → Flipkart
     """
+    from merchants.resolution_engine import resolve as run_resolution  # heavy (RapidFuzz + LLM)
     result = await run_resolution(raw_input=request.raw_name, session=db)
     return ResolutionResponse(
         merchant_id=result.merchant_id,

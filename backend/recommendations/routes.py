@@ -6,32 +6,28 @@ Responsibility: HTTP endpoints for recommendations.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.rate_limit import limiter
+from core.database import get_db
 from api.deps import get_merchant_service, get_reward_rule_service, get_user_card_service
 from auth.dependencies import get_current_user
 from auth.schemas import UserResponse
-from merchants.service import MerchantService
 from recommendations.exceptions import NoCardsError
-from recommendations.orchestrator import RecommendationOrchestrator
 from recommendations.schemas import RecommendationRequest, RecommendationResponse
-from recommendations.service import RecommendationService
-from rewards.service import RewardRuleService
 from schemas.common import SingleResponse
-from services.card_service import UserCardService
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
 
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from core.database import get_db
-
 def _get_recommendation_service(
-    merchant_service: MerchantService = Depends(get_merchant_service),
-    user_card_service: UserCardService = Depends(get_user_card_service),
-    reward_rule_service: RewardRuleService = Depends(get_reward_rule_service),
+    merchant_service=Depends(get_merchant_service),
+    user_card_service=Depends(get_user_card_service),
+    reward_rule_service=Depends(get_reward_rule_service),
     db: AsyncSession = Depends(get_db),
-) -> RecommendationService:
+):
+    from recommendations.orchestrator import RecommendationOrchestrator  # heavy
+    from recommendations.service import RecommendationService  # heavy
     orchestrator = RecommendationOrchestrator(
         merchant_service=merchant_service,
         user_card_service=user_card_service,

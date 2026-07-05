@@ -16,7 +16,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, status
 
-from reward_engine.evaluator import evaluate
 from reward_engine.schemas import (
     EvaluateRequest,
     EvaluateResponse,
@@ -96,6 +95,9 @@ async def evaluate_reward(
     # Parse the incoming request into domain objects.
     transaction = TransactionContext.model_validate(request.transaction)
     rules = [NormalizedRuleConfig.model_validate(r) for r in request.rules]
+
+    # Lazy import — evaluator pulls in the full reward engine
+    from reward_engine.evaluator import evaluate
 
     # Delegate to the pure engine — no side effects.
     result = evaluate(transaction, rules)

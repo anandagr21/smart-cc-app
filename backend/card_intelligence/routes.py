@@ -10,7 +10,6 @@ from api.deps import get_db
 from auth.dependencies import get_current_admin_user
 from auth.schemas import UserResponse
 from core.rate_limit import limiter
-from services.card_intelligence_service import CardIntelligenceService
 
 router = APIRouter(prefix="/card-intelligence", tags=["Card Intelligence"])
 
@@ -58,6 +57,7 @@ class AdminReviewActionPayload(BaseModel):
 @limiter.limit("20/minute")
 async def fetch_card_payload_for_review(request: Request, card_id: UUID, current_admin: UserResponse = Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
     """Loads clean text side-by-side with recommended structural JSON schemas."""
+    from services.card_intelligence_service import CardIntelligenceService  # heavy (LangGraph)
     service = CardIntelligenceService(db)
     return await service.fetch_card_payload_for_review(card_id)
 
@@ -65,6 +65,7 @@ async def fetch_card_payload_for_review(request: Request, card_id: UUID, current
 @limiter.limit("20/minute")
 async def commit_admin_review_decision(request: Request, payload: AdminReviewActionPayload, current_admin: UserResponse = Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
     """Applies admin manual alterations directly to the live calculations database portfolio."""
+    from services.card_intelligence_service import CardIntelligenceService  # heavy (LangGraph)
     service = CardIntelligenceService(db)
     return await service.commit_admin_review_decision(
         card_id=UUID(payload.card_id),
@@ -88,6 +89,7 @@ async def ingest_raw_bank_url(
     generates a unique tracking card_id, stores the initial baseline tracking data, 
     and returns the card_id to the UI for instant workspace redirection.
     """
+    from services.card_intelligence_service import CardIntelligenceService  # heavy (LangGraph)
     service = CardIntelligenceService(session)
     return await service.ingest_raw_bank_url(
         url=payload.url,
