@@ -22,6 +22,7 @@ import { DynamicIcon } from '@/components/DynamicIcon';
 interface CardCatalogListProps {
   catalog: CardCatalogResponse[];
   onSelect: (card: CardCatalogResponse) => void;
+  ownedCatalogIds?: Set<string>;
 }
 
 /** A mini card block showing network brand color */
@@ -40,7 +41,7 @@ function NetworkMiniCard({ network, isDark }: { network: string; isDark: boolean
   );
 }
 
-export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSelect }) => {
+export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSelect, ownedCatalogIds = new Set() }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
@@ -140,38 +141,52 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
               </View>
 
               <View style={[styles.cardGroupContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: colors.glassBorder }]}>
-                {group.cards.map((card, index) => (
-                  <TouchableOpacity
-                    key={card.id}
-                    activeOpacity={0.7}
-                    onPress={() => onSelect(card)}
-                    style={[
-                      styles.row,
-                      index < group.cards.length - 1 && {
-                        borderBottomColor: colors.border,
-                        borderBottomWidth: StyleSheet.hairlineWidth,
-                      },
-                    ]}
-                  >
-                    <NetworkMiniCard network={card.network} isDark={isDark} />
+                {group.cards.map((card, index) => {
+                  const cardId = String(card.id);
+                  const isOwned = ownedCatalogIds.has(cardId);
 
-                    <View style={styles.rowText}>
-                      <Text
-                        style={[styles.cardName, { color: colors.textPrimary }]}
-                        numberOfLines={1}
-                      >
-                        {card.card_name}
-                      </Text>
-                      <Text style={[styles.meta, { color: colors.textMuted }]}>
-                        {card.network}
-                      </Text>
-                    </View>
+                  return (
+                    <TouchableOpacity
+                      key={card.id}
+                      activeOpacity={isOwned ? 1 : 0.7}
+                      disabled={isOwned}
+                      onPress={() => onSelect(card)}
+                      style={[
+                        styles.row,
+                        isOwned && styles.rowOwned,
+                        index < group.cards.length - 1 && {
+                          borderBottomColor: colors.border,
+                          borderBottomWidth: StyleSheet.hairlineWidth,
+                        },
+                      ]}
+                    >
+                      <NetworkMiniCard network={card.network} isDark={isDark} />
 
-                    <View style={[styles.chevronWrap, { backgroundColor: colors.surface }]}>
-                      <DynamicIcon name="ChevronRight" size={14} color={colors.textMuted} strokeWidth={2} />
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                      <View style={styles.rowText}>
+                        <Text
+                          style={[styles.cardName, { color: isOwned ? colors.textMuted : colors.textPrimary }]}
+                          numberOfLines={1}
+                        >
+                          {card.card_name}
+                        </Text>
+                        <Text style={[styles.meta, { color: colors.textMuted }]}>
+                          {card.network}
+                        </Text>
+                      </View>
+
+                      {isOwned ? (
+                        <View style={[styles.ownedBadge, { backgroundColor: colors.successSoft }]}>
+                          <DynamicIcon name="CheckCircle2" size={12} color={colors.success} strokeWidth={2.5} />
+                          <Text style={[styles.ownedBadgeText, { color: colors.success }]}>In wallet</Text>
+                        </View>
+                      ) : (
+                        <View style={[styles.chevronWrap, { backgroundColor: colors.surface }]}>
+                          <DynamicIcon name="ChevronRight" size={14} color={colors.textMuted} strokeWidth={2} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </Animated.View>
           ))
@@ -270,6 +285,21 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.bold,
     textTransform: 'uppercase',
     letterSpacing: tokens.letterSpacing.wide,
+  },
+  rowOwned: {
+    opacity: 0.55,
+  },
+  ownedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: tokens.radius.full,
+  },
+  ownedBadgeText: {
+    fontSize: tokens.fontSize.micro,
+    fontWeight: tokens.fontWeight.bold,
   },
   chevronWrap: {
     width: 28,

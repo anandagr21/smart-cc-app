@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { DynamicIcon } from '@/components/DynamicIcon';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
@@ -27,7 +27,10 @@ export const CardEditSheetBase: React.FC<CardEditSheetBaseProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.backdrop}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.backdrop}
+      >
         <View style={styles.sheet}>
           <BlurView
             tint={isDark ? 'dark' : 'light'}
@@ -52,9 +55,14 @@ export const CardEditSheetBase: React.FC<CardEditSheetBaseProps> = ({
             </TouchableOpacity>
           </View>
 
-          <View style={styles.content}>
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentInner}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             {children}
-          </View>
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -92,6 +100,9 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   content: {
+    maxHeight: '70%',
+  },
+  contentInner: {
     paddingHorizontal: 24,
     paddingBottom: 40,
   },

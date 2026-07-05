@@ -81,14 +81,14 @@ export const EmptyWalletState: React.FC<EmptyWalletStateProps> = ({ onAddCard })
       </View>
 
       <Text style={[styles.title, { color: colors.textPrimary }]}>
-        Your Digital Wallet
+        Your wallet is empty
       </Text>
       <Text style={[styles.body, { color: colors.textSecondary }]}>
-        Connect your credit cards to unlock AI-powered reward optimization and intelligent spend routing.
+        Add a card to start tracking rewards, fee waivers, and spending insights.
       </Text>
 
       <Button
-        label="Add Your First Card"
+        label="Add your first card"
         variant="primary"
         onPress={onAddCard}
         style={styles.cta}

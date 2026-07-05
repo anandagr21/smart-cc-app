@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CardCatalogResponse } from '../types/api';
+import { useCards } from '../hooks/useCards';
 import { useCardCatalog } from '../hooks/useCardCatalog';
 import { useAddCard } from '../hooks/useAddCard';
 import { CardCatalogList } from './CardCatalogList';
@@ -33,8 +34,15 @@ interface AddCardSheetProps {
 
 export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) => {
   const { data: catalog, isLoading: isCatalogLoading } = useCardCatalog(visible);
+  const { data: cards } = useCards();
   const { mutateAsync: addCard, isPending } = useAddCard();
   const colors = useThemeColors();
+
+  // Cards the user already owns — used to filter/hide from catalog
+  const ownedCatalogIds = useMemo(
+    () => new Set((cards || []).map((c) => String(c.card_catalog_id))),
+    [cards],
+  );
   const { themeMode } = useThemeStore();
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
   const insets = useSafeAreaInsets();
@@ -235,7 +243,7 @@ export const AddCardSheet: React.FC<AddCardSheetProps> = ({ visible, onClose }) 
                   <ActivityIndicator size="large" color={colors.primary} />
                 </View>
               ) : (
-                <CardCatalogList catalog={catalog || []} onSelect={setSelectedCard} />
+                <CardCatalogList catalog={catalog || []} onSelect={setSelectedCard} ownedCatalogIds={ownedCatalogIds} />
               )}
             </View>
           )}

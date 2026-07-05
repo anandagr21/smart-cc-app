@@ -24,7 +24,7 @@ export const useUpdateCard = (cardId: string) => {
         queryClient.setQueryData<UserCardResponse[]>(QueryKeys.cards.wallet(), (old) => {
           if (!old) return [];
           
-          if (newCardPayload.card_status === 'DELETED') {
+          if (newCardPayload.card_status === 'CLOSED') {
             return old.filter(card => card.id !== cardId);
           }
 

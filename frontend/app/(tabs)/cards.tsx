@@ -63,11 +63,11 @@ export default function CardsScreen() {
         <FeaturedCardsSection cards={cards || []} onSelectCard={(card) => setSelectedCardId(card.id)} />
         
         <View style={styles.searchSection}>
-          <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.searchBar, { backgroundColor: colors.surface }]}>
             <DynamicIcon name="Search" size={18} color={colors.textMuted} />
             <TextInput
               style={[styles.searchInput, { color: colors.textPrimary }]}
-              placeholder="Search cards by name, bank or network..."
+              placeholder="Search cards by name, bank, or network"
               placeholderTextColor={colors.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -77,7 +77,7 @@ export default function CardsScreen() {
           </View>
           
           <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 24, marginBottom: -8, marginLeft: 24 }]}>
-            YOUR WALLET
+            Your cards
           </Text>
         </View>
       </View>
@@ -99,7 +99,9 @@ export default function CardsScreen() {
             )}
           </View>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Manage your active cards
+            {cardCount > 0
+              ? `${cardCount} card${cardCount !== 1 ? 's' : ''} in your wallet`
+              : 'Manage your cards'}
           </Text>
         </View>
 
@@ -110,10 +112,7 @@ export default function CardsScreen() {
             onPress={() => setSheetVisible(true)}
             style={[
               styles.addBtn,
-              {
-                borderColor: colors.primary,
-                borderWidth: 1,
-              },
+              { backgroundColor: colors.primary + '10' },
             ]}
             activeOpacity={0.75}
           >
@@ -124,18 +123,6 @@ export default function CardsScreen() {
 
       <PortfolioLens />
       <BehavioralSignalsSurface />
-      
-      <View style={{ paddingHorizontal: 24, marginTop: 4, marginBottom: 16 }}>
-        <TouchableOpacity 
-          onPress={() => router.push('/intelligence')}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: 0.4 }}
-          disabled={true}
-        >
-          <Text style={{ fontSize: tokens.fontSize.body, color: colors.primary }}>
-            Financial Intelligence (Coming Soon)
-          </Text>
-        </TouchableOpacity>
-      </View>
 
       {isLoading ? (
         <WalletCardSkeleton />
@@ -212,7 +199,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: tokens.radius.lg,
     paddingHorizontal: 16,
-    borderWidth: 1,
+    
   },
   searchInput: {
     flex: 1,

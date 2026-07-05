@@ -30,6 +30,8 @@ import { QueryKeys } from '@/features/core/api/queryKeys';
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
+// ── Greeting ──────────────────────────────────────────────────────────────────
+
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return 'Good morning';
@@ -37,52 +39,91 @@ function getGreeting() {
   return 'Good evening';
 }
 
+// ── Category → Icon mapping ──────────────────────────────────────────────────
+
+const CATEGORY_ICONS: Record<string, string> = {
+  FOOD: 'Utensils',
+  DINING: 'Utensils',
+  FUEL: 'Fuel',
+  ECOMMERCE: 'ShoppingBag',
+  TRAVEL: 'Plane',
+  GROCERY: 'ShoppingCart',
+};
+
+function iconForCategory(cat: string): string {
+  return CATEGORY_ICONS[cat] || 'Tag';
+}
+
+// ── Urgency order ─────────────────────────────────────────────────────────────
+
+const URGENCY_ORDER: Record<string, number> = {
+  HIGH: 0,
+  ELEVATED: 1,
+  MODERATE: 2,
+  LOW: 3,
+};
+
+// ── Dashboard Screen ──────────────────────────────────────────────────────────
+
 export default function DashboardScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isFormSheetVisible, setFormSheetVisible] = useState(false);
-  const [quickStartData, setQuickStartData] = useState<{ merchant_name: string; amount: string } | null>(null);
+  const [quickStartData, setQuickStartData] = useState<{
+    merchant_name: string;
+    amount: string;
+  } | null>(null);
   const [isRefreshing, setRefreshing] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
 
-  // Check reduced motion preference
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
   }, []);
 
-  // Load existing intelligence data
   const now = new Date();
   const {
     data: monthlySummary,
     isLoading: statsLoading,
     error: statsError,
   } = useMonthlyIntelligence(now.getFullYear(), now.getMonth() + 1);
-  const {
-    primaryInsight,
-    isLoading: insightsLoading,
-  } = useSpendInsights();
+  const { primaryInsight, isLoading: insightsLoading } = useSpendInsights();
   const { data: cardsData } = useCards();
 
   const isLoading = statsLoading || insightsLoading;
-  const hasStats = monthlySummary && (monthlySummary.total_rewards_optimized > 0 || monthlySummary.optimization_rate > 0);
+  const hasStats =
+    monthlySummary &&
+    (monthlySummary.total_rewards_optimized > 0 ||
+      monthlySummary.optimization_rate > 0);
 
-  // ── Fee Waiver Alerts ────────────────────────────────────────────────────────
+  // ── Fee Waiver Alerts ──────────────────────────────────────────────────
   const feeWaiverAlerts = (cardsData || [])
-    .filter(c => c.effective_fee_waiver_threshold && c.effective_fee_waiver_threshold > 0 && !c.waiver_achieved)
-    .sort((a, b) => {
-      const urgencyOrder: Record<string, number> = { HIGH: 0, ELEVATED: 1, MODERATE: 2, LOW: 3 };
-      return (urgencyOrder[a.urgency_level || 'LOW'] ?? 3) - (urgencyOrder[b.urgency_level || 'LOW'] ?? 3);
-    })
+    .filter(
+      (c) =>
+        c.effective_fee_waiver_threshold &&
+        c.effective_fee_waiver_threshold > 0 &&
+        !c.waiver_achieved,
+    )
+    .sort(
+      (a, b) =>
+        (URGENCY_ORDER[a.urgency_level || 'LOW'] ?? 3) -
+        (URGENCY_ORDER[b.urgency_level || 'LOW'] ?? 3),
+    )
     .slice(0, 3);
 
-  // ── Best Card Pairings (Cheat Sheet) ─────────────────────────────────────────
+  // ── Best Card Pairings ─────────────────────────────────────────────────
   const { data: transactionsPages } = useTransactions();
-  const bestPairings: { category: string; cardName: string; txCount: number }[] = (() => {
+  const bestPairings: {
+    category: string;
+    cardName: string;
+    txCount: number;
+  }[] = (() => {
     if (!transactionsPages || !cardsData) return [];
-    const allTxs = transactionsPages.pages.flatMap(p => p.data);
+    const allTxs = transactionsPages.pages.flatMap((p) => p.data);
     if (!allTxs.length) return [];
-    const cardMap = new Map(cardsData.map(c => [c.id, c.card_details?.card_name || 'Unknown Card']));
+    const cardMap = new Map(
+      cardsData.map((c) => [c.id, c.card_details?.card_name || 'Unknown Card']),
+    );
     const categoryStats: Record<string, Record<string, number>> = {};
     allTxs.forEach((tx) => {
       if (!tx.category || !tx.user_card_id || tx.category === 'UNKNOWN') return;
@@ -90,31 +131,42 @@ export default function DashboardScreen() {
       const cardName = cardMap.get(tx.user_card_id);
       if (!cardName) return;
       if (!categoryStats[cat]) categoryStats[cat] = {};
-      categoryStats[cat][cardName] = (categoryStats[cat][cardName] || 0) + 1;
+      categoryStats[cat][cardName] =
+        (categoryStats[cat][cardName] || 0) + 1;
     });
     return Object.entries(categoryStats)
       .flatMap(([category, cardCounts]) => {
-        const best = Object.entries(cardCounts).sort((a, b) => b[1] - a[1])[0];
-        return best ? [{ category, cardName: best[0], txCount: best[1] }] : [];
+        const best = Object.entries(cardCounts).sort(
+          (a, b) => b[1] - a[1],
+        )[0];
+        return best
+          ? [{ category, cardName: best[0], txCount: best[1] }]
+          : [];
       })
       .sort((a, b) => b.txCount - a.txCount)
       .slice(0, 5);
   })();
 
-  // ── Pull-to-refresh ──────────────────────────────────────────────────────────
+  // ── Pull-to-refresh ────────────────────────────────────────────────────
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: QueryKeys.monthlyIntelligence.summary(now.getFullYear(), now.getMonth() + 1) }),
-        queryClient.invalidateQueries({ queryKey: QueryKeys.insights.all }),
+        queryClient.invalidateQueries({
+          queryKey: QueryKeys.monthlyIntelligence.summary(
+            now.getFullYear(),
+            now.getMonth() + 1,
+          ),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: QueryKeys.insights.all,
+        }),
       ]);
     } finally {
       setRefreshing(false);
     }
   };
 
-  // ── Animation helper: instant fade when reduced motion, springified otherwise
   const maybeAnimated = (delay: number) =>
     reduceMotion
       ? FadeInDown.delay(delay).duration(0)
@@ -134,18 +186,21 @@ export default function DashboardScreen() {
           />
         }
       >
-        {/* ── Header ──────────────────────────────────────────────────────── */}
+        {/* ── Header ────────────────────────────────────────────────────── */}
         <Animated.View entering={maybeAnimated(50)} style={styles.header}>
-          <Text style={[styles.heroText, { color: colors.textPrimary }]}>
+          <Text style={[styles.greeting, { color: colors.textSecondary }]}>
             {getGreeting()}
           </Text>
-          <Text style={[styles.subText, { color: colors.textSecondary }]}>
-            Your proactive financial assistant.
+          <Text style={[styles.heroLine, { color: colors.textPrimary }]}>
+            Here's how your cards are doing.
           </Text>
 
+          {/* Monthly Intelligence — lightweight text link, not a card */}
           <TouchableOpacity
-            style={[styles.intelligenceBanner, { backgroundColor: colors.primarySoft, borderColor: colors.border }]}
-            activeOpacity={0.8}
+            style={styles.intelRow}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Monthly Intelligence"
             onPress={() => {
               Sentry.addBreadcrumb({
                 category: 'navigation',
@@ -154,55 +209,77 @@ export default function DashboardScreen() {
               router.push('/monthly-intelligence');
             }}
           >
-            <View style={[styles.intelligenceIconWrap, { backgroundColor: colors.surfaceElevated }]}>
-              <DynamicIcon name="Sparkles" size={20} color={colors.primary} />
-            </View>
-            <View style={styles.intelligenceBannerText}>
-              <Text style={[styles.intelligenceBannerTitle, { color: colors.textPrimary }]}>
-                Monthly Intelligence
-              </Text>
-              <Text style={[styles.intelligenceBannerSub, { color: colors.textSecondary }]}>
-                Tap to view your detailed portfolio analysis
-              </Text>
-            </View>
-            <DynamicIcon name="ChevronRight" size={20} color={colors.textSecondary} />
+            <DynamicIcon
+              name="Sparkles"
+              size={14}
+              color={colors.primary}
+              strokeWidth={2}
+            />
+            <Text style={[styles.intelLabel, { color: colors.primary }]}>
+              Monthly Intelligence
+            </Text>
+            <DynamicIcon
+              name="ChevronRight"
+              size={14}
+              color={colors.primary}
+              strokeWidth={2}
+            />
           </TouchableOpacity>
         </Animated.View>
 
-        {/* ── Error Banner ────────────────────────────────────────────────── */}
-        {statsError && !isLoading && (
+        {/* ── Error Banner ──────────────────────────────────────────────── */}
+        {statsError && !isLoading ? (
           <ErrorBanner
             message="Unable to load dashboard data. Check your connection and try again."
             variant="error"
             onRetry={handleRefresh}
             onDismiss={() => {}}
           />
-        )}
+        ) : null}
 
-        {/* ── Loading Skeleton ────────────────────────────────────────────── */}
-        {isLoading && (
+        {/* ── Loading Skeleton ──────────────────────────────────────────── */}
+        {isLoading ? (
           <View style={styles.skeletonContainer}>
-            {/* Stat cards row */}
+            <SkeletonBox
+              height={14}
+              width="55%"
+              borderRadius={6}
+              style={{ marginBottom: 10 }}
+            />
+            <SkeletonBox
+              height={36}
+              width="40%"
+              borderRadius={8}
+              style={{ marginBottom: 20 }}
+            />
             <View style={styles.statsRow}>
-              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View
+                style={[
+                  styles.statCard,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
                 <SkeletonBox height={12} width="60%" borderRadius={6} />
                 <View style={{ height: 12 }} />
                 <SkeletonBox height={28} width="40%" borderRadius={8} />
               </View>
-              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View
+                style={[
+                  styles.statCard,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
                 <SkeletonBox height={12} width="50%" borderRadius={6} />
                 <View style={{ height: 12 }} />
                 <SkeletonBox height={28} width="50%" borderRadius={8} />
               </View>
             </View>
-            {/* Best Category skeleton */}
-            <View style={[styles.fullWidthCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <SkeletonBox height={14} width="40%" borderRadius={6} />
-              <View style={{ height: 8 }} />
-              <SkeletonBox height={20} width="30%" borderRadius={8} />
-            </View>
-            {/* Insight card skeleton */}
-            <View style={[styles.insightCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.insightCard,
+                { backgroundColor: colors.surface, marginTop: 16 },
+              ]}
+            >
               <SkeletonBox height={12} width="35%" borderRadius={6} />
               <View style={{ height: 16 }} />
               <SkeletonBox height={16} width="90%" borderRadius={8} />
@@ -210,10 +287,10 @@ export default function DashboardScreen() {
               <SkeletonBox height={12} width="70%" borderRadius={6} />
             </View>
           </View>
-        )}
+        ) : null}
 
-        {/* ── Empty Dashboard State ───────────────────────────────────────── */}
-        {!isLoading && !hasStats && !primaryInsight && (
+        {/* ── Empty Dashboard State ─────────────────────────────────────── */}
+        {!isLoading && !hasStats && !primaryInsight ? (
           <EmptyDashboardState
             onAddCard={() => router.push('/cards')}
             onAddTransaction={() => {
@@ -221,47 +298,83 @@ export default function DashboardScreen() {
               setFormSheetVisible(true);
             }}
             onQuickStart={(merchant, amount) => {
-              setQuickStartData({ merchant_name: merchant, amount: String(amount) });
+              setQuickStartData({
+                merchant_name: merchant,
+                amount: String(amount),
+              });
               setFormSheetVisible(true);
             }}
           />
-        )}
+        ) : null}
 
-        {/* ── Intelligence Cards Section ──────────────────────────────────── */}
-        {!isLoading && hasStats && (
-          <Animated.View entering={maybeAnimated(100)} style={styles.statsContainer}>
-            <View style={styles.statsRow}>
-              {/* Optimization Score */}
-              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={styles.statHeader}>
-                  <DynamicIcon name="Trophy" size={16} color={colors.warning} />
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Reward Efficiency</Text>
-                </View>
-                <AnimatedNumber
-                  value={monthlySummary?.optimization_rate || 0}
-                  suffix="%"
-                  style={[styles.statValue, { color: colors.textPrimary }]}
+        {/* ── Stats Section ─────────────────────────────────────────────── */}
+        {!isLoading && hasStats ? (
+          <Animated.View
+            entering={maybeAnimated(100)}
+            style={styles.statsContainer}
+          >
+            {/* Reward Efficiency */}
+            <View
+              style={[
+                styles.statCard,
+                styles.statCardWide,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <View style={styles.statHeader}>
+                <DynamicIcon
+                  name="Trophy"
+                  size={15}
+                  color={colors.warning}
+                  strokeWidth={2}
                 />
+                <Text
+                  style={[styles.statLabel, { color: colors.textSecondary }]}
+                >
+                  Reward Efficiency
+                </Text>
               </View>
-
-              {/* Monthly Rewards (Hero Bento) */}
-              <View style={[styles.statCard, { backgroundColor: colors.successSoft, borderColor: colors.success + '30' }]}>
-                <View style={styles.statHeader}>
-                  <DynamicIcon name="TrendingUp" size={16} color={colors.success} />
-                  <Text style={[styles.statLabel, { color: colors.textPrimary }]}>Rewards</Text>
-                </View>
-                <AnimatedNumber
-                  value={monthlySummary?.total_rewards_optimized || 0}
-                  prefix="₹"
-                  style={[styles.statValue, { color: colors.success }]}
-                />
-              </View>
+              <AnimatedNumber
+                value={monthlySummary?.optimization_rate || 0}
+                suffix="%"
+                style={[styles.statValue, { color: colors.textPrimary }]}
+              />
             </View>
 
-            {/* Best Category card — now interactive */}
-            {!!monthlySummary?.strongest_category && (
+            {/* Rewards earned — tinted background, no border */}
+            <View
+              style={[
+                styles.statCard,
+                styles.statCardWide,
+                {
+                  backgroundColor: colors.successSoft,
+                },
+              ]}
+            >
+              <View style={styles.statHeader}>
+                <DynamicIcon
+                  name="TrendingUp"
+                  size={15}
+                  color={colors.success}
+                  strokeWidth={2}
+                />
+                <Text style={[styles.statLabel, { color: colors.success }]}>
+                  Rewards this month
+                </Text>
+              </View>
+              <AnimatedNumber
+                value={monthlySummary?.total_rewards_optimized || 0}
+                prefix="₹"
+                style={[styles.statValueLarge, { color: colors.success }]}
+              />
+            </View>
+
+            {/* Best Category */}
+            {monthlySummary?.strongest_category ? (
               <TouchableOpacity
-                activeOpacity={0.8}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`Best category: ${monthlySummary.strongest_category}`}
                 onPress={() => {
                   Sentry.addBreadcrumb({
                     category: 'navigation',
@@ -270,65 +383,130 @@ export default function DashboardScreen() {
                   router.push('/monthly-intelligence');
                 }}
               >
-                <View style={[styles.fullWidthCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <View style={styles.fullWidthRow}>
-                    <Text style={[styles.fullWidthLabel, { color: colors.textSecondary }]}>Best Category</Text>
-                    <View style={styles.fullWidthValueRow}>
-                      <Text style={[styles.fullWidthValue, { color: colors.success, backgroundColor: colors.successSoft }]}>
-                        {monthlySummary.strongest_category}
-                      </Text>
-                      <DynamicIcon name="ChevronRight" size={16} color={colors.textSecondary} />
-                    </View>
+                <View
+                  style={[
+                    styles.bestCatRow,
+                    { backgroundColor: colors.surface },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.bestCatLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Best category
+                  </Text>
+                  <View style={styles.bestCatRight}>
+                    <Text
+                      style={[
+                        styles.bestCatPill,
+                        {
+                          color: colors.success,
+                          backgroundColor: colors.successSoft,
+                        },
+                      ]}
+                    >
+                      {monthlySummary.strongest_category}
+                    </Text>
+                    <DynamicIcon
+                      name="ChevronRight"
+                      size={14}
+                      color={colors.textMuted}
+                      strokeWidth={2}
+                    />
                   </View>
                 </View>
               </TouchableOpacity>
-            )}
+            ) : null}
           </Animated.View>
-        )}
+        ) : null}
 
-        {/* ── Primary Action: Add Transaction / Add First Card ──────────────── */}
-        {cardsData && cardsData.length > 0 && (
+        {/* ── Primary Action ────────────────────────────────────────────── */}
+        {cardsData && cardsData.length > 0 ? (
           <Animated.View
             entering={maybeAnimated(120)}
             style={styles.actionContainer}
           >
             <TouchableOpacity
-              style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
+              style={[
+                styles.primaryActionBtn,
+                { backgroundColor: colors.primary },
+              ]}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Add transaction"
               onPress={() => {
                 setQuickStartData(null);
                 setFormSheetVisible(true);
               }}
             >
-              <DynamicIcon name="Plus" size={24} color="#FFF" strokeWidth={2.5} />
+              <DynamicIcon
+                name="Plus"
+                size={22}
+                color="#FFF"
+                strokeWidth={2.5}
+              />
               <Text style={styles.primaryActionText}>Add Transaction</Text>
             </TouchableOpacity>
             <Text style={[styles.actionHint, { color: colors.textSecondary }]}>
-              Get instant, live recommendations based on your portfolio.
+              Get instant recommendations based on your portfolio.
             </Text>
           </Animated.View>
-        )}
-        {cardsData && cardsData.length === 0 && (
+        ) : null}
+
+        {/* ── Add First Card prompt ─────────────────────────────────────── */}
+        {cardsData && cardsData.length === 0 ? (
           <Animated.View
             entering={maybeAnimated(120)}
             style={styles.actionContainer}
           >
-            <View style={[styles.addCardCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={[styles.addCardIconWrap, { backgroundColor: colors.primarySoft }]}>
-                <DynamicIcon name="CreditCard" size={28} color={colors.primary} strokeWidth={1.5} />
+            <View
+              style={[
+                styles.addCardCard,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <View
+                style={[
+                  styles.addCardIconWrap,
+                  { backgroundColor: colors.primarySoft },
+                ]}
+              >
+                <DynamicIcon
+                  name="CreditCard"
+                  size={28}
+                  color={colors.primary}
+                  strokeWidth={1.5}
+                />
               </View>
-              <Text style={[styles.addCardTitle, { color: colors.textPrimary }]}>
+              <Text
+                style={[styles.addCardTitle, { color: colors.textPrimary }]}
+              >
                 Add your first card
               </Text>
-              <Text style={[styles.addCardBody, { color: colors.textSecondary }]}>
-                Connect your credit cards to unlock AI-powered reward optimization and real-time recommendations.
+              <Text
+                style={[styles.addCardBody, { color: colors.textSecondary }]}
+              >
+                Connect your credit cards to unlock reward optimization and
+                real-time recommendations.
               </Text>
               <TouchableOpacity
-                style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
+                style={[
+                  styles.primaryActionBtn,
+                  { backgroundColor: colors.primary },
+                ]}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Add a card"
                 onPress={() => router.push('/cards')}
               >
-                <DynamicIcon name="Plus" size={24} color="#FFF" strokeWidth={2.5} />
+                <DynamicIcon
+                  name="Plus"
+                  size={22}
+                  color="#FFF"
+                  strokeWidth={2.5}
+                />
                 <Text style={styles.primaryActionText}>Add a Card</Text>
               </TouchableOpacity>
             </View>
@@ -336,143 +514,232 @@ export default function DashboardScreen() {
               We support 60+ Indian credit cards across 14 banks.
             </Text>
           </Animated.View>
-        )}
+        ) : null}
 
-        {/* ── Fee Waiver Alerts ────────────────────────────────────────────── */}
-        {!isLoading && feeWaiverAlerts.length > 0 && (
-          <Animated.View entering={maybeAnimated(130)} style={{ marginBottom: 28 }}>
-            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>FEE WAIVER ALERTS</Text>
-            <View style={{ gap: 8 }}>
+        {/* ── Fee Waiver Alerts ──────────────────────────────────────────── */}
+        {!isLoading && feeWaiverAlerts.length > 0 ? (
+          <Animated.View entering={maybeAnimated(130)} style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
+              Fee waiver alerts
+            </Text>
+            <View style={styles.alertList}>
               {feeWaiverAlerts.map((card) => {
-                const isUrgent = card.urgency_level === 'HIGH' || card.urgency_level === 'ELEVATED';
-                const urgencyColor = isUrgent ? colors.warning : colors.textSecondary;
-                const cardName = card.card_details?.card_name || 'Unknown Card';
+                const isUrgent =
+                  card.urgency_level === 'HIGH' ||
+                  card.urgency_level === 'ELEVATED';
+                const urgencyColor = isUrgent
+                  ? colors.warning
+                  : colors.textSecondary;
+                const cardName =
+                  card.card_details?.card_name || 'Unknown Card';
                 const remaining = card.remaining_spend_for_waiver || 0;
-                const monthsLeft = card.days_until_renewal ? Math.max(1, Math.round(card.days_until_renewal / 30)) : null;
-                const monthlyTarget = monthsLeft ? Math.round(remaining / monthsLeft) : null;
+                const monthsLeft = card.days_until_renewal
+                  ? Math.max(1, Math.round(card.days_until_renewal / 30))
+                  : null;
+                const monthlyTarget = monthsLeft
+                  ? Math.round(remaining / monthsLeft)
+                  : null;
 
                 return (
                   <TouchableOpacity
                     key={card.id}
-                    activeOpacity={0.8}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${cardName}: ₹${remaining.toLocaleString('en-IN')} remaining for fee waiver`}
                     onPress={() => router.push('/cards')}
                     style={[
-                      styles.statCard,
+                      styles.alertCard,
                       {
-                        backgroundColor: isUrgent ? colors.warning + '0A' : colors.surface,
-                        borderColor: isUrgent ? colors.warning + '30' : colors.border,
-                        borderLeftWidth: 3,
+                        backgroundColor: isUrgent
+                          ? colors.warning + '0A'
+                          : colors.surface,
                         borderLeftColor: urgencyColor,
                       },
                     ]}
                   >
-                    <View style={styles.statHeader}>
+                    <View style={styles.alertHeader}>
                       <DynamicIcon
                         name={isUrgent ? 'AlertTriangle' : 'Clock'}
-                        size={16}
+                        size={15}
                         color={urgencyColor}
+                        strokeWidth={2}
                       />
-                      <Text style={[styles.statLabel, { color: colors.textPrimary, flex: 1 }]} numberOfLines={1}>
+                      <Text
+                        style={[
+                          styles.alertCardName,
+                          { color: colors.textPrimary },
+                        ]}
+                        numberOfLines={1}
+                      >
                         {cardName}
                       </Text>
                     </View>
-                    <Text style={[styles.feeWaiverBody, { color: colors.textSecondary }]}>
-                      ₹{remaining.toLocaleString('en-IN')} more to waive ₹{(card.effective_fee_waiver_threshold || 0).toLocaleString('en-IN')} fee
+                    <Text
+                      style={[
+                        styles.alertBody,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      ₹{remaining.toLocaleString('en-IN')} more to waive ₹
+                      {(
+                        card.effective_fee_waiver_threshold || 0
+                      ).toLocaleString('en-IN')}{' '}
+                      fee
                     </Text>
-                    {monthsLeft && monthlyTarget && (
-                      <Text style={[styles.feeWaiverHint, { color: colors.textMuted }]}>
-                        {monthsLeft} month{monthsLeft > 1 ? 's' : ''} remaining · Spend ₹{monthlyTarget.toLocaleString('en-IN')}/month
+                    {monthsLeft && monthlyTarget ? (
+                      <Text
+                        style={[
+                          styles.alertHint,
+                          { color: colors.textMuted },
+                        ]}
+                      >
+                        {monthsLeft} month{monthsLeft > 1 ? 's' : ''}{' '}
+                        remaining · ₹{monthlyTarget.toLocaleString('en-IN')}
+                        /month
                       </Text>
-                    )}
+                    ) : null}
                   </TouchableOpacity>
                 );
               })}
             </View>
           </Animated.View>
-        )}
+        ) : null}
 
-        {/* ── Best Card Pairings (Cheat Sheet) ────────────────────────────── */}
-        {!isLoading && bestPairings.length > 0 && (
-          <Animated.View entering={maybeAnimated(140)} style={{ marginBottom: 28 }}>
-            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>YOUR BEST PAIRINGS</Text>
-            <View style={[styles.fullWidthCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {/* ── Best Card Pairings ─────────────────────────────────────────── */}
+        {!isLoading && bestPairings.length > 0 ? (
+          <Animated.View entering={maybeAnimated(140)} style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
+              Your best pairings
+            </Text>
+            <View
+              style={[styles.pairingsCard, { backgroundColor: colors.surface }]}
+            >
               {bestPairings.map((pairing, idx) => (
                 <View
                   key={pairing.category}
                   style={[
                     styles.pairingRow,
-                    idx < bestPairings.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingBottom: 10, marginBottom: 10 },
+                    idx < bestPairings.length - 1 && {
+                      borderBottomWidth: StyleSheet.hairlineWidth,
+                      borderBottomColor: colors.border,
+                      paddingBottom: 10,
+                      marginBottom: 10,
+                    },
                   ]}
                 >
                   <DynamicIcon
-                    name={pairing.category === 'FOOD' || pairing.category === 'DINING' ? 'Utensils' : pairing.category === 'FUEL' ? 'Fuel' : pairing.category === 'ECOMMERCE' ? 'ShoppingBag' : pairing.category === 'TRAVEL' ? 'Plane' : pairing.category === 'GROCERY' ? 'ShoppingCart' : 'Tag'}
-                    size={16}
+                    name={iconForCategory(pairing.category)}
+                    size={15}
                     color={colors.textSecondary}
+                    strokeWidth={1.5}
                   />
-                  <Text style={[styles.pairingCategory, { color: colors.textPrimary }]}>
-                    {pairing.category.charAt(0) + pairing.category.slice(1).toLowerCase()}
+                  <Text
+                    style={[
+                      styles.pairingCategory,
+                      { color: colors.textPrimary },
+                    ]}
+                  >
+                    {pairing.category.charAt(0) +
+                      pairing.category.slice(1).toLowerCase()}
                   </Text>
-                  <DynamicIcon name="ArrowRight" size={14} color={colors.textMuted} />
-                  <Text style={[styles.pairingCard, { color: colors.primary }]} numberOfLines={1}>
+                  <DynamicIcon
+                    name="ArrowRight"
+                    size={13}
+                    color={colors.textMuted}
+                    strokeWidth={2}
+                  />
+                  <Text
+                    style={[styles.pairingCard, { color: colors.primary }]}
+                    numberOfLines={1}
+                  >
                     {pairing.cardName}
                   </Text>
                 </View>
               ))}
             </View>
           </Animated.View>
-        )}
+        ) : null}
 
-        {/* ── Recent Recommendation Section ──────────────────────────────── */}
-        {!isLoading && primaryInsight && (
+        {/* ── Recent Recommendation ──────────────────────────────────────── */}
+        {!isLoading && primaryInsight ? (
           <Animated.View
             entering={maybeAnimated(150)}
-            style={styles.insightSection}
+            style={styles.section}
           >
-            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>RECENT RECOMMENDATION</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
+              Recent recommendation
+            </Text>
             <TouchableOpacity
-              activeOpacity={0.8}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={primaryInsight.title}
               style={[
                 styles.insightCard,
                 {
                   backgroundColor: primaryInsight.badge_color + '0A',
-                  borderColor: colors.border,
-                  borderLeftWidth: 4,
                   borderLeftColor: primaryInsight.badge_color,
                 },
               ]}
             >
               <View style={styles.insightHeader}>
                 <View style={styles.insightHeaderLeft}>
-                  <DynamicIcon name="Lightbulb" size={18} color={primaryInsight.badge_color} />
-                  <View style={[styles.insightBadge, { backgroundColor: primaryInsight.badge_color + '15' }]}>
-                    <Text style={[styles.insightBadgeText, { color: primaryInsight.badge_color }]}>
+                  <DynamicIcon
+                    name="Lightbulb"
+                    size={16}
+                    color={primaryInsight.badge_color}
+                    strokeWidth={2}
+                  />
+                  <View
+                    style={[
+                      styles.insightBadge,
+                      {
+                        backgroundColor: primaryInsight.badge_color + '15',
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.insightBadgeText,
+                        { color: primaryInsight.badge_color },
+                      ]}
+                    >
                       {primaryInsight.badge_label}
                     </Text>
                   </View>
                 </View>
-                <DynamicIcon name="ChevronRight" size={18} color={colors.textSecondary} />
+                <DynamicIcon
+                  name="ChevronRight"
+                  size={16}
+                  color={colors.textMuted}
+                  strokeWidth={2}
+                />
               </View>
-              <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>
+              <Text
+                style={[styles.insightTitle, { color: colors.textPrimary }]}
+              >
                 {primaryInsight.title}
               </Text>
-              <Text style={[styles.insightSummary, { color: colors.textSecondary }]}>
+              <Text
+                style={[
+                  styles.insightSummary,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 {primaryInsight.summary}
               </Text>
             </TouchableOpacity>
           </Animated.View>
-        )}
+        ) : null}
       </ScrollView>
 
       <TransactionFormSheet
         visible={isFormSheetVisible}
         onClose={() => {
           setFormSheetVisible(false);
-          // Small delay before clearing to prevent UI jump during sheet closing animation
           setTimeout(() => setQuickStartData(null), 300);
         }}
         onSuccess={() => {
-          showToast('Transaction logged successfully');
-          // Refresh dashboard data to reflect the new transaction
+          showToast('Transaction logged');
           setTimeout(() => {
             handleRefresh();
           }, 600);
@@ -483,59 +750,48 @@ export default function DashboardScreen() {
   );
 }
 
+// ── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 120 },
+
+  // ── Header ────────────────────────────────────────────────────────────
   header: {
-    marginBottom: 32,
+    marginBottom: 28,
+    paddingTop: 4,
   },
-  heroText: {
-    fontSize: tokens.fontSize.title * 1.5,
-    fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.tight,
-    marginBottom: 6,
-  },
-  subText: {
-    fontSize: tokens.fontSize.body,
+  greeting: {
+    fontSize: tokens.fontSize.bodyLg,
     fontWeight: tokens.fontWeight.medium,
+    marginBottom: 4,
   },
-  intelligenceBanner: {
+  heroLine: {
+    fontSize: 28,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: -0.8,
+    lineHeight: 34,
+    marginBottom: 16,
+  },
+  intelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    marginTop: 24,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: tokens.radius.card,
-    borderWidth: 1,
+    gap: 6,
+    paddingVertical: 6,
   },
-  intelligenceIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  intelligenceBannerText: {
-    flex: 1,
-    gap: 2,
-  },
-  intelligenceBannerTitle: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.bold,
-  },
-  intelligenceBannerSub: {
-    fontSize: tokens.fontSize.caption,
+  intelLabel: {
+    fontSize: tokens.fontSize.bodySm,
+    fontWeight: tokens.fontWeight.semibold,
   },
 
-  // ── Skeleton ─────────────────────────────────────────────────────────────
+  // ── Skeleton ──────────────────────────────────────────────────────────
   skeletonContainer: {
-    gap: 12,
+    gap: 0,
   },
 
-  // ── Stats ────────────────────────────────────────────────────────────────
+  // ── Stats ─────────────────────────────────────────────────────────────
   statsContainer: {
-    marginBottom: 28,
-    gap: 12,
+    marginBottom: 8,
+    gap: 10,
   },
   statsRow: {
     flexDirection: 'row',
@@ -543,76 +799,83 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    padding: 16,
+    padding: 18,
     borderRadius: tokens.radius.card,
-    borderWidth: 1,
+  },
+  statCardWide: {
+    flex: undefined,
+    width: '100%',
   },
   statHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
+    gap: 7,
+    marginBottom: 10,
   },
   statLabel: {
     fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.bold,
+    fontWeight: tokens.fontWeight.semibold,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
   statValue: {
-    fontSize: tokens.fontSize.headline,
+    fontSize: 30,
     fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.tight,
+    letterSpacing: -1,
   },
-  fullWidthCard: {
-    padding: 16,
-    borderRadius: tokens.radius.card,
-    borderWidth: 1,
+  statValueLarge: {
+    fontSize: 38,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: -1.5,
   },
-  fullWidthRow: {
+
+  // ── Best Category ─────────────────────────────────────────────────────
+  bestCatRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 16,
+    borderRadius: tokens.radius.card,
   },
-  fullWidthLabel: {
+  bestCatLabel: {
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.semibold,
   },
-  fullWidthValueRow: {
+  bestCatRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  fullWidthValue: {
+  bestCatPill: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: tokens.radius.full,
     textTransform: 'capitalize',
   },
 
-  // ── Insight ──────────────────────────────────────────────────────────────
-  insightSection: {
+  // ── Insight ───────────────────────────────────────────────────────────
+  section: {
     marginBottom: 28,
   },
   sectionTitle: {
     fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.widest,
-    marginBottom: 12,
-    marginLeft: 4,
+    fontWeight: tokens.fontWeight.semibold,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 10,
   },
   insightCard: {
-    padding: 20,
+    padding: 18,
     borderRadius: tokens.radius.card,
-    borderWidth: 1,
+    borderLeftWidth: 3,
   },
   insightHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   insightHeaderLeft: {
     flexDirection: 'row',
@@ -621,7 +884,7 @@ const styles = StyleSheet.create({
   },
   insightBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 4,
   },
   insightBadgeText: {
@@ -631,45 +894,48 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   insightTitle: {
-    fontSize: tokens.fontSize.bodyLg,
+    fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   insightSummary: {
-    fontSize: tokens.fontSize.body,
-    lineHeight: 20,
+    fontSize: tokens.fontSize.bodySm,
+    lineHeight: 19,
   },
 
-  // ── Best Pairings ──────────────────────────────────────────────────────
+  // ── Pairings ──────────────────────────────────────────────────────────
+  pairingsCard: {
+    borderRadius: tokens.radius.card,
+    padding: 14,
+  },
   pairingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
   pairingCategory: {
-    fontSize: tokens.fontSize.body,
+    fontSize: tokens.fontSize.bodySm,
     fontWeight: tokens.fontWeight.semibold,
     flex: 1,
   },
   pairingCard: {
-    fontSize: tokens.fontSize.body,
+    fontSize: tokens.fontSize.bodySm,
     fontWeight: tokens.fontWeight.semibold,
     maxWidth: '50%',
   },
 
-  // ── Add Card Prompt ────────────────────────────────────────────────────
+  // ── Add Card Prompt ───────────────────────────────────────────────────
   addCardCard: {
-    padding: 24,
+    padding: 28,
     borderRadius: tokens.radius.card,
-    borderWidth: 1,
     alignItems: 'center',
     marginBottom: 16,
     width: '100%',
   },
   addCardIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -677,7 +943,7 @@ const styles = StyleSheet.create({
   addCardTitle: {
     fontSize: tokens.fontSize.title,
     fontWeight: tokens.fontWeight.bold,
-    letterSpacing: tokens.letterSpacing.tight,
+    letterSpacing: -0.3,
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -689,30 +955,50 @@ const styles = StyleSheet.create({
     maxWidth: 290,
   },
 
-  // ── Fee Waiver ──────────────────────────────────────────────────────────
-  feeWaiverBody: {
-    fontSize: tokens.fontSize.body,
-    lineHeight: 20,
-    marginTop: 4,
+  // ── Fee Waiver Alerts ─────────────────────────────────────────────────
+  alertList: {
+    gap: 8,
   },
-  feeWaiverHint: {
+  alertCard: {
+    padding: 14,
+    borderRadius: tokens.radius.sm,
+    borderLeftWidth: 3,
+  },
+  alertHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  alertCardName: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.semibold,
+    flex: 1,
+  },
+  alertBody: {
+    fontSize: tokens.fontSize.bodySm,
+    lineHeight: 19,
+    marginLeft: 23,
+  },
+  alertHint: {
     fontSize: tokens.fontSize.caption,
-    marginTop: 4,
+    marginLeft: 23,
+    marginTop: 3,
   },
 
-  // ── CTA ─────────────────────────────────────────────────────────────────
+  // ── CTA ───────────────────────────────────────────────────────────────
   actionContainer: {
     alignItems: 'center',
-    marginTop: 8,
-    paddingVertical: 24,
+    paddingVertical: 12,
     paddingHorizontal: 16,
+    marginBottom: 4,
   },
   primaryActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 16,
+    gap: 10,
+    paddingVertical: 15,
     paddingHorizontal: 28,
     borderRadius: tokens.radius.full,
     width: '100%',
@@ -721,12 +1007,12 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: tokens.fontSize.bodyLg,
     fontWeight: tokens.fontWeight.bold,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   actionHint: {
-    marginTop: 16,
-    fontSize: tokens.fontSize.body,
+    marginTop: 14,
+    fontSize: tokens.fontSize.bodySm,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 20,
   },
 });

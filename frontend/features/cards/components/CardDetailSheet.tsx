@@ -142,7 +142,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
           text: "Remove", 
           style: "destructive",
           onPress: () => {
-            updateCard({ card_status: 'DELETED' });
+            updateCard({ card_status: 'CLOSED' });
             onClose();
           }
         }
@@ -214,7 +214,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
 
                 <View style={styles.heroFooter}>
                   <View>
-                    <Text style={styles.heroFeeLabel}>ANNUAL FEE</Text>
+                    <Text style={styles.heroFeeLabel}>Annual fee</Text>
                     <Text style={styles.heroFeeValue}>
                       {card.effective_annual_fee ? formatCurrencyIN(card.effective_annual_fee) : 'Free'}
                     </Text>
@@ -232,7 +232,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 <Animated.View entering={FadeInUp.duration(500).delay(100)} style={[{ width: '100%' }]}>
                   <TouchableOpacity activeOpacity={0.8} onPress={() => setIsSpendEditVisible(true)} style={bentoBoxStyle}>
                     <View style={styles.bentoHeader}>
-                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>FEE WAIVER PROGRESS</Text>
+                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>Fee waiver</Text>
                       <DynamicIcon name="Sparkles" size={14} color={colors.primary} />
                     </View>
                     
@@ -266,7 +266,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 <Animated.View entering={FadeInUp.duration(500).delay(150)} style={{ flex: 1 }}>
                   <TouchableOpacity activeOpacity={0.8} onPress={() => setIsAnnualFeeEditVisible(true)} style={[bentoBoxStyle, { height: 110, justifyContent: 'space-between' }]}>
                     <View style={styles.bentoHeader}>
-                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>ANNUAL FEE</Text>
+                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>Annual fee</Text>
                       <DynamicIcon name="Pencil" size={12} color={colors.textMuted} />
                     </View>
                     <View>
@@ -283,7 +283,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 <Animated.View entering={FadeInUp.duration(500).delay(200)} style={{ flex: 1 }}>
                   <TouchableOpacity activeOpacity={0.8} onPress={() => setIsFeeCycleEditVisible(true)} style={[bentoBoxStyle, { height: 110, justifyContent: 'space-between' }]}>
                     <View style={styles.bentoHeader}>
-                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>FEE CYCLE</Text>
+                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>Fee cycle</Text>
                       <DynamicIcon name="Calendar" size={12} color={colors.textMuted} />
                     </View>
                     <View>
@@ -305,7 +305,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 <Animated.View entering={FadeInUp.duration(500).delay(250)} style={[{ width: '100%' }]}>
                   <View style={bentoBoxStyle}>
                     <View style={styles.bentoHeader}>
-                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>MILESTONES</Text>
+                      <Text style={[styles.bentoTitle, { color: colors.textMuted }]}>Milestones</Text>
                       <DynamicIcon name="Trophy" size={14} color={colors.primary} />
                     </View>
                     
@@ -343,7 +343,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
               <Animated.View entering={FadeInUp.duration(500).delay(300)} style={[{ width: '100%' }]}>
                 <View style={[bentoBoxStyle, { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.05)' : 'rgba(139, 92, 246, 0.02)', borderColor: 'rgba(139, 92, 246, 0.2)' }]}>
                   <View style={styles.bentoHeader}>
-                    <Text style={[styles.bentoTitle, { color: '#8B5CF6' }]}>INTELLIGENCE</Text>
+                    <Text style={[styles.bentoTitle, { color: '#8B5CF6' }]}>Intelligence</Text>
                     <DynamicIcon name="BrainCircuit" size={14} color="#8B5CF6" />
                   </View>
                   

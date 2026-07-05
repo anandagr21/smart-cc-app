@@ -52,9 +52,8 @@ export const WalletCardSkeleton: React.FC = () => {
           key={i} 
           style={[
             styles.skeletonCard, 
-            { 
-              backgroundColor: colors.surface, 
-              borderColor: colors.border 
+            {
+              backgroundColor: colors.surface,
             }
           ]}
         >
@@ -84,7 +83,6 @@ const styles = StyleSheet.create({
   },
   skeletonCard: {
     borderRadius: tokens.radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
     marginBottom: 16,
     overflow: 'hidden',
     padding: 24,

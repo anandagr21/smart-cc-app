@@ -115,7 +115,7 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
         ) : (
           isActive && (
             <View style={styles.waiverWrap}>
-              <Text style={[styles.tagText, { color: colors.textMuted }]}>No waiver info</Text>
+              {/* No waiver threshold set — intentionally blank */}
             </View>
           )
         )}

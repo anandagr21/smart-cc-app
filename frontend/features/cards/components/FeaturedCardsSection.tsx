@@ -43,7 +43,7 @@ export const FeaturedCardsSection: React.FC<FeaturedCardsSectionProps> = ({ card
       <View style={styles.headerRow}>
         <View style={styles.titleWrap}>
           <DynamicIcon name="Sparkles" size={16} color={colors.primary} />
-          <Text style={[styles.titleText, { color: colors.textSecondary }]}>FEATURED FOR YOU</Text>
+          <Text style={[styles.titleText, { color: colors.textSecondary }]}>Featured for you</Text>
         </View>
       </View>
 

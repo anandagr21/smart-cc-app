@@ -1,26 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, AccessibilityInfo } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  AccessibilityInfo,
+  Platform,
+  TouchableOpacity,
+} from 'react-native';
 
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Button } from '@/components/ui/Button';
+import { CardStack } from '@/components/CreditCardIllustration';
 import { useGoogleAuth } from '@/features/auth/hooks/useGoogleAuth';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
-import Animated, {
-  FadeInDown,
-  FadeInUp,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withDelay,
-  withTiming,
-} from 'react-native-reanimated';
-import Svg, { Path, Rect, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
 // ── Google Logo SVG ──────────────────────────────────────────────────────────
 
-const GoogleIcon = ({ size = 20 }: { size?: number }) => (
+const GoogleIcon = React.memo(({ size = 20 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
     <Path
       fill="#4285F4"
@@ -39,100 +39,14 @@ const GoogleIcon = ({ size = 20 }: { size?: number }) => (
       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
     />
   </Svg>
-);
-
-// ── Animated Credit Card SVG ─────────────────────────────────────────────────
-
-const CARD_GRADIENTS = [
-  ['#4F36FF', '#6C5CE7'],
-  ['#F59E0B', '#D97706'],
-  ['#8B5CF6', '#7C3AED'],
-];
-
-const NETWORK_LABELS = ['VISA', 'MC', 'AMEX'];
-
-const AnimatedCard = ({
-  gradient,
-  networkLabel,
-  index,
-  reduceMotion,
-}: {
-  gradient: string[];
-  networkLabel: string;
-  index: number;
-  reduceMotion: boolean;
-}) => {
-  const translateY = useSharedValue(reduceMotion ? 0 : 80);
-  const opacity = useSharedValue(0);
-  const rotate = useSharedValue(reduceMotion ? 0 : (index - 1) * 8);
-
-  useEffect(() => {
-    const delay = 400 + index * 150;
-    if (reduceMotion) {
-      opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
-    } else {
-      translateY.value = withDelay(delay, withSpring(0, { damping: 14, stiffness: 100 }));
-      opacity.value = withDelay(delay, withTiming(1, { duration: 400 }));
-      rotate.value = withDelay(delay, withSpring((index - 1) * 6, { damping: 14, stiffness: 100 }));
-    }
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: translateY.value },
-      { rotate: `${rotate.value}deg` },
-    ],
-    opacity: opacity.value,
-  }));
-
-  return (
-    <Animated.View style={[styles.cardWrap, animatedStyle, { zIndex: 3 - index }]}>
-      <Svg width={200} height={120} viewBox="0 0 200 120">
-        <Defs>
-          <SvgLinearGradient id={`cardGrad-${index}`} x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor={gradient[0]} stopOpacity="1" />
-            <Stop offset="1" stopColor={gradient[1]} stopOpacity="1" />
-          </SvgLinearGradient>
-        </Defs>
-        {/* Card body */}
-        <Rect x="0" y="0" width="200" height="120" rx="12" fill={`url(#cardGrad-${index})`} opacity="0.15" />
-        <Rect x="0" y="0" width="200" height="120" rx="12" fill="none" stroke={gradient[0]} strokeOpacity="0.3" strokeWidth="1" />
-        {/* Chip */}
-        <Rect x="20" y="40" width="30" height="22" rx="4" fill={gradient[0]} opacity="0.5" />
-        {/* Network label */}
-        <Svg width="50" height="20" x="150" y="90" viewBox="0 0 50 20">
-          <Rect x="0" y="0" width="50" height="20" rx="3" fill={gradient[0]} opacity="0.3" />
-          <Path
-            d={`M${networkLabel === 'VISA' ? '10 14 L16 6 L22 14' : networkLabel === 'MC' ? '10 14 L25 14 M17.5 14 L17.5 6' : '10 14 L25 14 M17.5 10 L17.5 14'}`}
-            stroke="#fff"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-            opacity="0.6"
-          />
-        </Svg>
-        {/* Decorative lines */}
-        <Rect x="20" y="75" width="80" height="3" rx="1.5" fill="#fff" opacity="0.2" />
-        <Rect x="20" y="83" width="50" height="3" rx="1.5" fill="#fff" opacity="0.15" />
-      </Svg>
-    </Animated.View>
-  );
-};
-
-// ── Trust Badges ─────────────────────────────────────────────────────────────
-
-const TRUST_BADGES = [
-  { icon: 'Shield', label: 'No bank linking' },
-  { icon: 'Lock', label: 'Bank-grade encryption' },
-  { icon: 'Users', label: '2,000+ cardholders' },
-];
+));
 
 // ── Login Screen ─────────────────────────────────────────────────────────────
 
 export default function LoginScreen() {
   const colors = useThemeColors();
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const {
     signIn: googleSignIn,
     isLoading: isGoogleLoading,
@@ -143,88 +57,158 @@ export default function LoginScreen() {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
   }, []);
 
+  const handleSignIn = useCallback(() => {
+    googleSignIn();
+  }, [googleSignIn]);
+
   return (
     <ScreenContainer style={styles.screen}>
-      {/* Animated Card Illustration */}
-      <View style={styles.illustrationWrap}>
-        {CARD_GRADIENTS.map((gradient, i) => (
-          <AnimatedCard
-            key={i}
-            gradient={gradient}
-            networkLabel={NETWORK_LABELS[i]}
-            index={i}
-            reduceMotion={reduceMotion}
-          />
-        ))}
+      {/* ── Hero: Card Illustration ──────────────────────────────────────── */}
+      <View style={styles.heroArea}>
+        {/* Subtle radial backdrop behind cards */}
+        <View
+          pointerEvents="none"
+          style={[
+            styles.cardBackdrop,
+            { backgroundColor: colors.primarySoft, opacity: 0.5 },
+          ]}
+        />
+        <View style={styles.cardStack}>
+          <CardStack reduceMotion={reduceMotion} />
+        </View>
       </View>
 
-      {/* Logo + Brand */}
-      <Animated.View entering={reduceMotion ? FadeInDown.delay(50).duration(0) : FadeInDown.delay(50).springify()} style={styles.logoWrap}>
-        <View style={[styles.logoRing, { borderColor: colors.primary + '30' }]}>
-          <View style={[styles.logoInner, { backgroundColor: colors.primarySoft }]}>
-            <DynamicIcon name="Sparkles" size={28} color={colors.primary} strokeWidth={1.5} />
-          </View>
-        </View>
-        <Text style={[styles.brandName, { color: colors.textPrimary }]}>
+      {/* ── Brand ────────────────────────────────────────────────────────── */}
+      <Animated.View
+        entering={
+          reduceMotion
+            ? FadeInDown.delay(100).duration(0)
+            : FadeInDown.delay(400).springify()
+        }
+        style={styles.brandRow}
+      >
+        <View style={[styles.brandDot, { backgroundColor: colors.primary }]} />
+        <Text style={[styles.brandName, { color: colors.textSecondary }]}>
           Card Optimizer
         </Text>
       </Animated.View>
 
-      {/* Headline */}
-      <Animated.View entering={reduceMotion ? FadeInDown.delay(80).duration(0) : FadeInDown.delay(80).springify()} style={styles.headline}>
-        <Text style={[styles.heroText, { color: colors.textPrimary }]}>
-          Your cards,{'\n'}finally smart.
+      {/* ── Headline ─────────────────────────────────────────────────────── */}
+      <Animated.View
+        entering={
+          reduceMotion
+            ? FadeInDown.delay(120).duration(0)
+            : FadeInDown.delay(460).springify()
+        }
+      >
+        <Text style={[styles.headline, { color: colors.textPrimary }]}>
+          Your cards,{' '}
+          <Text style={{ color: colors.primary }}>smarter</Text>
+          {'.'}
         </Text>
       </Animated.View>
 
-      {/* Subheadline */}
-      <Animated.View entering={reduceMotion ? FadeInDown.delay(100).duration(0) : FadeInDown.delay(100).springify()} style={styles.subWrap}>
+      {/* ── Subheadline ──────────────────────────────────────────────────── */}
+      <Animated.View
+        entering={
+          reduceMotion
+            ? FadeInDown.delay(140).duration(0)
+            : FadeInDown.delay(520).springify()
+        }
+        style={styles.subWrap}
+      >
         <Text style={[styles.subText, { color: colors.textSecondary }]}>
-          AI-powered card tracking, fee waiver prediction, and reward maximization.
+          AI that tracks spending, predicts fee waivers, and finds rewards you're missing.
         </Text>
       </Animated.View>
 
-      {/* Google Sign-In CTA */}
-      <Animated.View entering={reduceMotion ? FadeInDown.delay(150).duration(0) : FadeInDown.delay(150).springify()} style={styles.ctaWrap}>
-        {googleError && (
-          <Animated.View entering={FadeInDown.duration(200)} style={[styles.errorBanner, { backgroundColor: colors.danger + '10', borderColor: colors.danger + '30' }]}>
+      {/* ── CTA ──────────────────────────────────────────────────────────── */}
+      <Animated.View
+        entering={
+          reduceMotion
+            ? FadeInDown.delay(170).duration(0)
+            : FadeInDown.delay(600).springify()
+        }
+        style={styles.ctaWrap}
+      >
+        {googleError ? (
+          <Animated.View
+            entering={FadeInDown.duration(200)}
+            style={[
+              styles.errorBanner,
+              {
+                backgroundColor: colors.dangerSoft,
+                borderColor: colors.danger + '30',
+              },
+            ]}
+          >
             <DynamicIcon name="AlertCircle" size={16} color={colors.danger} />
             <Text style={[styles.errorText, { color: colors.danger }]}>
               {googleError}
             </Text>
           </Animated.View>
-        )}
+        ) : null}
+
+        {/* Terms acceptance */}
+        <TouchableOpacity
+          style={styles.termsRow}
+          activeOpacity={0.7}
+          onPress={() => setTermsAccepted((prev) => !prev)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: termsAccepted }}
+          accessibilityLabel="Accept terms and conditions"
+        >
+          <View
+            style={[
+              styles.checkbox,
+              termsAccepted && { backgroundColor: colors.primary, borderColor: colors.primary },
+              !termsAccepted && { borderColor: colors.border },
+            ]}
+          >
+            {termsAccepted && (
+              <DynamicIcon name="Check" size={12} color="#FFF" strokeWidth={3} />
+            )}
+          </View>
+          <Text style={[styles.termsText, { color: colors.textSecondary }]}>
+            I agree to the{' '}
+            <Text style={{ color: colors.primary, fontWeight: tokens.fontWeight.semibold }}>
+              Terms
+            </Text>{' '}
+            and{' '}
+            <Text style={{ color: colors.primary, fontWeight: tokens.fontWeight.semibold }}>
+              Privacy Policy
+            </Text>
+          </Text>
+        </TouchableOpacity>
 
         <Button
-          label={isGoogleLoading ? 'Signing in...' : 'Sign in with Google'}
+          label={isGoogleLoading ? 'Signing in…' : 'Continue with Google'}
           variant="primary"
-          onPress={() => googleSignIn()}
+          onPress={handleSignIn}
           isLoading={isGoogleLoading}
-          disabled={isGoogleLoading}
+          disabled={isGoogleLoading || !termsAccepted}
           icon={<GoogleIcon size={20} />}
           style={styles.googleBtn}
         />
       </Animated.View>
 
-      {/* Trust badges */}
-      <Animated.View entering={reduceMotion ? FadeInDown.delay(200).duration(0) : FadeInDown.delay(200).springify()} style={styles.trustWrap}>
-        {TRUST_BADGES.map((badge) => (
-          <View key={badge.label} style={styles.trustBadge}>
-            <DynamicIcon name={badge.icon} size={14} color={colors.textMuted} strokeWidth={1.5} />
-            <Text style={[styles.trustLabel, { color: colors.textMuted }]}>
-              {badge.label}
-            </Text>
-          </View>
-        ))}
-      </Animated.View>
-
-      {/* Footer */}
-      <Animated.View entering={reduceMotion ? FadeInDown.delay(250).duration(0) : FadeInDown.delay(250).springify()} style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.textMuted }]}>
-          By continuing, you agree to our{' '}
-          <Text style={{ color: colors.primary }}>Terms</Text>
-          {' '}and{' '}
-          <Text style={{ color: colors.primary }}>Privacy Policy</Text>
+      {/* ── AI-powered tagline ────────────────────────────────────────────── */}
+      <Animated.View
+        entering={
+          reduceMotion
+            ? FadeInDown.delay(200).duration(0)
+            : FadeInDown.delay(680).springify()
+        }
+        style={styles.taglineWrap}
+      >
+        <DynamicIcon
+          name="Sparkles"
+          size={13}
+          color={colors.textMuted}
+          strokeWidth={1.5}
+        />
+        <Text style={[styles.taglineText, { color: colors.textMuted }]}>
+          AI-powered insights
         </Text>
       </Animated.View>
     </ScreenContainer>
@@ -235,72 +219,105 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   screen: {
-    justifyContent: 'center',
-    paddingHorizontal: 24,
+    flex: 1,
+    justifyContent: 'flex-start',
+    paddingTop: tokens.spacing['2xl'],
+    paddingHorizontal: tokens.layout.screenPadding,
   },
-  // ── Card Illustration ──────────────────────────────────────────────────────
-  illustrationWrap: {
-    height: 160,
+
+  // ── Hero / Card Area ───────────────────────────────────────────────────
+  heroArea: {
+    height: 240,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: tokens.spacing.xl,
   },
-  cardWrap: {
+  cardBackdrop: {
     position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    top: 0,
+    ...(Platform.OS === 'web' ? ({ filter: 'blur(60px)' } as any) : {}),
   },
-  // ── Logo ───────────────────────────────────────────────────────────────────
-  logoWrap: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  logoRing: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 1.5,
+  cardStack: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
   },
-  logoInner: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+
+  // ── Brand ──────────────────────────────────────────────────────────────
+  brandRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+    marginBottom: tokens.spacing.lg,
+  },
+  brandDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   brandName: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.bold,
-    letterSpacing: tokens.letterSpacing.wide,
+    fontSize: tokens.fontSize.bodySm,
+    fontWeight: tokens.fontWeight.semibold,
+    letterSpacing: tokens.letterSpacing.wider,
+    textTransform: 'uppercase',
   },
-  // ── Headline ───────────────────────────────────────────────────────────────
+
+  // ── Headline ───────────────────────────────────────────────────────────
   headline: {
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  heroText: {
-    fontSize: tokens.fontSize.display,
+    fontSize: 36,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.tightest,
-    lineHeight: tokens.fontSize.display * 1.2,
+    lineHeight: 42,
     textAlign: 'center',
+    marginBottom: tokens.spacing.lg,
   },
+
+  // ── Subheadline ────────────────────────────────────────────────────────
   subWrap: {
-    marginBottom: 32,
     alignItems: 'center',
+    marginBottom: tokens.spacing.xl,
   },
   subText: {
     fontSize: tokens.fontSize.bodyLg,
     fontWeight: tokens.fontWeight.medium,
-    lineHeight: tokens.fontSize.bodyLg * 1.55,
+    lineHeight: tokens.fontSize.bodyLg * 1.6,
     textAlign: 'center',
     maxWidth: 320,
   },
-  // ── CTA ────────────────────────────────────────────────────────────────────
+
+  // ── Terms Checkbox ────────────────────────────────────────────────────
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: tokens.spacing.lg,
+    paddingHorizontal: 4,
+    maxWidth: 340,
+    alignSelf: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  termsText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+    lineHeight: tokens.fontSize.caption * 1.5,
+    flex: 1,
+  },
+
+  // ── CTA ────────────────────────────────────────────────────────────────
   ctaWrap: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: tokens.spacing.xl,
   },
   googleBtn: {
     width: '100%',
@@ -314,7 +331,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: tokens.radius.card,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: tokens.spacing.md,
     width: '100%',
     maxWidth: 360,
   },
@@ -323,30 +340,16 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.medium,
     flex: 1,
   },
-  // ── Trust ──────────────────────────────────────────────────────────────────
-  trustWrap: {
+
+  // ── Tagline ────────────────────────────────────────────────────────────
+  taglineWrap: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 24,
-    marginBottom: 28,
-  },
-  trustBadge: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  trustLabel: {
+  taglineText: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
-  },
-  // ── Footer ─────────────────────────────────────────────────────────────────
-  footer: {
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.medium,
-    textAlign: 'center',
-    lineHeight: tokens.fontSize.caption * 1.6,
   },
 });
