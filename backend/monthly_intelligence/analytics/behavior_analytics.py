@@ -51,7 +51,8 @@ class BehaviorAnalyticsEngine:
             req = RecommendationRequest(
                 amount=amount,
                 merchant_name=tx.merchant_name,
-                category=tx.category
+                category=tx.category,
+                transaction_date=tx.transaction_date,
             )
             eval = await self.recommendation_service.evaluate(user_id, req)
             

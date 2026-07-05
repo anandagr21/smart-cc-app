@@ -33,12 +33,12 @@ export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
             <DynamicIcon name="Sparkles" size={24} color={colors.primary} strokeWidth={1.5} />
           </View>
           <Text style={[styles.title, { color: colors.textPrimary }]}>
-            Your dashboard awaits
+            {hasCards ? 'Ready to earn rewards' : 'Your dashboard awaits'}
           </Text>
           <Text style={[styles.body, { color: colors.textSecondary }]}>
-            Add a credit card and log your first transaction. Smart CC will
-            analyze your portfolio and recommend the best card for every
-            purchase — automatically.
+            {hasCards
+              ? 'Your card is set up! Log your first transaction to see cashback, reward efficiency, and personalized card recommendations.'
+              : 'Add a credit card and log your first transaction. Smart CC will analyze your portfolio and recommend the best card for every purchase — automatically.'}
           </Text>
         </View>
 

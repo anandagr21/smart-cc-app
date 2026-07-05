@@ -24,7 +24,7 @@ TARGET_CARDS = [
     # UPI-Linked RuPay Cards
     "Tata Neu Infinity HDFC", "Tata Neu Plus HDFC", "Kiwi Axis", "Jupiter Edge",
     "HDFC Digital RuPay", "ICICI Coral RuPay", "BOB Snapdeal RuPay", "Kotak League RuPay",
-    "Yes Bank PaisaSave", "Pnb Select RuPay",
+    "Yes Bank PaisaSave", "Pnb Select RuPay", "Yes Bank Kiwi RuPay",
     
     # Travel & Co-Branded Cards
     "Axis Atlas", "SBI Elite", "HDFC Marriott Bonvoy", "Amex Platinum Travel",

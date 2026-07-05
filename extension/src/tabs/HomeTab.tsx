@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getMonthlyIntelligence, getSpendInsights } from "../api/client"
+import { getMonthlyIntelligence, getSpendInsights, getCards } from "../api/client"
 import { SkeletonBox } from "../components/ui/SkeletonBox"
 import { ErrorBanner } from "../components/ui/ErrorBanner"
 import { Sparkles, Trophy, TrendingUp, ChevronRight, Lightbulb, RefreshCw, Plus, CreditCard } from "lucide-react"
@@ -18,6 +18,7 @@ interface HomeTabProps {
 export function HomeTab({ onTabChange }: HomeTabProps) {
   const [monthlyData, setMonthlyData] = useState<any>(null)
   const [insights, setInsights] = useState<any[]>([])
+  const [cardCount, setCardCount] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,12 +27,14 @@ export function HomeTab({ onTabChange }: HomeTabProps) {
   const loadDashboard = async () => {
     setIsLoading(true); setError(null)
     try {
-      const [monthly, ins] = await Promise.all([
+      const [monthly, ins, cards] = await Promise.all([
         getMonthlyIntelligence(now.getFullYear(), now.getMonth() + 1).catch(() => null),
         getSpendInsights().catch(() => []),
+        getCards().catch(() => []),
       ])
       setMonthlyData(monthly)
       setInsights(Array.isArray(ins) ? ins : ins?.insights || [])
+      setCardCount(Array.isArray(cards) ? cards.length : 0)
     } catch (err: any) { setError(err.message) }
     finally { setIsLoading(false); setIsRefreshing(false) }
   }
@@ -106,31 +109,37 @@ export function HomeTab({ onTabChange }: HomeTabProps) {
         </div>
       )}
 
-      {/* ── Empty Dashboard State — matches Expo EmptyDashboardState exactly ── */}
+      {/* ── Empty Dashboard State — contextual by card presence ── */}
       {!isLoading && !hasStats && !primaryInsight && (
         <div className="plasmo-p-4 plasmo-rounded-card plasmo-bg-surface plasmo-border plasmo-border-border">
           <div className="plasmo-text-center plasmo-mb-6">
             <div className="plasmo-w-14 plasmo-h-14 plasmo-rounded-full plasmo-bg-primary-soft plasmo-flex plasmo-items-center plasmo-justify-center plasmo-mx-auto plasmo-mb-5">
               <Sparkles className="plasmo-w-6 plasmo-h-6 plasmo-text-primary" />
             </div>
-            <h3 className="plasmo-text-title plasmo-font-bold plasmo-tracking-tight plasmo-text-text-primary plasmo-mb-2.5">Your dashboard awaits</h3>
+            <h3 className="plasmo-text-title plasmo-font-bold plasmo-tracking-tight plasmo-text-text-primary plasmo-mb-2.5">
+              {cardCount > 0 ? 'Ready to earn rewards' : 'Your dashboard awaits'}
+            </h3>
             <p className="plasmo-text-body plasmo-text-text-secondary plasmo-max-w-xs plasmo-mx-auto plasmo-leading-relaxed">
-              Add a credit card and log your first transaction. Card Optimizer will analyze your portfolio and recommend the best card for every purchase — automatically.
+              {cardCount > 0
+                ? "Your card is set up! Log your first transaction to see cashback, reward efficiency, and personalized card recommendations."
+                : "Add a credit card and log your first transaction. Card Optimizer will analyze your portfolio and recommend the best card for every purchase — automatically."}
             </p>
           </div>
           <div className="plasmo-space-y-2">
-            <button
-              onClick={() => onTabChange?.("wallet")}
-              className="plasmo-w-full plasmo-bg-primary plasmo-text-white plasmo-py-2.5 plasmo-rounded-full plasmo-font-bold plasmo-text-body-lg plasmo-cursor-pointer hover:plasmo-bg-primary-dark plasmo-transition-colors plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-2"
-            >
-              <Plus className="plasmo-w-5 plasmo-h-5" strokeWidth={2.5} />
-              Add a Card
-            </button>
+            {cardCount === 0 && (
+              <button
+                onClick={() => onTabChange?.("wallet")}
+                className="plasmo-w-full plasmo-bg-primary plasmo-text-white plasmo-py-2.5 plasmo-rounded-full plasmo-font-bold plasmo-text-body-lg plasmo-cursor-pointer hover:plasmo-bg-primary-dark plasmo-transition-colors plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-2"
+              >
+                <Plus className="plasmo-w-5 plasmo-h-5" strokeWidth={2.5} />
+                Add a Card
+              </button>
+            )}
             <button
               onClick={() => onTabChange?.("activity")}
-              className="plasmo-w-full plasmo-bg-surface plasmo-text-text-secondary plasmo-py-2.5 plasmo-rounded-full plasmo-font-bold plasmo-text-body-lg plasmo-cursor-pointer hover:plasmo-bg-background plasmo-transition-colors plasmo-border plasmo-border-border plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-2"
+              className={`plasmo-w-full plasmo-py-2.5 plasmo-rounded-full plasmo-font-bold plasmo-text-body-lg plasmo-cursor-pointer plasmo-transition-colors plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-2 ${cardCount > 0 ? 'plasmo-bg-primary plasmo-text-white hover:plasmo-bg-primary-dark' : 'plasmo-bg-surface plasmo-text-text-secondary hover:plasmo-bg-background plasmo-border plasmo-border-border'}`}
             >
-              <CreditCard className="plasmo-w-5 plasmo-h-5" strokeWidth={2} />
+              <CreditCard className="plasmo-w-5 plasmo-h-5" strokeWidth={cardCount > 0 ? 2.5 : 2} />
               Log a Transaction
             </button>
           </div>
@@ -203,8 +212,8 @@ export function HomeTab({ onTabChange }: HomeTabProps) {
         </div>
       )}
 
-      {/* ── Primary Action Button — matches Expo ───────────────────────── */}
-      {!isLoading && hasStats && (
+      {/* ── Primary Action Button — show when has stats OR user has cards ── */}
+      {!isLoading && (hasStats || cardCount > 0) && (
         <div className="plasmo-text-center plasmo-mt-2 plasmo-py-6 plasmo-px-4">
           <button
             onClick={() => onTabChange?.("activity")}
