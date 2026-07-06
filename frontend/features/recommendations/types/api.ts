@@ -1,4 +1,4 @@
-export type PaymentMode = 'ANY' | 'ONLINE' | 'OFFLINE' | 'INTERNATIONAL';
+export type PaymentMode = 'ANY' | 'ONLINE' | 'OFFLINE' | 'UPI' | 'INTERNATIONAL';
 export type RewardType = 'CASHBACK' | 'POINTS' | 'MILES' | 'STATEMENT_CREDIT';
 
 export type OptimizationIntent = 'MAX_REWARDS' | 'SAVE_FEE_WAIVER' | 'BALANCED' | 'SIMPLIFY_DECISIONS';

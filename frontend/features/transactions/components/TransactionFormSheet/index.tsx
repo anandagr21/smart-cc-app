@@ -55,13 +55,13 @@ const formSchema = z.object({
   merchant_name: z.string().min(1, 'Merchant name is required').transform((v) => v.trim()),
   amount: z.coerce.number().positive('Amount must be positive'),
   user_card_id: z.string().min(1, 'Please select a card'),
-  payment_mode: z.enum(['ONLINE', 'OFFLINE', 'INTERNATIONAL']).default('ONLINE'),
+  payment_mode: z.enum(['ONLINE', 'OFFLINE', 'UPI', 'INTERNATIONAL']).default('ONLINE'),
   override_reason: z.string().optional(),
   intent: z.enum(['MAX_REWARDS', 'SAVE_FEE_WAIVER', 'BALANCED', 'SIMPLIFY_DECISIONS']).default('BALANCED'),
 });
 
 const PAYMENT_MODE_LOWER: Record<string, string> = {
-  ONLINE: 'online', OFFLINE: 'offline', INTERNATIONAL: 'international',
+  ONLINE: 'online', OFFLINE: 'offline', UPI: 'upi', INTERNATIONAL: 'international',
 };
 
 const mapPersonalityToIntent = (personality?: OptimizationPersonality) => {
@@ -348,8 +348,14 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
   const { groupedActive, inactiveCards } = useMemo(() => {
     const grouped: Record<string, typeof filteredCards> = {};
     const inactive: typeof filteredCards = [];
-    
+
     filteredCards.forEach(card => {
+      // When UPI is selected, only show RuPay network cards
+      if (paymentMode === 'UPI') {
+        const network = (card.network_override || card.card_details?.network || '').toUpperCase();
+        if (network !== 'RUPAY') return;
+      }
+
       if (card.card_status === 'ACTIVE') {
         const bank = card.card_details?.bank_name || 'Other';
         if (!grouped[bank]) grouped[bank] = [];
@@ -358,9 +364,26 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
         inactive.push(card);
       }
     });
-    
+
     return { groupedActive: grouped, inactiveCards: inactive };
-  }, [filteredCards]);
+  }, [filteredCards, paymentMode]);
+
+  // When switching to UPI, auto-select the first RuPay card if current selection is not RuPay
+  useEffect(() => {
+    if (paymentMode !== 'UPI' || !cardsData) return;
+    const selectedCard = cardsData.find(c => c.id === selectedCardId);
+    if (!selectedCard) return;
+    const network = (selectedCard.network_override || selectedCard.card_details?.network || '').toUpperCase();
+    if (network !== 'RUPAY') {
+      const allActiveCards = filteredCards.filter(c => {
+        const n = (c.network_override || c.card_details?.network || '').toUpperCase();
+        return n === 'RUPAY' && c.card_status === 'ACTIVE';
+      });
+      if (allActiveCards.length > 0) {
+        setValue('user_card_id', allActiveCards[0].id);
+      }
+    }
+  }, [paymentMode]);
 
   return (
     <>

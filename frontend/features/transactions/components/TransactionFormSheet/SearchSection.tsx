@@ -12,6 +12,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 const PAYMENT_MODES = [
   { label: 'Online', value: 'ONLINE', icon: 'Globe' },
   { label: 'Offline', value: 'OFFLINE', icon: 'Store' },
+  { label: 'UPI', value: 'UPI', icon: 'Smartphone' },
   { label: 'International', value: 'INTERNATIONAL', icon: 'Plane' },
 ];
 
