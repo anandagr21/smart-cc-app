@@ -168,7 +168,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Text style={[styles.versionText, { color: colors.textMuted }]}>
-          Card Optimiser • v1.0.8
+          Card Optimiser • v1.0.9
         </Text>
       </ScrollView>
     </ScreenContainer>
