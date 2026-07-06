@@ -14,8 +14,10 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Body, status
+from fastapi import APIRouter, Body, Depends, status
 
+from auth.dependencies import get_current_user
+from auth.schemas import UserResponse
 from reward_engine.schemas import (
     EvaluateRequest,
     EvaluateResponse,
@@ -77,6 +79,7 @@ async def evaluate_reward(
             ],
         ),
     ],
+    _user: UserResponse = Depends(get_current_user),
 ) -> EvaluateResponse:
     """Evaluate applicable rewards for the given transaction and rule set.
 
