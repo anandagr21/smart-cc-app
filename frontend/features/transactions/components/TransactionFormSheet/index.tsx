@@ -327,8 +327,16 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
     return Array.from(winners.values()).map(rc => ({
       card: cardsData?.find(c => c.card_details?.card_name === rc.card_name || c.nickname === rc.card_name),
       recommendation: rc
-    })).filter(r => r.card) as { card: NonNullable<typeof cardsData>[0], recommendation: typeof res.all_ranked_cards[0] }[];
-  }, [getRecommendation.data, cardsData]);
+    })).filter(r => {
+      if (!r.card) return false;
+      // When UPI is selected, only show RuPay cards in recommendations
+      if (paymentMode === 'UPI') {
+        const network = (r.card.network_override || r.card.card_details?.network || '').toUpperCase();
+        if (network !== 'RUPAY') return false;
+      }
+      return true;
+    }) as { card: NonNullable<typeof cardsData>[0], recommendation: typeof res.all_ranked_cards[0] }[];
+  }, [getRecommendation.data, cardsData, paymentMode]);
   
   const recommendedCardId = winningWalletCards[0]?.card?.id;
   const isOverride = !isEditing && !!recommendedCardId && !!selectedCardId && selectedCardId !== recommendedCardId;
@@ -368,9 +376,12 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
     return { groupedActive: grouped, inactiveCards: inactive };
   }, [filteredCards, paymentMode]);
 
-  // When switching to UPI, auto-select the first RuPay card if current selection is not RuPay
+  // When switching to UPI, auto-populate merchant as "UPI" and select first RuPay card
   useEffect(() => {
     if (paymentMode !== 'UPI' || !cardsData) return;
+    // Auto-fill merchant name
+    setValue('merchant_name', 'UPI');
+    // Auto-select first RuPay card if current selection is not RuPay
     const selectedCard = cardsData.find(c => c.id === selectedCardId);
     if (!selectedCard) return;
     const network = (selectedCard.network_override || selectedCard.card_details?.network || '').toUpperCase();
