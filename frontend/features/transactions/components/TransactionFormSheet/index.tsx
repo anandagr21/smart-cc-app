@@ -315,6 +315,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
     if (res.best_cashback_card && !winners.has(res.best_cashback_card.card_id)) winners.set(res.best_cashback_card.card_id, res.best_cashback_card);
     if (res.best_fee_waiver_card && !winners.has(res.best_fee_waiver_card.card_id) && res.best_fee_waiver_card.fee_waiver_progress_impact > 0) winners.set(res.best_fee_waiver_card.card_id, res.best_fee_waiver_card);
     if (res.best_balanced_card && !winners.has(res.best_balanced_card.card_id)) winners.set(res.best_balanced_card.card_id, res.best_balanced_card);
+    if (res.best_simplify_card && !winners.has(res.best_simplify_card.card_id)) winners.set(res.best_simplify_card.card_id, res.best_simplify_card);
     
     if (res.all_ranked_cards) {
       for (const card of res.all_ranked_cards) {

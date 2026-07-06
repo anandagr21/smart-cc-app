@@ -25,8 +25,9 @@ async def update_card():
                 {"rule_type": "merchant_bonus", "merchant": "uber", "reward_type": "cashback", "cashback_percent": 4.0},
                 {"rule_type": "merchant_bonus", "merchant": "tata play", "reward_type": "cashback", "cashback_percent": 4.0},
                 {"rule_type": "merchant_bonus", "merchant": "cult.fit", "reward_type": "cashback", "cashback_percent": 4.0},
-                {"rule_type": "base_reward", "reward_type": "cashback", "cashback_percent": 1.5}
-            ]
+                {"rule_type": "base_reward", "reward_type": "cashback", "cashback_percent": 1.5},
+            ],
+            "exclusions": ["rent", "wallet", "fuel", "emi", "education", "utilities"],
         }
         
         session.add(card)

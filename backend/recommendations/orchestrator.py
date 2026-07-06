@@ -120,7 +120,30 @@ class RecommendationOrchestrator:
         
         eval_inputs: list[CardEvaluationInput] = []
         optimization_results = []
-        
+
+        # Pre-fetch monthly spend per card so caps can use real cumulative values
+        from datetime import date
+        from sqlalchemy import select, func
+        from transactions.models import Transaction, TransactionType, TransactionStatus
+
+        today = date.today()
+        month_start = date(today.year, today.month, 1)
+        card_spend_map: dict[str, Decimal] = {}
+
+        for user_card in user_cards:
+            spend_stmt = (
+                select(func.coalesce(func.sum(Transaction.amount), 0))
+                .where(
+                    Transaction.user_card_id == user_card.id,
+                    Transaction.transaction_date >= month_start,
+                    Transaction.transaction_date <= today,
+                    Transaction.transaction_type == TransactionType.PURCHASE,
+                    Transaction.status.in_([TransactionStatus.PENDING, TransactionStatus.POSTED]),
+                )
+            )
+            spend_result = await session.execute(spend_stmt)
+            card_spend_map[str(user_card.id)] = Decimal(str(spend_result.scalar() or 0))
+
         for user_card in user_cards:
             card_id_str = str(user_card.card_catalog_id)
             
@@ -130,13 +153,9 @@ class RecommendationOrchestrator:
             from recommendations.utils import parse_rules_from_catalog
             normalized_rules = parse_rules_from_catalog(catalog_card, card_name)
 
-            # Pure evaluate
-            # Temporary cap bug mitigation: Requires Reward Ledger implementation (P1)
-            # current_spend is total INR spend, which incorrectly exhausts reward limits.
-            # Bypassing historical usage for now to prevent 0-reward recommendation errors.
-            import sentry_sdk
-            sentry_sdk.capture_message("Cap evaluation running without historical usage", level="warning")
-            card_txn_context = txn_context.model_copy(update={"cumulative_spend": 0})
+            # Pass actual month-to-date spend so monthly caps can fire correctly
+            monthly_spend = card_spend_map.get(str(user_card.id), Decimal("0"))
+            card_txn_context = txn_context.model_copy(update={"cumulative_spend": monthly_spend})
             eval_result: EvaluationResult = engine_evaluate(card_txn_context, normalized_rules)
             
             # Phase 2: Compute fee waiver intelligence and portfolio optimization

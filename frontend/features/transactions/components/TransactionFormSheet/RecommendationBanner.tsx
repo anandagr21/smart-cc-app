@@ -10,6 +10,13 @@ import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { FeatureFlags } from '@/config/features';
 
+const INTENT_LABELS: Record<string, { title: string; heroLabel: string; altLabel: string }> = {
+  BALANCED: { title: '✨ SMARTEST FINANCIAL CHOICE', heroLabel: 'Best Overall', altLabel: 'OTHER STRATEGIC OPTIONS' },
+  MAX_REWARDS: { title: '🏆 MAXIMUM REWARDS', heroLabel: 'Highest Cashback', altLabel: 'LOWER REWARD OPTIONS' },
+  SAVE_FEE_WAIVER: { title: '🛡️ FEE WAIVER FOCUS', heroLabel: 'Best for Waiver', altLabel: 'OTHER OPTIONS' },
+  SIMPLIFY_DECISIONS: { title: '✌️ SIMPLIFY YOUR WALLET', heroLabel: 'One Card to Rule', altLabel: 'MORE COMPLEX OPTIONS' },
+};
+
 interface RecommendationBannerProps {
   debouncedMerchant: string;
   debouncedAmount: number;
@@ -35,7 +42,9 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
   calculationId
 }) => {
   const colors = useThemeColors();
-  const { setValue } = useFormContext<any>();
+  const { setValue, watch } = useFormContext<any>();
+  const currentIntent: string = watch('intent') || 'BALANCED';
+  const labels = INTENT_LABELS[currentIntent] || INTENT_LABELS.BALANCED;
 
   if (!FeatureFlags.ENABLE_SMART_RECOMMENDATIONS) return null;
 
@@ -44,7 +53,7 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
   return (
     <View style={styles.recommendationSection}>
       <View style={styles.recommendationHeader}>
-        <Text style={[styles.sectionTitle, { color: colors.success }]}>✨ SMARTEST FINANCIAL CHOICE</Text>
+        <Text style={[styles.sectionTitle, { color: colors.success }]}>{labels.title}</Text>
       </View>
 
       {!hasValidInput && !isPending && winningWalletCards.length === 0 && (
@@ -90,7 +99,7 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
           {winningWalletCards.length > 1 && (
             <View style={styles.alternativesWrap}>
               <Text style={[styles.alternativesTitle, { color: colors.textMuted }]}>
-                OTHER STRATEGIC OPTIONS
+                {labels.altLabel}
               </Text>
               
               <View>

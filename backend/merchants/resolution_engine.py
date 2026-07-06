@@ -32,6 +32,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from merchants import cache as resolution_cache
 from merchants import fuzzy as fuzzy_index
+from merchants.categorizer import categorize as categorize_merchant
+from merchants.constants import MerchantCategory
 from merchants.fuzzy import FuzzyCandidate, IndexEntry, classify_score
 from merchants.llm_resolver import discover, recover
 from merchants.models import Merchant, MerchantAlias
@@ -42,6 +44,36 @@ logger = logging.getLogger(__name__)
 
 # Minimum LLM Discovery confidence to create a pending review record
 _DISCOVERY_AUTO_QUEUE_THRESHOLD = 0.90
+
+
+def _normalize_category(category: str, normalized_input: str) -> str:
+    """Map non-canonical category strings (from LLM) to canonical values.
+
+    Falls back to the deterministic categorizer when the resolved category
+    is unknown or unrecognized.
+    """
+    if not category or category == "unknown":
+        cat = categorize_merchant(normalized_input)
+        return cat.value if isinstance(cat, MerchantCategory) else str(cat)
+
+    # Normalize common LLM-returned non-canonical category names
+    cat_lower = category.strip().lower()
+    llm_aliases = {
+        "fuel & gas": "fuel",
+        "fuel & gas stations": "fuel",
+        "fuel and gas": "fuel",
+        "petrol pump": "fuel",
+        "petrol station": "fuel",
+        "gas station": "fuel",
+        "online shopping": "ecommerce",
+        "food & dining": "dining",
+        "food and dining": "dining",
+        "fast food": "food",
+        "restaurants": "dining",
+        "grocery store": "grocery",
+        "supermarket": "grocery",
+    }
+    return llm_aliases.get(cat_lower, category.strip().lower())
 
 
 # ---------------------------------------------------------------------------
@@ -308,7 +340,8 @@ async def resolve(
         )
         return ResolutionResult(
             merchant_id=None, merchant_name=None,
-            category="unknown", merchant_type="UNKNOWN",
+            category=_normalize_category("unknown", normalized_input),
+            merchant_type="UNKNOWN",
             confidence=0.0, resolution_type="UNKNOWN",
         )
 
@@ -327,7 +360,7 @@ async def resolve(
             return ResolutionResult(
                 merchant_id=None,
                 merchant_name=discovery.merchant_name,
-                category=discovery.category,
+                category=_normalize_category(discovery.category, normalized_input),
                 merchant_type=discovery.merchant_type,
                 confidence=discovery.confidence,
                 resolution_type="LLM_DISCOVERY",
@@ -343,7 +376,7 @@ async def resolve(
             )
             return ResolutionResult(
                 merchant_id=None, merchant_name=discovery.merchant_name,
-                category="unknown", merchant_type="UNKNOWN",
+                category=_normalize_category("unknown", normalized_input), merchant_type="UNKNOWN",
                 confidence=discovery.confidence, resolution_type="UNKNOWN",
                 requires_confirmation=True,
             )
@@ -357,7 +390,8 @@ async def resolve(
         )
         return ResolutionResult(
             merchant_id=None, merchant_name=None,
-            category="unknown", merchant_type="UNKNOWN",
+            category=_normalize_category("unknown", normalized_input),
+            merchant_type="UNKNOWN",
             confidence=0.0, resolution_type="UNKNOWN",
         )
 

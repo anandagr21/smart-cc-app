@@ -173,7 +173,9 @@ _TOKEN_HINTS: Mapping[str, MerchantCategory] = {
     "diesel": MerchantCategory.FUEL,
     "fuel": MerchantCategory.FUEL,
     "gas": MerchantCategory.FUEL,
-    "cn": MerchantCategory.FUEL,
+    "oil": MerchantCategory.FUEL,
+    "cn": MerchantCategory.FUEL,  # CNG
+    "cng": MerchantCategory.FUEL,
     "pump": MerchantCategory.FUEL,
     "grocery": MerchantCategory.GROCERY,
     "mart": MerchantCategory.GROCERY,

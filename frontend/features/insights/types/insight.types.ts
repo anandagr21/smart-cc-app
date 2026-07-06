@@ -3,11 +3,12 @@ import { TransactionResponse } from '@/features/transactions/types/transaction.t
 
 export type InsightPriority = 'URGENT' | 'HIGH' | 'MEDIUM' | 'INFORMATIONAL';
 
-export type InsightCategory = 
+export type InsightCategory =
   | 'FEE_WAIVER'
   | 'MISSED_REWARDS'
   | 'UNDERUTILIZED_CARD'
-  | 'PORTFOLIO_OPTIMIZATION';
+  | 'PORTFOLIO_OPTIMIZATION'
+  | 'DORMANT_CARD';
 
 export type InsightConfidence = 'HIGH' | 'MODERATE' | 'ESTIMATED';
 

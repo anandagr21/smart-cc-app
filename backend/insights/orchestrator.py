@@ -6,6 +6,7 @@ from insights.generators.fee_waiver import FeeWaiverGenerator
 from insights.generators.missed_rewards import MissedRewardsGenerator
 from insights.generators.underutilized_cards import UnderutilizedCardGenerator
 from insights.generators.portfolio_optimization import PortfolioOptimizationGenerator
+from insights.generators.dormant_card import DormantCardGenerator
 from insights.prioritization.prioritization_engine import PrioritizationEngine
 from insights.schemas import InsightResponse
 from insights.suppression.cooldown_engine import CooldownEngine
@@ -31,6 +32,7 @@ class InsightOrchestrator:
         self.fee_waiver_gen = FeeWaiverGenerator()
         self.underutilized_gen = UnderutilizedCardGenerator()
         self.portfolio_gen = PortfolioOptimizationGenerator()
+        self.dormant_card_gen = DormantCardGenerator()
         
         # Dependency injected generators
         self.missed_rewards_gen = missed_rewards_gen
@@ -55,6 +57,7 @@ class InsightOrchestrator:
         insights.extend(self.fee_waiver_gen.generate(str(user_id), cards, enriched_txns))
         insights.extend(self.underutilized_gen.generate(str(user_id), cards, enriched_txns))
         insights.extend(self.portfolio_gen.generate(str(user_id), cards, enriched_txns))
+        insights.extend(self.dormant_card_gen.generate(str(user_id), cards, enriched_txns))
         
         # Async generators
         mr_insights = await self.missed_rewards_gen.generate_async(str(user_id), cards, enriched_txns)

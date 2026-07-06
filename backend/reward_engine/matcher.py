@@ -154,14 +154,14 @@ def match_rules(
         # ---- Match: exact merchant ----
         rule_merchant = cfg.get(KEY_MERCHANT)
         if rule_merchant is not None:
-            if rule_merchant.strip().lower() == txn.merchant:
+            if rule_merchant.strip().lower() == txn.merchant.strip().lower():
                 applicable.append((rule, MatchType.EXACT_MERCHANT))
                 continue
 
         # ---- Match: category ----
         rule_category = cfg.get(KEY_CATEGORY)
         if rule_category is not None:
-            if rule_category.strip().lower() == txn.category:
+            if rule_category.strip().lower() == txn.category.strip().lower():
                 applicable.append((rule, MatchType.CATEGORY_MATCH))
                 continue
 

@@ -284,6 +284,7 @@ function SmartCCOrb() {
   const [recommendation, setRecommendation] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [orbEnabled, setOrbEnabled] = useState(true)
+  const [intent, setIntent] = useState<"BALANCED" | "MAX_REWARDS" | "PRESERVE_FEE_WAIVER" | "SIMPLIFY">("BALANCED")
 
   // Load floating button preference
   useEffect(() => {
@@ -323,10 +324,10 @@ function SmartCCOrb() {
     if (merchant && cartAmount > 0) {
       setIsLoading(true)
       try {
-        chrome.runtime.sendMessage({ type: "FETCH_RECOMMENDATION", payload: { merchant_name: merchant.key, amount: cartAmount } })
+        chrome.runtime.sendMessage({ type: "FETCH_RECOMMENDATION", payload: { merchant_name: merchant.key, amount: cartAmount, intent } })
       } catch {}
     }
-  }, [merchant, cartAmount])
+  }, [merchant, cartAmount, intent])
 
   useEffect(() => {
     if (!merchant) return
@@ -343,8 +344,12 @@ function SmartCCOrb() {
     return () => clearInterval(id)
   }, [merchant])
 
-  const bestCard = recommendation?.best_balanced_card
-  const altCards = recommendation?.all_ranked_cards?.slice(1, 3) || []
+  const bestCard =
+    intent === "SIMPLIFY" ? recommendation?.best_simplify_card :
+    intent === "MAX_REWARDS" ? recommendation?.best_cashback_card :
+    intent === "PRESERVE_FEE_WAIVER" ? recommendation?.best_fee_waiver_card :
+    recommendation?.best_balanced_card
+  const altCards = recommendation?.all_ranked_cards?.filter((c: any) => c.card_id !== bestCard?.card_id).slice(0, 2) || []
 
   // Respect user toggle — hide completely if disabled
   if (!orbEnabled) return null
@@ -381,6 +386,33 @@ function SmartCCOrb() {
           </div>
           <button onClick={() => setIsExpanded(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#666A80", padding: 0, lineHeight: 1 }}>✕</button>
         </div>
+        {/* Intent Selector */}
+        <div style={{ padding: "8px 16px", borderBottom: "1px solid #E7E8F0", display: "flex", gap: 6, overflowX: "auto" }}>
+          {[
+            { key: "BALANCED", label: "Balanced" },
+            { key: "MAX_REWARDS", label: "Max Cashback" },
+            { key: "PRESERVE_FEE_WAIVER", label: "Fee Waiver" },
+            { key: "SIMPLIFY", label: "Simplify" },
+          ].map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setIntent(opt.key as any)}
+              style={{
+                padding: "4px 10px",
+                borderRadius: 999,
+                border: `1px solid ${intent === opt.key ? "#4F36FF" : "#E7E8F0"}`,
+                background: intent === opt.key ? "#4F36FF" : "transparent",
+                color: intent === opt.key ? "#FFF" : "#666A80",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
         <div style={{ padding: 16, overflowY: "auto", flex: 1 }}>
           {/* Merchant info */}
           <div style={{ background: "#F8F8FC", borderRadius: 12, padding: 12, display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
@@ -393,7 +425,9 @@ function SmartCCOrb() {
             <>
               {/* Best Card Hero */}
               <div style={{ marginBottom: 16 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#666A80", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Best Card</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#666A80", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>
+                  {intent === "SIMPLIFY" ? "Simplify Pick" : intent === "MAX_REWARDS" ? "Max Cashback" : intent === "PRESERVE_FEE_WAIVER" ? "Fee Waiver Pick" : "Best Card"}
+                </span>
                 <div style={{
                   position: "relative",
                   border: "1px solid rgba(79,54,255,0.3)",
