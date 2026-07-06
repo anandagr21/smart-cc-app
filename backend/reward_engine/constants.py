@@ -35,6 +35,8 @@ class PaymentMode(StrEnum):
     ONLINE = "online"
     OFFLINE = "offline"
     CONTACTLESS = "contactless"
+    UPI = "upi"
+    INTERNATIONAL = "international"
     ANY = "any"
 
 
