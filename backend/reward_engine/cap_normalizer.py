@@ -21,6 +21,7 @@ from reward_engine.constants import (
     CAP_TYPE_CATEGORY,
     CAP_TYPE_MERCHANT,
     CAP_TYPE_MONTHLY,
+    CAP_TYPE_QUARTERLY,
     CAP_TYPE_TRANSACTION,
     ZERO_DECIMAL,
     CapScope,
@@ -118,13 +119,14 @@ _LEGACY_KEY_MAP: dict[str, tuple[str, CapScope]] = {
     "transaction_cap": (CAP_TYPE_TRANSACTION, CapScope.PER_TRANSACTION),
     "per_transaction_cap": (CAP_TYPE_TRANSACTION, CapScope.PER_TRANSACTION),
     "monthly_cap": (CAP_TYPE_MONTHLY, CapScope.MONTHLY),
+    "quarterly_cap": (CAP_TYPE_QUARTERLY, CapScope.QUARTERLY),
     "annual_cap": (CAP_TYPE_ANNUAL, CapScope.ANNUAL),
     "category_cap": (CAP_TYPE_CATEGORY, CapScope.CATEGORY),
     "merchant_cap": (CAP_TYPE_MERCHANT, CapScope.MERCHANT),
 }
 
 _VALID_CAP_TYPES = frozenset(
-    {CAP_TYPE_TRANSACTION, CAP_TYPE_MONTHLY, CAP_TYPE_CATEGORY, CAP_TYPE_MERCHANT, CAP_TYPE_ANNUAL}
+    {CAP_TYPE_TRANSACTION, CAP_TYPE_MONTHLY, CAP_TYPE_QUARTERLY, CAP_TYPE_CATEGORY, CAP_TYPE_MERCHANT, CAP_TYPE_ANNUAL}
 )
 
 
@@ -194,6 +196,7 @@ def _infer_scope_from_type(cap_type: str) -> CapScope:
     """Infer the appropriate CapScope from a cap type string."""
     type_to_scope = {
         CAP_TYPE_MONTHLY: CapScope.MONTHLY,
+        CAP_TYPE_QUARTERLY: CapScope.QUARTERLY,
         CAP_TYPE_ANNUAL: CapScope.ANNUAL,
         CAP_TYPE_CATEGORY: CapScope.CATEGORY,
         CAP_TYPE_MERCHANT: CapScope.MERCHANT,

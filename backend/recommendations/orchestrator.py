@@ -121,21 +121,24 @@ class RecommendationOrchestrator:
         eval_inputs: list[CardEvaluationInput] = []
         optimization_results = []
 
-        # Pre-fetch monthly spend per card so caps can use real cumulative values
+        # Pre-fetch cumulative spend per card for the full quarter so caps work
         from datetime import date
         from sqlalchemy import select, func
         from transactions.models import Transaction, TransactionType, TransactionStatus
 
         today = date.today()
+        quarter_start_month = ((today.month - 1) // 3) * 3 + 1
+        quarter_start = date(today.year, quarter_start_month, 1)
         month_start = date(today.year, today.month, 1)
         card_spend_map: dict[str, Decimal] = {}
 
         for user_card in user_cards:
+            # Use quarter range for quarterly caps, month for monthly tracking
             spend_stmt = (
                 select(func.coalesce(func.sum(Transaction.amount), 0))
                 .where(
                     Transaction.user_card_id == user_card.id,
-                    Transaction.transaction_date >= month_start,
+                    Transaction.transaction_date >= quarter_start,
                     Transaction.transaction_date <= today,
                     Transaction.transaction_type == TransactionType.PURCHASE,
                     Transaction.status.in_([TransactionStatus.PENDING, TransactionStatus.POSTED]),
@@ -153,9 +156,12 @@ class RecommendationOrchestrator:
             from recommendations.utils import parse_rules_from_catalog
             normalized_rules = parse_rules_from_catalog(catalog_card, card_name)
 
-            # Pass actual month-to-date spend so monthly caps can fire correctly
-            monthly_spend = card_spend_map.get(str(user_card.id), Decimal("0"))
-            card_txn_context = txn_context.model_copy(update={"cumulative_spend": monthly_spend})
+            # Pass cumulative reward-equivalent (approximate) for cap enforcement.
+            # Divide quarterly spend by 100 to estimate ~1% reward rate.
+            # More accurate than raw INR spend vs reward cap mismatch.
+            quarterly_spend = card_spend_map.get(str(user_card.id), Decimal("0"))
+            est_cumulative_reward = quarterly_spend / Decimal("100")
+            card_txn_context = txn_context.model_copy(update={"cumulative_spend": est_cumulative_reward})
             eval_result: EvaluationResult = engine_evaluate(card_txn_context, normalized_rules)
             
             # Phase 2: Compute fee waiver intelligence and portfolio optimization

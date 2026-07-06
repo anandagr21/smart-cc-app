@@ -57,7 +57,9 @@ export default function HistoryScreen() {
 
   const handleEndReached = () => { if (hasNextPage) fetchNextPage(); };
 
-  const handleTransactionPress = (_tx: TransactionResponse) => {};
+  const handleTransactionPress = (tx: TransactionResponse) => {
+    setSelectedTransaction(tx);
+  };
 
   const handleClearFilter = () => { router.setParams({ cardId: '' }); };
 

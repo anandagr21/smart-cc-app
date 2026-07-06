@@ -313,60 +313,57 @@ export default function DashboardScreen() {
             entering={maybeAnimated(100)}
             style={styles.statsContainer}
           >
-            {/* Reward Efficiency */}
-            <View
-              style={[
-                styles.statCard,
-                styles.statCardWide,
-                { backgroundColor: colors.surface },
-              ]}
-            >
-              <View style={styles.statHeader}>
-                <DynamicIcon
-                  name="Trophy"
-                  size={15}
-                  color={colors.warning}
-                  strokeWidth={2}
+            {/* Reward Efficiency + Rewards — side by side */}
+            <View style={styles.statsRow}>
+              <View
+                style={[
+                  styles.statCard,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
+                <View style={styles.statHeader}>
+                  <DynamicIcon
+                    name="Trophy"
+                    size={15}
+                    color={colors.warning}
+                    strokeWidth={2}
+                  />
+                  <Text
+                    style={[styles.statLabel, { color: colors.textSecondary }]}
+                  >
+                    Reward Efficiency
+                  </Text>
+                </View>
+                <AnimatedNumber
+                  value={monthlySummary?.optimization_rate || 0}
+                  suffix="%"
+                  style={[styles.statValue, { color: colors.textPrimary }]}
                 />
-                <Text
-                  style={[styles.statLabel, { color: colors.textSecondary }]}
-                >
-                  Reward Efficiency
-                </Text>
               </View>
-              <AnimatedNumber
-                value={monthlySummary?.optimization_rate || 0}
-                suffix="%"
-                style={[styles.statValue, { color: colors.textPrimary }]}
-              />
-            </View>
 
-            {/* Rewards earned — tinted background, no border */}
-            <View
-              style={[
-                styles.statCard,
-                styles.statCardWide,
-                {
-                  backgroundColor: colors.successSoft,
-                },
-              ]}
-            >
-              <View style={styles.statHeader}>
-                <DynamicIcon
-                  name="TrendingUp"
-                  size={15}
-                  color={colors.success}
-                  strokeWidth={2}
+              <View
+                style={[
+                  styles.statCard,
+                  { backgroundColor: colors.successSoft },
+                ]}
+              >
+                <View style={styles.statHeader}>
+                  <DynamicIcon
+                    name="TrendingUp"
+                    size={15}
+                    color={colors.success}
+                    strokeWidth={2}
+                  />
+                  <Text style={[styles.statLabel, { color: colors.success }]}>
+                    Rewards this month
+                  </Text>
+                </View>
+                <AnimatedNumber
+                  value={monthlySummary?.total_rewards_optimized || 0}
+                  prefix="₹"
+                  style={[styles.statValue, { color: colors.success }]}
                 />
-                <Text style={[styles.statLabel, { color: colors.success }]}>
-                  Rewards this month
-                </Text>
               </View>
-              <AnimatedNumber
-                value={monthlySummary?.total_rewards_optimized || 0}
-                prefix="₹"
-                style={[styles.statValueLarge, { color: colors.success }]}
-              />
             </View>
 
             {/* Best Category */}
@@ -545,7 +542,7 @@ export default function DashboardScreen() {
                     key={card.id}
                     activeOpacity={0.7}
                     accessibilityRole="button"
-                    accessibilityLabel={`${cardName}: ₹${remaining.toLocaleString('en-IN')} remaining for fee waiver`}
+                    accessibilityLabel={`${cardName}: ₹${Math.round(remaining).toLocaleString('en-IN')} more to waive your ₹${card.effective_annual_fee || 0} fee`}
                     onPress={() => router.push('/cards')}
                     style={[
                       styles.alertCard,
@@ -580,10 +577,8 @@ export default function DashboardScreen() {
                         { color: colors.textSecondary },
                       ]}
                     >
-                      ₹{remaining.toLocaleString('en-IN')} more to waive ₹
-                      {(
-                        card.effective_fee_waiver_threshold || 0
-                      ).toLocaleString('en-IN')}{' '}
+                      ₹{Math.round(remaining).toLocaleString('en-IN')} more to waive your ₹
+                      {(card.effective_annual_fee || 0).toLocaleString('en-IN')}{' '}
                       fee
                     </Text>
                     {monthsLeft && monthlyTarget ? (
@@ -594,7 +589,7 @@ export default function DashboardScreen() {
                         ]}
                       >
                         {monthsLeft} month{monthsLeft > 1 ? 's' : ''}{' '}
-                        remaining · ₹{monthlyTarget.toLocaleString('en-IN')}
+                        remaining · ₹{Math.round(monthlyTarget).toLocaleString('en-IN')}
                         /month
                       </Text>
                     ) : null}
@@ -799,12 +794,8 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    padding: 18,
+    padding: 16,
     borderRadius: tokens.radius.card,
-  },
-  statCardWide: {
-    flex: undefined,
-    width: '100%',
   },
   statHeader: {
     flexDirection: 'row',
@@ -823,12 +814,6 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: -1,
   },
-  statValueLarge: {
-    fontSize: 38,
-    fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: -1.5,
-  },
-
   // ── Best Category ─────────────────────────────────────────────────────
   bestCatRow: {
     flexDirection: 'row',

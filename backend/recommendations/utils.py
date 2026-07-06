@@ -132,11 +132,11 @@ def parse_rules_from_catalog(catalog_card: Any, card_name: str) -> list[Normaliz
         if not caps and r.get("has_cap"):
             cap_limit = float(r.get("cap_limit", 0) or 0)
             if cap_limit > 0:
-                is_monthly = r.get("cap_cycle") == "monthly"
+                cap_cycle = r.get("cap_cycle", "per_transaction")
                 caps.append({
-                    "cap_type": "monthly_cap" if is_monthly else "transaction_cap",
+                    "cap_type": f"{cap_cycle}_cap",
                     "limit": cap_limit,
-                    "scope": "monthly" if is_monthly else "per_transaction"
+                    "scope": cap_cycle,
                 })
 
         config = {

@@ -286,6 +286,8 @@ def apply_caps_from_config(
     # For now, just apply the first cap (simplified)
     # In a full implementation, we'd use evaluate_caps with proper matching
     cap = caps[0]
+    # Use cumulative tracking only for monthly caps (quarterly/annual need
+    # per-merchant reward tracking which requires a reward ledger — TODO P1).
     capped = apply_single_cap(
         uncapped_reward,
         cap.limit,

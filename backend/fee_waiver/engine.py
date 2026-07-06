@@ -74,12 +74,14 @@ class FeeWaiverEngine:
         )
         
         # 3. Explainability
+        has_history = current_spend > Decimal("0")
         explanation = WaiverExplainability.generate_state_explanation(
             comfort_state=comfort_state,
             urgency=urgency,
             is_achieved=is_achieved,
             remaining_spend=remaining_spend or Decimal("0.00"),
-            days_remaining=days_remaining or 0
+            days_remaining=days_remaining or 0,
+            has_spending_history=has_history,
         )
         
         return FeeWaiverState(

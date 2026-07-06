@@ -33,6 +33,156 @@ import { EditCardDetailsSheet } from './EditCardDetailsSheet';
 import { formatCurrencyIN } from '@/utils/currency';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
+// ── Card Intelligence Derivation ────────────────────────────────────────────
+
+interface IntelChip {
+  label: string;
+  icon: string;
+  color: string;
+}
+
+interface CardIntel {
+  text: string;
+  chips: IntelChip[];
+}
+
+function deriveCardIntel(rules: any[], card: UserCardResponse): CardIntel {
+  const chips: IntelChip[] = [];
+  const fee = card.effective_annual_fee || card.card_details?.annual_fee || 0;
+  const waiverTarget = card.effective_fee_waiver_threshold;
+
+  // Parse rules into structured data
+  let rawRules = rules;
+  if (typeof rules === 'string') {
+    try {
+      rawRules = JSON.parse(rules);
+    } catch (e) {
+      rawRules = [];
+    }
+  }
+  const rulesArray = Array.isArray(rawRules) ? rawRules : [];
+
+  const parsedRules = rulesArray.map((r: any) => ({
+    category: r.category || r.category_name || '',
+    merchant: r.merchant || '',
+    rate: r.cashback_percent || r.multiplier || r.reward_rate || 0,
+    rewardType: (r.reward_type || 'cashback').toLowerCase(),
+    hasCap: r.has_cap || false,
+    capLimit: r.cap_limit || 0,
+    capCycle: r.cap_cycle || '',
+    ruleType: r.rule_type || '',
+  }));
+
+  // Separate bonus rules from base
+  const bonusRules = parsedRules.filter(r => r.ruleType !== 'base_reward' && r.rate > 0);
+  const baseRule = parsedRules.find(r => r.ruleType === 'base_reward');
+
+  // Detect card personality
+  const hasFuelRules = bonusRules.some(r =>
+    ['fuel', 'petrol', 'diesel'].some(w => r.category.toLowerCase().includes(w))
+  );
+  const isPointsCard = parsedRules.some(r => r.rewardType === 'points' || r.rewardType === 'rp');
+  const isCashbackCard = parsedRules.some(r => r.rewardType === 'cashback');
+
+  // ── Build chips ──
+  // Best rate chip
+  if (bonusRules.length > 0) {
+    const best = bonusRules.reduce((a, b) => a.rate > b.rate ? a : b);
+    const target = best.merchant || best.category;
+    if (isPointsCard) {
+      chips.push({ label: `${best.rate}x on ${target}`, icon: 'Sparkles', color: '#10B981' });
+    } else {
+      chips.push({ label: `${best.rate}% on ${target}`, icon: 'Sparkles', color: '#10B981' });
+    }
+  }
+
+  // Base rate chip
+  if (baseRule) {
+    if (isPointsCard) {
+      const basePts = baseRule.rate > 0 ? `${baseRule.rate}x` : 'Base';
+      chips.push({ label: `${basePts} Base Points`, icon: 'Layers', color: '#8B5CF6' });
+    } else {
+      chips.push({ label: `${baseRule.rate}% Base Rate`, icon: 'Layers', color: '#8B5CF6' });
+    }
+  }
+
+  // Cap warning
+  const cappedRules = parsedRules.filter(r => r.hasCap);
+  if (cappedRules.length > 0) {
+    const cap = cappedRules[0];
+    if (cap.capLimit > 0) {
+      chips.push({
+        label: `Capped ₹${cap.capLimit.toLocaleString('en-IN')}/${cap.capCycle || 'month'}`,
+        icon: 'Shield',
+        color: '#F59E0B',
+      });
+    }
+  }
+
+  // Waiver chip
+  if (waiverTarget && waiverTarget > 0) {
+    const spend = card.annual_spend || 0;
+    if (spend < waiverTarget) {
+      const pct = Math.round((spend / waiverTarget) * 100);
+      chips.push({
+        label: `${pct}% to Fee Waiver`,
+        icon: 'ShieldCheck',
+        color: pct > 75 ? '#F59E0B' : '#8B5CF6',
+      });
+    } else {
+      chips.push({ label: 'Fee Waiver Achieved', icon: 'ShieldCheck', color: '#10B981' });
+    }
+  }
+
+  // Fee info
+  if (fee === 0) {
+    chips.push({ label: 'Lifetime Free', icon: 'BadgeCheck', color: '#10B981' });
+  }
+
+  // ── Build text ──
+  const parts: string[] = [];
+
+  if (bonusRules.length > 0) {
+    const topRules = [...bonusRules]
+      .sort((a, b) => b.rate - a.rate)
+      .slice(0, 3);
+    const ruleDescs = topRules.map(r => {
+      const target = r.merchant || r.category;
+      const capNote = r.hasCap && r.capLimit > 0
+        ? ` (capped at ${isPointsCard ? '' : '₹'}${r.capLimit.toLocaleString('en-IN')}/${r.capCycle || 'month'})`
+        : '';
+      const rateStr = isPointsCard ? `${r.rate}x pts` : `${r.rate}%`;
+      return `${rateStr} on ${target}${capNote}`;
+    });
+    parts.push(ruleDescs.join('. ') + '.');
+  }
+
+  if (baseRule) {
+    if (isPointsCard) {
+      parts.push(`${baseRule.rate}x reward points on all other spends.`);
+    } else {
+      parts.push(`${baseRule.rate}% cashback on everything else.`);
+    }
+  } else if (bonusRules.length === 0) {
+    if (isPointsCard) {
+      parts.push('Earn reward points on all purchases.');
+    } else {
+      parts.push('No bonus categories configured.');
+    }
+  }
+
+  if (fee > 0 && waiverTarget && waiverTarget > 0) {
+    parts.push(`Annual fee ₹${fee.toLocaleString('en-IN')} — waived on ₹${waiverTarget.toLocaleString('en-IN')} spend.`);
+  } else if (fee === 0) {
+    parts.push('No annual fee.');
+  }
+
+  return {
+    text: parts.join(' '),
+    chips,
+  };
+}
+
 interface CardDetailSheetProps {
   card: UserCardResponse | null;
   onClose: () => void;
@@ -98,28 +248,14 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
     card.comfort_state === 'UNLIKELY_NATURALLY' ? 'Unlikely naturally' : 'Tracking progress'
   );
 
-  // Logic: Intelligence Heuristics (Max 3-5)
-  const intelligenceChips = [];
-  const cNameLow = cardName.toLowerCase();
+  // Logic: Intelligence Heuristics — derived from actual reward rules
+  const rewardRulesJson = card.card_details?.reward_rules_json;
+  const rewardRules = Array.isArray(rewardRulesJson)
+    ? rewardRulesJson
+    : (rewardRulesJson as any)?.rules || [];
+  const intel = deriveCardIntel(rewardRules, card);
 
-  if (hasWaiver && waiverPercent >= 75 && waiverPercent < 100) {
-    intelligenceChips.push({ label: 'Near Fee Waiver', icon: 'Activity', color: colors.warning });
-  } else if (card.annual_spend > 50000) {
-    intelligenceChips.push({ label: 'Frequently Used', icon: 'Zap', color: colors.primary });
-  }
-
-  if (cNameLow.includes('travel') || cNameLow.includes('miles') || cNameLow.includes('club')) {
-    intelligenceChips.push({ label: 'Travel Optimized', icon: 'Plane', color: '#0EA5E9' });
-  }
-  if (cNameLow.includes('cashback') || cNameLow.includes('ace')) {
-    intelligenceChips.push({ label: 'Cashback Rewards', icon: 'ShoppingBag', color: '#10B981' });
-  }
-  if (cNameLow.includes('fuel') || cNameLow.includes('petro')) {
-    intelligenceChips.push({ label: 'Fuel Benefits', icon: 'Fuel', color: '#F59E0B' });
-  }
-  if (cNameLow.includes('dine') || cNameLow.includes('swiggy')) {
-    intelligenceChips.push({ label: 'Dining Benefits', icon: 'Utensils', color: '#EC4899' });
-  }
+  const intelligenceChips = intel.chips;
   const finalChips = intelligenceChips.slice(0, 4);
 
   const handleToggleStatus = (newValue: boolean) => {
@@ -348,9 +484,9 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                   </View>
                   
                   <Text style={[styles.intelligenceText, { color: colors.textPrimary }]}>
-                    {hasWaiver && card.explanation_text 
-                      ? card.explanation_text 
-                      : `Best used for ${cNameLow.includes('travel') || cNameLow.includes('miles') ? 'travel & milestone acceleration' : 'maximizing immediate cashback on daily spends'}.`}
+                    {hasWaiver && card.explanation_text
+                      ? card.explanation_text
+                      : intel.text}
                   </Text>
 
                   {finalChips.length > 0 && (
