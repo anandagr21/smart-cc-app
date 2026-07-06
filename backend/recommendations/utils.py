@@ -152,6 +152,7 @@ def parse_rules_from_catalog(catalog_card: Any, card_name: str) -> list[Normaliz
         explicit_rule_type = r.get("rule_type")
         explicit_merchant = r.get("merchant")
         explicit_category = r.get("category")
+        explicit_payment_mode = r.get("payment_mode")
         
         if explicit_rule_type:
             rule_type = explicit_rule_type
@@ -163,6 +164,10 @@ def parse_rules_from_catalog(catalog_card: Any, card_name: str) -> list[Normaliz
                 config["category"] = explicit_category
                 priority = 10
                 rule_name = f"{card_name} - {explicit_category.title()}"
+            elif explicit_payment_mode:
+                config["payment_mode"] = explicit_payment_mode
+                priority = 20
+                rule_name = f"{card_name} - {explicit_payment_mode.upper()}"
             elif explicit_rule_type == "base_reward":
                 priority = 100
                 rule_name = f"{card_name} - Base Reward"

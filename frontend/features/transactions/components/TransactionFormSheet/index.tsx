@@ -376,23 +376,27 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
     return { groupedActive: grouped, inactiveCards: inactive };
   }, [filteredCards, paymentMode]);
 
-  // When switching to UPI, auto-populate merchant as "UPI" and select first RuPay card
+  // UPI mode: auto-populate merchant, filter RuPay cards. Other modes: clear merchant.
   useEffect(() => {
-    if (paymentMode !== 'UPI' || !cardsData) return;
-    // Auto-fill merchant name
-    setValue('merchant_name', 'UPI');
-    // Auto-select first RuPay card if current selection is not RuPay
-    const selectedCard = cardsData.find(c => c.id === selectedCardId);
-    if (!selectedCard) return;
-    const network = (selectedCard.network_override || selectedCard.card_details?.network || '').toUpperCase();
-    if (network !== 'RUPAY') {
-      const allActiveCards = filteredCards.filter(c => {
-        const n = (c.network_override || c.card_details?.network || '').toUpperCase();
-        return n === 'RUPAY' && c.card_status === 'ACTIVE';
-      });
-      if (allActiveCards.length > 0) {
-        setValue('user_card_id', allActiveCards[0].id);
+    if (!cardsData) return;
+    if (paymentMode === 'UPI') {
+      setValue('merchant_name', 'UPI');
+      // Auto-select first RuPay card if current selection is not RuPay
+      const selectedCard = cardsData.find(c => c.id === selectedCardId);
+      if (!selectedCard) return;
+      const network = (selectedCard.network_override || selectedCard.card_details?.network || '').toUpperCase();
+      if (network !== 'RUPAY') {
+        const allActiveCards = filteredCards.filter(c => {
+          const n = (c.network_override || c.card_details?.network || '').toUpperCase();
+          return n === 'RUPAY' && c.card_status === 'ACTIVE';
+        });
+        if (allActiveCards.length > 0) {
+          setValue('user_card_id', allActiveCards[0].id);
+        }
       }
+    } else if (merchantName === 'UPI') {
+      // Clear merchant when switching away from UPI if it was auto-filled
+      setValue('merchant_name', '');
     }
   }, [paymentMode]);
 
