@@ -26,7 +26,7 @@ const steps = [
       </svg>
     ),
     iconBg: "bg-accent-500/10 border-accent-500/20",
-    accentColor: "#8B5CF6",
+    accentColor: "#14B8A6",
     title: "Track Fee Waivers",
     desc: "We auto-detect your cards' annual fee waiver thresholds. See exactly how much more to spend on each card to avoid paying the fee — before the deadline hits.",
     detail: "Never pay an annual fee again",
@@ -139,7 +139,7 @@ export default function HowItWorks() {
           >
             <motion.div
               className="h-full"
-              style={{ background: "linear-gradient(90deg, #F59E0B, #8B5CF6, #10B981)" }}
+              style={{ background: "linear-gradient(90deg, #F59E0B, #14B8A6, #10B981)" }}
               initial={{ scaleX: 0, originX: 0 }}
               animate={lineInView ? { scaleX: 1 } : {}}
               transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
@@ -177,10 +177,10 @@ export default function HowItWorks() {
                 </div>
               </div>
 
-              {/* Right: Card Optimizer way */}
+              {/* Right: Card Analyser way */}
               <div>
                 <p className="text-xs font-bold text-green-400 uppercase tracking-widest mb-4">
-                  Card Optimizer
+                  Card Analyser
                 </p>
                 <div className="space-y-3">
                   {[

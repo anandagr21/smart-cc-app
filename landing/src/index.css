@@ -3,34 +3,34 @@
 @theme {
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
 
-  /* Brand - Amber/Gold */
-  --color-brand-50:  #FFFBEB;
-  --color-brand-100: #FEF3C7;
-  --color-brand-200: #FDE68A;
-  --color-brand-300: #FCD34D;
-  --color-brand-400: #FBBF24;
-  --color-brand-500: #F59E0B;
-  --color-brand-600: #D97706;
-  --color-brand-700: #B45309;
+  /* Primary - Teal */
+  --color-brand-50:  #F0FDFA;
+  --color-brand-100: #CCFBF1;
+  --color-brand-200: #99F6E4;
+  --color-brand-300: #5EEAD4;
+  --color-brand-400: #2DD4BF;
+  --color-brand-500: #14B8A6;
+  --color-brand-600: #0D9488;
+  --color-brand-700: #0F766E;
 
-  /* Accent - Violet */
-  --color-accent-300: #C4B5FD;
-  --color-accent-400: #A78BFA;
-  --color-accent-500: #8B5CF6;
-  --color-accent-600: #7C3AED;
-  --color-accent-700: #6D28D9;
+  /* Accent - Amber */
+  --color-accent-300: #FDE68A;
+  --color-accent-400: #FBBF24;
+  --color-accent-500: #F59E0B;
+  --color-accent-600: #D97706;
+  --color-accent-700: #B45309;
 
-  /* Cyan accent */
+  /* Cyan */
   --color-cyan-400: #22D3EE;
   --color-cyan-500: #06B6D4;
 
-  /* Surface - Deep Dark */
+  /* Surface - Deep Navy */
   --color-surface-50:  #F8FAFC;
   --color-surface-100: #F1F5F9;
-  --color-surface-800: #1E293B;
-  --color-surface-850: #131C2E;
-  --color-surface-900: #0F172A;
-  --color-surface-950: #020617;
+  --color-surface-800: #1A2738;
+  --color-surface-850: #111D2B;
+  --color-surface-900: #0C1A2B;
+  --color-surface-950: #060F1A;
 }
 
 /* ─── Reset & Base ─────────────────────────────────────────── */
@@ -39,52 +39,46 @@
 html {
   scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: rgba(139,92,246,0.3) transparent;
+  scrollbar-color: rgba(20,184,166,0.3) transparent;
 }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.35); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: rgba(20,184,166,0.3); border-radius: 99px; }
 
 body {
   margin: 0;
-  background: #020617;
+  background: #060F1A;
   color: #fff;
   overflow-x: hidden;
 }
 
-/* ─── Background Grid — pure CSS, no animation ────────────── */
+/* ─── Geometric Grid ───────────────────────────────────────── */
 .bg-grid {
   background-image:
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
-  /* No filter, no animation — just pixels */
+    linear-gradient(rgba(20,184,166,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20,184,166,0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
 }
 
 .bg-dot {
-  background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background-image: radial-gradient(circle, rgba(20,184,166,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 /* ─── Glass Utilities ─────────────────────────────────────── */
-/*
-   Performance rule: never stack more than 2 backdrop-filter layers
-   in the visible viewport. Use solid semi-transparent bg as fallback.
-*/
 .glass {
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 .glass-strong {
-  background: rgba(255,255,255,0.07);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.10);
 }
 .glass-card {
-  /* Reduced blur from 16px → 8px — cuts GPU cost significantly */
   background: rgba(255,255,255,0.05);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -94,13 +88,13 @@ body {
   transition: background 0.2s, border-color 0.2s;
 }
 .glass-hover:hover {
-  background: rgba(255,255,255,0.09);
-  border-color: rgba(255,255,255,0.16);
+  background: rgba(20,184,166,0.06);
+  border-color: rgba(20,184,166,0.16);
 }
 
-/* ─── Gradients ───────────────────────────────────────────── */
+/* ─── Gradients ────────────────────────────────────────────── */
 .text-gradient {
-  background: linear-gradient(125deg, #FBBF24 0%, #F59E0B 30%, #A78BFA 70%, #8B5CF6 100%);
+  background: linear-gradient(125deg, #2DD4BF 0%, #14B8A6 40%, #F59E0B 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -115,7 +109,7 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(251,191,36,0.5), rgba(139,92,246,0.5));
+  background: linear-gradient(135deg, rgba(20,184,166,0.5), rgba(245,158,11,0.3));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -123,43 +117,36 @@ body {
   pointer-events: none;
 }
 
-/* ─── Hero static glow orbs ───────────────────────────────── */
-/*
-   KEY PERF FIX: No animated scale, no animated filter.
-   Static radial-gradient blobs — zero GPU cost per frame.
-   Using CSS @keyframes opacity-only (opacity is compositor-only).
-*/
+/* ─── Hero orbs — teal + amber ─────────────────────────────── */
 .hero-orb-left {
   position: absolute;
-  width: 700px;
-  height: 700px;
-  top: -10%;
-  left: -15%;
+  width: 600px;
+  height: 600px;
+  top: -8%;
+  left: -10%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(20,184,166,0.10) 0%, transparent 60%);
   pointer-events: none;
-  /* No filter: blur() — the radial-gradient itself softens the edge */
-  animation: orb-breathe 9s ease-in-out infinite;
+  animation: orb-breathe 10s ease-in-out infinite;
 }
 .hero-orb-right {
   position: absolute;
-  width: 520px;
-  height: 520px;
-  top: 5%;
-  right: -12%;
+  width: 450px;
+  height: 450px;
+  top: 10%;
+  right: -8%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 60%);
   pointer-events: none;
-  animation: orb-breathe 11s ease-in-out infinite 2s;
+  animation: orb-breathe 12s ease-in-out infinite 2s;
 }
 
 @keyframes orb-breathe {
-  0%, 100% { opacity: 0.7; }
+  0%, 100% { opacity: 0.6; }
   50%       { opacity: 1;   }
 }
 
-/* ─── Hero floating chips — CSS keyframes ─────────────────── */
-/* JS motion was scheduling 120 fps updates; CSS runs on compositor thread */
+/* ─── Floating chips ───────────────────────────────────────── */
 @keyframes float-slow {
   0%, 100% { transform: translateY(0px) translateZ(0);  }
   50%       { transform: translateY(-10px) translateZ(0); }
@@ -179,7 +166,7 @@ body {
   backface-visibility: hidden;
 }
 
-/* ─── Scroll cue ──────────────────────────────────────────── */
+/* ─── Scroll cue ───────────────────────────────────────────── */
 @keyframes scroll-cue {
   0%, 100% { transform: scaleY(1);   opacity: 0.4; }
   50%       { transform: scaleY(0.3); opacity: 1;   }
@@ -192,88 +179,51 @@ body {
   animation: scroll-cue 1.8s ease-in-out infinite;
 }
 
-/* ─── Glow Orbs (section decorations) ────────────────────── */
-.glow-orb {
-  position: absolute;
-  border-radius: 50%;
-  /* Static — no blur filter, no motion. Radial gradient does the work. */
-  pointer-events: none;
-  z-index: 0;
-}
+/* ─── Icon glow ────────────────────────────────────────────── */
+.icon-glow { box-shadow: 0 0 20px rgba(20,184,166,0.18); }
 
-.icon-glow { box-shadow: 0 0 20px rgba(139,92,246,0.22); }
-
-/* ─── Hero Card ───────────────────────────────────────────── */
+/* ─── Hero Card ────────────────────────────────────────────── */
 .hero-card {
-  background: linear-gradient(135deg, rgba(30,41,59,0.88) 0%, rgba(15,23,42,0.94) 100%);
-  /* Reduced backdrop blur from 32px → 16px */
+  background: linear-gradient(135deg, rgba(12,26,43,0.9) 0%, rgba(6,15,26,0.95) 100%);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 28px;
+  border: 1px solid rgba(20,184,166,0.10);
+  border-radius: 24px;
   box-shadow:
     0 32px 64px rgba(0,0,0,0.5),
-    0 0 0 1px rgba(255,255,255,0.05),
-    inset 0 1px 0 rgba(255,255,255,0.08);
+    0 0 0 1px rgba(20,184,166,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
-/* ─── Marquee ─────────────────────────────────────────────── */
-/* will-change: transform tells the browser to promote to its own layer */
-@keyframes marquee {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.marquee-track {
-  animation: marquee 30s linear infinite;
-  display: flex;
-  width: max-content;
-  will-change: transform;
-}
-.marquee-track:hover { animation-play-state: paused; }
-
-/* ─── Ticker ──────────────────────────────────────────────── */
-@keyframes ticker {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.ticker-track {
-  animation: ticker 22s linear infinite;
-  display: flex;
-  width: max-content;
-  will-change: transform;
-}
-
-/* ─── Testimonial cards — NO backdrop-filter (was 24 blurred layers) ─ */
-/* Solid semi-transparent bg renders in a single GPU pass vs blur compositing */
+/* ─── Testimonial cards ────────────────────────────────────── */
 .testimonial-card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(20,184,166,0.04);
+  border: 1px solid rgba(20,184,166,0.07);
   border-radius: 16px;
   padding: 24px;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 .testimonial-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(255,255,255,0.14);
+  border-color: rgba(20,184,166,0.16);
 }
 
 .savings-badge {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(20,184,166,0.05);
+  border: 1px solid rgba(20,184,166,0.07);
 }
 
 .stat-bar {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(20,184,166,0.04);
+  border: 1px solid rgba(20,184,166,0.06);
 }
 
-/* ─── CTA card — solid bg, static gradient orbs ──────────────────── */
+/* ─── CTA ──────────────────────────────────────────────────── */
 .cta-card {
-  background: rgba(15,23,42,0.8);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(12,26,43,0.8);
+  border: 1px solid rgba(20,184,166,0.12);
 }
 
-/* CTA orbs — pure CSS opacity breathing, no JS, no filter */
 .cta-orb-left {
   animation: orb-breathe 8s ease-in-out infinite;
   will-change: opacity;
@@ -290,44 +240,43 @@ body {
 }
 
 .cta-input {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 .cta-input:focus {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(139,92,246,0.5);
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(20,184,166,0.5);
 }
 
 .cta-btn {
-  background: #8B5CF6;
-  box-shadow: 0 8px 24px rgba(139,92,246,0.3);
+  background: #14B8A6;
+  box-shadow: 0 8px 24px rgba(20,184,166,0.25);
   transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 .cta-btn:hover:not(:disabled) {
-  background: #7C3AED;
-  box-shadow: 0 12px 32px rgba(139,92,246,0.5);
+  background: #0D9488;
+  box-shadow: 0 12px 32px rgba(20,184,166,0.4);
 }
 .cta-btn:disabled { opacity: 0.6; }
 
 .cta-success-card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(20,184,166,0.05);
+  border: 1px solid rgba(20,184,166,0.08);
 }
 
-/* CSS spinner — no JS RAF needed */
 @keyframes spin { to { transform: rotate(360deg); } }
 .cta-spinner {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255,255,255,0.25);
-  border-top-color: white;
+  border: 2px solid rgba(20,184,166,0.25);
+  border-top-color: #14B8A6;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   will-change: transform;
 }
 
-/* ─── Pricing card hover lift — CSS only ─────────────────────────── */
+/* ─── Card hover lifts ─────────────────────────────────────── */
 .pricing-card {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -336,8 +285,6 @@ body {
   box-shadow: 0 28px 56px rgba(0,0,0,0.4);
 }
 
-/* ─── Card hover lifts — CSS transform instead of JS whileHover ─── */
-/* transform + box-shadow on their own compositor layer = no layout repaint */
 .feature-card {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -346,21 +293,17 @@ body {
   box-shadow: 0 28px 56px rgba(0,0,0,0.4);
 }
 
-/* ─── Focus / A11y ────────────────────────────────────────── */
+/* ─── Focus / A11y ─────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid rgba(139,92,246,0.7);
+  outline: 2px solid rgba(20,184,166,0.6);
   outline-offset: 3px;
   border-radius: 6px;
 }
 
-/* ─── Respect reduced motion ──────────────────────────────── */
+/* ─── Respect reduced motion ───────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
-  }
-  .marquee-track,
-  .ticker-track {
-    animation: none !important;
   }
 }

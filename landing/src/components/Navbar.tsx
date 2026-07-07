@@ -27,9 +27,9 @@ export default function Navbar() {
         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2.5 group" aria-label="Card Optimizer home">
-          <div className="w-9 h-9 rounded-xl bg-white/10 p-0.5 shadow-lg shadow-brand-500/30 group-hover:shadow-brand-500/50 transition-shadow duration-300"><img src="/favicon.png" alt="Card Optimizer" className="w-full h-full rounded-lg" /></div>
-          <span className="font-bold text-base tracking-tight text-white">Card Optimizer</span>
+        <a href="#" className="flex items-center gap-2.5 group" aria-label="Card Analyser home">
+          <div className="w-9 h-9 rounded-xl bg-white/10 p-0.5 shadow-lg shadow-brand-500/30 group-hover:shadow-brand-500/50 transition-shadow duration-300"><img src="/favicon.png" alt="Card Analyser" className="w-full h-full rounded-lg" /></div>
+          <span className="font-bold text-base tracking-tight text-white">Card Analyser</span>
         </a>
 
         {/* Desktop links */}

@@ -5,7 +5,7 @@ interface Props {
   color?: string;
 }
 
-export default function GlowOrb({ className = "", size = 500, color = "#8B5CF6" }: Props) {
+export default function GlowOrb({ className = "", size = 500, color = "#14B8A6" }: Props) {
   return (
     <div
       className={`glow-orb ${className}`}

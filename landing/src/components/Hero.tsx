@@ -10,7 +10,7 @@ const stats = [
 const cards = [
   { name: "HDFC Infinia",  network: "VISA",       progress: 65, color: "from-amber-500 to-orange-600" },
   { name: "Amex Platinum", network: "AMEX",       progress: 82, color: "from-slate-300 to-slate-500" },
-  { name: "Axis Magnus",   network: "MASTERCARD", progress: 41, color: "from-purple-600 to-blue-700" },
+  { name: "Axis Magnus",   network: "MASTERCARD", progress: 41, color: "from-teal-600 to-brand-700" },
   { name: "SBI Cashback",  network: "VISA",       progress: 93, color: "from-green-500 to-teal-600"  },
 ];
 
@@ -62,7 +62,7 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.32, duration: 0.5 }}
             >
-              Card Optimizer remembers every reward rule so you don't have to.
+              Card Analyser remembers every reward rule so you don't have to.
               No spreadsheets. No emails to yourself. Just the best card for every purchase.
             </motion.p>
 
@@ -75,7 +75,7 @@ export default function Hero() {
             >
               <a
                 href="#cta"
-                className="group inline-flex items-center justify-center px-8 py-4 bg-accent-500 hover:bg-accent-600 text-white font-semibold text-lg rounded-2xl transition-all duration-200 shadow-xl shadow-accent-500/30 hover:shadow-accent-500/50 cursor-pointer"
+                className="group inline-flex items-center justify-center px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-lg rounded-2xl transition-all duration-200 shadow-xl shadow-brand-500/30 hover:shadow-brand-500/50 cursor-pointer"
               >
                 Join Early Access
                 <ArrowRightIcon className="w-5 h-5 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
@@ -143,7 +143,7 @@ export default function Hero() {
                 {/* Top bar */}
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <p className="text-white/40 text-xs font-semibold tracking-widest uppercase mb-0.5">Card Optimizer Dashboard</p>
+                    <p className="text-white/40 text-xs font-semibold tracking-widest uppercase mb-0.5">Card Analyser Dashboard</p>
                     <p className="text-white font-bold text-lg">My Card Portfolio</p>
                   </div>
                   <div className="flex items-center gap-1.5 glass rounded-full px-3 py-1.5">

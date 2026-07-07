@@ -127,7 +127,7 @@ export default function Features() {
                   <p className="text-white/40 text-sm mt-1.5">HDFC, SBI, ICICI, Amex, Axis, Kotak, Yes Bank and more — all auto-populated.</p>
                 </div>
                 <div className="flex -space-x-3 flex-shrink-0">
-                  {["from-amber-500 to-orange-600","from-blue-600 to-indigo-700","from-green-500 to-emerald-600","from-purple-600 to-violet-700","from-rose-500 to-pink-600"].map((g, i) => (
+                  {["from-amber-500 to-orange-600","from-blue-600 to-indigo-700","from-green-500 to-emerald-600","from-teal-500 to-brand-700","from-rose-500 to-pink-600"].map((g, i) => (
                     <motion.div
                       key={i}
                       className={`w-12 h-8 rounded-lg bg-gradient-to-r ${g} border-2 border-surface-950 shadow-lg`}
