@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Card Analyser",
-    "slug": "card-optimizer",
+    "slug": "card-analyser",
     "version": "1.0.0",
     "scheme": "smartcc",
     "orientation": "portrait",
