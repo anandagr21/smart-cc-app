@@ -143,8 +143,11 @@ const sections: { title: string; content: React.ReactNode }[] = [
         <p className="text-white/55 mb-3">
           We retain your account, card, and transaction data for as long as your account
           is active. You can delete individual cards or transactions at any time from
-          within the app. You may also request full account deletion by contacting us
-          at the email below. Deletion requests are processed within 30 days.
+          within the app. To request full account deletion, visit our{" "}
+          <a href="/delete-data" className="text-accent-400 hover:text-accent-300 underline transition-colors">
+            data deletion page
+          </a>{" "}
+          or contact us at the email below. Deletion requests are processed within 30 days.
         </p>
         <p className="text-white/55">
           Crash and performance data in Sentry is automatically deleted after 90 days.
