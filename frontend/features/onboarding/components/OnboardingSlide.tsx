@@ -59,7 +59,7 @@ export const SLIDES: OnboardingSlideData[] = [
     icon: 'Plus',
     title: 'Track Transactions',
     description:
-      'Log each purchase. Smart CC instantly recommends the best card to maximize your rewards.',
+      'Log each purchase. Card Analyser instantly recommends the best card to maximize your rewards.',
     gradient: ['#6C5CE7', '#8B5CF6'],
   },
   {

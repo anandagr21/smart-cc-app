@@ -32,7 +32,7 @@ export default function ProfileScreen() {
   };
 
   const getInitials = (name: string, email: string) => {
-    if (name && name !== 'User' && name !== 'Smart CC User') {
+    if (name && name !== 'User' && name !== 'Card Analyser User') {
       const parts = name.trim().split(' ');
       if (parts.length > 1) {
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -168,7 +168,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Text style={[styles.versionText, { color: colors.textMuted }]}>
-          Card Optimiser • v1.1.0
+          Card Analyser • v1.1.0
         </Text>
       </ScrollView>
     </ScreenContainer>

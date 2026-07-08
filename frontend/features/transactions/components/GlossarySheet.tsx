@@ -58,7 +58,7 @@ export const GlossarySheet: React.FC<GlossarySheetProps> = ({ visible, onClose }
               </View>
               
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                How Smart CC calculates long-term financial value beyond simple cashback.
+                How Card Analyser calculates long-term financial value beyond simple cashback.
               </Text>
 
               {/* VALUE AT RISK */}

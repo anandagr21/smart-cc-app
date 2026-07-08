@@ -162,7 +162,7 @@ export default function SearchScreen() {
             <TextInput
               ref={inputRef}
               style={[styles.input, { color: colors.textPrimary }]}
-              placeholder="Ask Smart CC or search merchants..."
+              placeholder="Ask Card Analyser or search merchants..."
               placeholderTextColor={colors.textMuted}
               value={query}
               onChangeText={setQuery}

@@ -10,8 +10,8 @@ import { DynamicIcon } from '@/components/DynamicIcon';
 const MOCK_AUDIT_LOGS = [
   { id: '1', type: 'PUBLISH', title: 'Published Version 4', actor: 'Admin (You)', date: 'Today, 2:30 PM', isBot: false },
   { id: '2', type: 'EDIT', title: 'Admin Edited Lounge Access', detail: 'Changed "4 Visits" to "8 Visits"', actor: 'Admin (You)', date: 'Today, 2:15 PM', isBot: false },
-  { id: '3', type: 'VERIFY', title: 'AI Verified Fields', detail: '21 fields verified against MITC', actor: 'Smart CC AI', date: 'Today, 1:45 PM', isBot: true },
-  { id: '4', type: 'EXTRACT', title: 'AI Extracted Data', detail: 'Processed HDFC_Millennia_MITC.pdf', actor: 'Smart CC AI', date: 'Today, 1:42 PM', isBot: true },
+  { id: '3', type: 'VERIFY', title: 'AI Verified Fields', detail: '21 fields verified against MITC', actor: 'Card Analyser AI', date: 'Today, 1:45 PM', isBot: true },
+  { id: '4', type: 'EXTRACT', title: 'AI Extracted Data', detail: 'Processed HDFC_Millennia_MITC.pdf', actor: 'Card Analyser AI', date: 'Today, 1:42 PM', isBot: true },
 ];
 
 export default function AuditTimelineScreen() {

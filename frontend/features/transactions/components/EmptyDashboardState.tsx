@@ -38,7 +38,7 @@ export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
           <Text style={[styles.body, { color: colors.textSecondary }]}>
             {hasCards
               ? 'Your card is set up! Log your first transaction to see cashback, reward efficiency, and personalized card recommendations.'
-              : 'Add a credit card and log your first transaction. Smart CC will analyze your portfolio and recommend the best card for every purchase — automatically.'}
+              : 'Add a credit card and log your first transaction. Card Analyser will analyze your portfolio and recommend the best card for every purchase — automatically.'}
           </Text>
         </View>
 

@@ -89,7 +89,7 @@ export default function LoginScreen() {
       >
         <View style={[styles.brandDot, { backgroundColor: colors.primary }]} />
         <Text style={[styles.brandName, { color: colors.textSecondary }]}>
-          Card Optimizer
+          Card Analyser
         </Text>
       </Animated.View>
 

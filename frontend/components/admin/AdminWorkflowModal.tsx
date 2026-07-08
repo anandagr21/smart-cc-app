@@ -61,7 +61,7 @@ export const AdminWorkflowModal: React.FC<AdminWorkflowModalProps> = ({ visible,
 
           <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <Text style={styles.introText}>
-              The Smart CC App is powered by a robust data ingestion pipeline. Below is the end-to-end flow of how raw bank data becomes live user features.
+              The Card Analyser App is powered by a robust data ingestion pipeline. Below is the end-to-end flow of how raw bank data becomes live user features.
             </Text>
 
             <View style={styles.flowchart}>

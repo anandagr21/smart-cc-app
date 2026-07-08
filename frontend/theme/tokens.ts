@@ -1,4 +1,4 @@
-// ─── Smart CC Design System — Design Tokens ──────────────────────────────────
+// ─── Card Analyser Design System — Design Tokens ──────────────────────────────────
 
 export const tokens = {
   // ── Layout ─────────────────────────────────────────────────────────────────

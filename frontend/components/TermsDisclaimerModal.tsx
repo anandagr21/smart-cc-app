@@ -31,7 +31,7 @@ export function TermsDisclaimerModal() {
     <Modal visible={true} transparent={true} animationType="slide">
       <View style={styles.container}>
         <View style={styles.modalContent}>
-          <Text style={styles.title}>Welcome to Smart CC</Text>
+          <Text style={styles.title}>Welcome to Card Analyser</Text>
           <ScrollView style={styles.scrollArea}>
             <Text style={styles.paragraph}>
               Before you proceed, please read and accept our terms and conditions.
@@ -39,7 +39,7 @@ export function TermsDisclaimerModal() {
             
             <Text style={styles.subtitle}>AI Disclaimer</Text>
             <Text style={styles.paragraph}>
-              Smart CC uses artificial intelligence to analyze your credit cards, provide insights, and generate recommendations. While we strive for accuracy, AI models can occasionally produce incorrect, incomplete, or probabilistic information.
+              Card Analyser uses artificial intelligence to analyze your credit cards, provide insights, and generate recommendations. While we strive for accuracy, AI models can occasionally produce incorrect, incomplete, or probabilistic information.
             </Text>
             
             <Text style={styles.subtitle}>Not Financial Advice</Text>
@@ -49,7 +49,7 @@ export function TermsDisclaimerModal() {
 
             <Text style={styles.subtitle}>Data Privacy</Text>
             <Text style={styles.paragraph}>
-              By using Smart CC, you consent to our privacy policy regarding how we process your transactions and card data to provide personalized AI insights.
+              By using Card Analyser, you consent to our privacy policy regarding how we process your transactions and card data to provide personalized AI insights.
             </Text>
 
             {error && <Text style={styles.errorText}>{error}</Text>}

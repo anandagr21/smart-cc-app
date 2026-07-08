@@ -1,4 +1,4 @@
-// ─── Smart CC Design System — Color Tokens ───────────────────────────────────
+// ─── Card Analyser Design System — Color Tokens ───────────────────────────────────
 // Palette locked per product spec. Do NOT add random accents.
 
 export const lightTheme = {
