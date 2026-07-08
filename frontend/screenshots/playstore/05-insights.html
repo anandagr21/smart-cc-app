@@ -16,23 +16,23 @@
   }
   .bg {
     position: absolute; inset: 0;
-    background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 50%, #020617 100%);
+    background: linear-gradient(160deg, #060F1A 0%, #0C1A2B 50%, #060F1A 100%);
   }
   .bg-grid {
     position: absolute; inset: 0;
     background-image:
-      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      linear-gradient(rgba(20,184,166,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20,184,166,0.04) 1px, transparent 1px);
     background-size: 80px 80px;
     mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 70%);
   }
   .phone {
     position: relative; z-index: 1;
-    width: 420px; height: 860px;
-    background: #0f172a;
+    width: 390px; height: 844px;
+    background: #0C1A2B;
     border-radius: 48px;
-    border: 3px solid #334155;
-    box-shadow: 0 0 80px rgba(139,92,246,0.15), 0 0 200px rgba(59,130,246,0.08);
+    border: 3px solid rgba(20,184,166,0.12);
+    box-shadow: 0 0 80px rgba(20,184,166,0.10), 0 0 200px rgba(20,184,166,0.04);
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -40,14 +40,14 @@
   }
   .phone img {
     width: 100%; height: 100%;
-    object-fit: cover;
+    object-fit: fill;
     border-radius: 45px;
   }
   .caption {
     position: relative; z-index: 1;
-    background: rgba(15,23,42,0.85);
+    background: rgba(12,26,43,0.85);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(20,184,166,0.10);
     border-radius: 16px;
     padding: 20px 36px;
     text-align: center;
@@ -70,7 +70,7 @@
   <div class="bg"></div>
   <div class="bg-grid"></div>
   <div class="phone">
-    <img src="./viewable/05-intelligence.jpg" alt="" />
+    <img src="file:///Users/anandagrawal/work/smart-cc-app/frontend/screenshots/viewable/05-intelligence.jpg" alt="" />
   </div>
   <div class="caption">
     <h2>AI-Powered Insights</h2>

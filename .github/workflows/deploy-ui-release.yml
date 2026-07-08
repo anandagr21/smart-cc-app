@@ -1,0 +1,81 @@
+name: UI Release — EAS Update + Web Deploy
+
+on:
+  release:
+    types: [published]
+
+env:
+  EAS_CHANNEL: production
+  CLOUDFLARE_PROJECT: card-analyser-web
+
+permissions:
+  contents: read
+
+jobs:
+  eas-update:
+    name: EAS OTA Update (Production)
+    if: github.ref_name == 'ui' || github.ref_name == 'all'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: EAS Update — Production Channel
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_API_URL: https://api.akaovia.com/api/v1
+        run: |
+          npx eas update \
+            --channel ${{ env.EAS_CHANNEL }} \
+            --message "${{ github.ref_name }} — ${{ github.sha }}"
+
+  web-deploy:
+    name: Build & Deploy Web to Cloudflare
+    if: github.ref_name == 'ui' || github.ref_name == 'all'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Web App
+        env:
+          EXPO_PUBLIC_API_URL: https://api.akaovia.com/api/v1
+        run: npx expo export --platform web
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: frontend
+          command: pages deploy dist --project-name ${{ env.CLOUDFLARE_PROJECT }} --branch main

@@ -4,63 +4,36 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SCREENSHOTS_DIR = join(__dirname, 'screenshots');
-const BASE_URL = 'http://localhost:19006';
+const SCREENSHOTS_DIR = join(__dirname, 'screenshots', 'viewable');
+const BASE_URL = 'http://localhost:8081';
 
-const CREDENTIALS = {
-  email: 'anandagr@test.com',
-  password: 'anandagr@123',
+// Fake user injected into localStorage to bypass Google Sign-In
+const FAKE_AUTH = {
+  auth_token: 'screenshot_token_placeholder',
+  auth_user: JSON.stringify({
+    id: 'user-1',
+    email: 'user@cardanalyser.com',
+    full_name: 'Rahul Sharma',
+    role: 'user',
+    terms_accepted: true,
+    is_premium: false,
+  }),
 };
 
-// All screens to capture — ordered for natural navigation flow
 const SCREENS = [
-  // Login screen (captured first, before logging in)
-  { name: '00-login', path: '/(auth)/login', description: 'Login screen' },
-
-  // Tab screens (after login)
-  { name: '01-analyze', path: '/', description: 'Analyze tab — main dashboard with AI insights' },
-  { name: '02-wallet', path: '/cards', description: 'Wallet tab — credit cards inventory' },
-  { name: '03-activity', path: '/history', description: 'Activity tab — transaction history' },
-  { name: '04-profile', path: '/profile', description: 'Profile tab — user settings & preferences' },
-
-  // Intelligence screens (modals over tabs)
-  { name: '05-intelligence', path: '/intelligence', description: 'Transaction intelligence detail' },
-  { name: '06-monthly-intelligence', path: '/monthly-intelligence', description: 'Monthly intelligence report' },
-
-  // Search screens
-  { name: '07-search', path: '/search', description: 'Search — merchant/product search' },
-  { name: '08-search-results', path: '/search/results?q=amazon', description: 'Search results for "amazon"' },
-
-  // Modal screens (settings-related)
-  { name: '09-notifications', path: '/(modals)/notifications', description: 'Notifications preferences modal' },
-  { name: '10-preferences', path: '/(modals)/preferences', description: 'App preferences modal' },
-  { name: '11-security', path: '/(modals)/security', description: 'Security settings modal' },
-
-  // Admin screens
-  { name: '12-admin-catalog', path: '/admin/master-catalog', description: 'Admin — Master catalog' },
-  { name: '13-admin-card-intelligence', path: '/admin/card-intelligence', description: 'Admin — Card intelligence dashboard' },
-  { name: '14-admin-feedback', path: '/admin/feedback', description: 'Admin — User feedback' },
+  { name: '00-login', path: '/(auth)/login', desc: 'Login screen' },
+  { name: '01-analyze', path: '/', desc: 'Analyze — card recommendations' },
+  { name: '02-wallet', path: '/cards', desc: 'Wallet — saved cards' },
+  { name: '03-activity', path: '/history', desc: 'Activity — transaction history' },
+  { name: '04-profile', path: '/profile', desc: 'Profile & settings' },
+  { name: '05-intelligence', path: '/intelligence', desc: 'Transaction intelligence' },
+  { name: '06-monthly-intelligence', path: '/monthly-intelligence', desc: 'Monthly intelligence report' },
+  { name: '07-search', path: '/search', desc: 'Search merchants' },
+  { name: '08-search-results', path: '/search/results?q=amazon', desc: 'Search results' },
 ];
 
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function takeScreenshot(page, name, url, description) {
-  const fullUrl = `${BASE_URL}${url}`;
-  console.log(`📸 [${name}] → ${url}`);
-  try {
-    await page.goto(fullUrl, { waitUntil: 'networkidle', timeout: 20000 });
-    await sleep(2000); // Let animations finish
-
-    const filePath = join(SCREENSHOTS_DIR, `${name}.png`);
-    await page.screenshot({ path: filePath, fullPage: false });
-    console.log(`   ✅ saved`);
-    return { name, path: filePath, url: fullUrl, description, status: 'success' };
-  } catch (err) {
-    console.log(`   ❌ ${err.message.slice(0, 80)}`);
-    return { name, path: null, url: fullUrl, description, status: 'error', error: err.message };
-  }
 }
 
 async function main() {
@@ -74,98 +47,75 @@ async function main() {
   });
   const page = await context.newPage();
 
+  // ── Mock all API calls to prevent 401 → logout ────────────────────
+  // Intercept requests to the backend API and return empty/200 responses
+  await page.route('**/api/**', (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [], items: [], results: [], count: 0 }),
+    });
+  });
+
+  // Also intercept port 8000 (local backend)
+  await page.route('**:8000/**', (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [], items: [], results: [], count: 0 }),
+    });
+  });
+
   const results = [];
 
-  // ================================================================
-  // STEP 1: Screenshot the login screen BEFORE logging in
-  // ================================================================
+  // ── STEP 1: Login screen ──────────────────────────────────────────
   console.log('——— Login Screen ———');
   await page.goto(`${BASE_URL}/(auth)/login`, { waitUntil: 'networkidle', timeout: 20000 });
   await sleep(3000);
-  await page.screenshot({ path: join(SCREENSHOTS_DIR, '00-login.png'), fullPage: false });
-  console.log('📸 [00-login] → /(auth)/login');
-  console.log('   ✅ saved');
+  await page.screenshot({ path: join(SCREENSHOTS_DIR, '00-login.jpg'), type: 'jpeg', quality: 90 });
+  console.log('📸 [00-login] ✅ saved\n');
 
-  // ================================================================
-  // STEP 2: Log in with real credentials
-  // ================================================================
-  console.log('\n——— Logging in ———');
+  // ── STEP 2: Inject auth + skip onboarding ────────────────────
+  console.log('——— Injecting Auth ———');
+  await page.evaluate((auth) => {
+    localStorage.setItem('auth_token', auth.auth_token);
+    localStorage.setItem('auth_user', auth.auth_user);
+    localStorage.setItem('smartcc_onboarding_complete', 'true');
+    localStorage.setItem('smartcc_onboarding_persona', 'MAXIMIZE_REWARDS');
+  }, FAKE_AUTH);
+  console.log('   ✓ auth + onboarding skip injected\n');
 
-  // Fill email
-  const emailInput = page.locator('input[placeholder="name@example.com"]');
-  await emailInput.waitFor({ state: 'visible', timeout: 10000 });
-  await emailInput.click();
-  await emailInput.fill(CREDENTIALS.email);
-  console.log('   ✓ email filled');
+  // ── STEP 3: Navigate home with auth ───────────────────────────────
+  await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 20000 });
+  await sleep(4000);
 
-  // Fill password
-  const passwordInput = page.locator('input[placeholder="••••••••"]');
-  await passwordInput.click();
-  await passwordInput.fill(CREDENTIALS.password);
-  console.log('   ✓ password filled');
-
-  // Click Sign In
-  const signInBtn = page.locator('text=Sign In').first();
-  await signInBtn.click();
-  console.log('   ✓ Sign In clicked');
-
-  // Wait for redirect to tabs (the URL should change from /(auth)/login to /)
-  await page.waitForURL(url => !url.pathname.includes('login'), { timeout: 20000 });
-  await sleep(3000); // Let the home screen fully render
-  console.log('   ✅ logged in, now on home screen\n');
-
-  // ================================================================
-  // STEP 3: Screenshot all screens
-  // ================================================================
-  console.log('——— Capturing All Screens ———\n');
-
-  for (const screen of SCREENS.slice(1)) { // Skip login, already done
-    const r = await takeScreenshot(page, screen.name, screen.path, screen.description);
-    results.push(r);
+  // ── STEP 4: Capture all screens ───────────────────────────────────
+  console.log('——— Capturing Screens ———\n');
+  for (const screen of SCREENS.slice(1)) {
+    console.log(`📸 [${screen.name}] → ${screen.path}`);
+    try {
+      await page.goto(`${BASE_URL}${screen.path}`, { waitUntil: 'networkidle', timeout: 20000 });
+      await sleep(2500);
+      await page.screenshot({ path: join(SCREENSHOTS_DIR, `${screen.name}.jpg`), type: 'jpeg', quality: 90 });
+      console.log('   ✅ saved');
+      results.push({ name: screen.name, status: 'success' });
+    } catch (err) {
+      console.log(`   ❌ ${err.message.slice(0, 80)}`);
+      results.push({ name: screen.name, status: 'error', error: err.message });
+    }
   }
 
-  // ================================================================
-  // STEP 4: Dark mode screenshots
-  // ================================================================
-  console.log('\n——— Dark Mode Screens ———');
-  await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
-  await sleep(1500);
-
-  // Toggle to dark mode via localStorage, then reload
-  // The theme store uses localStorage on web
-  const currentTheme = await page.evaluate(() => localStorage.getItem('theme_mode'));
-  console.log(`   current theme: ${currentTheme}`);
-
-  await page.evaluate(() => localStorage.setItem('theme_mode', 'dark'));
-  await page.reload({ waitUntil: 'networkidle', timeout: 15000 });
-  await sleep(3000);
-
-  const darkScreens = [
-    { name: '15-dark-analyze', path: '/', description: 'Dark mode — Analyze tab' },
-    { name: '16-dark-wallet', path: '/cards', description: 'Dark mode — Wallet tab' },
-  ];
-
-  for (const screen of darkScreens) {
-    const r = await takeScreenshot(page, screen.name, screen.path, screen.description);
-    results.push(r);
-  }
-
-  // ================================================================
-  // Done — write report
-  // ================================================================
   await browser.close();
 
   const success = results.filter(r => r.status === 'success');
   const failed = results.filter(r => r.status === 'error');
-
-  console.log('\n========================================');
+  console.log(`\n========================================`);
   console.log(`SUMMARY: ${results.length} total | ✅ ${success.length} | ❌ ${failed.length}`);
-  if (failed.length) {
-    failed.forEach(f => console.log(`  ❌ ${f.name}: ${f.error?.slice(0, 60)}`));
-  }
 
-  writeFileSync(join(SCREENSHOTS_DIR, 'manifest.json'), JSON.stringify({ capturedAt: new Date().toISOString(), results }, null, 2));
-  console.log('manifest.json written\n');
+  writeFileSync(join(SCREENSHOTS_DIR, 'manifest.json'), JSON.stringify({
+    capturedAt: new Date().toISOString(),
+    results,
+  }, null, 2));
 }
 
 main().catch(err => { console.error('FATAL:', err); process.exit(1); });

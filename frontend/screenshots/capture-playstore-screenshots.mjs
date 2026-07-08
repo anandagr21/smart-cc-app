@@ -1,7 +1,7 @@
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+import { chromium } from 'playwright';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, 'playstore');
@@ -45,10 +45,10 @@ const screenshots = [
     sub: 'Track optimization rate and forecast savings',
   },
   {
-    name: '07-dark-mode',
-    src: '15-dark-analyze.jpg',
-    title: 'Beautiful Dark Mode',
-    sub: 'Easy on the eyes — day or night',
+    name: '07-search-results',
+    src: '08-search-results.jpg',
+    title: 'Smart Merchant Search',
+    sub: 'Find any store or category with auto-suggestions',
   },
   {
     name: '08-profile',
@@ -76,23 +76,23 @@ const template = `<!doctype html>
   }
   .bg {
     position: absolute; inset: 0;
-    background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 50%, #020617 100%);
+    background: linear-gradient(160deg, #060F1A 0%, #0C1A2B 50%, #060F1A 100%);
   }
   .bg-grid {
     position: absolute; inset: 0;
     background-image:
-      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      linear-gradient(rgba(20,184,166,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20,184,166,0.04) 1px, transparent 1px);
     background-size: 80px 80px;
     mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 70%);
   }
   .phone {
     position: relative; z-index: 1;
-    width: 420px; height: 860px;
-    background: #0f172a;
+    width: 390px; height: 844px;
+    background: #0C1A2B;
     border-radius: 48px;
-    border: 3px solid #334155;
-    box-shadow: 0 0 80px rgba(139,92,246,0.15), 0 0 200px rgba(59,130,246,0.08);
+    border: 3px solid rgba(20,184,166,0.12);
+    box-shadow: 0 0 80px rgba(20,184,166,0.10), 0 0 200px rgba(20,184,166,0.04);
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -100,14 +100,14 @@ const template = `<!doctype html>
   }
   .phone img {
     width: 100%; height: 100%;
-    object-fit: cover;
+    object-fit: fill;
     border-radius: 45px;
   }
   .caption {
     position: relative; z-index: 1;
-    background: rgba(15,23,42,0.85);
+    background: rgba(12,26,43,0.85);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(20,184,166,0.10);
     border-radius: 16px;
     padding: 20px 36px;
     text-align: center;
@@ -130,7 +130,7 @@ const template = `<!doctype html>
   <div class="bg"></div>
   <div class="bg-grid"></div>
   <div class="phone">
-    <img src="./viewable/SCREENSHOT" alt="" />
+    <img src="IMAGE_SRC" alt="" />
   </div>
   <div class="caption">
     <h2>CAPTION_TITLE</h2>
@@ -139,9 +139,12 @@ const template = `<!doctype html>
 </body>
 </html>`;
 
+const browser = await chromium.launch();
+
 for (const shot of screenshots) {
+  const imgSrc = join(__dirname, 'viewable', shot.src);
   const html = template
-    .replace('SCREENSHOT', shot.src)
+    .replace('IMAGE_SRC', `file://${imgSrc}`)
     .replace('CAPTION_TITLE', shot.title)
     .replace('CAPTION_SUB', shot.sub);
 
@@ -149,15 +152,14 @@ for (const shot of screenshots) {
   writeFileSync(htmlPath, html);
 
   console.log(`Capturing ${shot.name}...`);
-  try {
-    execSync(
-      `npx playwright screenshot --viewport-size="1080,1920" "${htmlPath}" "${join(outDir, shot.name + '.png')}"`,
-      { stdio: 'pipe', cwd: __dirname }
-    );
-    console.log(`  ✓ ${shot.name}.png`);
-  } catch (e) {
-    console.error(`  ✗ ${shot.name} failed:`, e.message);
-  }
+  const page = await browser.newPage();
+  await page.setViewportSize({ width: 1080, height: 1920 });
+  await page.goto(`file://${htmlPath}`);
+  await page.waitForTimeout(1500); // let fonts and image load
+  await page.screenshot({ path: join(outDir, `${shot.name}.png`), type: 'png' });
+  await page.close();
+  console.log(`  ✓ ${shot.name}.png`);
 }
 
+await browser.close();
 console.log(`\nDone! ${screenshots.length} screenshots in ${outDir}/`);

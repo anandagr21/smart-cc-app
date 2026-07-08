@@ -1,0 +1,45 @@
+{
+  "capturedAt": "2026-07-08T10:08:21.501Z",
+  "results": [
+    {
+      "name": "01-analyze",
+      "status": "success"
+    },
+    {
+      "name": "02-wallet",
+      "status": "success"
+    },
+    {
+      "name": "03-activity",
+      "status": "success"
+    },
+    {
+      "name": "04-profile",
+      "status": "success"
+    },
+    {
+      "name": "05-intelligence",
+      "status": "success"
+    },
+    {
+      "name": "06-monthly-intelligence",
+      "status": "success"
+    },
+    {
+      "name": "07-search",
+      "status": "success"
+    },
+    {
+      "name": "08-search-results",
+      "status": "success"
+    },
+    {
+      "name": "15-dark-analyze",
+      "status": "success"
+    },
+    {
+      "name": "16-dark-wallet",
+      "status": "success"
+    }
+  ]
+}

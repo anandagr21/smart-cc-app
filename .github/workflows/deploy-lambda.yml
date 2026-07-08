@@ -1,9 +1,8 @@
 name: Deploy Backend to AWS Lambda
 
 on:
-  push:
-    branches:
-      - 'release*'
+  release:
+    types: [published]
 
 env:
   AWS_REGION: ap-south-1
@@ -11,12 +10,13 @@ env:
   LAMBDA_FUNCTION_NAME: smart-cc-backend
 
 permissions:
-  id-token: write # Required for AWS OIDC authentication
+  id-token: write
   contents: read
 
 jobs:
   migrate:
     name: Run DB Migrations
+    if: github.ref_name == 'backend' || github.ref_name == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -54,6 +54,7 @@ jobs:
   deploy:
     name: Build & Deploy
     needs: migrate
+    if: github.ref_name == 'backend' || github.ref_name == 'all'
     runs-on: ubuntu-latest
 
     steps:
