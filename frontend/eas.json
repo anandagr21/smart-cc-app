@@ -18,6 +18,7 @@
       "channel": "preview"
     },
     "production": {
+      "distribution": "store",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.akaovia.com/api/v1"
       },
