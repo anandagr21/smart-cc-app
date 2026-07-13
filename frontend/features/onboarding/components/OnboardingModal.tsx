@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  Dimensions,
   useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -22,7 +21,7 @@ export const OnboardingModal: React.FC = () => {
   const completeOnboarding = useOnboardingStore((s) => s.completeOnboarding);
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
 
   const handleNext = () => {
@@ -54,7 +53,6 @@ export const OnboardingModal: React.FC = () => {
   }).current;
 
   const isLastSlide = activeIndex === SLIDES.length - 1;
-  const isPersonaSlide = activeIndex === SLIDES.length - 1;
 
   return (
     <Animated.View
@@ -84,8 +82,10 @@ export const OnboardingModal: React.FC = () => {
         showsHorizontalScrollIndicator={false}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+        style={styles.slidesList}
+        contentContainerStyle={styles.slidesContent}
         renderItem={({ item, index }) => (
-          <View style={{ width }}>
+          <View style={[styles.slidePage, { width, height }]}>
             <OnboardingSlide slide={item} index={index} onSelectPersona={handleSelectPersona} />
           </View>
         )}
@@ -135,9 +135,12 @@ export const OnboardingModal: React.FC = () => {
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 999,
-    flex: 1,
   },
   skipBtn: {
     position: 'absolute',
@@ -152,6 +155,16 @@ const styles = StyleSheet.create({
   skipText: {
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.semibold,
+  },
+  slidesList: {
+    flex: 1,
+  },
+  slidesContent: {
+    flexGrow: 1,
+  },
+  slidePage: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   footer: {
     paddingBottom: 60,
