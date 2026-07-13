@@ -14,6 +14,7 @@ import { TermsDisclaimerModal } from '@/components/TermsDisclaimerModal';
 import { ToastOverlay } from '@/components/ui/Toast';
 import { useOnboardingStore } from '@/features/onboarding/store/onboardingStore';
 import { OnboardingModal } from '@/features/onboarding/components/OnboardingModal';
+import { useAppUpdates } from '@/hooks/useAppUpdates';
 import { ObserveRoot } from 'expo-observe';
 import '@/global.css';
 const routingIntegration = Sentry.reactNavigationIntegration();
@@ -118,6 +119,8 @@ export default Sentry.wrap(function RootLayout() {
     initializeTheme();
     initializeOnboarding();
   }, []);
+
+  useAppUpdates();
 
   // Track React Navigation for Sentry
   useEffect(() => {
