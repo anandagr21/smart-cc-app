@@ -168,7 +168,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         <Text style={[styles.versionText, { color: colors.textMuted }]}>
-          Card Analyser • v1.1.1
+          Card Analyser • v1.0.1
         </Text>
       </ScrollView>
     </ScreenContainer>
