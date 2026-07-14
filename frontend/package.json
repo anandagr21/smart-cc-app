@@ -34,6 +34,7 @@
     "expo-observe": "~56.0.21",
     "expo-router": "~56.2.11",
     "expo-secure-store": "~56.0.4",
+    "expo-splash-screen": "~56.0.12",
     "expo-status-bar": "~56.0.4",
     "expo-updates": "~56.0.19",
     "expo-web-browser": "~56.0.5",

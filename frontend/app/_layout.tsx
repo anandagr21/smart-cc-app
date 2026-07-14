@@ -16,6 +16,7 @@ import { useOnboardingStore } from '@/features/onboarding/store/onboardingStore'
 import { OnboardingModal } from '@/features/onboarding/components/OnboardingModal';
 import { useAppUpdates } from '@/hooks/useAppUpdates';
 import { ObserveRoot } from 'expo-observe';
+import * as SplashScreen from 'expo-splash-screen';
 import '@/global.css';
 const routingIntegration = Sentry.reactNavigationIntegration();
 
@@ -108,7 +109,7 @@ export default Sentry.wrap(function RootLayout() {
   const { initializeTheme, isHydrated: isThemeHydrated, themeMode } = useThemeStore();
   const { hasSeenOnboarding, isLoading: isOnboardingLoading, initializeOnboarding } = useOnboardingStore();
   const colors = useThemeColors();
-  
+
   const segments = useSegments();
   const router = useRouter();
   const ref = useNavigationContainerRef();
@@ -119,6 +120,23 @@ export default Sentry.wrap(function RootLayout() {
     initializeTheme();
     initializeOnboarding();
   }, []);
+
+  // Keep the native splash screen visible while the app is initialising
+  useEffect(() => {
+    SplashScreen.preventAutoHideAsync().catch((e) =>
+      console.warn('Failed to prevent splash screen auto-hide:', e)
+    );
+  }, []);
+
+  const appReady = !isAuthLoading && isThemeHydrated && !isOnboardingLoading;
+
+  useEffect(() => {
+    if (appReady) {
+      SplashScreen.hideAsync().catch((e) =>
+        console.warn('Failed to hide splash screen:', e)
+      );
+    }
+  }, [appReady]);
 
   useAppUpdates();
 
@@ -143,7 +161,7 @@ export default Sentry.wrap(function RootLayout() {
 
   useEffect(() => {
     if (!rootNavigationState?.key) return;
-    if (isAuthLoading || !isThemeHydrated || isOnboardingLoading) return;
+    if (!appReady) return;
 
     const inAuthGroup = segments[0] === '(auth)';
 
@@ -160,9 +178,9 @@ export default Sentry.wrap(function RootLayout() {
     } else if (token && user) {
       Sentry.setUser({ id: user.id });
     }
-  }, [token, user, isAuthLoading, isThemeHydrated, isOnboardingLoading, segments]);
+  }, [token, user, appReady, segments]);
 
-  if (isAuthLoading || !isThemeHydrated || isOnboardingLoading) {
+  if (!appReady) {
     return null;
   }
 

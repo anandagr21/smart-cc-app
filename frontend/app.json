@@ -46,7 +46,8 @@
           "organization": "smart-cc"
         }
       ],
-      "expo-updates"
+      "expo-updates",
+      "expo-splash-screen"
     ],
     "extra": {
       "router": {},
