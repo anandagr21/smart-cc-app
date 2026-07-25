@@ -21,9 +21,6 @@ import logging
 from typing import Optional
 from pydantic import BaseModel, Field
 
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
-
 from core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -34,8 +31,10 @@ logger = logging.getLogger(__name__)
 
 _settings = get_settings()
 
-def _get_llm() -> ChatOpenAI:
+def _get_llm() -> "ChatOpenAI":
     """Lazily instantiate the OpenAI LLM."""
+    from langchain_openai import ChatOpenAI
+
     if not _settings.openai_api_key:
         raise ValueError("OpenAI API key is missing. Please set OPENAI_API_KEY.")
     
@@ -127,9 +126,11 @@ You MUST respond in strictly valid JSON format with exactly these keys:
 """
 
     try:
+        from langchain_core.messages import HumanMessage, SystemMessage
+
         llm = _get_llm()
         structured_llm = llm.with_structured_output(LLMRecoveryResult, method="json_mode")
-        
+
         result = await structured_llm.ainvoke([
             SystemMessage(content=_RECOVERY_SYSTEM),
             HumanMessage(content=prompt),
@@ -200,9 +201,11 @@ You MUST respond in strictly valid JSON format with exactly these keys:
 """
 
     try:
+        from langchain_core.messages import HumanMessage, SystemMessage
+
         llm = _get_llm()
         structured_llm = llm.with_structured_output(LLMDiscoveryResult, method="json_mode")
-        
+
         result = await structured_llm.ainvoke([
             SystemMessage(content=_DISCOVERY_SYSTEM),
             HumanMessage(content=prompt),

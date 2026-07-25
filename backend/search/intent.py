@@ -1,9 +1,8 @@
+from __future__ import annotations
+
 import json
 import logging
 from typing import Dict, Any, Optional
-
-from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_openai import ChatOpenAI
 
 from core.config import get_settings
 from search.schemas import IntentType, SearchResultType
@@ -14,8 +13,10 @@ logger = logging.getLogger(__name__)
 _DEFAULT_INTENT = IntentType.UNKNOWN
 
 
-def _get_llm() -> ChatOpenAI:
+def _get_llm() -> "ChatOpenAI":
     """Initialize the LLM for intent detection."""
+    from langchain_openai import ChatOpenAI
+
     settings = get_settings()
     # Using deepseek-v4-flash as per the proxy configuration
     return ChatOpenAI(
@@ -58,6 +59,8 @@ You MUST respond in strictly valid JSON format with exactly these keys:
 """
 
     try:
+        from langchain_core.messages import SystemMessage, HumanMessage
+
         llm = _get_llm()
         messages = [
             SystemMessage(content="You are a helpful JSON-only API that outputs strictly valid JSON."),

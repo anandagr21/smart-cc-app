@@ -1,7 +1,6 @@
 import logging
 from typing import List, Dict, Any, Optional, Literal
 from pydantic import BaseModel, Field
-from langchain_core.prompts import ChatPromptTemplate
 
 from models.card_catalog import CardCatalog
 from .state import IngestionState
@@ -52,6 +51,8 @@ CRITICAL RULES:
 4. Extract fees as numbers. If null or lifetime free, set to 0.0.
 """
     
+    from langchain_core.prompts import ChatPromptTemplate
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("user", "Map the following card data:\n{card_data}")

@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import json
 import logging
 from typing import Any, Optional, Literal
 from uuid import UUID
 
-from openai import AsyncOpenAI
 from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,7 +47,9 @@ class WelcomeBonusExtractionSchema(BaseExtractionSchema):
     condition: Optional[str] = Field(default=None)
 
 
-def get_openai_client() -> AsyncOpenAI:
+def get_openai_client() -> "AsyncOpenAI":
+    from openai import AsyncOpenAI
+
     return AsyncOpenAI(
         api_key=settings.openai_api_key,
         base_url=settings.openai_base_url if settings.openai_base_url else None

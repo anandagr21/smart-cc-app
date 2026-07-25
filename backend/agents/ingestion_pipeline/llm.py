@@ -1,8 +1,5 @@
 import os
 import logging
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
-from langchain_core.language_models import BaseChatModel
 from core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -10,10 +7,13 @@ logger = logging.getLogger(__name__)
 import json
 from pydantic import BaseModel
 
-def get_llm(structured: bool = False, schema=None) -> BaseChatModel:
+def get_llm(structured: bool = False, schema=None):
     """
     Returns the configured LLM based on the project settings.
     """
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain_openai import ChatOpenAI
+
     settings = get_settings()
     provider = settings.card_intelligence_provider.lower()
     model_name = settings.card_intelligence_model

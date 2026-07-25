@@ -1,7 +1,6 @@
 import logging
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
-from langchain_core.prompts import ChatPromptTemplate
 from .state import IngestionState
 from .search import get_search_provider
 from .llm import get_llm
@@ -60,11 +59,13 @@ CRITICAL:
 3. Use null when information cannot be verified.
 """
 
+    from langchain_core.prompts import ChatPromptTemplate
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("user", "Existing cards (DO NOT EXTRACT THESE):\n{existing_cards}\n\nSearch Results:\n{search_results}")
     ])
-    
+
     from .llm import invoke_structured
     result: DiscoveryOutput = await invoke_structured(prompt, {
         "existing_cards": ", ".join(existing_cards) if existing_cards else "None",

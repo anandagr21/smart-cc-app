@@ -3,7 +3,6 @@ from typing import List, Dict, Any, Optional
 from uuid import UUID
 from pydantic import BaseModel, Field
 from sqlalchemy import select
-from langchain_core.prompts import ChatPromptTemplate
 
 from models.card_catalog import CardCatalog
 from core.database import async_session_factory
@@ -48,6 +47,8 @@ CRITICAL RULES:
 2. NEVER delete cards, create cards, merge cards, or rename issuers.
 3. You must provide the old value, new value, and the specific source URL for every change.
 """
+
+    from langchain_core.prompts import ChatPromptTemplate
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),

@@ -3,9 +3,6 @@ import logging
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
 from core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -14,6 +11,9 @@ from .schemas import RewardRule, CardMilestone, StructuredCardData
 
 class StructuredParser:
     def __init__(self):
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        from langchain_openai import ChatOpenAI
+
         self.settings = get_settings()
         self.provider = self.settings.card_intelligence_provider.lower()
         self.model_name = self.settings.card_intelligence_model
@@ -54,8 +54,11 @@ class StructuredParser:
             "If a cap, limit, or milestone condition is omitted in the source text, set its schema field to null."
         )
         
+        from langchain_core.prompts import ChatPromptTemplate
+
         if self.provider == "deepseek":
             import json
+
             schema_json = json.dumps(StructuredCardData.model_json_schema(), indent=2)
             system_prompt += (
                 "\n\nYou MUST respond with a single valid JSON object that strictly follows this schema. "

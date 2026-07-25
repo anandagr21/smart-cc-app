@@ -3,7 +3,6 @@ import logging
 from typing import List, Dict, Any
 from uuid import UUID
 from pydantic import BaseModel, Field
-from langchain_core.prompts import ChatPromptTemplate
 from sqlalchemy import select
 
 from models.card_catalog import CardCatalog
@@ -67,6 +66,8 @@ Use exactly one of these states for the overall status:
 If status is FAIL, you MUST list the failures. If status is PASS or PASS_WITH_FORMAT_DIFFERENCES, failures should be an empty list.
 """
     
+    from langchain_core.prompts import ChatPromptTemplate
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("user", "Database Record to verify:\n{db_record}\n\nIndependent Search Results for Verification:\n{search_results}")
