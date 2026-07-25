@@ -1,7 +1,7 @@
 # =========================
 # Builder Stage
 # =========================
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim-bookworm AS builder
 
 WORKDIR /app
 
@@ -24,12 +24,12 @@ COPY pyproject.toml uv.lock ./
 
 # Create virtual environment at /opt/venv so absolute paths match when copied to runtime
 ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
-RUN uv sync --no-dev
+RUN uv sync --no-dev --frozen
 
 # =========================
 # Runtime Stage
 # =========================
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
 
 WORKDIR /app
 
@@ -39,7 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Add AWS Lambda Web Adapter
-COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.0 /lambda-adapter /opt/extensions/lambda-adapter
 ENV PORT=8000
 
 # Copy virtualenv to /opt/venv (outside /app) so bind mount doesn't wipe it

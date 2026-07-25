@@ -1,1 +1,34 @@
+# Virtual environment (created at build time)
 .venv
+
+# Python cache artifacts
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.mypy_cache
+.ruff_cache
+.pytest_cache
+
+# Local config (env vars come from Lambda config)
+.env
+.env.example
+
+# Tests — not needed at runtime
+tests/
+
+# One-off utility/administration scripts
+scripts/
+get_kiwi_card.py
+make_admin.py
+
+# Documentation
+README.md
+
+# VCS
+.git
+.gitignore
+.dockerignore
+
+# Local storage / data (not production data)
+storage/

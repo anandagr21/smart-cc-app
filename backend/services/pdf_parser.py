@@ -1,6 +1,5 @@
 import hashlib
 import os
-import fitz  # PyMuPDF
 from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from models.ingestion import SourceDocument, SourceChunk
@@ -29,6 +28,7 @@ async def parse_and_chunk_pdf(
     pages_processed = 0
 
     try:
+        import fitz  # PyMuPDF — lazy import to avoid loading on every cold start
         pdf_document = fitz.open(file_path)
         pages_processed = len(pdf_document)
         
