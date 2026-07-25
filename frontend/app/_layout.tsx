@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
 import { Platform, Text, TouchableOpacity, View } from 'react-native';
 import { Stack, useRouter, useSegments, useNavigationContainerRef, useRootNavigationState } from 'expo-router';
-import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
+import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
@@ -18,6 +21,13 @@ import { useAppUpdates } from '@/hooks/useAppUpdates';
 import { ObserveRoot } from 'expo-observe';
 import * as SplashScreen from 'expo-splash-screen';
 import '@/global.css';
+
+// Must be called synchronously at module level, not inside useEffect.
+// If called inside an effect, the native splash may auto-hide before JS is
+// ready, producing a white flash.
+SplashScreen.preventAutoHideAsync().catch((e) =>
+  console.warn('Failed to prevent splash screen auto-hide:', e)
+);
 const routingIntegration = Sentry.reactNavigationIntegration();
 
 Sentry.init({
@@ -58,9 +68,55 @@ const queryClient = new QueryClient({
     queries: {
       retry: 2,
       staleTime: 1000 * 60 * 5, // 5 minutes
+      // Cache data in AsyncStorage so screens render instantly on relaunch,
+      // then refetch in the background when stale.
+      gcTime: 1000 * 60 * 60 * 24, // 24 hours — keep unused cache data for offline reads
     },
   },
 });
+
+// Persist React Query cache to AsyncStorage so the UI renders cached data
+// immediately on app launch while fresh data fetches in the background.
+// Each user's cache is stored under a separate key (scoped by user ID) so
+// there's no cross-contamination between accounts on the same device.
+const BASE_CACHE_KEY = 'REACT_QUERY_OFFLINE_CACHE';
+
+const getScopedCacheKey = (): string | null => {
+  const userId = useAuthStore.getState().user?.id;
+  return userId ? `${BASE_CACHE_KEY}_${userId}` : null;
+};
+
+// Wrap AsyncStorage to namespace reads/writes by the current user. The
+// persister passes a fixed key, but we intercept and append the user ID.
+// When no user is logged in, reads return null and writes are no-ops.
+const userScopedStorage = {
+  getItem: async (_key: string) => {
+    const scopedKey = getScopedCacheKey();
+    return scopedKey ? AsyncStorage.getItem(scopedKey) : null;
+  },
+  setItem: async (_key: string, value: string) => {
+    const scopedKey = getScopedCacheKey();
+    if (scopedKey) await AsyncStorage.setItem(scopedKey, value);
+  },
+  removeItem: async (_key: string) => {
+    const scopedKey = getScopedCacheKey();
+    if (scopedKey) await AsyncStorage.removeItem(scopedKey);
+  },
+};
+
+const asyncStoragePersister = createAsyncStoragePersister({
+  storage: userScopedStorage,
+  key: BASE_CACHE_KEY,
+  throttleTime: 2000, // debounce writes — avoid thrashing AsyncStorage
+});
+
+/** Clear the in-memory query cache when switching users. */
+function clearMemoryCache() {
+  queryClient.cancelQueries().catch((e) =>
+    console.warn('Failed to cancel in-flight queries:', e)
+  );
+  queryClient.clear();
+}
 
 // ---------------------------------------------------------------------------
 // Error boundary fallback — shown when an uncaught error crashes the React tree.
@@ -121,13 +177,6 @@ export default Sentry.wrap(function RootLayout() {
     initializeOnboarding();
   }, []);
 
-  // Keep the native splash screen visible while the app is initialising
-  useEffect(() => {
-    SplashScreen.preventAutoHideAsync().catch((e) =>
-      console.warn('Failed to prevent splash screen auto-hide:', e)
-    );
-  }, []);
-
   const appReady = !isAuthLoading && isThemeHydrated && !isOnboardingLoading;
 
   useEffect(() => {
@@ -167,13 +216,13 @@ export default Sentry.wrap(function RootLayout() {
 
     if (!token && !inAuthGroup) {
       Sentry.setUser(null);
-      queryClient.clear();
+      clearMemoryCache();
       router.replace('/(auth)/login');
     } else if (token && inAuthGroup) {
       if (user) {
         Sentry.setUser({ id: user.id });
       }
-      queryClient.clear();
+      clearMemoryCache();
       router.replace('/(tabs)');
     } else if (token && user) {
       Sentry.setUser({ id: user.id });
@@ -190,7 +239,10 @@ export default Sentry.wrap(function RootLayout() {
       <Sentry.ErrorBoundary fallback={({error, retry}) => (
         <ErrorFallback error={error} onRetry={retry} />
       )}>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{ persister: asyncStoragePersister }}
+        >
           <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
             <Stack.Screen name="(auth)/login" options={{ animation: 'fade' }} />
@@ -201,7 +253,7 @@ export default Sentry.wrap(function RootLayout() {
           {token && !hasSeenOnboarding && <OnboardingModal />}
           <TermsDisclaimerModal />
           <ToastOverlay />
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </Sentry.ErrorBoundary>
     </GestureHandlerRootView>
     </ObserveRoot>
