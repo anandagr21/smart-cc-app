@@ -57,8 +57,8 @@ USER appuser
 # Activate venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Default environment
-ENV ENVIRONMENT=development
+# Production-safe default — override to "development" for local dev via docker-compose
+ENV ENVIRONMENT=production
 
 EXPOSE 8000
 
