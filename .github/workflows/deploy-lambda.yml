@@ -86,6 +86,7 @@ jobs:
           #   2. In AWS Console or CLI, update Lambda architecture: aws lambda update-function-configuration --architectures arm64
           docker buildx build \
             --platform linux/amd64 \
+            --provenance=false \
             --push \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           echo "Pushed image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
