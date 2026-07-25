@@ -47,7 +47,12 @@
         }
       ],
       "expo-updates",
-      "expo-splash-screen"
+      ["expo-splash-screen", {
+        "backgroundColor": "#0f172a",
+        "image": "./assets/splash-icon.png",
+        "imageWidth": 100,
+        "resizeMode": "contain"
+      }]
     ],
     "extra": {
       "router": {},
