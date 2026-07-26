@@ -25,6 +25,9 @@ class BehaviorAnalyticsEngine:
     ) -> dict:
         """
         Dynamically calculates optimization metrics for a given set of transactions.
+
+        Uses a single batch evaluation call instead of N individual evaluate()
+        calls, eliminating the N+1 bottleneck for monthly intelligence.
         """
         total_spent = 0.0
         total_rewards_optimized = 0.0
@@ -35,39 +38,55 @@ class BehaviorAnalyticsEngine:
         category_spend = defaultdict(float)
         category_rewards = defaultdict(float)
         card_usage = defaultdict(int)
-        
+
         # Hydrate cards by ID for easy lookup
         card_map = {str(c.id): c for c in user_cards}
 
-        for tx in transactions:
+        if not transactions:
+            return {
+                "total_spent": 0.0,
+                "total_rewards_optimized": 0.0,
+                "missed_opportunity_value": 0.0,
+                "optimization_rate": 0.0,
+                "strongest_category": None,
+                "strongest_card": None,
+                "transaction_count": 0,
+            }
+
+        # Build batch requests in order — results come back in the same order
+        batch_requests = [
+            RecommendationRequest(
+                amount=float(tx.amount),
+                merchant_name=tx.merchant_name,
+                transaction_date=tx.transaction_date,
+            )
+            for tx in transactions
+        ]
+
+        # Single batch evaluation instead of N individual calls
+        evaluations = await self.recommendation_service.evaluate_batch(user_id, batch_requests)
+
+        # Process results alongside original transactions
+        for tx, eval in zip(transactions, evaluations):
             amount = float(tx.amount)
             total_spent += amount
             category_spend[tx.category] += amount
-            
+
             if tx.user_card_id:
                 card_usage[str(tx.user_card_id)] += 1
 
-            # Evaluate transaction against recommendation engine
-            req = RecommendationRequest(
-                amount=amount,
-                merchant_name=tx.merchant_name,
-                category=tx.category,
-                transaction_date=tx.transaction_date,
-            )
-            eval = await self.recommendation_service.evaluate(user_id, req)
-            
             if not eval or not eval.all_ranked_cards:
                 continue
-                
+
             best_eval = eval.all_ranked_cards[0]
             actual_eval = next((e for e in eval.all_ranked_cards if str(e.card_id) == str(tx.user_card_id)), None)
-            
+
             actual_reward = actual_eval.blended_total_value if actual_eval else 0.0
             best_reward = best_eval.blended_total_value
-            
+
             total_rewards_optimized += actual_reward
             category_rewards[tx.category] += actual_reward
-            
+
             # If actual reward is close to best reward, it's optimized
             if best_reward - actual_reward < 1.0:
                 optimized_count += 1
@@ -75,15 +94,15 @@ class BehaviorAnalyticsEngine:
                 missed_opportunity_value += (best_reward - actual_reward)
 
         optimization_rate = (optimized_count / total_count * 100) if total_count > 0 else 0.0
-        
+
         strongest_category = None
         if category_rewards:
             strongest_category = max(category_rewards.items(), key=lambda x: x[1])[0]
-            
+
         strongest_card_id = None
         if card_usage:
             strongest_card_id = max(card_usage.items(), key=lambda x: x[1])[0]
-            
+
         strongest_card_name = None
         if strongest_card_id and strongest_card_id in card_map:
             card_obj = card_map[strongest_card_id]

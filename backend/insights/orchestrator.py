@@ -1,4 +1,5 @@
 
+import asyncio
 from uuid import UUID
 
 from insights.enrichment.transaction_enrichment import TransactionEnrichmentService
@@ -50,18 +51,19 @@ class InsightOrchestrator:
         # 2. Enrich transactions
         enriched_txns = await self.enrichment_service.enrich_transactions(raw_transactions)
         
-        # 3. Execute Generators
+        # 3. Execute all generators in parallel — sync in thread pool, async natively
+        user_id_str = str(user_id)
+        results = await asyncio.gather(
+            asyncio.to_thread(self.fee_waiver_gen.generate, user_id_str, cards, enriched_txns),
+            asyncio.to_thread(self.underutilized_gen.generate, user_id_str, cards, enriched_txns),
+            asyncio.to_thread(self.portfolio_gen.generate, user_id_str, cards, enriched_txns),
+            asyncio.to_thread(self.dormant_card_gen.generate, user_id_str, cards, enriched_txns),
+            self.missed_rewards_gen.generate_async(user_id_str, cards, enriched_txns),
+        )
+
         insights: list[InsightResponse] = []
-        
-        # Sync generators
-        insights.extend(self.fee_waiver_gen.generate(str(user_id), cards, enriched_txns))
-        insights.extend(self.underutilized_gen.generate(str(user_id), cards, enriched_txns))
-        insights.extend(self.portfolio_gen.generate(str(user_id), cards, enriched_txns))
-        insights.extend(self.dormant_card_gen.generate(str(user_id), cards, enriched_txns))
-        
-        # Async generators
-        mr_insights = await self.missed_rewards_gen.generate_async(str(user_id), cards, enriched_txns)
-        insights.extend(mr_insights)
+        for result in results:
+            insights.extend(result)
         
         # 4. Suppression / Cooldown filtering
         active_insights = await self.cooldown_engine.filter_suppressed(str(user_id), insights)
