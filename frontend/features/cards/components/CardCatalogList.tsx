@@ -60,13 +60,27 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
 
   const groupedCatalog = useMemo(() => {
     // Normalize inconsistent bank names from catalog data
-    const normalizeBankName = (name: string): string => {
-      if (!name || !name.trim()) return 'Other';
-      const trimmed = name.trim();
-      const lower = trimmed.toLowerCase();
-      if (lower.includes('sbi') || lower.includes('state bank')) return 'SBI Card';
-      // Add more normalizations here as needed
-      return trimmed;
+    const KNOWN_BANKS = [
+      'Axis Bank', 'HDFC Bank', 'ICICI Bank', 'SBI Card', 'Kotak Mahindra Bank',
+      'HSBC', 'Standard Chartered', 'Citibank', 'American Express', 'RBL Bank',
+      'IndusInd Bank', 'Yes Bank', 'Federal Bank', 'IDFC First Bank', 'AU Small Finance Bank',
+      'Bank of Baroda', 'Punjab National Bank', 'Canara Bank', 'Union Bank of India',
+      'Indian Bank', 'Central Bank of India', 'DBS Bank',
+    ];
+
+    const normalizeBankName = (name: string, cardName: string): string => {
+      const trimmed = (name || '').trim();
+      if (trimmed) {
+        const lower = trimmed.toLowerCase();
+        if (lower.includes('sbi') || lower.includes('state bank')) return 'SBI Card';
+        return trimmed;
+      }
+      // Fallback: try to extract a known bank from the card name
+      const cardLower = cardName.toLowerCase();
+      for (const bank of KNOWN_BANKS) {
+        if (cardLower.includes(bank.toLowerCase())) return bank;
+      }
+      return 'Other';
     };
 
     const seen = new Set<string>();
@@ -77,7 +91,7 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
     const other: CardCatalogResponse[] = [];
 
     for (const card of sorted) {
-      const bank = normalizeBankName(card.bank_name);
+      const bank = normalizeBankName(card.bank_name, card.card_name);
       // Deduplicate: skip cards with same (bank, card_name) already added
       const dedupeKey = `${bank}::${card.card_name}`;
       if (seen.has(dedupeKey)) continue;
