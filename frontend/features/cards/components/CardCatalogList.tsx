@@ -61,15 +61,21 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
   const groupedCatalog = useMemo(() => {
     // Normalize inconsistent bank names from catalog data
     const normalizeBankName = (name: string): string => {
-      const lower = name.toLowerCase();
+      if (!name || !name.trim()) return 'Other';
+      const trimmed = name.trim();
+      const lower = trimmed.toLowerCase();
       if (lower.includes('sbi') || lower.includes('state bank')) return 'SBI Card';
       // Add more normalizations here as needed
-      return name;
+      return trimmed;
     };
 
     const seen = new Set<string>();
-    const sorted = [...filteredCatalog].sort((a, b) => a.card_name.localeCompare(b.card_name));
+    const sorted = [...filteredCatalog].sort((a, b) =>
+      a.card_name.localeCompare(b.card_name)
+    );
     const groups: Record<string, CardCatalogResponse[]> = {};
+    const other: CardCatalogResponse[] = [];
+
     for (const card of sorted) {
       const bank = normalizeBankName(card.bank_name);
       // Deduplicate: skip cards with same (bank, card_name) already added
@@ -77,13 +83,24 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
       if (seen.has(dedupeKey)) continue;
       seen.add(dedupeKey);
 
-      if (!groups[bank]) groups[bank] = [];
-      groups[bank].push(card);
+      if (bank === 'Other') {
+        other.push(card);
+      } else {
+        if (!groups[bank]) groups[bank] = [];
+        groups[bank].push(card);
+      }
     }
-    return Object.keys(groups).sort().map(bank => ({
-      bank,
-      cards: groups[bank]
-    }));
+
+    const result = Object.keys(groups)
+      .sort()
+      .map((bank) => ({ bank, cards: groups[bank] }));
+
+    // Push "Other" to the end instead of sorting to the top
+    if (other.length > 0) {
+      result.push({ bank: 'Other', cards: other });
+    }
+
+    return result;
   }, [filteredCatalog]);
 
   const [isReady, setIsReady] = useState(false);
