@@ -40,7 +40,7 @@ const features = [
     tag: "Data-driven",
     tagColor: "text-green-400 bg-green-500/10 border-green-500/20",
     featured: false,
-    metric: "79",
+    metric: "75+",
     metricLabel: "card profiles",
   },
 ];
@@ -122,7 +122,7 @@ export default function Features() {
                 <div>
                   <p className="text-xs text-white/30 font-semibold uppercase tracking-widest mb-2">Everything in one place</p>
                   <h3 className="text-2xl font-bold text-white">
-                    Supports <span className="text-gradient">79 Indian credit cards</span>
+                    Supports <span className="text-gradient">75+ Indian credit cards</span>
                   </h3>
                   <p className="text-white/40 text-sm mt-1.5">HDFC, SBI, ICICI, Amex, Axis, Kotak, Yes Bank and more — all auto-populated.</p>
                 </div>
@@ -138,7 +138,7 @@ export default function Features() {
                     />
                   ))}
                   <div className="w-12 h-8 rounded-lg glass border-2 border-white/10 flex items-center justify-center text-white/50 text-xs font-bold">
-                    +74
+                    +70
                   </div>
                 </div>
               </div>

@@ -15,7 +15,7 @@ const steps = [
     iconBg: "bg-brand-500/10 border-brand-500/20",
     accentColor: "#F59E0B",
     title: "Add Your Cards",
-    desc: "Enter card name, bank, and network. We fetch the rest from our database of 79 card profiles — automatically.",
+    desc: "Enter card name, bank, and network. We fetch the rest from our database of 75+ card profiles — automatically.",
     detail: "Takes under 30 seconds per card",
   },
   {
@@ -184,7 +184,7 @@ export default function HowItWorks() {
                 </p>
                 <div className="space-y-3">
                   {[
-                    "Supports 79 Indian cards. We update when banks do.",
+                    "Supports 75+ Indian cards. We update when banks do.",
                     "Auto-detects reward caps, exclusions, and category limits.",
                     "One tap to see your best card for any purchase.",
                     "Fee waiver deadlines? Tracked. Milestones? Tracked.",
