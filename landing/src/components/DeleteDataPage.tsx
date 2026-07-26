@@ -97,7 +97,7 @@ export default function DeleteDataPage() {
                   <li>All saved credit cards (name, issuer, last 4 digits, limits, fee data)</li>
                   <li>All transaction records</li>
                   <li>Search history</li>
-                  <li>Optimization preferences and personality profile</li>
+                  <li>Analysis preferences and personality profile</li>
                   <li>Monthly spending intelligence and insights</li>
                   <li>Submitted feedback and support history</li>
                 </ul>

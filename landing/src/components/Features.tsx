@@ -35,7 +35,7 @@ const features = [
     iconColor: "text-green-400",
     iconBg: "bg-green-500/10 border-green-500/20",
     glowColor: "rgba(16,185,129,0.12)",
-    title: "Portfolio Optimisation",
+    title: "Portfolio Analysis",
     desc: "See which cards earn the most and which are dead weight. Get AI recommendations to upgrade, downgrade, or cancel.",
     tag: "Data-driven",
     tagColor: "text-green-400 bg-green-500/10 border-green-500/20",
@@ -67,7 +67,7 @@ export default function Features() {
               <span className="text-gradient">dominate your wallet</span>
             </h2>
             <p className="text-white/40 text-lg max-w-2xl mx-auto">
-              Whether you carry 2 cards or 12. Track, optimise, and save — automatically.
+              Whether you carry 2 cards or 12. Track, analyse, and save — automatically.
             </p>
           </ScrollReveal>
         </div>

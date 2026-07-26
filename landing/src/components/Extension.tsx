@@ -20,7 +20,7 @@ export default function Extension() {
               Browser Extension
             </SectionBadge>
             <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-white">
-              Optimise everywhere you{" "}
+              Analyse everywhere you{" "}
               <span className="text-gradient">shop online</span>
             </h2>
             <p className="text-white/40 text-lg max-w-2xl mx-auto">

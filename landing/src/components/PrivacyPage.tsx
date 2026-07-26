@@ -59,7 +59,7 @@ const sections: { title: string; content: React.ReactNode }[] = [
         <div>
           <h3 className="text-white/90 font-semibold mb-1">Usage Data</h3>
           <p className="text-white/55">
-            We log your in-app searches, the optimization preferences you set (e.g.,
+            We log your in-app searches, the analysis preferences you set (e.g.,
             prioritize cashback vs. travel rewards), and feedback you submit with
             calculation context. This helps us improve recommendation quality. We do
             not use any third-party marketing or product analytics SDKs.
@@ -87,7 +87,7 @@ const sections: { title: string; content: React.ReactNode }[] = [
           <li>Calculate which of your cards earns the most rewards for each transaction</li>
           <li>Generate AI-powered explanations of card recommendations and portfolio insights</li>
           <li>Track fee waiver progress and milestone benefits across your cards</li>
-          <li>Provide monthly spending analysis and optimization suggestions</li>
+          <li>Provide monthly spending analysis and card recommendations</li>
           <li>Detect, diagnose, and fix crashes and performance issues</li>
           <li>Deliver over-the-air app updates via Expo Updates</li>
           <li>Improve recommendation accuracy based on aggregated usage patterns</li>

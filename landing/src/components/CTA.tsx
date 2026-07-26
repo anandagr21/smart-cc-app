@@ -92,7 +92,7 @@ export default function CTA() {
                 <span className="text-gradient">tonight's Swiggy order?</span>
               </h2>
               <p className="text-white/50 text-lg max-w-lg mx-auto mb-10">
-                Join 2,000+ cardholders who stopped guessing and started optimizing.
+                Join 2,000+ cardholders who stopped guessing and started analysing.
                 No bank linking. Setup takes 2 minutes. Early access is free.
               </p>
 

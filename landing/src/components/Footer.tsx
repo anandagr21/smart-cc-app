@@ -21,7 +21,7 @@ export default function Footer() {
               <span className="font-bold text-base text-white">Card Analyser</span>
             </div>
             <p className="text-white/45 text-sm leading-relaxed max-w-[200px]">
-              AI-powered credit card optimization for every Indian cardholder.
+              AI-powered credit card analysis for every Indian cardholder.
             </p>
             {/* Social icons */}
             <div className="flex gap-3 mt-5">
@@ -66,7 +66,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/40 text-xs">
-            © {new Date().getFullYear()} Card Analyser · Built for card enthusiasts, by card enthusiasts.
+            © {new Date().getFullYear()} Akaovia · Built for Indian cardholders.
           </p>
           <div className="flex items-center gap-2 text-white/40 text-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
