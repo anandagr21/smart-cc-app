@@ -60,12 +60,19 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
 
   const groupedCatalog = useMemo(() => {
     // Normalize inconsistent bank names from catalog data
+    // Banks ordered by specificity — longer names first so "IDFC First Bank"
+    // matches before "First Bank" would (if it existed), and "HDFC Bank" before
+    // "HDFC" alone.
     const KNOWN_BANKS = [
-      'Axis Bank', 'HDFC Bank', 'ICICI Bank', 'SBI Card', 'Kotak Mahindra Bank',
-      'HSBC', 'Standard Chartered', 'Citibank', 'American Express', 'RBL Bank',
-      'IndusInd Bank', 'Yes Bank', 'Federal Bank', 'IDFC First Bank', 'AU Small Finance Bank',
-      'Bank of Baroda', 'Punjab National Bank', 'Canara Bank', 'Union Bank of India',
-      'Indian Bank', 'Central Bank of India', 'DBS Bank',
+      'Kotak Mahindra Bank', 'IDFC First Bank', 'AU Small Finance Bank',
+      'Standard Chartered', 'American Express', 'Bank of Baroda',
+      'Punjab National Bank', 'Union Bank of India', 'Central Bank of India',
+      'Indian Overseas Bank', 'Jammu & Kashmir Bank', 'South Indian Bank',
+      'Axis Bank', 'HDFC Bank', 'ICICI Bank', 'SBI Card', 'Yes Bank',
+      'RBL Bank', 'IndusInd Bank', 'Federal Bank', 'Canara Bank',
+      'Indian Bank', 'DBS Bank', 'HSBC', 'Citibank', 'IDBI Bank',
+      'Karur Vysya Bank', 'Tamilnad Mercantile Bank', 'DCB Bank',
+      'Bandhan Bank', 'CSB Bank', 'OneCard',
     ];
 
     const normalizeBankName = (name: string, cardName: string): string => {
@@ -79,6 +86,10 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
       const cardLower = cardName.toLowerCase();
       for (const bank of KNOWN_BANKS) {
         if (cardLower.includes(bank.toLowerCase())) return bank;
+      }
+      // Still unknown — log in dev so the backend team can fix the catalog
+      if (__DEV__) {
+        console.warn(`[CardCatalog] Unknown bank for "${cardName}" — falling back to "Other"`);
       }
       return 'Other';
     };
