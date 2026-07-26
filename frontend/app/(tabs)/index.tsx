@@ -25,6 +25,7 @@ import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/us
 import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
 import { useCards } from '@/features/cards/hooks/useCards';
 import { useTransactions } from '@/features/transactions/hooks/useTransactions';
+import { formatCategoryLabel } from '@/features/transactions/utils/categoryAccents';
 import { QueryKeys } from '@/features/core/api/queryKeys';
 
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
@@ -634,8 +635,7 @@ export default function DashboardScreen() {
                       { color: colors.textPrimary },
                     ]}
                   >
-                    {pairing.category.charAt(0) +
-                      pairing.category.slice(1).toLowerCase()}
+                    {formatCategoryLabel(pairing.category)}
                   </Text>
                   <DynamicIcon
                     name="ArrowRight"

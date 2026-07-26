@@ -12,7 +12,7 @@ import { BlurView } from 'expo-blur';
 
 import { TransactionResponse } from '../types/transaction.types';
 import { format } from 'date-fns';
-import { getCategoryAccent } from '../utils/categoryAccents';
+import { getCategoryAccent, formatCategoryLabel } from '../utils/categoryAccents';
 import { useCards } from '@/features/cards/hooks/useCards';
 import { useDeleteTransaction } from '../hooks/useDeleteTransaction';
 
@@ -137,7 +137,7 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
                   <DynamicIcon name="ShoppingBag" size={16} color={colors.textMuted} style={styles.detailIcon} />
                   <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Category</Text>
                 </View>
-                <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{transaction.category}</Text>
+                <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{formatCategoryLabel(transaction.category)}</Text>
               </View>
               
               <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>

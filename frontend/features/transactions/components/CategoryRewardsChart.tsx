@@ -6,6 +6,7 @@ import { TransactionResponse } from '../types/transaction.types';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
+import { formatCategoryLabel } from '../utils/categoryAccents';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface CategoryRewardsChartProps {
@@ -73,7 +74,7 @@ export const CategoryRewardsChart: React.FC<CategoryRewardsChartProps> = ({ tran
     const maxValue = sortedCategories[0][1];
 
     return sortedCategories.map(([category, value]) => ({
-      name: category,
+      name: formatCategoryLabel(category),
       value,
       progress: (value / maxValue) * 100, // Relative to the top category
       Icon: getCategoryIcon(category),
