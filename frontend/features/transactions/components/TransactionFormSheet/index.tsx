@@ -235,11 +235,18 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
     if (!initialData && !cardsData?.length) return;
 
     if (initialData) {
+      // Convert payment_mode to uppercase — the API returns lowercase but the
+      // form schema expects UPPERCASE enum values.
+      const apiPaymentMode = (initialData.payment_mode || '').toUpperCase();
+      const validPaymentMode = ['ONLINE', 'OFFLINE', 'UPI', 'INTERNATIONAL'].includes(apiPaymentMode)
+        ? apiPaymentMode
+        : 'ONLINE';
+
       reset({
         merchant_name: initialData.merchant_name,
         amount: initialData.amount,
         user_card_id: initialData.user_card_id,
-        payment_mode: initialData.payment_mode || 'ONLINE',
+        payment_mode: validPaymentMode,
         intent: 'BALANCED',
       });
       setSearchQuery('');
@@ -378,7 +385,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
 
   // UPI mode: auto-populate merchant, filter RuPay cards. Other modes: clear merchant.
   useEffect(() => {
-    if (!cardsData) return;
+    if (!cardsData || isEditing) return;
     if (paymentMode === 'UPI') {
       setValue('merchant_name', 'UPI');
       // Auto-select first RuPay card if current selection is not RuPay
