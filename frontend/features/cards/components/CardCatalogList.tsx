@@ -59,20 +59,40 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
   }, [catalog, searchQuery]);
 
   const groupedCatalog = useMemo(() => {
-    // Normalize inconsistent bank names from catalog data
-    // Banks ordered by specificity — longer names first so "IDFC First Bank"
-    // matches before "First Bank" would (if it existed), and "HDFC Bank" before
-    // "HDFC" alone.
-    const KNOWN_BANKS = [
-      'Kotak Mahindra Bank', 'IDFC First Bank', 'AU Small Finance Bank',
-      'Standard Chartered', 'American Express', 'Bank of Baroda',
-      'Punjab National Bank', 'Union Bank of India', 'Central Bank of India',
-      'Indian Overseas Bank', 'Jammu & Kashmir Bank', 'South Indian Bank',
-      'Axis Bank', 'HDFC Bank', 'ICICI Bank', 'SBI Card', 'Yes Bank',
-      'RBL Bank', 'IndusInd Bank', 'Federal Bank', 'Canara Bank',
-      'Indian Bank', 'DBS Bank', 'HSBC', 'Citibank', 'IDBI Bank',
-      'Karur Vysya Bank', 'Tamilnad Mercantile Bank', 'DCB Bank',
-      'Bandhan Bank', 'CSB Bank', 'OneCard',
+    // Map of canonical bank name → patterns to match in card names.
+    // Patterns are lowercase substrings checked against the lowercase card name.
+    // Ordered so shorter/ambiguous patterns come after more specific ones.
+    const BANK_PATTERNS: [string, string[]][] = [
+      ['Kotak Mahindra Bank', ['kotak']],
+      ['IDFC First Bank', ['idfc']],
+      ['AU Small Finance Bank', ['au small finance', 'au bank']],
+      ['Standard Chartered', ['standard chartered', 'stanchart']],
+      ['American Express', ['american express', 'amex']],
+      ['Bank of Baroda', ['bank of baroda', 'bob']],
+      ['Punjab National Bank', ['punjab national', 'pnb']],
+      ['Union Bank of India', ['union bank']],
+      ['Central Bank of India', ['central bank']],
+      ['Indian Overseas Bank', ['indian overseas', 'iob']],
+      ['South Indian Bank', ['south indian']],
+      ['SBI Card', ['sbi', 'state bank']],
+      ['Axis Bank', ['axis']],
+      ['HDFC Bank', ['hdfc']],
+      ['ICICI Bank', ['icici']],
+      ['Yes Bank', ['yes bank']],
+      ['RBL Bank', ['rbl']],
+      ['IndusInd Bank', ['indusind']],
+      ['Federal Bank', ['federal']],
+      ['Canara Bank', ['canara']],
+      ['Indian Bank', ['indian bank']],
+      ['DBS Bank', ['dbs']],
+      ['HSBC', ['hsbc']],
+      ['Citibank', ['citibank', 'citi']],
+      ['IDBI Bank', ['idbi']],
+      ['Karur Vysya Bank', ['karur vysya']],
+      ['DCB Bank', ['dcb']],
+      ['Bandhan Bank', ['bandhan']],
+      ['CSB Bank', ['csb']],
+      ['OneCard', ['onecard']],
     ];
 
     const normalizeBankName = (name: string, cardName: string): string => {
@@ -82,12 +102,13 @@ export const CardCatalogList: React.FC<CardCatalogListProps> = ({ catalog, onSel
         if (lower.includes('sbi') || lower.includes('state bank')) return 'SBI Card';
         return trimmed;
       }
-      // Fallback: try to extract a known bank from the card name
+      // Fallback: match card name against known bank patterns
       const cardLower = cardName.toLowerCase();
-      for (const bank of KNOWN_BANKS) {
-        if (cardLower.includes(bank.toLowerCase())) return bank;
+      for (const [bank, patterns] of BANK_PATTERNS) {
+        for (const pattern of patterns) {
+          if (cardLower.includes(pattern)) return bank;
+        }
       }
-      // Still unknown — log in dev so the backend team can fix the catalog
       if (__DEV__) {
         console.warn(`[CardCatalog] Unknown bank for "${cardName}" — falling back to "Other"`);
       }
