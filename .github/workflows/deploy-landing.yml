@@ -13,7 +13,7 @@ permissions:
 jobs:
   deploy:
     name: Build & Deploy Landing Page
-    if: github.ref_name == 'landing' || github.ref_name == 'all'
+    if: github.ref_name == 'landing' || github.ref_name == 'land_release_v5' || github.ref_name == 'all'
     runs-on: ubuntu-latest
 
     defaults:
