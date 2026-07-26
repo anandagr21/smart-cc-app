@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, Text, TouchableOpacity, View } from 'react-native';
 import { Stack, useRouter, useSegments, useNavigationContainerRef, useRootNavigationState } from 'expo-router';
-import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import * as Sentry from '@sentry/react-native';
@@ -92,15 +92,29 @@ const getScopedCacheKey = (): string | null => {
 const userScopedStorage = {
   getItem: async (_key: string) => {
     const scopedKey = getScopedCacheKey();
-    return scopedKey ? AsyncStorage.getItem(scopedKey) : null;
+    if (!scopedKey) {
+      __DEV__ && console.log('[RQ Cache] getItem skipped — no user');
+      return null;
+    }
+    const data = await AsyncStorage.getItem(scopedKey);
+    __DEV__ && console.log(`[RQ Cache] getItem ${scopedKey} → ${data ? `${(data.length / 1024).toFixed(1)}KB` : 'empty'}`);
+    return data;
   },
   setItem: async (_key: string, value: string) => {
     const scopedKey = getScopedCacheKey();
-    if (scopedKey) await AsyncStorage.setItem(scopedKey, value);
+    if (!scopedKey) {
+      __DEV__ && console.log('[RQ Cache] setItem skipped — no user');
+      return;
+    }
+    await AsyncStorage.setItem(scopedKey, value);
+    __DEV__ && console.log(`[RQ Cache] setItem ${scopedKey} → ${(value.length / 1024).toFixed(1)}KB`);
   },
   removeItem: async (_key: string) => {
     const scopedKey = getScopedCacheKey();
-    if (scopedKey) await AsyncStorage.removeItem(scopedKey);
+    if (scopedKey) {
+      await AsyncStorage.removeItem(scopedKey);
+      __DEV__ && console.log(`[RQ Cache] removeItem ${scopedKey}`);
+    }
   },
 };
 
@@ -171,14 +185,71 @@ export default Sentry.wrap(function RootLayout() {
   const ref = useNavigationContainerRef();
   const rootNavigationState = useRootNavigationState();
 
+  // Track whether the persisted React Query cache has been restored from
+  // AsyncStorage. For authenticated users we delay rendering content until
+  // the cache is hydrated so queries find cached data on their first render.
+  const [isCacheRestored, setIsCacheRestored] = useState(false);
+  const hasUser = !!(token && user?.id);
+
   useEffect(() => {
     initializeAuth();
     initializeTheme();
     initializeOnboarding();
   }, []);
 
-  const appReady = !isAuthLoading && isThemeHydrated && !isOnboardingLoading;
+  // Reset restore state when the user changes (login, logout, switch account).
+  useEffect(() => {
+    setIsCacheRestored(false);
+  }, [hasUser]);
 
+  // Restore the persisted query cache BEFORE any query-using components mount.
+  // We use persistQueryClient (not PersistQueryClientProvider) so we can
+  // await the restore and gate rendering on it via isCacheRestored.
+  // Otherwise PersistQueryClientProvider renders children immediately and
+  // queries fire before AsyncStorage is read.
+  useEffect(() => {
+    if (!hasUser) {
+      __DEV__ && console.log('[RQ Cache] No user — skipping restore');
+      setIsCacheRestored(true);
+      return;
+    }
+
+    __DEV__ && console.log('[RQ Cache] Starting restore for user:', user?.id);
+
+    let cancelled = false;
+    const [unsubscribe, restorePromise] = persistQueryClient({
+      queryClient,
+      persister: asyncStoragePersister,
+    });
+
+    restorePromise
+      .then(() => {
+        if (!cancelled) {
+          __DEV__ && console.log('[RQ Cache] Restore complete — cache hydrated');
+          setIsCacheRestored(true);
+        }
+      })
+      .catch((e) => {
+        console.warn('Failed to restore persisted query cache:', e);
+        if (!cancelled) setIsCacheRestored(true); // proceed without cache on error
+      });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [hasUser]);
+
+  const appReady = !isAuthLoading && isThemeHydrated && !isOnboardingLoading && isCacheRestored;
+
+  // Once the app has been ready, keep it ready — prevents a blank flash when
+  // switching users (sign-out → sign-in) where isCacheRestored briefly resets.
+  const [hasEverBeenReady, setHasEverBeenReady] = useState(false);
+  useEffect(() => {
+    if (appReady) setHasEverBeenReady(true);
+  }, [appReady]);
+
+  // Only hide the native splash once everything (including cache restore) is ready.
   useEffect(() => {
     if (appReady) {
       SplashScreen.hideAsync().catch((e) =>
@@ -229,7 +300,7 @@ export default Sentry.wrap(function RootLayout() {
     }
   }, [token, user, appReady, segments]);
 
-  if (!appReady) {
+  if (!appReady && !hasEverBeenReady) {
     return null;
   }
 
@@ -239,10 +310,7 @@ export default Sentry.wrap(function RootLayout() {
       <Sentry.ErrorBoundary fallback={({error, retry}) => (
         <ErrorFallback error={error} onRetry={retry} />
       )}>
-        <PersistQueryClientProvider
-          client={queryClient}
-          persistOptions={{ persister: asyncStoragePersister }}
-        >
+        <QueryClientProvider client={queryClient}>
           <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
             <Stack.Screen name="(auth)/login" options={{ animation: 'fade' }} />
@@ -253,7 +321,7 @@ export default Sentry.wrap(function RootLayout() {
           {token && !hasSeenOnboarding && <OnboardingModal />}
           <TermsDisclaimerModal />
           <ToastOverlay />
-        </PersistQueryClientProvider>
+        </QueryClientProvider>
       </Sentry.ErrorBoundary>
     </GestureHandlerRootView>
     </ObserveRoot>
