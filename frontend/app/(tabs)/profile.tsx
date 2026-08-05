@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -146,6 +146,7 @@ export default function ProfileScreen() {
             <SettingsRow icon="Bell" label="Notifications" onPress={() => router.push('/notifications')} />
             <SettingsRow icon="Settings" label="Preferences" onPress={() => router.push('/preferences')} />
             <SettingsRow icon="Shield" label="Security" onPress={() => router.push('/security')} />
+            <SettingsRow icon="Globe" label="Website" onPress={() => Linking.openURL('https://app.akaovia.com')} />
           </View>
         </Animated.View>
 
