@@ -1,7 +1,11 @@
+import { GOOGLE_PLAY_URL, APP_WEB_URL } from "../constants";
+
 const footerLinks = {
   Product: [
     { label: "Features",    href: "#features" },
     { label: "How It Works",href: "#how-it-works" },
+    { label: "Get the App", href: GOOGLE_PLAY_URL, external: true },
+    { label: "Open Web App", href: APP_WEB_URL, external: true },
   ],
   Legal: [
     { label: "Privacy Policy", href: "/privacy" },
@@ -52,6 +56,8 @@ export default function Footer() {
                   <li key={l.label}>
                     <a
                       href={l.href}
+                      target={l.external ? "_blank" : undefined}
+                      rel={l.external ? "noopener noreferrer" : undefined}
                       className="text-white/45 hover:text-white/70 text-sm transition-colors duration-150 cursor-pointer"
                     >
                       {l.label}

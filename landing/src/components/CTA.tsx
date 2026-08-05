@@ -1,53 +1,9 @@
-import { motion, AnimatePresence } from "motion/react";
-import { useState } from "react";
+import { motion } from "motion/react";
 import ScrollReveal from "./ScrollReveal";
 import { ArrowRightIcon } from "./Icons";
-
-const API_URL = import.meta.env.VITE_API_URL || "https://api.akaovia.com";
+import { GOOGLE_PLAY_URL } from "../constants";
 
 export default function CTA() {
-  const [email, setEmail]       = useState("");
-  const [status, setStatus]     = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setStatus("loading");
-    setErrorMsg("");
-
-    if (!API_URL) {
-      setErrorMsg("API is not configured. Please try again later.");
-      setStatus("error");
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_URL}/api/v1/waitlist/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (res.ok) {
-        setStatus("success");
-      } else {
-        const body = await res.text();
-        console.error("Failed to join waitlist:", body);
-        setErrorMsg(
-          res.status === 429
-            ? "Too many attempts. Please wait a moment and try again."
-            : "Something went wrong. Please try again."
-        );
-        setStatus("error");
-      }
-    } catch (err) {
-      console.error("Network error:", err);
-      setErrorMsg("Network error. Please check your connection and try again.");
-      setStatus("error");
-    }
-  };
-
   return (
     <section id="cta" className="relative py-20 md:py-28 overflow-hidden">
       <div className="max-w-4xl mx-auto px-6">
@@ -84,7 +40,7 @@ export default function CTA() {
                 <span className="relative w-2 h-2">
                   <span className="relative block w-2 h-2 rounded-full bg-brand-500" />
                 </span>
-                Limited Early Access — Spots Filling Fast
+                Now Live on Google Play
               </motion.div>
 
               <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-white">
@@ -92,89 +48,22 @@ export default function CTA() {
                 <span className="text-gradient">tonight's Swiggy order?</span>
               </h2>
               <p className="text-white/50 text-lg max-w-lg mx-auto mb-10">
-                Join 2,000+ cardholders who stopped guessing and started analysing.
-                No bank linking. Setup takes 2 minutes. Early access is free.
+                Stop guessing and start analysing your own wallet.
+                Install on Android — free during early access.
               </p>
 
-              {status === "error" && (
-                <motion.div
-                  key="error"
-                  className="rounded-xl p-4 max-w-md mx-auto mb-4"
-                  style={{ background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.25)" }}
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <p className="text-red-400 text-sm">{errorMsg}</p>
-                </motion.div>
-              )}
-
-              <AnimatePresence mode="wait">
-                {status === "success" ? (
-                  <motion.div
-                    key="success"
-                    className="cta-success-card rounded-2xl p-8 max-w-md mx-auto"
-                    initial={{ opacity: 0, scale: 0.92, y: 16 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  >
-                    <motion.div
-                      className="w-14 h-14 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center mx-auto mb-4"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 280, delay: 0.1 }}
-                    >
-                      <svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </motion.div>
-                    <p className="text-white font-bold text-xl mb-1">You're on the list!</p>
-                    <p className="text-white/45 text-sm">
-                      We'll reach out at{" "}
-                      <span className="text-brand-400 font-semibold">{email}</span> soon.
-                    </p>
-                  </motion.div>
-                ) : (
-                  <motion.form
-                    key="form"
-                    onSubmit={handleSubmit}
-                    className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-                    initial={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <label htmlFor="cta-email" className="sr-only">Email address</label>
-                    <input
-                      id="cta-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="flex-1 px-5 py-4 cta-input rounded-xl text-white placeholder-white/30 focus:outline-none transition-colors duration-200 text-sm"
-                    />
-                    <button
-                      type="submit"
-                      disabled={status === "loading"}
-                      className="cta-btn px-7 py-4 text-white font-bold text-sm rounded-xl transition-all duration-200 whitespace-nowrap flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      {status === "loading" ? (
-                        <>
-                          <span className="cta-spinner" />
-                          Joining...
-                        </>
-                      ) : (
-                        <>
-                          Get Early Access
-                          <ArrowRightIcon className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  </motion.form>
-                )}
-              </AnimatePresence>
+              <a
+                href={GOOGLE_PLAY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cta-btn inline-flex items-center justify-center gap-2 px-8 py-4 text-white font-bold text-base rounded-xl transition-all duration-200 cursor-pointer"
+              >
+                Get It on Google Play
+                <ArrowRightIcon className="w-4 h-4" />
+              </a>
 
               <p className="text-white/20 text-xs mt-5">
-                No spam. Unsubscribe anytime. We'll never share your email.
+                Free during early access · No bank linking · Setup takes 2 minutes
               </p>
             </div>
           </div>

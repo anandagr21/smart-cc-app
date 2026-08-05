@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { ArrowRightIcon } from "./Icons";
+import { GOOGLE_PLAY_URL, APP_WEB_URL } from "../constants";
 
 const stats = [
   { value: "₹2.4L", label: "Avg savings / year" },
@@ -40,7 +41,7 @@ export default function Hero() {
               <span className="relative w-2 h-2">
                 <span className="relative block w-2 h-2 rounded-full bg-brand-500" />
               </span>
-              100% Free During Early Access
+              Now Live on Google Play
             </motion.div>
 
             {/* Headline */}
@@ -74,10 +75,12 @@ export default function Hero() {
               transition={{ delay: 0.44, duration: 0.5 }}
             >
               <a
-                href="#cta"
+                href={GOOGLE_PLAY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group inline-flex items-center justify-center px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-lg rounded-2xl transition-all duration-200 shadow-xl shadow-brand-500/30 hover:shadow-brand-500/50 cursor-pointer"
               >
-                Join Early Access
+                Get It on Google Play
                 <ArrowRightIcon className="w-5 h-5 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
               </a>
               <a
@@ -87,6 +90,20 @@ export default function Hero() {
                 See How It Works
               </a>
             </motion.div>
+
+            {/* Web app link */}
+            <motion.a
+              href={APP_WEB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/70 transition-colors duration-200 cursor-pointer mb-10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+            >
+              Prefer the browser? Open the web app
+              <ArrowRightIcon className="w-4 h-4" />
+            </motion.a>
 
             {/* Trust badges */}
             <motion.div

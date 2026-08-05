@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect } from "react";
+import { GOOGLE_PLAY_URL, APP_WEB_URL } from "../constants";
 
 const links = [
   { href: "#features",     label: "Features"     },
@@ -49,10 +50,20 @@ export default function Navbar() {
         {/* CTA + mobile burger */}
         <div className="flex items-center gap-3">
           <a
-            href="#cta"
+            href={APP_WEB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:inline-flex items-center px-4 py-2.5 text-white/70 hover:text-white font-semibold text-sm transition-colors duration-200 cursor-pointer"
+          >
+            Sign In
+          </a>
+          <a
+            href={GOOGLE_PLAY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="hidden md:inline-flex items-center px-5 py-2.5 bg-accent-500 hover:bg-accent-600 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-lg shadow-accent-500/25 hover:shadow-accent-500/40 cursor-pointer"
           >
-            Get Early Access
+            Get the App
           </a>
 
           {/* Burger */}
@@ -105,14 +116,28 @@ export default function Navbar() {
               </motion.a>
             ))}
             <motion.a
-              href="#cta"
+              href={APP_WEB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/70 hover:text-white font-medium text-base py-2 px-3 rounded-xl hover:bg-white/5 transition-colors duration-150 cursor-pointer"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.22 }}
+              onClick={() => setMenuOpen(false)}
+            >
+              Sign In
+            </motion.a>
+            <motion.a
+              href={GOOGLE_PLAY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-1 text-center py-3 bg-accent-500 hover:bg-accent-600 text-white font-semibold text-sm rounded-xl transition-colors duration-200 cursor-pointer"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.28 }}
               onClick={() => setMenuOpen(false)}
             >
-              Get Early Access
+              Get the App
             </motion.a>
           </motion.div>
         )}
