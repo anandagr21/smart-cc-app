@@ -151,7 +151,19 @@ export default function LoginScreen() {
 
         {/* Terms acceptance */}
         <TouchableOpacity
-          style={styles.termsRow}
+          style={[
+            styles.termsRow,
+            {
+              backgroundColor: colors.isDark
+                ? 'rgba(79, 54, 255, 0.08)'
+                : 'rgba(79, 54, 255, 0.04)',
+              borderColor: termsAccepted
+                ? colors.primary
+                : colors.isDark
+                ? 'rgba(79, 54, 255, 0.35)'
+                : 'rgba(79, 54, 255, 0.25)',
+            },
+          ]}
           activeOpacity={0.7}
           onPress={() => setTermsAccepted((prev) => !prev)}
           accessibilityRole="checkbox"
@@ -161,21 +173,27 @@ export default function LoginScreen() {
           <View
             style={[
               styles.checkbox,
-              termsAccepted && { backgroundColor: colors.primary, borderColor: colors.primary },
-              !termsAccepted && { borderColor: colors.border },
+              termsAccepted
+                ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                : {
+                    backgroundColor: colors.isDark
+                      ? 'rgba(79, 54, 255, 0.18)'
+                      : '#EDEAFF',
+                    borderColor: colors.primary,
+                  },
             ]}
           >
             {termsAccepted && (
-              <DynamicIcon name="Check" size={12} color="#FFF" strokeWidth={3} />
+              <DynamicIcon name="Check" size={14} color="#FFF" strokeWidth={3.5} />
             )}
           </View>
-          <Text style={[styles.termsText, { color: colors.textSecondary }]}>
+          <Text style={[styles.termsText, { color: colors.textPrimary }]}>
             I agree to the{' '}
-            <Text style={{ color: colors.primary, fontWeight: tokens.fontWeight.semibold }}>
+            <Text style={{ color: colors.primary, fontWeight: tokens.fontWeight.bold }}>
               Terms
             </Text>{' '}
             and{' '}
-            <Text style={{ color: colors.primary, fontWeight: tokens.fontWeight.semibold }}>
+            <Text style={{ color: colors.primary, fontWeight: tokens.fontWeight.bold }}>
               Privacy Policy
             </Text>
           </Text>
@@ -292,25 +310,29 @@ const styles = StyleSheet.create({
   termsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     marginBottom: tokens.spacing.lg,
-    paddingHorizontal: 4,
-    maxWidth: 340,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    maxWidth: 360,
+    width: '100%',
     alignSelf: 'center',
   },
   checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 1.5,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   termsText: {
-    fontSize: tokens.fontSize.caption,
+    fontSize: tokens.fontSize.caption + 1,
     fontWeight: tokens.fontWeight.medium,
-    lineHeight: tokens.fontSize.caption * 1.5,
+    lineHeight: (tokens.fontSize.caption + 1) * 1.4,
     flex: 1,
   },
 
