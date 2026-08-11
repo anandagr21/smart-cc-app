@@ -61,12 +61,16 @@ async def create_transaction(
     current_user: UserResponse = Depends(get_current_user),
     service: TransactionService = Depends(get_transaction_service),
     enrichment_service: TransactionEnrichmentService = Depends(get_transaction_enrichment_service),
+    user_card_service: UserCardService = Depends(get_user_card_service),
     db: AsyncSession = Depends(get_db),
     idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
 ) -> dict:
     try:
         if idempotency_key:
             request.idempotency_key = idempotency_key
+
+        # Verify card ownership — prevents IDOR injection on other users' cards
+        await user_card_service.get_card_by_id(current_user.id, request.user_card_id)
 
         result = await service.create_transaction(current_user.id, request)
         enriched = await enrichment_service.enrich_transactions(current_user.id, [result])
