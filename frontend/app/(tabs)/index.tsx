@@ -15,7 +15,6 @@ import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { SkeletonBox } from '@/components/ui/SkeletonBox';
 import { ErrorBanner } from '@/components/ui/ErrorBanner';
 import { showToast } from '@/components/ui/Toast';
-
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { useRouter } from 'expo-router';
@@ -25,13 +24,12 @@ import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/us
 import { useSpendInsights } from '@/features/insights/hooks/useSpendInsights';
 import { useCards } from '@/features/cards/hooks/useCards';
 import { useTransactions } from '@/features/transactions/hooks/useTransactions';
+import { useAuthStore } from '@/features/auth/store/authStore';
 import { formatCategoryLabel } from '@/features/transactions/utils/categoryAccents';
 import { QueryKeys } from '@/features/core/api/queryKeys';
-
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 import { DynamicIcon } from '@/components/DynamicIcon';
-
-// ── Greeting ──────────────────────────────────────────────────────────────────
+import { FeaturedWalletCard } from '@/features/cards/components/FeaturedWalletCard';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -39,8 +37,6 @@ function getGreeting() {
   if (h < 17) return 'Good afternoon';
   return 'Good evening';
 }
-
-// ── Category → Icon mapping ──────────────────────────────────────────────────
 
 const CATEGORY_ICONS: Record<string, string> = {
   FOOD: 'Utensils',
@@ -55,8 +51,6 @@ function iconForCategory(cat: string): string {
   return CATEGORY_ICONS[cat] || 'Tag';
 }
 
-// ── Urgency order ─────────────────────────────────────────────────────────────
-
 const URGENCY_ORDER: Record<string, number> = {
   HIGH: 0,
   ELEVATED: 1,
@@ -64,12 +58,13 @@ const URGENCY_ORDER: Record<string, number> = {
   LOW: 3,
 };
 
-// ── Dashboard Screen ──────────────────────────────────────────────────────────
-
 export default function DashboardScreen() {
   const colors = useThemeColors();
+  const isDark = colors.isDark;
   const router = useRouter();
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
+
   const [isFormSheetVisible, setFormSheetVisible] = useState(false);
   const [quickStartData, setQuickStartData] = useState<{
     merchant_name: string;
@@ -88,16 +83,16 @@ export default function DashboardScreen() {
     isLoading: statsLoading,
     error: statsError,
   } = useMonthlyIntelligence(now.getFullYear(), now.getMonth() + 1);
-  const { primaryInsight, isLoading: insightsLoading } = useSpendInsights();
-  const { data: cardsData } = useCards();
+  const { primaryInsight, insights, isLoading: insightsLoading } = useSpendInsights();
+  const { data: cardsData, isLoading: cardsLoading } = useCards();
+  const { data: transactionsPages } = useTransactions();
 
-  const isLoading = statsLoading || insightsLoading;
+  const isLoading = statsLoading || insightsLoading || cardsLoading;
   const hasStats =
     monthlySummary &&
     (monthlySummary.total_rewards_optimized > 0 ||
       monthlySummary.optimization_rate > 0);
 
-  // ── Fee Waiver Alerts ──────────────────────────────────────────────────
   const feeWaiverAlerts = (cardsData || [])
     .filter(
       (c) =>
@@ -112,8 +107,6 @@ export default function DashboardScreen() {
     )
     .slice(0, 3);
 
-  // ── Best Card Pairings ─────────────────────────────────────────────────
-  const { data: transactionsPages } = useTransactions();
   const bestPairings: {
     category: string;
     cardName: string;
@@ -145,10 +138,9 @@ export default function DashboardScreen() {
           : [];
       })
       .sort((a, b) => b.txCount - a.txCount)
-      .slice(0, 5);
+      .slice(0, 4);
   })();
 
-  // ── Pull-to-refresh ────────────────────────────────────────────────────
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
@@ -162,6 +154,9 @@ export default function DashboardScreen() {
         queryClient.invalidateQueries({
           queryKey: QueryKeys.insights.all,
         }),
+        queryClient.invalidateQueries({
+          queryKey: QueryKeys.cards.all,
+        }),
       ]);
     } finally {
       setRefreshing(false);
@@ -172,6 +167,8 @@ export default function DashboardScreen() {
     reduceMotion
       ? FadeInDown.delay(delay).duration(0)
       : FadeInDown.delay(delay).springify();
+
+  const userName = user?.full_name?.split(' ')[0] || 'User';
 
   return (
     <ScreenContainer>
@@ -187,44 +184,34 @@ export default function DashboardScreen() {
           />
         }
       >
-        {/* ── Header ────────────────────────────────────────────────────── */}
-        <Animated.View entering={maybeAnimated(50)} style={styles.header}>
-          <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-            {getGreeting()}
-          </Text>
-          <Text style={[styles.heroLine, { color: colors.textPrimary }]}>
-            Here's how your cards are doing.
-          </Text>
-
-          {/* Monthly Intelligence — lightweight text link, not a card */}
+        {/* ── Header ────────────────────────────────────────────── */}
+        <Animated.View entering={maybeAnimated(40)} style={styles.header}>
           <TouchableOpacity
-            style={styles.intelRow}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Monthly Intelligence"
-            onPress={() => {
-              Sentry.addBreadcrumb({
-                category: 'navigation',
-                message: 'Monthly Intelligence Opened',
-              });
-              router.push('/monthly-intelligence');
-            }}
+            style={styles.profileHeaderLeft}
+            activeOpacity={0.8}
+            onPress={() => router.push('/profile')}
           >
-            <DynamicIcon
-              name="Sparkles"
-              size={14}
-              color={colors.primary}
-              strokeWidth={2}
-            />
-            <Text style={[styles.intelLabel, { color: colors.primary }]}>
-              Monthly Intelligence
-            </Text>
-            <DynamicIcon
-              name="ChevronRight"
-              size={14}
-              color={colors.primary}
-              strokeWidth={2}
-            />
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarInitials}>
+                {userName.substring(0, 1).toUpperCase()}
+              </Text>
+            </View>
+            <View>
+              <Text style={[styles.greetingText, { color: colors.textSecondary }]}>
+                {userName}
+              </Text>
+              <View style={styles.premiumBadgeRow}>
+                <Text style={styles.premiumBadgeText}>Beta Access</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.notificationIconBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : colors.surface, borderColor: colors.border }]}
+            activeOpacity={0.7}
+            onPress={() => router.push('/profile')}
+          >
+            <DynamicIcon name="Settings" size={18} color={colors.textPrimary} strokeWidth={1.8} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -238,60 +225,146 @@ export default function DashboardScreen() {
           />
         ) : null}
 
+        {/* ── Optimization Score Card ──────────────────────────────────── */}
+        {!isLoading && (
+          <Animated.View entering={maybeAnimated(60)} style={styles.scoreSection}>
+            <View style={[styles.scoreCard, { backgroundColor: isDark ? '#13162A' : colors.surface, borderColor: isDark ? 'rgba(139,92,246,0.2)' : colors.border }]}>
+              <View style={styles.scoreCardHeader}>
+                <Text style={[styles.scoreCardLabel, { color: colors.textSecondary }]}>Your Optimization Score</Text>
+                <TouchableOpacity
+                  activeOpacity={0.75}
+                  onPress={() => router.push('/monthly-intelligence')}
+                >
+                  <DynamicIcon name="ChevronRight" size={18} color={colors.textMuted} strokeWidth={2} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.scoreCardBody}>
+                {/* Circular Score Ring */}
+                <View style={styles.scoreRingWrap}>
+                  <View style={styles.scoreRingOuter}>
+                    <View style={[styles.scoreRingInner, { borderColor: isDark ? '#1E2340' : '#E5E7EB' }]}>
+                      <View style={styles.scoreRingFill}>
+                        <Text style={styles.scoreNumber}>
+                          {monthlySummary?.optimization_rate ? Math.round(monthlySummary.optimization_rate) : '—'}
+                        </Text>
+                        <Text style={styles.scoreOutOf}>/100</Text>
+                      </View>
+                    </View>
+                    {/* Arc segment overlay */}
+                    <View style={[styles.scoreArcGreen, { opacity: monthlySummary?.optimization_rate ? 1 : 0.3 }]} />
+                  </View>
+                </View>
+
+                {/* Score description */}
+                <View style={styles.scoreDescWrap}>
+                  <Text style={[styles.scoreGreatLabel, { color: colors.textPrimary }]}>
+                    {monthlySummary?.optimization_rate
+                      ? monthlySummary.optimization_rate >= 80
+                        ? 'Great! 🎉'
+                        : monthlySummary.optimization_rate >= 60
+                        ? 'Good! 👍'
+                        : 'Getting there!'
+                      : 'No data yet'}
+                  </Text>
+                  <Text style={[styles.scoreSubText, { color: colors.textSecondary }]}>
+                    {monthlySummary?.optimization_rate
+                      ? `${Math.round(monthlySummary.optimization_rate)}% of this month's purchases optimized`
+                      : 'Add purchases to see your score'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* ── Primary action: "Which card should I use?" ─────────────────── */}
+        {!isLoading && cardsData && cardsData.length > 0 ? (
+          <Animated.View entering={maybeAnimated(80)} style={styles.primaryActionWrap}>
+            <TouchableOpacity
+              style={[styles.primaryAction, { backgroundColor: colors.primary }]}
+              activeOpacity={0.85}
+              onPress={() => {
+                setQuickStartData(null);
+                setFormSheetVisible(true);
+              }}
+            >
+              <View style={styles.primaryActionIcon}>
+                <DynamicIcon name="CreditCard" size={18} color="#FFFFFF" strokeWidth={2.4} />
+              </View>
+              <View style={styles.primaryActionTextWrap}>
+                <Text style={styles.primaryActionTitle}>Which card should I use?</Text>
+                <Text style={styles.primaryActionSub}>Enter a purchase to find your best card</Text>
+              </View>
+              <DynamicIcon name="ArrowRight" size={18} color="rgba(255,255,255,0.85)" strokeWidth={2.4} />
+            </TouchableOpacity>
+          </Animated.View>
+        ) : null}
+
+        {/* ── 4-Button Action Bar ───────────────────────────────────────── */}
+        <Animated.View entering={maybeAnimated(90)} style={styles.actionGrid}>
+          {/* Add Transaction */}
+          <TouchableOpacity
+            style={styles.actionItem}
+            activeOpacity={0.8}
+            onPress={() => {
+              setQuickStartData(null);
+              setFormSheetVisible(true);
+            }}
+          >
+            <View style={[styles.actionIconCircle, { backgroundColor: colors.primary }]}>
+              <DynamicIcon name="Plus" size={20} color="#FFFFFF" strokeWidth={2.5} />
+            </View>
+            <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Add purchase</Text>
+          </TouchableOpacity>
+
+          {/* My Cards */}
+          <TouchableOpacity
+            style={styles.actionItem}
+            activeOpacity={0.8}
+            onPress={() => router.push('/cards')}
+          >
+            <View style={[styles.actionIconCircle, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+              <DynamicIcon name="CreditCard" size={19} color={colors.textPrimary} strokeWidth={2} />
+            </View>
+            <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>My cards</Text>
+          </TouchableOpacity>
+
+          {/* Monthly Intelligence */}
+          <TouchableOpacity
+            style={styles.actionItem}
+            activeOpacity={0.8}
+            onPress={() => router.push('/monthly-intelligence')}
+          >
+            <View style={[styles.actionIconCircle, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+              <DynamicIcon name="BarChart3" size={19} color={colors.textPrimary} strokeWidth={2} />
+            </View>
+            <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Insights</Text>
+          </TouchableOpacity>
+
+          {/* Activity / History */}
+          <TouchableOpacity
+            style={styles.actionItem}
+            activeOpacity={0.8}
+            onPress={() => router.push('/history')}
+          >
+            <View style={[styles.actionIconCircle, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+              <DynamicIcon name="Clock" size={19} color={colors.textPrimary} strokeWidth={2} />
+            </View>
+            <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Activity</Text>
+          </TouchableOpacity>
+        </Animated.View>
+
         {/* ── Loading Skeleton ──────────────────────────────────────────── */}
         {isLoading ? (
           <View style={styles.skeletonContainer}>
-            <SkeletonBox
-              height={14}
-              width="55%"
-              borderRadius={6}
-              style={{ marginBottom: 10 }}
-            />
-            <SkeletonBox
-              height={36}
-              width="40%"
-              borderRadius={8}
-              style={{ marginBottom: 20 }}
-            />
-            <View style={styles.statsRow}>
-              <View
-                style={[
-                  styles.statCard,
-                  { backgroundColor: colors.surface },
-                ]}
-              >
-                <SkeletonBox height={12} width="60%" borderRadius={6} />
-                <View style={{ height: 12 }} />
-                <SkeletonBox height={28} width="40%" borderRadius={8} />
-              </View>
-              <View
-                style={[
-                  styles.statCard,
-                  { backgroundColor: colors.surface },
-                ]}
-              >
-                <SkeletonBox height={12} width="50%" borderRadius={6} />
-                <View style={{ height: 12 }} />
-                <SkeletonBox height={28} width="50%" borderRadius={8} />
-              </View>
-            </View>
-            <View
-              style={[
-                styles.insightCard,
-                { backgroundColor: colors.surface, marginTop: 16 },
-              ]}
-            >
-              <SkeletonBox height={12} width="35%" borderRadius={6} />
-              <View style={{ height: 16 }} />
-              <SkeletonBox height={16} width="90%" borderRadius={8} />
-              <View style={{ height: 8 }} />
-              <SkeletonBox height={12} width="70%" borderRadius={6} />
-            </View>
+            <SkeletonBox height={160} width="100%" borderRadius={tokens.radius.card} style={{ marginBottom: 16 }} />
+            <SkeletonBox height={80} width="100%" borderRadius={tokens.radius.card} style={{ marginBottom: 16 }} />
           </View>
         ) : null}
 
         {/* ── Empty Dashboard State ─────────────────────────────────────── */}
-        {!isLoading && !hasStats && !primaryInsight ? (
+        {!isLoading && !hasStats && !primaryInsight && (!cardsData || cardsData.length === 0) ? (
           <EmptyDashboardState
             onAddCard={() => router.push('/cards')}
             onAddTransaction={() => {
@@ -308,292 +381,100 @@ export default function DashboardScreen() {
           />
         ) : null}
 
-        {/* ── Stats Section ─────────────────────────────────────────────── */}
-        {!isLoading && hasStats ? (
-          <Animated.View
-            entering={maybeAnimated(100)}
-            style={styles.statsContainer}
-          >
-            {/* Reward Efficiency + Rewards — side by side */}
-            <View style={styles.statsRow}>
-              <View
-                style={[
-                  styles.statCard,
-                  { backgroundColor: colors.surface },
-                ]}
-              >
-                <View style={styles.statHeader}>
-                  <DynamicIcon
-                    name="Trophy"
-                    size={15}
-                    color={colors.warning}
-                    strokeWidth={2}
-                  />
-                  <Text
-                    style={[styles.statLabel, { color: colors.textSecondary }]}
-                  >
-                    Reward Efficiency
-                  </Text>
-                </View>
-                <AnimatedNumber
-                  value={monthlySummary?.optimization_rate || 0}
-                  suffix="%"
-                  style={[styles.statValue, { color: colors.textPrimary }]}
-                />
-              </View>
-
-              <View
-                style={[
-                  styles.statCard,
-                  { backgroundColor: colors.successSoft },
-                ]}
-              >
-                <View style={styles.statHeader}>
-                  <DynamicIcon
-                    name="TrendingUp"
-                    size={15}
-                    color={colors.success}
-                    strokeWidth={2}
-                  />
-                  <Text style={[styles.statLabel, { color: colors.success }]}>
-                    Rewards this month
-                  </Text>
-                </View>
-                <AnimatedNumber
-                  value={monthlySummary?.total_rewards_optimized || 0}
-                  prefix="₹"
-                  style={[styles.statValue, { color: colors.success }]}
-                />
-              </View>
+        {/* ── Cards Carousel (Card Stack) ─────────────────────────── */}
+        {!isLoading && cardsData && cardsData.length > 0 ? (
+          <Animated.View entering={maybeAnimated(100)} style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+                MY CARDS ({cardsData.length})
+              </Text>
+              <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/cards')}>
+                <Text style={[styles.seeAllLink, { color: colors.primary }]}>See all</Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Best Category */}
-            {monthlySummary?.strongest_category ? (
-              <TouchableOpacity
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel={`Best category: ${monthlySummary.strongest_category}`}
-                onPress={() => {
-                  Sentry.addBreadcrumb({
-                    category: 'navigation',
-                    message: 'Best Category → Monthly Intelligence',
-                  });
-                  router.push('/monthly-intelligence');
-                }}
-              >
-                <View
-                  style={[
-                    styles.bestCatRow,
-                    { backgroundColor: colors.surface },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.bestCatLabel,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    Best category
-                  </Text>
-                  <View style={styles.bestCatRight}>
-                    <Text
-                      style={[
-                        styles.bestCatPill,
-                        {
-                          color: colors.success,
-                          backgroundColor: colors.successSoft,
-                        },
-                      ]}
-                    >
-                      {monthlySummary.strongest_category}
-                    </Text>
-                    <DynamicIcon
-                      name="ChevronRight"
-                      size={14}
-                      color={colors.textMuted}
-                      strokeWidth={2}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.cardCarouselContent}
+            >
+              {cardsData.map((card) => {
+                const cardInsight = insights?.find((i) => i.card_id === card.id);
+                return (
+                  <View key={card.id} style={styles.carouselItemWrapper}>
+                    <FeaturedWalletCard
+                      card={card}
+                      insight={cardInsight}
+                      onPress={() => router.push('/cards')}
                     />
                   </View>
-                </View>
-              </TouchableOpacity>
-            ) : null}
+                );
+              })}
+            </ScrollView>
           </Animated.View>
         ) : null}
 
-        {/* ── Primary Action ────────────────────────────────────────────── */}
-        {cardsData && cardsData.length > 0 ? (
-          <Animated.View
-            entering={maybeAnimated(120)}
-            style={styles.actionContainer}
-          >
-            <TouchableOpacity
-              style={[
-                styles.primaryActionBtn,
-                { backgroundColor: colors.primary },
-              ]}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel="Add transaction"
-              onPress={() => {
-                setQuickStartData(null);
-                setFormSheetVisible(true);
-              }}
-            >
-              <DynamicIcon
-                name="Plus"
-                size={22}
-                color="#FFF"
-                strokeWidth={2.5}
-              />
-              <Text style={styles.primaryActionText}>Add Transaction</Text>
-            </TouchableOpacity>
-            <Text style={[styles.actionHint, { color: colors.textSecondary }]}>
-              Get instant recommendations based on your portfolio.
-            </Text>
-          </Animated.View>
-        ) : null}
-
-        {/* ── Add First Card prompt ─────────────────────────────────────── */}
-        {cardsData && cardsData.length === 0 ? (
-          <Animated.View
-            entering={maybeAnimated(120)}
-            style={styles.actionContainer}
-          >
-            <View
-              style={[
-                styles.addCardCard,
-                { backgroundColor: colors.surface },
-              ]}
-            >
-              <View
-                style={[
-                  styles.addCardIconWrap,
-                  { backgroundColor: colors.primarySoft },
-                ]}
-              >
-                <DynamicIcon
-                  name="CreditCard"
-                  size={28}
-                  color={colors.primary}
-                  strokeWidth={1.5}
-                />
-              </View>
-              <Text
-                style={[styles.addCardTitle, { color: colors.textPrimary }]}
-              >
-                Add your first card
-              </Text>
-              <Text
-                style={[styles.addCardBody, { color: colors.textSecondary }]}
-              >
-                Connect your credit cards to unlock reward optimization and
-                real-time recommendations.
-              </Text>
-              <TouchableOpacity
-                style={[
-                  styles.primaryActionBtn,
-                  { backgroundColor: colors.primary },
-                ]}
-                activeOpacity={0.8}
-                accessibilityRole="button"
-                accessibilityLabel="Add a card"
-                onPress={() => router.push('/cards')}
-              >
-                <DynamicIcon
-                  name="Plus"
-                  size={22}
-                  color="#FFF"
-                  strokeWidth={2.5}
-                />
-                <Text style={styles.primaryActionText}>Add a Card</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={[styles.actionHint, { color: colors.textSecondary }]}>
-              We support 60+ Indian credit cards across 14 banks.
-            </Text>
-          </Animated.View>
-        ) : null}
-
-        {/* ── Fee Waiver Alerts ──────────────────────────────────────────── */}
+        {/* ── Fee Waiver Radar ──────────────────────────────────────────── */}
         {!isLoading && feeWaiverAlerts.length > 0 ? (
-          <Animated.View entering={maybeAnimated(130)} style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
-              Fee waiver alerts
-            </Text>
+          <Animated.View entering={maybeAnimated(110)} style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+                ANNUAL FEES
+              </Text>
+              <DynamicIcon name="ShieldAlert" size={15} color={colors.warning} />
+            </View>
+
             <View style={styles.alertList}>
               {feeWaiverAlerts.map((card) => {
                 const isUrgent =
                   card.urgency_level === 'HIGH' ||
                   card.urgency_level === 'ELEVATED';
-                const urgencyColor = isUrgent
-                  ? colors.warning
-                  : colors.textSecondary;
-                const cardName =
-                  card.card_details?.card_name || 'Unknown Card';
+                const cardName = card.card_details?.card_name || 'Card';
                 const remaining = card.remaining_spend_for_waiver || 0;
-                const monthsLeft = card.days_until_renewal
-                  ? Math.max(1, Math.round(card.days_until_renewal / 30))
-                  : null;
-                const monthlyTarget = monthsLeft
-                  ? Math.round(remaining / monthsLeft)
-                  : null;
+                const fee = card.effective_annual_fee || 0;
+                const days = card.days_until_renewal;
 
                 return (
                   <TouchableOpacity
                     key={card.id}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${cardName}: ₹${Math.round(remaining).toLocaleString('en-IN')} more to waive your ₹${card.effective_annual_fee || 0} fee`}
+                    activeOpacity={0.8}
                     onPress={() => router.push('/cards')}
                     style={[
-                      styles.alertCard,
+                      styles.waiverCard,
                       {
-                        backgroundColor: isUrgent
-                          ? colors.warning + '0A'
-                          : colors.surface,
-                        borderLeftColor: urgencyColor,
+                        backgroundColor: colors.surface,
+                        borderColor: colors.border,
                       },
                     ]}
                   >
-                    <View style={styles.alertHeader}>
-                      <DynamicIcon
-                        name={isUrgent ? 'AlertTriangle' : 'Clock'}
-                        size={15}
-                        color={urgencyColor}
-                        strokeWidth={2}
-                      />
-                      <Text
-                        style={[
-                          styles.alertCardName,
-                          { color: colors.textPrimary },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {cardName}
-                      </Text>
+                    <View style={styles.waiverCardHeader}>
+                      <View style={styles.waiverCardTitleWrap}>
+                        <Text style={[styles.waiverCardName, { color: colors.textPrimary }]} numberOfLines={1}>
+                          {cardName}
+                        </Text>
+                        <Text style={[styles.waiverFeeSub, { color: colors.textSecondary }]}>
+                          Save ₹{fee.toLocaleString('en-IN')} annual fee
+                        </Text>
+                      </View>
+
+                      {isUrgent && (
+                        <View style={[styles.urgencyBadge, { backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.10)' }]}>
+                          <Text style={styles.urgencyText}>Action needed</Text>
+                        </View>
+                      )}
                     </View>
-                    <Text
-                      style={[
-                        styles.alertBody,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      ₹{Math.round(remaining).toLocaleString('en-IN')} more to waive your ₹
-                      {(card.effective_annual_fee || 0).toLocaleString('en-IN')}{' '}
-                      fee
-                    </Text>
-                    {monthsLeft && monthlyTarget ? (
-                      <Text
-                        style={[
-                          styles.alertHint,
-                          { color: colors.textMuted },
-                        ]}
-                      >
-                        {monthsLeft} month{monthsLeft > 1 ? 's' : ''}{' '}
-                        remaining · ₹{Math.round(monthlyTarget).toLocaleString('en-IN')}
-                        /month
+
+                    <View style={styles.waiverMetricRow}>
+                      <Text style={[styles.waiverTargetText, { color: colors.textPrimary }]}>
+                        ₹{Math.round(remaining).toLocaleString('en-IN')}{' '}
+                        <Text style={[styles.waiverTargetSub, { color: colors.textSecondary }]}>remaining target</Text>
                       </Text>
-                    ) : null}
+                      {days !== undefined && days !== null && (
+                        <Text style={[styles.waiverDaysText, { color: colors.textSecondary }]}>
+                          {days} days left
+                        </Text>
+                      )}
+                    </View>
                   </TouchableOpacity>
                 );
               })}
@@ -601,125 +482,109 @@ export default function DashboardScreen() {
           </Animated.View>
         ) : null}
 
-        {/* ── Best Card Pairings ─────────────────────────────────────────── */}
+        {/* ── Top Recommendations ──────────────────────────────────────── */}
         {!isLoading && bestPairings.length > 0 ? (
-          <Animated.View entering={maybeAnimated(140)} style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
-              Your best pairings
-            </Text>
-            <View
-              style={[styles.pairingsCard, { backgroundColor: colors.surface }]}
-            >
-              {bestPairings.map((pairing, idx) => (
-                <View
-                  key={pairing.category}
-                  style={[
-                    styles.pairingRow,
-                    idx < bestPairings.length - 1 && {
-                      borderBottomWidth: StyleSheet.hairlineWidth,
-                      borderBottomColor: colors.border,
-                      paddingBottom: 10,
-                      marginBottom: 10,
-                    },
-                  ]}
-                >
-                  <DynamicIcon
-                    name={iconForCategory(pairing.category)}
-                    size={15}
-                    color={colors.textSecondary}
-                    strokeWidth={1.5}
-                  />
-                  <Text
+          <Animated.View entering={maybeAnimated(120)} style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+                TOP RECOMMENDATIONS
+              </Text>
+            </View>
+
+            <View style={[styles.recCard, { backgroundColor: isDark ? '#13162A' : colors.surface, borderColor: isDark ? 'rgba(139,92,246,0.15)' : colors.border }]}>
+              {bestPairings.map((pairing, idx) => {
+                const icon = iconForCategory(pairing.category);
+                const iconColors: Record<string, string> = {
+                  FOOD: '#3B82F6', DINING: '#3B82F6', FUEL: '#F97316',
+                  ECOMMERCE: '#EC4899', TRAVEL: '#06B6D4', GROCERY: '#10B981',
+                };
+                const iconBg = iconColors[pairing.category] || '#8B5CF6';
+                return (
+                  <TouchableOpacity
+                    key={pairing.category}
+                    activeOpacity={0.75}
+                    onPress={() => router.push('/cards')}
                     style={[
-                      styles.pairingCategory,
-                      { color: colors.textPrimary },
+                      styles.recRow,
+                      idx < bestPairings.length - 1 && {
+                        borderBottomWidth: StyleSheet.hairlineWidth,
+                        borderBottomColor: isDark ? 'rgba(255,255,255,0.07)' : colors.border,
+                      },
                     ]}
                   >
-                    {formatCategoryLabel(pairing.category)}
-                  </Text>
-                  <DynamicIcon
-                    name="ArrowRight"
-                    size={13}
-                    color={colors.textMuted}
-                    strokeWidth={2}
-                  />
-                  <Text
-                    style={[styles.pairingCard, { color: colors.primary }]}
-                    numberOfLines={1}
-                  >
-                    {pairing.cardName}
-                  </Text>
-                </View>
-              ))}
+                    <View style={[styles.recIconCircle, { backgroundColor: iconBg + '22' }]}>
+                      <DynamicIcon name={icon} size={18} color={iconBg} strokeWidth={2.2} />
+                    </View>
+                    <View style={styles.recInfo}>
+                      <Text style={[styles.recCardName, { color: colors.textPrimary }]} numberOfLines={1}>
+                        Use <Text style={{ color: '#8B5CF6', fontWeight: '700' }}>{pairing.cardName}</Text>
+                      </Text>
+                      <Text style={[styles.recDesc, { color: colors.textSecondary }]} numberOfLines={1}>
+                        for {formatCategoryLabel(pairing.category).toLowerCase()}
+                      </Text>
+                    </View>
+                    <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} strokeWidth={2} />
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </Animated.View>
         ) : null}
 
-        {/* ── Recent Recommendation ──────────────────────────────────────── */}
-        {!isLoading && primaryInsight ? (
-          <Animated.View
-            entering={maybeAnimated(150)}
-            style={styles.section}
-          >
-            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
-              Recent recommendation
-            </Text>
+        {/* ── Potential Annual Benefit ─────────────────────────────────── */}
+        {!isLoading && monthlySummary ? (
+          <Animated.View entering={maybeAnimated(130)} style={styles.section}>
             <TouchableOpacity
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={primaryInsight.title}
+              activeOpacity={0.8}
+              onPress={() => router.push('/monthly-intelligence')}
+              style={[styles.benefitCard, { backgroundColor: isDark ? '#13162A' : colors.surface, borderColor: isDark ? 'rgba(139,92,246,0.2)' : colors.border }]}
+            >
+              <View style={styles.benefitCardHeader}>
+                <Text style={[styles.benefitCardLabel, { color: colors.textSecondary }]}>Rewards optimized this month</Text>
+                <DynamicIcon name="ArrowRight" size={16} color={colors.textMuted} strokeWidth={2} />
+              </View>
+              <View style={styles.benefitCardBody}>
+                <Text style={[styles.benefitAmount, { color: colors.textPrimary }]}>
+                  ₹{(monthlySummary.total_rewards_optimized || 0).toLocaleString('en-IN')}
+                </Text>
+                <View style={[styles.benefitGiftIcon, { backgroundColor: 'rgba(139,92,246,0.15)' }]}>
+                  <Text style={styles.benefitGiftEmoji}>🎁</Text>
+                </View>
+              </View>
+              <Text style={[styles.benefitSub, { color: colors.textSecondary }]}>from purchases logged this month</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        ) : primaryInsight ? (
+          <Animated.View entering={maybeAnimated(130)} style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+                RECOMMENDATION
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push('/monthly-intelligence')}
               style={[
                 styles.insightCard,
                 {
-                  backgroundColor: primaryInsight.badge_color + '0A',
-                  borderLeftColor: primaryInsight.badge_color,
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
                 },
               ]}
             >
               <View style={styles.insightHeader}>
                 <View style={styles.insightHeaderLeft}>
-                  <DynamicIcon
-                    name="Lightbulb"
-                    size={16}
-                    color={primaryInsight.badge_color}
-                    strokeWidth={2}
-                  />
-                  <View
-                    style={[
-                      styles.insightBadge,
-                      {
-                        backgroundColor: primaryInsight.badge_color + '15',
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.insightBadgeText,
-                        { color: primaryInsight.badge_color },
-                      ]}
-                    >
-                      {primaryInsight.badge_label}
-                    </Text>
+                  <View style={[styles.insightIconBadge, { backgroundColor: 'rgba(59, 130, 246, 0.12)' }]}>
+                    <DynamicIcon name="Sparkles" size={14} color={colors.primary} strokeWidth={2.4} />
                   </View>
+                  <Text style={[styles.insightTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                    {primaryInsight.title}
+                  </Text>
                 </View>
-                <DynamicIcon
-                  name="ChevronRight"
-                  size={16}
-                  color={colors.textMuted}
-                  strokeWidth={2}
-                />
+                <DynamicIcon name="ChevronRight" size={16} color={colors.textSecondary} strokeWidth={2} />
               </View>
-              <Text
-                style={[styles.insightTitle, { color: colors.textPrimary }]}
-              >
-                {primaryInsight.title}
-              </Text>
-              <Text
-                style={[
-                  styles.insightSummary,
-                  { color: colors.textSecondary },
-                ]}
-              >
+              <Text style={[styles.insightSummary, { color: colors.textSecondary }]}>
                 {primaryInsight.summary}
               </Text>
             </TouchableOpacity>
@@ -745,259 +610,476 @@ export default function DashboardScreen() {
   );
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  scroll: { paddingBottom: 120 },
-
-  // ── Header ────────────────────────────────────────────────────────────
+  scroll: {
+    paddingBottom: 120,
+    paddingTop: 8,
+  },
   header: {
-    marginBottom: 28,
-    paddingTop: 4,
-  },
-  greeting: {
-    fontSize: tokens.fontSize.bodyLg,
-    fontWeight: tokens.fontWeight.medium,
-    marginBottom: 4,
-  },
-  heroLine: {
-    fontSize: 28,
-    fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: -0.8,
-    lineHeight: 34,
-    marginBottom: 16,
-  },
-  intelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-  },
-  intelLabel: {
-    fontSize: tokens.fontSize.bodySm,
-    fontWeight: tokens.fontWeight.semibold,
-  },
-
-  // ── Skeleton ──────────────────────────────────────────────────────────
-  skeletonContainer: {
-    gap: 0,
-  },
-
-  // ── Stats ─────────────────────────────────────────────────────────────
-  statsContainer: {
-    marginBottom: 8,
-    gap: 10,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    padding: 16,
-    borderRadius: tokens.radius.card,
-  },
-  statHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    marginBottom: 10,
-  },
-  statLabel: {
-    fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  statValue: {
-    fontSize: 30,
-    fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: -1,
-  },
-  // ── Best Category ─────────────────────────────────────────────────────
-  bestCatRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: tokens.radius.card,
+    marginBottom: 20,
   },
-  bestCatLabel: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.semibold,
-  },
-  bestCatRight: {
+  profileHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
-  bestCatPill: {
-    fontSize: tokens.fontSize.caption,
+  avatarCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#6D28D9',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  avatarInitials: {
+    fontSize: tokens.fontSize.bodyLg,
+    fontWeight: tokens.fontWeight.heavy,
+    color: '#FFFFFF',
+  },
+  greetingText: {
+    fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: tokens.radius.full,
-    textTransform: 'capitalize',
+    letterSpacing: -0.2,
   },
-
-  // ── Insight ───────────────────────────────────────────────────────────
+  premiumBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  premiumBadgeIcon: {
+    fontSize: 11,
+  },
+  premiumBadgeText: {
+    fontSize: 11,
+    fontWeight: tokens.fontWeight.semibold,
+    color: '#FBBF24',
+    letterSpacing: 0.2,
+  },
+  notificationIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  // Score ring
+  scoreSection: {
+    marginBottom: 22,
+  },
+  scoreCard: {
+    borderRadius: tokens.radius.card,
+    padding: 18,
+    borderWidth: 1,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  scoreCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  scoreCardLabel: {
+    fontSize: tokens.fontSize.bodySm,
+    fontWeight: tokens.fontWeight.semibold,
+  },
+  scoreCardBody: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  scoreRingWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoreRingOuter: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  scoreRingInner: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoreRingFill: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoreArcGreen: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 40,
+    borderWidth: 6,
+    borderColor: 'transparent',
+    borderTopColor: '#10B981',
+    borderRightColor: '#10B981',
+    transform: [{ rotate: '-45deg' }],
+  },
+  scoreNumber: {
+    fontSize: 22,
+    fontWeight: tokens.fontWeight.heavy,
+    color: '#10B981',
+    letterSpacing: -0.5,
+  },
+  scoreOutOf: {
+    fontSize: 10,
+    fontWeight: tokens.fontWeight.medium,
+    color: '#6B7280',
+  },
+  scoreDescWrap: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  scoreGreatLabel: {
+    fontSize: tokens.fontSize.bodyLg,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: -0.3,
+    marginBottom: 4,
+  },
+  scoreSubText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+    lineHeight: 17,
+  },
+  primaryActionWrap: {
+    marginBottom: 22,
+  },
+  primaryAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 18,
+    borderRadius: tokens.radius.card,
+    shadowColor: '#0052FF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  primaryActionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  primaryActionTextWrap: {
+    flex: 1,
+  },
+  primaryActionTitle: {
+    color: '#FFFFFF',
+    fontSize: tokens.fontSize.bodyLg,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: -0.3,
+    marginBottom: 2,
+  },
+  primaryActionSub: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  actionGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 32,
+    paddingHorizontal: 6,
+  },
+  actionItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  actionIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  actionLabel: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.semibold,
+    letterSpacing: -0.1,
+  },
+  skeletonContainer: {
+    marginBottom: 16,
+  },
   section: {
     marginBottom: 28,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 2,
+  },
   sectionTitle: {
+    fontSize: 11,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: 1.2,
+  },
+  seeAllLink: {
     fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.semibold,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: tokens.fontWeight.bold,
+  },
+  cardCarouselContent: {
+    paddingRight: 20,
+    gap: 14,
+  },
+  carouselItemWrapper: {
+    marginRight: 2,
+  },
+  alertList: {
+    gap: 10,
+  },
+  waiverCard: {
+    padding: 16,
+    borderRadius: tokens.radius.card,
+    borderWidth: 1,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  waiverCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 10,
+  },
+  waiverCardTitleWrap: {
+    flex: 1,
+    marginRight: 10,
+  },
+  waiverCardName: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: -0.2,
+    marginBottom: 2,
+  },
+  waiverFeeSub: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  urgencyBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  urgencyText: {
+    color: '#F59E0B',
+    fontSize: 10,
+    fontWeight: tokens.fontWeight.bold,
+  },
+  waiverMetricRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  waiverTargetText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.bold,
+  },
+  waiverTargetSub: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.normal,
+  },
+  waiverDaysText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  // Recommendation rows
+  recCard: {
+    borderRadius: tokens.radius.card,
+    borderWidth: 1,
+    overflow: 'hidden',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  recRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 14,
+  },
+  recIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  recInfo: {
+    flex: 1,
+  },
+  recCardName: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.semibold,
+    marginBottom: 2,
+  },
+  recDesc: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  // Benefit card
+  benefitCard: {
+    borderRadius: tokens.radius.card,
+    padding: 18,
+    borderWidth: 1,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  benefitCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  benefitCardLabel: {
+    fontSize: tokens.fontSize.bodySm,
+    fontWeight: tokens.fontWeight.semibold,
+  },
+  benefitCardBody: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  benefitAmount: {
+    fontSize: 30,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: -0.8,
+  },
+  benefitGiftIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  benefitGiftEmoji: {
+    fontSize: 22,
+  },
+  benefitSub: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  // Legacy pairing styles (kept for compatibility)
+  pairingsCard: {
+    padding: 16,
+    borderRadius: tokens.radius.card,
+    borderWidth: 1,
+  },
+  pairingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pairingCategoryIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  pairingInfo: {
+    flex: 1,
+    marginRight: 10,
+  },
+  pairingCategory: {
+    fontSize: tokens.fontSize.bodySm,
+    fontWeight: tokens.fontWeight.bold,
+    marginBottom: 2,
+  },
+  pairingCount: {
+    fontSize: 11,
+    fontWeight: tokens.fontWeight.medium,
+  },
+  pairingCardPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    maxWidth: '45%',
+  },
+  pairingCardText: {
+    fontSize: 11,
+    fontWeight: tokens.fontWeight.bold,
   },
   insightCard: {
     padding: 18,
     borderRadius: tokens.radius.card,
-    borderLeftWidth: 3,
+    borderWidth: 1,
   },
   insightHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   insightHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    flex: 1,
+    marginRight: 10,
   },
-  insightBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  insightBadgeText: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+  insightIconBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   insightTitle: {
     fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.bold,
-    marginBottom: 4,
+    letterSpacing: -0.2,
+    flex: 1,
   },
   insightSummary: {
     fontSize: tokens.fontSize.bodySm,
-    lineHeight: 19,
-  },
-
-  // ── Pairings ──────────────────────────────────────────────────────────
-  pairingsCard: {
-    borderRadius: tokens.radius.card,
-    padding: 14,
-  },
-  pairingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  pairingCategory: {
-    fontSize: tokens.fontSize.bodySm,
-    fontWeight: tokens.fontWeight.semibold,
-    flex: 1,
-  },
-  pairingCard: {
-    fontSize: tokens.fontSize.bodySm,
-    fontWeight: tokens.fontWeight.semibold,
-    maxWidth: '50%',
-  },
-
-  // ── Add Card Prompt ───────────────────────────────────────────────────
-  addCardCard: {
-    padding: 28,
-    borderRadius: tokens.radius.card,
-    alignItems: 'center',
-    marginBottom: 16,
-    width: '100%',
-  },
-  addCardIconWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  addCardTitle: {
-    fontSize: tokens.fontSize.title,
-    fontWeight: tokens.fontWeight.bold,
-    letterSpacing: -0.3,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  addCardBody: {
-    fontSize: tokens.fontSize.body,
-    lineHeight: tokens.fontSize.body * 1.6,
-    textAlign: 'center',
-    marginBottom: 24,
-    maxWidth: 290,
-  },
-
-  // ── Fee Waiver Alerts ─────────────────────────────────────────────────
-  alertList: {
-    gap: 8,
-  },
-  alertCard: {
-    padding: 14,
-    borderRadius: tokens.radius.sm,
-    borderLeftWidth: 3,
-  },
-  alertHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  alertCardName: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.semibold,
-    flex: 1,
-  },
-  alertBody: {
-    fontSize: tokens.fontSize.bodySm,
-    lineHeight: 19,
-    marginLeft: 23,
-  },
-  alertHint: {
-    fontSize: tokens.fontSize.caption,
-    marginLeft: 23,
-    marginTop: 3,
-  },
-
-  // ── CTA ───────────────────────────────────────────────────────────────
-  actionContainer: {
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 4,
-  },
-  primaryActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 28,
-    borderRadius: tokens.radius.full,
-    width: '100%',
-  },
-  primaryActionText: {
-    color: '#FFF',
-    fontSize: tokens.fontSize.bodyLg,
-    fontWeight: tokens.fontWeight.bold,
-    letterSpacing: 0.3,
-  },
-  actionHint: {
-    marginTop: 14,
-    fontSize: tokens.fontSize.bodySm,
-    textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });

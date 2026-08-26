@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, SectionList, RefreshControl, StyleSheet, AccessibilityInfo, ScrollView } from 'react-native';
-
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -36,6 +35,7 @@ export default function HistoryScreen() {
   const [activeTab, setActiveTab] = useState<'activity' | 'insights'>('activity');
   const [reduceMotion, setReduceMotion] = useState(false);
   const colors = useThemeColors();
+  const isDark = colors.isDark;
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -71,21 +71,21 @@ export default function HistoryScreen() {
   return (
     <ScreenContainer noPadding>
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-        <Animated.View entering={anim(50)} style={styles.headerLeft}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Activity</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Your spending intelligence</Text>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        <Animated.View entering={anim(40)} style={styles.headerLeft}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Transactions</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Your purchases and rewards</Text>
         </Animated.View>
 
         {showHeader && (
-          <Animated.View entering={anim(100)}>
+          <Animated.View entering={anim(80)}>
             <TouchableOpacity
               testID="add-tx-btn"
               onPress={handleOpenAdd}
-              style={[styles.addBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]}
-              activeOpacity={0.75}
+              style={[styles.addBtn, { backgroundColor: colors.primary }]}
+              activeOpacity={0.8}
             >
-              <DynamicIcon name="Plus" size={22} color="#FFF" strokeWidth={2.5} />
+              <DynamicIcon name="Plus" size={20} color="#FFF" strokeWidth={2.5} />
             </TouchableOpacity>
           </Animated.View>
         )}
@@ -93,23 +93,68 @@ export default function HistoryScreen() {
 
       {/* ── Segmented Control ───────────────────────────────────────────── */}
       {showHeader && (
-        <Animated.View entering={anim(80)} style={styles.segmentWrap}>
-          <View style={[styles.segmentBg, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+        <Animated.View entering={anim(60)} style={styles.segmentWrap}>
+          <View style={[styles.segmentBg, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TouchableOpacity
-              style={[styles.segment, activeTab === 'activity' && [styles.segmentActive, { backgroundColor: colors.surface, borderColor: colors.border }]]}
+              style={[
+                styles.segment,
+                activeTab === 'activity' && {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.10)' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+                  borderWidth: 1,
+                },
+              ]}
               onPress={() => setActiveTab('activity')}
               activeOpacity={0.8}
             >
-              <DynamicIcon name="LayoutList" size={14} color={activeTab === 'activity' ? colors.textPrimary : colors.textSecondary} strokeWidth={2} />
-              <Text style={[styles.segmentText, { color: activeTab === 'activity' ? colors.textPrimary : colors.textSecondary }]}>Activity</Text>
+              <DynamicIcon
+                name="LayoutList"
+                size={14}
+                color={activeTab === 'activity' ? (isDark ? '#FFFFFF' : colors.primary) : colors.textSecondary}
+                strokeWidth={2}
+              />
+              <Text
+                style={[
+                  styles.segmentText,
+                  {
+                    color: activeTab === 'activity' ? (isDark ? '#FFFFFF' : colors.primary) : colors.textSecondary,
+                    fontWeight: activeTab === 'activity' ? tokens.fontWeight.bold : tokens.fontWeight.medium,
+                  },
+                ]}
+              >
+                Transactions
+              </Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[styles.segment, activeTab === 'insights' && [styles.segmentActive, { backgroundColor: colors.surface, borderColor: colors.border }]]}
+              style={[
+                styles.segment,
+                activeTab === 'insights' && {
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.10)' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+                  borderWidth: 1,
+                },
+              ]}
               onPress={() => setActiveTab('insights')}
               activeOpacity={0.8}
             >
-              <DynamicIcon name="BarChart3" size={14} color={activeTab === 'insights' ? colors.textPrimary : colors.textSecondary} strokeWidth={2} />
-              <Text style={[styles.segmentText, { color: activeTab === 'insights' ? colors.textPrimary : colors.textSecondary }]}>Insights</Text>
+              <DynamicIcon
+                name="BarChart3"
+                size={14}
+                color={activeTab === 'insights' ? (isDark ? '#FFFFFF' : colors.primary) : colors.textSecondary}
+                strokeWidth={2}
+              />
+              <Text
+                style={[
+                  styles.segmentText,
+                  {
+                    color: activeTab === 'insights' ? (isDark ? '#FFFFFF' : colors.primary) : colors.textSecondary,
+                    fontWeight: activeTab === 'insights' ? tokens.fontWeight.bold : tokens.fontWeight.medium,
+                  },
+                ]}
+              >
+                Insights
+              </Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -117,7 +162,7 @@ export default function HistoryScreen() {
 
       {/* ── Filter Pill ─────────────────────────────────────────────────── */}
       {cardId && filteredCard && (
-        <Animated.View entering={anim(80)} style={styles.filterWrap}>
+        <Animated.View entering={anim(70)} style={styles.filterWrap}>
           <TouchableOpacity
             style={[styles.filterPill, { backgroundColor: colors.primarySoft, borderColor: colors.primary + '30' }]}
             onPress={handleClearFilter}
@@ -135,7 +180,7 @@ export default function HistoryScreen() {
       {/* ── Content Area ────────────────────────────────────────────────── */}
       <View style={styles.listContainer}>
         {isLoading ? (
-          <View style={{ paddingHorizontal: 24 }}>
+          <View style={{ paddingHorizontal: 20 }}>
             <TransactionListSkeleton />
           </View>
         ) : allTransactions.length === 0 ? (
@@ -144,7 +189,7 @@ export default function HistoryScreen() {
               contentContainerStyle={styles.filteredEmpty}
               refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
             >
-              <View style={[styles.emptyIcon, { backgroundColor: colors.surfaceElevated }]}>
+              <View style={[styles.emptyIcon, { backgroundColor: colors.surface }]}>
                 <DynamicIcon name="Search" size={28} color={colors.textMuted} strokeWidth={1.5} />
               </View>
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No matches</Text>
@@ -172,7 +217,7 @@ export default function HistoryScreen() {
             })}
             renderSectionHeader={({ section: { title } }) => (
               <View style={[styles.sectionHeader]}>
-                <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{title}</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
               </View>
             )}
             ListHeaderComponent={
@@ -217,49 +262,48 @@ export default function HistoryScreen() {
   );
 }
 
-const ITEM_HEIGHT = 88;
+const ITEM_HEIGHT = 80;
 
 const styles = StyleSheet.create({
-  // ── Header ─────────────────────────────────────────────────────────────
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: tokens.layout.screenPadding,
-    paddingBottom: 20,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
   headerLeft: {
     flex: 1,
   },
   title: {
-    fontSize: tokens.fontSize.display,
+    fontSize: tokens.fontSize.headline,
     fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.tightest,
-    marginBottom: 4,
+    letterSpacing: -0.4,
+    marginBottom: 2,
   },
   subtitle: {
-    fontSize: tokens.fontSize.body,
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
-    letterSpacing: 0.2,
   },
   addBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 3,
   },
-
-  // ── Segmented Control ──────────────────────────────────────────────────
   segmentWrap: {
-    paddingHorizontal: tokens.layout.screenPadding,
-    paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
   segmentBg: {
     flexDirection: 'row',
-    borderRadius: tokens.radius.card,
+    borderRadius: tokens.radius.full,
     borderWidth: 1,
     padding: 4,
   },
@@ -269,25 +313,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
-    borderRadius: tokens.radius.md,
-  },
-  segmentActive: {
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    paddingVertical: 8,
+    borderRadius: tokens.radius.full,
   },
   segmentText: {
-    fontSize: tokens.fontSize.body,
-    fontWeight: tokens.fontWeight.semibold,
+    fontSize: tokens.fontSize.caption,
   },
-
-  // ── Filter ─────────────────────────────────────────────────────────────
   filterWrap: {
-    paddingHorizontal: tokens.layout.screenPadding,
+    paddingHorizontal: 20,
     marginBottom: 8,
     flexDirection: 'row',
   },
@@ -295,8 +328,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: tokens.radius.full,
     borderWidth: 1,
   },
@@ -304,8 +337,6 @@ const styles = StyleSheet.create({
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
   },
-
-  // ── List ───────────────────────────────────────────────────────────────
   listContainer: {
     flex: 1,
   },
@@ -313,21 +344,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   sectionHeader: {
-    paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     backgroundColor: 'transparent',
   },
   sectionTitle: {
-    fontSize: tokens.fontSize.caption,
+    fontSize: 11,
     fontWeight: tokens.fontWeight.bold,
-    textTransform: 'uppercase',
-    letterSpacing: tokens.letterSpacing.widest,
+    letterSpacing: 1.2,
   },
   scrollContent: {
+    paddingHorizontal: 20,
     paddingBottom: 140,
   },
-
-  // ── Empty States ───────────────────────────────────────────────────────
   filteredEmpty: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -336,31 +365,31 @@ const styles = StyleSheet.create({
     paddingBottom: 64,
   },
   emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   emptyTitle: {
     fontSize: tokens.fontSize.title,
     fontWeight: tokens.fontWeight.bold,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   emptyText: {
     fontSize: tokens.fontSize.body,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 20,
+    lineHeight: 20,
+    marginBottom: 16,
   },
   clearBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
     borderRadius: tokens.radius.full,
   },
   clearBtnText: {
-    fontSize: tokens.fontSize.body,
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.bold,
   },
 });

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { PortfolioEvolutionSurface } from '@/features/portfolio_evolution/components/PortfolioEvolutionSurface';
 import { DynamicIcon } from '@/components/DynamicIcon';
+import { showToast } from '@/components/ui/Toast';
 
 export default function IntelligenceScreen() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function IntelligenceScreen() {
       <View style={[styles.headerRow, { paddingTop: Math.max(insets.top, 20) }]}>
         <View style={{ flex: 1 }} />
         <TouchableOpacity 
+          onPress={() => showToast('Filters coming soon')}
           style={[styles.iconButton, { backgroundColor: colors.glassSurface, marginRight: 12 }]}
           accessibilityLabel="Filter insights"
           accessibilityRole="button"

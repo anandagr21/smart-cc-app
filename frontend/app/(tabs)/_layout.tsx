@@ -1,13 +1,10 @@
 import React from 'react';
 import { Tabs, usePathname, useRouter } from 'expo-router';
-
-import { BlurView } from 'expo-blur';
-import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useThemeStore } from '@/features/theme/store/themeStore';
@@ -17,9 +14,9 @@ import { useNotifications } from '@/features/notifications/hooks/useNotification
 import { DynamicIcon } from '@/components/DynamicIcon';
 
 const TABS = [
-  { name: 'index', route: '/', icon: 'Sparkles', label: 'Analyze' },
-  { name: 'cards', route: '/cards', icon: 'CreditCard', label: 'Wallet' },
-  { name: 'history', route: '/history', icon: 'History', label: 'Activity' },
+  { name: 'index', route: '/', icon: 'House', label: 'Home' },
+  { name: 'cards', route: '/cards', icon: 'Wallet', label: 'Wallet' },
+  { name: 'history', route: '/history', icon: 'BarChart2', label: 'Activity' },
   { name: 'profile', route: '/profile', icon: 'User', label: 'Profile' },
 ];
 
@@ -28,14 +25,15 @@ interface TabButtonProps {
   isActive: boolean;
   onPress: () => void;
   colors: any;
+  isDark: boolean;
   unreadCount?: number;
 }
 
-function TabButton({ tab, isActive, onPress, colors, unreadCount }: TabButtonProps) {
+function TabButton({ tab, isActive, onPress, colors, isDark, unreadCount }: TabButtonProps) {
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.88, tokens.spring.snappy);
+    scale.value = withSpring(0.96, tokens.spring.snappy);
   };
   const handlePressOut = () => {
     scale.value = withSpring(1, tokens.spring.calm);
@@ -46,31 +44,30 @@ function TabButton({ tab, isActive, onPress, colors, unreadCount }: TabButtonPro
     transform: [{ scale: scale.value }],
   }));
 
+  const iconColor = isActive
+    ? '#8B5CF6'
+    : (isDark ? '#6B7280' : '#9CA3AF');
+
   return (
     <TouchableOpacity
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       activeOpacity={1}
       style={styles.tabBtn}
-      accessibilityRole="button"
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isActive }}
       accessibilityLabel={tab.label}
     >
       <Animated.View style={[styles.tabBtnInner, animStyle]}>
-        {/* Active pill background */}
-        {isActive && (
-          <View
-            style={[
-              styles.activePill,
-              { backgroundColor: colors.primarySoft },
-            ]}
-          />
-        )}
-        <View>
+        <View style={styles.iconContainer}>
+          {isActive && (
+            <View style={styles.activeIconGlow} />
+          )}
           <DynamicIcon
             name={tab.icon}
             size={22}
-            color={isActive ? colors.primary : colors.textMuted}
-            strokeWidth={isActive ? 2.5 : 1.8}
+            color={iconColor}
+            strokeWidth={isActive ? 2.4 : 1.6}
           />
           {!!unreadCount && unreadCount > 0 && (
             <View style={[styles.badgeContainer, { backgroundColor: colors.danger }]}>
@@ -82,29 +79,29 @@ function TabButton({ tab, isActive, onPress, colors, unreadCount }: TabButtonPro
           style={[
             styles.tabLabel,
             {
-              color: isActive ? colors.primary : colors.textMuted,
-              fontWeight: isActive
-                ? tokens.fontWeight.bold
-                : tokens.fontWeight.medium,
+              color: isActive ? '#8B5CF6' : iconColor,
+              fontWeight: isActive ? tokens.fontWeight.bold : tokens.fontWeight.medium,
             },
           ]}
         >
           {tab.label}
         </Text>
       </Animated.View>
+      {/* Active indicator — dot below */}
+      {isActive && (
+        <View style={styles.activeIndicator} />
+      )}
     </TouchableOpacity>
   );
 }
 
-function FloatingTabBar() {
+function TabBar() {
   const colors = useThemeColors();
   const { themeMode } = useThemeStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
-  const isDark =
-    themeMode === 'dark' ||
-    (themeMode === 'system' && colors.background === '#0A0E17');
+  const isDark = colors.isDark;
 
   const isActive = (tabRoute: string) => {
     if (tabRoute === '/') return pathname === '/' || pathname === '/index';
@@ -117,35 +114,15 @@ function FloatingTabBar() {
   return (
     <View
       style={[
-        styles.barWrapper,
+        styles.bar,
         {
-          bottom: Math.max(insets.bottom, 20),
-          ...tokens.elevation.level4,
+          backgroundColor: isDark ? '#0D0F1A' : colors.surface,
+          borderTopColor: isDark ? 'rgba(139, 92, 246, 0.15)' : colors.border,
+          borderTopWidth: isDark ? 1 : StyleSheet.hairlineWidth,
+          paddingBottom: Math.max(insets.bottom, 8),
         },
       ]}
     >
-      <BlurView
-        tint={isDark ? 'dark' : 'light'}
-        intensity={85}
-        style={[
-          StyleSheet.absoluteFill,
-          {
-            borderRadius: tokens.radius.sheet,
-            backgroundColor: colors.glassSurface,
-            borderWidth: 1,
-            borderColor: colors.glassBorder,
-          },
-        ]}
-      />
-      {/* Metallic top edge */}
-      <View
-        style={[
-          styles.topEdge,
-          { backgroundColor: colors.glassHighlight },
-        ]}
-        pointerEvents="none"
-      />
-
       <View style={styles.tabRow}>
         {TABS.map((tab) => (
           <TabButton
@@ -154,6 +131,7 @@ function FloatingTabBar() {
             isActive={isActive(tab.route)}
             onPress={() => router.push(tab.route as any)}
             colors={colors}
+            isDark={isDark}
             unreadCount={tab.name === 'profile' ? unreadCount : 0}
           />
         ))}
@@ -165,7 +143,7 @@ function FloatingTabBar() {
 export default function TabLayout() {
   return (
     <Tabs
-      tabBar={() => <FloatingTabBar />}
+      tabBar={() => <TabBar />}
       screenOptions={{ headerShown: false }}
     >
       <Tabs.Screen name="index" />
@@ -177,51 +155,53 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  barWrapper: {
-    position: 'absolute',
-    left: 20,
-    right: 20,
-    height: 72,
-    borderRadius: tokens.radius.sheet,
-    overflow: 'hidden',
-  },
-  topEdge: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
+  bar: {
+    paddingTop: 6,
   },
   tabRow: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    height: 58,
   },
   tabBtn: {
     flex: 1,
-    height: 72,
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
   tabBtnInner: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: tokens.radius.lg,
+    paddingVertical: 4,
     minWidth: 56,
   },
-  activePill: {
+  iconContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 30,
+  },
+  activeIconGlow: {
     position: 'absolute',
-    inset: 0,
-    borderRadius: tokens.radius.lg,
+    width: 36,
+    height: 28,
+    borderRadius: 10,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
   },
   tabLabel: {
-    fontSize: tokens.fontSize.micro,
-    letterSpacing: 0.4,
+    fontSize: 10,
+    letterSpacing: 0.2,
     marginTop: 3,
-    textTransform: 'uppercase',
+  },
+  activeIndicator: {
+    position: 'absolute',
+    bottom: 4,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#8B5CF6',
   },
   badgeContainer: {
     position: 'absolute',

@@ -162,8 +162,18 @@ export default function SearchResultsScreen() {
             {intent?.entity_name || 'Search Results'}
           </Text>
           <Text style={[styles.placeholderSubtext, { color: colors.textSecondary }]}>
-            This is a placeholder for the intent-driven results page.
+            {intent?.entity_type === 'MERCHANT' || intent?.intent_type === 'BEST_CARD_FOR_MERCHANT'
+              ? `We’ll show the best card from your wallet for “${intent.entity_name}” here. Full ranking coming soon — for now, try “Which card should I use?” on the Home tab.`
+              : intent?.entity_type
+                ? `Matched to ${intent.entity_type.toLowerCase()} “${intent.entity_name}”. Detailed view coming soon.`
+                : 'No detailed view yet for this query.'}
           </Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)')}
+            style={[styles.bannerButton, { backgroundColor: colors.primary, marginTop: 16 }]}
+          >
+            <Text style={styles.bannerButtonText}>Go to Home</Text>
+          </TouchableOpacity>
         </View>
         
       </Animated.ScrollView>

@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
-
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { useAuthStore } from '@/features/auth/store/authStore';
@@ -9,8 +8,8 @@ import { useThemeStore } from '@/features/theme/store/themeStore';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { useCards } from '@/features/cards/hooks/useCards';
 import { useTransactions } from '@/features/transactions/hooks/useTransactions';
+import { useMonthlyIntelligence } from '@/features/monthly_intelligence/hooks/useMonthlyIntelligence';
 import { SkeletonBox } from '@/components/ui/SkeletonBox';
-import { ProfileSummaryCard } from '@/features/profile/components/ProfileSummaryCard';
 import { tokens } from '@/theme/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
 import { DynamicIcon } from '@/components/DynamicIcon';
@@ -20,12 +19,19 @@ export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
   const { themeMode, setThemeMode } = useThemeStore();
   const colors = useThemeColors();
+  const isDark = colors.isDark;
 
   const { data: cards, isLoading: isLoadingCards } = useCards();
   const { data: transactionsData, isLoading: isLoadingTransactions } = useTransactions();
+  const now = new Date();
+  const { data: monthly, isLoading: isLoadingMonthly } = useMonthlyIntelligence(
+    now.getFullYear(),
+    now.getMonth() + 1,
+  );
 
   const cardCount = cards?.length || 0;
   const txCount = transactionsData?.pages.flatMap((page) => page.data).length || 0;
+  const optimizationRate = monthly?.optimization_rate || 0;
 
   const handleLogout = async () => {
     await logout();
@@ -34,15 +40,13 @@ export default function ProfileScreen() {
   const getInitials = (name: string, email: string) => {
     if (name && name !== 'User' && name !== 'Card Analyser User') {
       const parts = name.trim().split(' ');
-      if (parts.length > 1) {
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-      }
+      if (parts.length > 1) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
       return name.substring(0, 2).toUpperCase();
     }
     return email ? email.substring(0, 2).toUpperCase() : 'ME';
   };
 
-  const ThemePill = ({ mode, icon, label }: { mode: 'light' | 'dark' | 'system', icon: string, label: string }) => {
+  const ThemePill = ({ mode, icon, label }: { mode: 'light' | 'dark' | 'system'; icon: string; label: string }) => {
     const isActive = themeMode === mode;
     return (
       <TouchableOpacity
@@ -50,120 +54,233 @@ export default function ProfileScreen() {
         activeOpacity={0.7}
         style={[
           styles.themePillBtn,
-          isActive && { backgroundColor: colors.primarySoft, borderColor: colors.primary, borderWidth: 1 }
+          isActive && {
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#FFFFFF',
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 2,
+          },
         ]}
       >
-        <DynamicIcon name={icon} size={14} color={isActive ? colors.primary : colors.textMuted} style={styles.themePillIcon} />
-        <Text style={[
-          styles.themePillText,
-          {
-            color: isActive ? colors.primary : colors.textMuted,
-            fontWeight: isActive ? tokens.fontWeight.bold : tokens.fontWeight.medium
-          }
-        ]}>
+        <DynamicIcon
+          name={icon}
+          size={14}
+          color={isActive ? (isDark ? '#FFFFFF' : colors.primary) : colors.textMuted}
+          style={styles.themePillIcon}
+        />
+        <Text
+          style={[
+            styles.themePillText,
+            {
+              color: isActive ? (isDark ? '#FFFFFF' : colors.primary) : colors.textMuted,
+              fontWeight: isActive ? tokens.fontWeight.bold : tokens.fontWeight.medium,
+            },
+          ]}
+        >
           {label}
         </Text>
       </TouchableOpacity>
     );
   };
 
-  const SettingsRow = ({ icon, label, onPress, danger = false }: any) => (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[
-        styles.settingsRow,
-        { borderBottomColor: colors.border }
-      ]}
-    >
-      <View style={[styles.settingsIconWrap, { backgroundColor: danger ? colors.dangerSoft : colors.surfaceElevated }]}>
-        <DynamicIcon name={icon} size={18} color={danger ? colors.danger : colors.textSecondary} />
-      </View>
-      <Text style={[styles.settingsLabel, { color: danger ? colors.danger : colors.textPrimary }]}>
-        {label}
-      </Text>
-      {!danger && <DynamicIcon name="ChevronRight" size={18} color={colors.textMuted} />}
-    </TouchableOpacity>
-  );
+  const SettingsRow = ({ icon, label, subtitle, onPress, danger = false }: any) => {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
+        style={[styles.settingsRow, { borderBottomColor: colors.border }]}
+      >
+        <View
+          style={[
+            styles.settingsIconWrap,
+            {
+              backgroundColor: danger
+                ? colors.dangerSoft
+                : isDark
+                ? 'rgba(255, 255, 255, 0.06)'
+                : 'rgba(0, 0, 0, 0.04)',
+            },
+          ]}
+        >
+          <DynamicIcon
+            name={icon}
+            size={18}
+            color={danger ? colors.danger : colors.textPrimary}
+            strokeWidth={1.8}
+          />
+        </View>
+
+        <View style={styles.settingsLabelWrap}>
+          <Text style={[styles.settingsLabel, { color: danger ? colors.danger : colors.textPrimary }]}>
+            {label}
+          </Text>
+          {subtitle && (
+            <Text style={[styles.settingsSub, { color: colors.textSecondary }]}>
+              {subtitle}
+            </Text>
+          )}
+        </View>
+
+        {!danger && <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} strokeWidth={2} />}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <ScreenContainer>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Header / Avatar */}
-        <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.heroSection}>
+        {/* ── Executive Membership Card ──────────────────── */}
+        <Animated.View entering={FadeInDown.delay(40).springify()} style={styles.membershipSection}>
           <LinearGradient
-            colors={[colors.primary, '#8B5CF6']}
+            colors={['#2D1B69', '#0F0A24']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.avatarWrap}
+            style={styles.membershipCard}
           >
-            <Text style={styles.avatarText}>{getInitials(user?.full_name || '', user?.email || '')}</Text>
-          </LinearGradient>
-          <Text style={[styles.userEmail, { color: colors.textPrimary }]}>
-            {user?.full_name || user?.email || 'User'}
-          </Text>
+            <View style={styles.membershipTop}>
+              <View style={styles.avatarWrap}>
+                <Text style={styles.avatarInitials}>
+                  {getInitials(user?.full_name || '', user?.email || '')}
+                </Text>
+              </View>
 
-          <View style={[styles.statsBar, { backgroundColor: colors.surface, borderColor: colors.borderHighlight }]}>
-            <View style={styles.statItem}>
-              {isLoadingCards ? (
-                <SkeletonBox width={24} height={28} style={{ marginBottom: 4 }} borderRadius={4} />
-              ) : (
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{cardCount}</Text>
-              )}
-              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Cards</Text>
+              <View style={styles.tierPill}>
+                <Text style={styles.tierPillText}>Beta</Text>
+              </View>
             </View>
-            <View style={[styles.statDivider, { backgroundColor: colors.borderHighlight }]} />
-            <View style={styles.statItem}>
-              {isLoadingTransactions ? (
-                <SkeletonBox width={24} height={28} style={{ marginBottom: 4 }} borderRadius={4} />
-              ) : (
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{txCount}</Text>
-              )}
-              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Transactions</Text>
+
+            <View style={styles.membershipBottom}>
+              <Text style={styles.userNameText}>
+                {user?.full_name || 'Card Analyser user'}
+              </Text>
+              <Text style={styles.userEmailText}>
+                {user?.email || 'hello@akaovia.com'}
+              </Text>
             </View>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* ── Portfolio 3-Column Metric Bar ─────────────────────────────── */}
+        <Animated.View entering={FadeInDown.delay(60).springify()} style={styles.metricGrid}>
+          <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>CARDS</Text>
+            {isLoadingCards ? (
+              <SkeletonBox width={32} height={24} borderRadius={4} />
+            ) : (
+              <Text style={[styles.metricValue, { color: colors.textPrimary }]}>{cardCount}</Text>
+            )}
+          </View>
+
+          <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>TXNS</Text>
+            {isLoadingTransactions ? (
+              <SkeletonBox width={32} height={24} borderRadius={4} />
+            ) : (
+              <Text style={[styles.metricValue, { color: colors.textPrimary }]}>{txCount}</Text>
+            )}
+          </View>
+
+          <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>EFFICIENCY</Text>
+            {isLoadingMonthly ? (
+              <SkeletonBox width={32} height={24} borderRadius={4} />
+            ) : (
+              <Text style={[styles.metricValue, { color: '#10B981' }]}>
+                {optimizationRate ? `${Math.round(optimizationRate)}%` : '—'}
+              </Text>
+            )}
           </View>
         </Animated.View>
 
-        {/* Summary Card */}
-        <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.section}>
-          <ProfileSummaryCard />
-        </Animated.View>
-
-        {/* Theme Settings */}
-        <Animated.View entering={FadeInDown.delay(130).springify()} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Appearance</Text>
-          <View style={[styles.themeRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {/* ── Appearance Segmented Control ───────────────────────────────── */}
+        <Animated.View entering={FadeInDown.delay(80).springify()} style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+            APPEARANCE
+          </Text>
+          <View
+            style={[
+              styles.themeRow,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}
+          >
             <ThemePill mode="system" icon="Monitor" label="System" />
             <ThemePill mode="light" icon="Sun" label="Light" />
             <ThemePill mode="dark" icon="Moon" label="Dark" />
           </View>
         </Animated.View>
 
-        {/* Preferences */}
-        <Animated.View entering={FadeInDown.delay(160).springify()} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Account</Text>
-          <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <SettingsRow icon="Bell" label="Notifications" onPress={() => router.push('/notifications')} />
-            <SettingsRow icon="Settings" label="Preferences" onPress={() => router.push('/preferences')} />
-            <SettingsRow icon="Shield" label="Security" onPress={() => router.push('/security')} />
-            <SettingsRow icon="Globe" label="Website" onPress={() => Linking.openURL('https://app.akaovia.com')} />
+        {/* ── Preferences & Account ──────────────────────────────────────── */}
+        <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+            PREFERENCES
+          </Text>
+          <View
+            style={[
+              styles.cardGroup,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <SettingsRow
+              icon="Bell"
+              label="Notifications"
+              subtitle="Alerts & recommendations"
+              onPress={() => router.push('/notifications')}
+            />
+            <SettingsRow
+              icon="Sliders"
+              label="Card preferences"
+              subtitle="Reward focus & fee protection"
+              onPress={() => router.push('/preferences')}
+            />
+            <SettingsRow
+              icon="Globe"
+              label="Akaovia Portal"
+              subtitle="Web dashboard & documentation"
+              onPress={() => Linking.openURL('https://app.akaovia.com')}
+            />
           </View>
         </Animated.View>
 
-        {/* Admin Tools */}
+        {/* ── Admin Management ───────────────────────────────────────────── */}
         {user?.role === 'ADMIN' && (
-          <Animated.View entering={FadeInDown.delay(175).springify()} style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Admin</Text>
-            <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <SettingsRow icon="Shield" label="Feedback Dashboard" onPress={() => router.push('/admin/feedback')} />
-              <SettingsRow icon="Monitor" label="Card Operations" onPress={() => router.push('/admin/operations')} />
+          <Animated.View entering={FadeInDown.delay(110).springify()} style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+              ADMIN CONSOLE
+            </Text>
+            <View
+              style={[
+                styles.cardGroup,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <SettingsRow icon="MessageSquare" label="Feedback Dashboard" onPress={() => router.push('/admin/feedback')} />
+              <SettingsRow icon="Cpu" label="Card Operations" onPress={() => router.push('/admin/operations')} />
             </View>
           </Animated.View>
         )}
 
-        {/* Danger Zone */}
-        <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.section}>
-          <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {/* ── Sign Out ────────────────────────────────────────────────────── */}
+        <Animated.View entering={FadeInDown.delay(120).springify()} style={styles.section}>
+          <View
+            style={[
+              styles.cardGroup,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}
+          >
             <SettingsRow icon="LogOut" label="Sign Out" onPress={handleLogout} danger />
           </View>
         </Animated.View>
@@ -179,81 +296,120 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 120,
-    paddingTop: 16,
+    paddingTop: 12,
   },
-  heroSection: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  avatarWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    ...tokens.elevation.level2,
-  },
-  avatarText: {
-    fontSize: tokens.fontSize.display,
-    fontWeight: tokens.fontWeight.heavy,
-    color: '#FFF',
-    letterSpacing: 1,
-  },
-  userEmail: {
-    fontSize: tokens.fontSize.title,
-    fontWeight: tokens.fontWeight.bold,
+  membershipSection: {
     marginBottom: 20,
   },
-  statsBar: {
+  membershipCard: {
+    borderRadius: tokens.radius.card,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 6,
+  },
+  membershipTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  avatarWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  avatarInitials: {
+    fontSize: tokens.fontSize.bodyLg,
+    fontWeight: tokens.fontWeight.heavy,
+    color: '#FFFFFF',
+  },
+  tierPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: tokens.radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    gap: 5,
+    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 0.8,
+    borderColor: 'rgba(251, 191, 36, 0.3)',
   },
-  statItem: {
-    alignItems: 'center',
-    paddingHorizontal: 16,
+  tierPillCrown: {
+    fontSize: 12,
   },
-  statValue: {
-    fontSize: tokens.fontSize.headline,
+  tierPillText: {
+    color: '#FBBF24',
+    fontSize: 10,
     fontWeight: tokens.fontWeight.bold,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  statDivider: {
-    width: 1,
-    height: 24,
+  membershipBottom: {},
+  userNameText: {
+    fontSize: tokens.fontSize.headline,
+    fontWeight: tokens.fontWeight.heavy,
+    color: '#FFFFFF',
+    letterSpacing: -0.4,
+    marginBottom: 2,
+  },
+  userEmailText: {
+    fontSize: tokens.fontSize.caption,
+    color: 'rgba(255, 255, 255, 0.65)',
+  },
+  metricGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 24,
+  },
+  metricCard: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  metricLabel: {
+    fontSize: 10,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: 1.2,
+    marginBottom: 6,
+  },
+  metricValue: {
+    fontSize: tokens.fontSize.title,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: -0.3,
   },
   section: {
-    marginBottom: 28,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: tokens.fontSize.caption,
+    fontSize: 11,
     fontWeight: tokens.fontWeight.bold,
-    textTransform: 'uppercase',
-    letterSpacing: tokens.letterSpacing.widest,
-    marginBottom: 12,
-    marginLeft: 16,
+    letterSpacing: 1.4,
+    marginBottom: 8,
+    marginLeft: 6,
   },
   themeRow: {
     flexDirection: 'row',
     borderRadius: tokens.radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     padding: 4,
     gap: 4,
   },
   themePillBtn: {
     flex: 1,
     flexDirection: 'row',
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: tokens.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
@@ -266,7 +422,7 @@ const styles = StyleSheet.create({
   },
   cardGroup: {
     borderRadius: tokens.radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     overflow: 'hidden',
   },
   settingsRow: {
@@ -278,23 +434,28 @@ const styles = StyleSheet.create({
   settingsIconWrap: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginRight: 14,
+  },
+  settingsLabelWrap: {
+    flex: 1,
   },
   settingsLabel: {
-    flex: 1,
-    fontSize: tokens.fontSize.bodyLg,
-    fontWeight: tokens.fontWeight.medium,
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.semibold,
+  },
+  settingsSub: {
+    fontSize: tokens.fontSize.caption,
+    marginTop: 2,
   },
   versionText: {
     textAlign: 'center',
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
-    textTransform: 'uppercase',
-    letterSpacing: tokens.letterSpacing.widest,
-    marginTop: 20,
+    letterSpacing: 0.8,
+    marginTop: 16,
     marginBottom: 40,
   },
 });

@@ -65,14 +65,6 @@ export default function LoginScreen() {
     <ScreenContainer style={styles.screen}>
       {/* ── Hero: Card Illustration ──────────────────────────────────────── */}
       <View style={styles.heroArea}>
-        {/* Subtle radial backdrop behind cards */}
-        <View
-          pointerEvents="none"
-          style={[
-            styles.cardBackdrop,
-            { backgroundColor: colors.primarySoft, opacity: 0.5 },
-          ]}
-        />
         <View style={styles.cardStack}>
           <CardStack reduceMotion={reduceMotion} />
         </View>
@@ -83,7 +75,7 @@ export default function LoginScreen() {
         entering={
           reduceMotion
             ? FadeInDown.delay(100).duration(0)
-            : FadeInDown.delay(400).springify()
+            : FadeInDown.delay(300).duration(tokens.duration.normal)
         }
         style={styles.brandRow}
       >
@@ -93,18 +85,17 @@ export default function LoginScreen() {
         </Text>
       </Animated.View>
 
-      {/* ── Headline ─────────────────────────────────────────────────────── */}
+      {/* ── Headline: the core job ───────────────────────────────────────── */}
       <Animated.View
         entering={
           reduceMotion
             ? FadeInDown.delay(120).duration(0)
-            : FadeInDown.delay(460).springify()
+            : FadeInDown.delay(360).duration(tokens.duration.normal)
         }
       >
         <Text style={[styles.headline, { color: colors.textPrimary }]}>
-          Your cards,{' '}
-          <Text style={{ color: colors.primary }}>smarter</Text>
-          {'.'}
+          Choose the best card{'\n'}
+          <Text style={{ color: colors.primary }}>for every purchase.</Text>
         </Text>
       </Animated.View>
 
@@ -113,12 +104,13 @@ export default function LoginScreen() {
         entering={
           reduceMotion
             ? FadeInDown.delay(140).duration(0)
-            : FadeInDown.delay(520).springify()
+            : FadeInDown.delay(420).duration(tokens.duration.normal)
         }
         style={styles.subWrap}
       >
         <Text style={[styles.subText, { color: colors.textSecondary }]}>
-          AI that tracks spending, predicts fee waivers, and finds rewards you're missing.
+          Compare the cards in your wallet against the merchant, category, caps
+          and exclusions — so you never leave rewards on the table.
         </Text>
       </Animated.View>
 
@@ -127,13 +119,13 @@ export default function LoginScreen() {
         entering={
           reduceMotion
             ? FadeInDown.delay(170).duration(0)
-            : FadeInDown.delay(600).springify()
+            : FadeInDown.delay(480).duration(tokens.duration.normal)
         }
         style={styles.ctaWrap}
       >
         {googleError ? (
           <Animated.View
-            entering={FadeInDown.duration(200)}
+            entering={FadeInDown.duration(tokens.duration.fast)}
             style={[
               styles.errorBanner,
               {
@@ -154,14 +146,10 @@ export default function LoginScreen() {
           style={[
             styles.termsRow,
             {
-              backgroundColor: colors.isDark
-                ? 'rgba(79, 54, 255, 0.08)'
-                : 'rgba(79, 54, 255, 0.04)',
+              backgroundColor: colors.primarySoft,
               borderColor: termsAccepted
                 ? colors.primary
-                : colors.isDark
-                ? 'rgba(79, 54, 255, 0.35)'
-                : 'rgba(79, 54, 255, 0.25)',
+                : colors.borderHighlight,
             },
           ]}
           activeOpacity={0.7}
@@ -176,10 +164,8 @@ export default function LoginScreen() {
               termsAccepted
                 ? { backgroundColor: colors.primary, borderColor: colors.primary }
                 : {
-                    backgroundColor: colors.isDark
-                      ? 'rgba(79, 54, 255, 0.18)'
-                      : '#EDEAFF',
-                    borderColor: colors.primary,
+                    backgroundColor: 'transparent',
+                    borderColor: colors.borderHighlight,
                   },
             ]}
           >
@@ -189,11 +175,11 @@ export default function LoginScreen() {
           </View>
           <Text style={[styles.termsText, { color: colors.textPrimary }]}>
             I agree to the{' '}
-            <Text style={{ color: colors.primary, fontWeight: tokens.fontWeight.bold }}>
+            <Text style={{ color: colors.primary, fontWeight: tokens.fontWeight.semibold }}>
               Terms
             </Text>{' '}
             and{' '}
-            <Text style={{ color: colors.primary, fontWeight: tokens.fontWeight.bold }}>
+            <Text style={{ color: colors.primary, fontWeight: tokens.fontWeight.semibold }}>
               Privacy Policy
             </Text>
           </Text>
@@ -210,23 +196,23 @@ export default function LoginScreen() {
         />
       </Animated.View>
 
-      {/* ── AI-powered tagline ────────────────────────────────────────────── */}
+      {/* ── Quiet trust line ─────────────────────────────────────────────── */}
       <Animated.View
         entering={
           reduceMotion
             ? FadeInDown.delay(200).duration(0)
-            : FadeInDown.delay(680).springify()
+            : FadeInDown.delay(540).duration(tokens.duration.normal)
         }
         style={styles.taglineWrap}
       >
         <DynamicIcon
-          name="Sparkles"
+          name="ShieldCheck"
           size={13}
           color={colors.textMuted}
           strokeWidth={1.5}
         />
         <Text style={[styles.taglineText, { color: colors.textMuted }]}>
-          AI-powered insights
+          No bank linking. No CVV or OTP.
         </Text>
       </Animated.View>
     </ScreenContainer>
@@ -245,18 +231,10 @@ const styles = StyleSheet.create({
 
   // ── Hero / Card Area ───────────────────────────────────────────────────
   heroArea: {
-    height: 240,
+    height: 220,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: tokens.spacing.xl,
-  },
-  cardBackdrop: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    top: 0,
-    ...(Platform.OS === 'web' ? ({ filter: 'blur(60px)' } as any) : {}),
+    marginBottom: tokens.spacing.lg,
   },
   cardStack: {
     alignItems: 'center',
@@ -269,7 +247,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    marginBottom: tokens.spacing.lg,
+    marginBottom: tokens.spacing.md,
   },
   brandDot: {
     width: 8,
@@ -285,12 +263,12 @@ const styles = StyleSheet.create({
 
   // ── Headline ───────────────────────────────────────────────────────────
   headline: {
-    fontSize: 36,
+    fontSize: 34,
     fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.tightest,
+    letterSpacing: tokens.letterSpacing.tight,
     lineHeight: 42,
     textAlign: 'center',
-    marginBottom: tokens.spacing.lg,
+    marginBottom: tokens.spacing.md,
   },
 
   // ── Subheadline ────────────────────────────────────────────────────────
@@ -303,7 +281,7 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.medium,
     lineHeight: tokens.fontSize.bodyLg * 1.6,
     textAlign: 'center',
-    maxWidth: 320,
+    maxWidth: 340,
   },
 
   // ── Terms Checkbox ────────────────────────────────────────────────────
@@ -311,20 +289,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: tokens.spacing.lg,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1.5,
+    marginBottom: tokens.spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
     maxWidth: 360,
     width: '100%',
     alignSelf: 'center',
   },
   checkbox: {
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
     borderRadius: 6,
-    borderWidth: 2,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -351,7 +329,7 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 14,
     paddingHorizontal: 18,
-    borderRadius: tokens.radius.card,
+    borderRadius: tokens.radius.md,
     borderWidth: 1,
     marginBottom: tokens.spacing.md,
     width: '100%',
