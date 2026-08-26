@@ -345,7 +345,6 @@ export function ProfileTab({ onLogout }: { onLogout: () => void }) {
         <div className="plasmo-bg-surface plasmo-border plasmo-border-border plasmo-rounded-card plasmo-overflow-hidden plasmo-divide-y plasmo-divide-border">
           <SettingsRow icon={Bell} label="Notifications" onClick={() => alert("Notifications settings coming soon")} />
           <SettingsRow icon={Settings} label="Preferences" onClick={() => alert("Preferences settings coming soon")} />
-          <SettingsRow icon={Shield} label="Security" onClick={() => alert("Security settings coming soon")} />
         </div>
       </div>
 
