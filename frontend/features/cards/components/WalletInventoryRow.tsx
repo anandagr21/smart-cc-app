@@ -6,6 +6,8 @@ import { UserCardResponse } from '@/features/cards/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { getNetworkGradient } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
+import { formatCurrencyIN } from '@/utils/currency';
+import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface WalletInventoryRowProps {
@@ -29,10 +31,14 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
   const isDark = colors.isDark;
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
-  const bankName = card.card_details?.bank_name || 'Bank';
+  const bankName = card.card_details?.bank_name || '';
   const network = card.network_override || card.card_details?.network || 'VISA';
   const networkLabel = getNetworkLabel(network);
   const isActive = card.card_status === 'ACTIVE';
+
+  const waiver = deriveFeeWaiverProgress(card);
+  const hasWaiver = waiver.hasWaiver;
+  const waiverPercent = waiver.percentComplete;
 
   const networkGradient = getNetworkGradient(network, isDark) as [string, string];
 
@@ -80,15 +86,46 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
           {cardName}
         </Text>
         <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-          {networkLabel || bankName}{card.last_4_digits ? ` •••• ${card.last_4_digits}` : ''}
+          {bankName ? `${bankName}${networkLabel ? ` • ${networkLabel}` : ''}` : networkLabel}{card.last_4_digits ? ` •••• ${card.last_4_digits}` : ''}
         </Text>
       </View>
 
-      {/* Right: network badge */}
-      {!!networkLabel && (
-        <Text style={[styles.networkBadge, { color: isDark ? 'rgba(255,255,255,0.55)' : '#6B7280' }]}>
-          {networkLabel}
-        </Text>
+      {/* Right Column: Fee Waiver Progress or Network Badge */}
+      {isActive && hasWaiver ? (
+        <View style={styles.rightCol}>
+          <View style={styles.waiverWrap}>
+            <View style={styles.waiverTextRow}>
+              <Text style={styles.waiverValueWrap}>
+                <Text style={[styles.waiverValue, { color: colors.success }]}>
+                  {formatCurrencyIN(waiver.currentSpend)}
+                </Text>
+                <Text style={[styles.waiverThreshold, { color: colors.textMuted }]}>
+                  {' / '}{formatCurrencyIN(waiver.target)}
+                </Text>
+              </Text>
+            </View>
+            <View style={[styles.progressTrack, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)' }]}>
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: `${Math.min(waiverPercent, 100)}%`,
+                    backgroundColor: waiverPercent >= 100 ? '#10B981' : '#7C3AED',
+                  },
+                ]}
+              />
+            </View>
+            <Text style={[styles.waiverPercent, { color: waiverPercent >= 100 ? '#10B981' : colors.textSecondary }]}>
+              {Math.min(waiverPercent, 100).toFixed(0)}% to waiver
+            </Text>
+          </View>
+        </View>
+      ) : (
+        !!networkLabel && (
+          <Text style={[styles.networkBadge, { color: isDark ? 'rgba(255,255,255,0.55)' : '#6B7280' }]}>
+            {networkLabel}
+          </Text>
+        )
       )}
 
       <DynamicIcon name="ChevronRight" size={15} color={colors.textMuted} strokeWidth={2} />
@@ -172,5 +209,45 @@ const styles = StyleSheet.create({
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
     marginRight: 10,
+  },
+  rightCol: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  waiverWrap: {
+    alignItems: 'flex-end',
+  },
+  waiverTextRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 2,
+  },
+  waiverValueWrap: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  waiverValue: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  waiverThreshold: {
+    fontSize: 10,
+  },
+  progressTrack: {
+    height: 3.5,
+    width: 74,
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginVertical: 2,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  waiverPercent: {
+    fontSize: 9.5,
+    fontWeight: '600',
+    marginTop: 1,
   },
 });
