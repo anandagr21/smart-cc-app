@@ -1,11 +1,11 @@
-// ─── Card Analyser Design System — Design Tokens ──────────────────────────────────
+// ─── Card Analyser Design System — Design Tokens ─────────────────────────────
 
 export const tokens = {
   // ── Layout ─────────────────────────────────────────────────────────────────
   layout: {
-    screenPadding: 24,
-    sectionGap: 32,
-    itemGap: 16,
+    screenPadding: 20,
+    sectionGap: 24,
+    itemGap: 12,
     elementGap: 8,
   },
 
@@ -14,22 +14,22 @@ export const tokens = {
     xs: 4,
     sm: 8,
     md: 16,
-    lg: 24,
-    xl: 32,
-    '2xl': 48,
-    '3xl': 64,
+    lg: 20,
+    xl: 24,
+    '2xl': 32,
+    '3xl': 48,
   },
 
   // ── Border Radius ──────────────────────────────────────────────────────────
   radius: {
     xs: 6,
     sm: 10,
-    md: 16,
-    lg: 20,
-    card: 24,      // Cards, containers
-    sheet: 32,     // Bottom sheets
-    xl: 28,
-    full: 9999,    // Pills, avatars
+    md: 12,
+    lg: 16,
+    card: 20,      // Cards, containers
+    sheet: 24,     // Bottom sheets
+    xl: 22,
+    full: 9999,    // Pills, avatars, circular action buttons
   },
 
   // ── Border Widths ─────────────────────────────────────────────────────────
@@ -39,72 +39,85 @@ export const tokens = {
     medium: 1.5,
   },
 
-  // ── Elevation / Shadow System ─────────────────────────────────────────────
+  // ── Elevation / Shadow System — minimal, calm ─────────────────────────────
   elevation: {
-    // Level 0: no shadow — background canvas
-    // Level 1: rows, lightweight containers
+    // Level 0: no shadow
+    // Level 1: subtle hairline separation
     level1: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.08,
-      shadowRadius: 6,
-      elevation: 2,
+      shadowOpacity: 0.06,
+      shadowRadius: 3,
+      elevation: 1,
     },
     // Level 2: cards, primary surfaces
     level2: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.14,
-      shadowRadius: 20,
-      elevation: 5,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.10,
+      shadowRadius: 12,
+      elevation: 3,
     },
     // Level 3: modal sheets, overlays
     level3: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: -2 },
-      shadowOpacity: 0.20,
-      shadowRadius: 28,
-      elevation: 10,
+      shadowOpacity: 0.14,
+      shadowRadius: 18,
+      elevation: 6,
     },
-    // Level 4: floating elements
+    // Level 4: floating docks
     level4: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.24,
-      shadowRadius: 36,
-      elevation: 15,
-    },
-    // Semantic glow — primary brand
-    glow: {
-      shadowColor: '#4F36FF',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.30,
-      shadowRadius: 20,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.18,
+      shadowRadius: 24,
       elevation: 8,
     },
-    // Semantic glow — success/rewards
+    // Restrained brand accent (no heavy glow)
+    glow: {
+      shadowColor: '#0052FF',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.14,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    glowViolet: {
+      shadowColor: '#5B5BD6',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.14,
+      shadowRadius: 8,
+      elevation: 2,
+    },
     glowSuccess: {
-      shadowColor: '#22C55E',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.25,
-      shadowRadius: 16,
-      elevation: 6,
+      shadowColor: '#0E9F6E',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    glowAmber: {
+      shadowColor: '#B45309',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+      elevation: 2,
     },
   },
 
   // ── Font Sizes ─────────────────────────────────────────────────────────────
   fontSize: {
-    micro: 9,      // Tiny labels, status pills
-    caption: 11,   // Sub-labels
-    label: 12,     // Section headers, uppercase labels
-    bodySm: 12,
-    body: 14,      // Body text
+    micro: 10,     // Tiny badges, status pills
+    caption: 12,   // Sub-labels, category tags
+    label: 13,     // Section headers, uppercase labels
+    bodySm: 13,
+    body: 15,      // Body text
     bodyLg: 16,    // Large body
     title: 18,     // Titles
-    headline: 22,  // Headlines
-    display: 32,   // Display
-    hero: 48,      // Hero numerals
-    heroXl: 60,    // Reward values, big numbers
+    headline: 22,  // Section headlines
+    display: 28,   // Medium display
+    hero: 38,      // Hero account numerals
+    heroXl: 48,    // Mega statistics
   },
 
   // ── Font Weights ───────────────────────────────────────────────────────────
@@ -119,38 +132,34 @@ export const tokens = {
   // ── Line Heights ───────────────────────────────────────────────────────────
   lineHeight: {
     tight: 1.1,
-    normal: 1.4,
-    relaxed: 1.6,
+    normal: 1.35,
+    relaxed: 1.5,
   },
 
   // ── Letter Spacing ────────────────────────────────────────────────────────
   letterSpacing: {
-    tightest: -1.5,
-    tight: -0.5,
+    tightest: -1.0,
+    tight: -0.4,
     normal: 0,
-    wide: 0.5,
-    wider: 1,
-    widest: 2,
+    wide: 0.4,
+    wider: 0.8,
+    widest: 1.6,
   },
 
-  // ── Animation Durations ───────────────────────────────────────────────────
+  // ── Animation Durations — purposeful 150–250ms ───────────────────────────
   duration: {
     instant: 100,
-    fast: 200,
-    normal: 350,
-    slow: 550,
-    verySlow: 800,
+    fast: 150,
+    normal: 220,
+    slow: 300,
+    verySlow: 450,
   },
 
-  // ── Spring Physics ────────────────────────────────────────────────────────
+  // ── Spring Physics — calm, weighted ────────────────────────────────────────
   spring: {
-    // Weighted: for entering cards, sheets
-    weighted: { damping: 26, stiffness: 100, mass: 1.2 },
-    // Calm: for general transitions
-    calm: { damping: 22, stiffness: 95, mass: 1 },
-    // Snappy: for micro-interactions (button press)
-    snappy: { damping: 28, stiffness: 160, mass: 0.9 },
-    // Gentle: for skeleton reveals, fade-ins
-    gentle: { damping: 30, stiffness: 80, mass: 1.5 },
+    weighted: { damping: 26, stiffness: 140, mass: 1.0 },
+    calm: { damping: 24, stiffness: 120, mass: 1 },
+    snappy: { damping: 24, stiffness: 200, mass: 0.8 },
+    gentle: { damping: 30, stiffness: 110, mass: 1.1 },
   },
 };

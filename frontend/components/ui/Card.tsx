@@ -8,13 +8,12 @@ interface CardProps extends ViewProps {
   padded?: boolean;
   variant?: 'solid' | 'elevated' | 'glass';
   accentColor?: string;   // left vertical stripe color
-  interactive?: boolean;  // reserved for future press-scale integration
+  interactive?: boolean;
 }
 
 export const Card: React.FC<CardProps> = ({
   children,
   padded = true,
-  className = '',
   style,
   variant = 'elevated',
   accentColor,
@@ -23,15 +22,15 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const colors = useThemeColors();
 
-  const padding = padded ? 20 : 0;
+  const padding = padded ? 18 : 0;
 
   const getSurface = () => {
     switch (variant) {
-      case 'elevated':
-        return colors.surface;
       case 'glass':
         return colors.glassSurface;
       case 'solid':
+        return colors.surface;
+      case 'elevated':
       default:
         return colors.surface;
     }
@@ -42,7 +41,8 @@ export const Card: React.FC<CardProps> = ({
       case 'elevated':
         return tokens.elevation.level2;
       case 'glass':
-        return tokens.elevation.level3;
+        return tokens.elevation.level1;
+      case 'solid':
       default:
         return tokens.elevation.level1;
     }
@@ -62,16 +62,7 @@ export const Card: React.FC<CardProps> = ({
       ]}
       {...props}
     >
-      {/* Top metallic highlight line */}
-      <View
-        style={[
-          styles.topHighlight,
-          { backgroundColor: colors.glassHighlight },
-        ]}
-        pointerEvents="none"
-      />
-
-      {/* Left accent stripe */}
+      {/* Left accent stripe — restrained */}
       {accentColor && (
         <View
           style={[styles.accentStripe, { backgroundColor: accentColor }]}
@@ -89,13 +80,7 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.card,
     borderWidth: 1,
     overflow: 'hidden',
-  },
-  topHighlight: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
+    position: 'relative',
   },
   accentStripe: {
     position: 'absolute',
