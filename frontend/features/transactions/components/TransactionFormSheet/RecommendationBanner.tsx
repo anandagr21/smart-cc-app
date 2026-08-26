@@ -48,7 +48,7 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
 
   if (!FeatureFlags.ENABLE_SMART_RECOMMENDATIONS) return null;
 
-  const hasValidInput = (debouncedMerchant && debouncedMerchant.length >= 3) || (debouncedAmount && debouncedAmount > 0);
+  const hasValidAmount = debouncedAmount && Number(debouncedAmount) > 0;
 
   return (
     <View style={styles.recommendationSection}>
@@ -56,7 +56,7 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
         <Text style={[styles.sectionTitle, { color: colors.success }]}>{labels.title}</Text>
       </View>
 
-      {!hasValidInput && !isPending && winningWalletCards.length === 0 && (
+      {!hasValidAmount && !isPending && winningWalletCards.length === 0 && (
         <Animated.View entering={FadeIn} style={[styles.emptyState, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
           <View style={[styles.emptyIconWrap, { backgroundColor: colors.primarySoft }]}>
             <DynamicIcon name="Sparkles" size={24} color={colors.primary} />
@@ -65,12 +65,12 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
             Find your best card
           </Text>
           <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
-            Enter an amount or merchant above to see which card earns the most.
+            Enter a purchase amount above to see which card earns the most rewards.
           </Text>
         </Animated.View>
       )}
 
-      {isPending && hasValidInput && (
+      {isPending && hasValidAmount && (
         <Animated.View entering={FadeIn} style={[styles.thinkingState, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1 }]}>
           <DynamicIcon name="Sparkles" size={28} color={colors.primary} style={styles.pulseIcon} />
           <Text style={[styles.thinkingStateText, { color: colors.textPrimary }]}>
@@ -79,7 +79,7 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
         </Animated.View>
       )}
 
-      {!isPending && winningWalletCards.length > 0 && (
+      {!isPending && hasValidAmount && winningWalletCards.length > 0 && (
         <Animated.View entering={FadeInUp.springify().damping(20).stiffness(150)}>
           <Animated.View entering={ZoomIn.duration(400).springify()}>
             <HeroRecommendationCard
@@ -91,7 +91,7 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
               }}
               onInfoPress={() => onExplainPress(winningWalletCards[0].card.id)}
               merchantName={debouncedMerchant}
-              amount={Number(debouncedAmount) || 1000}
+              amount={Number(debouncedAmount)}
               calculationId={calculationId}
             />
           </Animated.View>

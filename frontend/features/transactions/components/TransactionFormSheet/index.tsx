@@ -142,8 +142,8 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
     const hasValidMerchant = debouncedMerchant && debouncedMerchant.length >= 3;
     const hasValidAmount = Number(debouncedAmount) > 0;
 
-    if (visible && FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && (hasValidMerchant || hasValidAmount)) {
-      const fetchAmount = hasValidAmount ? Number(debouncedAmount) : 1000;
+    if (visible && FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && hasValidAmount) {
+      const fetchAmount = Number(debouncedAmount);
       const fetchMerchant = hasValidMerchant ? debouncedMerchant : 'Unknown Merchant';
       
       getRecommendation.mutate({
@@ -189,7 +189,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
           }
         }
       });
-    } else if (visible && !hasValidMerchant && !hasValidAmount && getRecommendation.data) {
+    } else if (visible && !hasValidAmount && getRecommendation.data) {
       getRecommendation.reset();
     }
   }, [debouncedMerchant, debouncedAmount, paymentMode, intentValue, visible, isUndoDisabled]);
