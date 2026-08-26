@@ -24,7 +24,17 @@ export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ card
     if (!cards || cards.length === 0) return [];
     
     if (!isGroupingEnabled) {
-      return cards;
+      return [...cards].sort((a, b) => {
+        const bankA = getCardBankName(a) || 'Other';
+        const bankB = getCardBankName(b) || 'Other';
+        if (bankA.toLowerCase() === 'other' && bankB.toLowerCase() !== 'other') return 1;
+        if (bankB.toLowerCase() === 'other' && bankA.toLowerCase() !== 'other') return -1;
+        const cmp = bankA.localeCompare(bankB);
+        if (cmp !== 0) return cmp;
+        const aName = (a.nickname || a.card_details?.card_name || '').toLowerCase();
+        const bName = (b.nickname || b.card_details?.card_name || '').toLowerCase();
+        return aName.localeCompare(bName);
+      });
     }
 
     // Bank Grouping Logic
@@ -44,11 +54,27 @@ export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ card
       return acc;
     }, {} as Record<string, { bank: string, cards: UserCardResponse[], totalSpend: number, nearWaiverCount: number }>);
 
+    // Sort bank groups alphabetically A-Z, placing 'Other' at the end
+    const sortedGroups = Object.values(grouped).sort((a, b) => {
+      if (a.bank.toLowerCase() === 'other') return 1;
+      if (b.bank.toLowerCase() === 'other') return -1;
+      return a.bank.localeCompare(b.bank);
+    });
+
     // Flatten into a structure suitable for FlashList (headers + items)
     const flattened: any[] = [];
-    Object.values(grouped).forEach(group => {
-      flattened.push({ type: 'header', ...group });
-      group.cards.forEach(card => {
+    sortedGroups.forEach(group => {
+      const sortedCards = [...group.cards].sort((a, b) => {
+        const aActive = a.card_status === 'ACTIVE' ? 0 : 1;
+        const bActive = b.card_status === 'ACTIVE' ? 0 : 1;
+        if (aActive !== bActive) return aActive - bActive;
+        const aName = (a.nickname || a.card_details?.card_name || '').toLowerCase();
+        const bName = (b.nickname || b.card_details?.card_name || '').toLowerCase();
+        return aName.localeCompare(bName);
+      });
+
+      flattened.push({ type: 'header', ...group, cards: sortedCards });
+      sortedCards.forEach(card => {
         flattened.push({ type: 'card', card });
       });
     });
