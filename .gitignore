@@ -220,6 +220,8 @@ node_modules/
 package*.json
 
 pitch-deck/
+instagram-posts/
+marketing/
 
 graphify-out/
 .claude/
