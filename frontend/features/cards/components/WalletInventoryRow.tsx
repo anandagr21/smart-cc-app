@@ -6,14 +6,22 @@ import { UserCardResponse } from '@/features/cards/types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { getNetworkGradient } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
-
-import { formatCurrencyIN } from '@/utils/currency';
-import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface WalletInventoryRowProps {
   card: UserCardResponse;
   onPress: () => void;
+}
+
+function getNetworkLabel(network: string): string {
+  if (!network) return '';
+  const n = network.toLowerCase();
+  if (n.includes('n/a') || n === 'na') return '';
+  if (n.includes('visa')) return 'VISA';
+  if (n.includes('mastercard')) return 'MASTERCARD';
+  if (n.includes('amex') || n.includes('american express')) return 'AMEX';
+  if (n.includes('rupay')) return 'RUPAY';
+  return network.toUpperCase();
 }
 
 export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, onPress }) => {
@@ -23,115 +31,67 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
   const bankName = card.card_details?.bank_name || 'Bank';
   const network = card.network_override || card.card_details?.network || 'VISA';
-  const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' ? '' : network;
+  const networkLabel = getNetworkLabel(network);
   const isActive = card.card_status === 'ACTIVE';
-
-  // Temporary derived data
-  const waiver = deriveFeeWaiverProgress(card);
-  const hasWaiver = waiver.hasWaiver;
-  const waiverPercent = waiver.percentComplete;
-
-  // Heuristic non-financial tags
-  let tags = [];
-  if (cardName.toLowerCase().includes('travel') || cardName.toLowerCase().includes('miles')) {
-    tags.push('Travel');
-  } else if (cardName.toLowerCase().includes('cashback') || cardName.toLowerCase().includes('ace')) {
-    tags.push('Cashback');
-  } else if (cardName.toLowerCase().includes('fuel') || cardName.toLowerCase().includes('petro')) {
-    tags.push('Fuel');
-  } else {
-    tags.push('Rewards');
-  }
 
   const networkGradient = getNetworkGradient(network, isDark) as [string, string];
 
   return (
     <TouchableOpacity
-      activeOpacity={0.7}
+      activeOpacity={0.75}
       onPress={onPress}
       style={[
         styles.container,
-        { borderBottomColor: colors.border },
-        !isActive && { opacity: 0.5 }
+        {
+          backgroundColor: isDark ? '#13162A' : colors.surface,
+          borderColor: isDark ? 'rgba(139,92,246,0.12)' : colors.border,
+        },
+        !isActive && { opacity: 0.55 },
       ]}
     >
+      {/* Left gradient accent bar */}
+      <LinearGradient
+        colors={isActive ? networkGradient : ['#6B7280', '#4B5563']}
+        style={styles.accentBar}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
 
-      {/* Mini Card Tile */}
-      <View style={[styles.tileWrap, !isActive && { opacity: 0.5 }]}>
+      {/* Card color tile */}
+      <View style={styles.tileWrap}>
         <LinearGradient
-          colors={isActive ? networkGradient : [colors.surfaceElevated, colors.surfaceElevated]}
-          style={styles.miniTile}
+          colors={isActive ? networkGradient : [isDark ? '#2A2E44' : '#D1D5DB', isDark ? '#1E2238' : '#9CA3AF']}
+          style={styles.cardTile}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-        />
-        {!!displayNetwork && (
-          <View style={styles.networkAccent}>
-            <Text style={[styles.networkAccentText, !isActive && { color: colors.textMuted }]}>{displayNetwork}</Text>
-          </View>
-        )}
+        >
+          {/* Mini chip */}
+          <View style={styles.miniChip} />
+          {/* Network label on tile */}
+          {!!networkLabel && (
+            <Text style={styles.tileNetworkText} numberOfLines={1}>{networkLabel}</Text>
+          )}
+        </LinearGradient>
       </View>
 
-      {/* Main Info */}
+      {/* Card info */}
       <View style={styles.infoCol}>
-        <View style={styles.nameRow}>
-          <Text style={[styles.cardName, { color: isActive ? colors.textPrimary : colors.textSecondary }]} numberOfLines={2}>
-            {bankName} {cardName}
-          </Text>
-        </View>
-        <View style={styles.tagsRow}>
-          <Text style={[styles.networkText, { color: colors.textMuted }]}>
-            {displayNetwork}{displayNetwork && card.last_4_digits ? ` •••• ` : ''}{card.last_4_digits || ''}
-          </Text>
-          <View style={[styles.dot, { backgroundColor: colors.borderHighlight }]} />
-          {tags.map(tag => (
-            <Text key={tag} style={[styles.tagText, { color: colors.textSecondary }]}>{tag}</Text>
-          ))}
-        </View>
+        <Text style={[styles.cardName, { color: isActive ? colors.textPrimary : colors.textSecondary }]} numberOfLines={1}>
+          {cardName}
+        </Text>
+        <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
+          {networkLabel || bankName}{card.last_4_digits ? ` •••• ${card.last_4_digits}` : ''}
+        </Text>
       </View>
 
-      {/* Waiver & Status */}
-      <View style={styles.rightCol}>
-        {isActive && hasWaiver ? (
-          <View style={styles.waiverWrap}>
-            <View style={styles.waiverTextRow}>
-              <Text style={styles.waiverValueWrap}>
-                <Text style={[styles.waiverValue, { color: colors.success }]}>
-                  {formatCurrencyIN(waiver.currentSpend)}
-                </Text>
-                <Text style={[styles.waiverThreshold, { color: colors.textMuted }]}>
-                  {' / '}{formatCurrencyIN(waiver.target)}
-                </Text>
-              </Text>
-            </View>
-            <View style={styles.waiverTextRow}>
-              <Text style={[styles.waiverPercent, { color: colors.success }]}>
-                {Math.min(waiverPercent, 100).toFixed(0)}% complete
-              </Text>
-            </View>
-            <View style={[styles.progressTrack, { backgroundColor: colors.borderHighlight }]}>
-              <View style={[styles.progressFill, { width: `${Math.min(waiverPercent, 100)}%`, backgroundColor: waiverPercent >= 100 ? colors.success : colors.primary }]} />
-            </View>
-          </View>
-        ) : (
-          isActive && (
-            <View style={styles.waiverWrap}>
-              {/* No waiver threshold set — intentionally blank */}
-            </View>
-          )
-        )}
+      {/* Right: network badge */}
+      {!!networkLabel && (
+        <Text style={[styles.networkBadge, { color: isDark ? 'rgba(255,255,255,0.55)' : '#6B7280' }]}>
+          {networkLabel}
+        </Text>
+      )}
 
-        <View style={[styles.statusRow, !isActive && styles.inactiveBadge]}>
-          {isActive && <View style={[styles.statusDot, { backgroundColor: colors.success }]} />}
-          <Text style={[styles.statusText, { color: isActive ? colors.success : colors.textMuted }]}>
-            {isActive ? 'Active' : 'Inactive'}
-          </Text>
-        </View>
-      </View>
-
-      {/* Chevron */}
-      <View style={styles.chevronWrap}>
-        <DynamicIcon name="ChevronRight" size={16} color={colors.textMuted} />
-      </View>
+      <DynamicIcon name="ChevronRight" size={15} color={colors.textMuted} strokeWidth={2} />
     </TouchableOpacity>
   );
 };
@@ -140,116 +100,77 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 8,
+    borderRadius: tokens.radius.card,
+    borderWidth: 1,
+    overflow: 'hidden',
+    paddingRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  accentBar: {
+    width: 3,
+    alignSelf: 'stretch',
   },
   tileWrap: {
-    marginRight: 16,
-    alignItems: 'center',
+    marginLeft: 14,
+    marginVertical: 14,
+    marginRight: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
+    borderRadius: 7,
   },
-  miniTile: {
-    width: 48,
-    height: 32,
-    borderRadius: 4,
-    opacity: 0.9,
+  cardTile: {
+    width: 54,
+    height: 36,
+    borderRadius: 7,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    padding: 4,
   },
-  networkAccent: {
+  miniChip: {
     position: 'absolute',
-    bottom: 2,
-    right: 4,
+    top: 5,
+    left: 5,
+    width: 14,
+    height: 10,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,215,0,0.75)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(200,160,0,0.6)',
   },
-  networkAccentText: {
-    fontSize: 6,
-    color: '#FFF',
-    fontWeight: 'bold',
+  tileNetworkText: {
+    fontSize: 5.5,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 0.8,
+    alignSelf: 'flex-end',
   },
   infoCol: {
     flex: 1,
-    marginRight: 12,
     justifyContent: 'center',
-  },
-  nameRow: {
-    marginBottom: 4,
   },
   cardName: {
-    fontSize: tokens.fontSize.bodySm,
+    fontSize: tokens.fontSize.body,
     fontWeight: tokens.fontWeight.semibold,
+    marginBottom: 3,
+    letterSpacing: -0.1,
   },
-  tagsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  networkText: {
-    fontSize: tokens.fontSize.micro,
-  },
-  dot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    marginHorizontal: 6,
-  },
-  tagText: {
-    fontSize: tokens.fontSize.micro,
-  },
-  rightCol: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  waiverWrap: {
-    alignItems: 'flex-end',
-    marginBottom: 6,
-  },
-  waiverTextRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 4,
-  },
-  waiverValueWrap: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  waiverValue: {
+  cardMeta: {
     fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.bold,
-  },
-  waiverThreshold: {
-    fontSize: tokens.fontSize.micro,
-  },
-  waiverPercent: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
-  },
-  progressTrack: {
-    height: 3,
-    width: 80,
-    borderRadius: 1.5,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 1.5,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusDot: {
-    width: 4, height: 4, borderRadius: 2,
-    marginRight: 4,
-  },
-  statusText: {
-    fontSize: 10,
     fontWeight: tokens.fontWeight.medium,
+    letterSpacing: 0.3,
   },
-  inactiveBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(150,150,150,0.1)',
-  },
-  chevronWrap: {
-    justifyContent: 'center',
+  networkBadge: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: tokens.letterSpacing.widest,
+    marginRight: 10,
   },
 });

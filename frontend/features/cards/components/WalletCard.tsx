@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { UserCardResponse } from '../types/api';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
@@ -11,7 +10,7 @@ import { useAuthStore } from '@/features/auth/store/authStore';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
 const CARD_WIDTH = Dimensions.get('window').width - tokens.layout.screenPadding * 2;
-const CARD_HEIGHT = CARD_WIDTH / 1.586; // Standard credit card ratio
+const CARD_HEIGHT = CARD_WIDTH / 1.62;
 
 interface WalletCardProps {
   card: UserCardResponse;
@@ -39,15 +38,14 @@ function FeeWaiverProgressBar({ threshold, remaining }: { threshold: number; rem
   );
 }
 
-/** Returns a short display label for the network */
 function getNetworkLabel(network: string): string {
   if (!network) return '';
   const n = network.toLowerCase();
   if (n.includes('n/a') || n === 'na') return '';
   if (n.includes('visa')) return 'VISA';
-  if (n.includes('mastercard')) return 'Mastercard';
-  if (n.includes('amex') || n.includes('american express')) return 'Amex';
-  if (n.includes('discover')) return 'Discover';
+  if (n.includes('mastercard')) return 'MASTERCARD';
+  if (n.includes('amex') || n.includes('american express')) return 'AMEX';
+  if (n.includes('discover')) return 'DISCOVER';
   return network.toUpperCase();
 }
 
@@ -66,70 +64,56 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(80 + index * 100).springify()}
+      entering={FadeInDown.delay(60 + index * 80).springify()}
       style={[
         styles.wrapper, 
-        { ...tokens.elevation.level2 },
         !isActive && { opacity: 0.6 }
       ]}
     >
       <LinearGradient
-        colors={isActive ? gradient : [isDark ? '#2A2A2A' : '#A0A0A0', isDark ? '#111' : '#666']}
+        colors={isActive ? gradient : [isDark ? '#1E2333' : '#A0A0A0', isDark ? '#111420' : '#666']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.card}
+        style={[
+          styles.card,
+          {
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+          },
+        ]}
       >
-        {/* Subtle inner highlight — top edge */}
+        {/* Subtle metallic edge highlight */}
         <View style={styles.topEdge} pointerEvents="none" />
 
-        {/* Noise texture overlay (circles pattern) */}
-        <View style={styles.noiseOverlay} pointerEvents="none">
-          {[...Array(3)].map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.noiseCircle,
-                {
-                  width: CARD_WIDTH * (0.6 + i * 0.25),
-                  height: CARD_WIDTH * (0.6 + i * 0.25),
-                  borderRadius: CARD_WIDTH * (0.3 + i * 0.125),
-                  top: -CARD_WIDTH * (0.15 + i * 0.05),
-                  right: -CARD_WIDTH * (0.2 + i * 0.05),
-                },
-              ]}
-            />
-          ))}
-        </View>
-
-        {/* ── Card Top Row ── */}
+        {/* Card Top Row */}
         <View style={styles.topRow}>
-          {/* Chip icon */}
-          <View style={[styles.chip, !isActive && { backgroundColor: 'rgba(200,200,200,0.85)' }]}>
-            <View style={[styles.chipInner, !isActive && { borderColor: 'rgba(100,100,100,0.6)', backgroundColor: 'rgba(150,150,150,0.4)' }]} />
-            <View style={[styles.chipLine, !isActive && { backgroundColor: 'rgba(100,100,100,0.4)' }]} />
+          {/* Chip */}
+          <View style={[styles.chip, !isActive && { backgroundColor: 'rgba(180,180,180,0.6)' }]}>
+            <View style={styles.chipInner} />
           </View>
 
-          {/* NFC/Contactless */}
-          <View style={styles.nfcIcon}>
-            <DynamicIcon name="Wifi" size={20} color="rgba(255,255,255,0.5)" strokeWidth={1.5} />
+          {/* Contactless / NFC */}
+          <View style={styles.nfcWrap}>
+            <DynamicIcon name="Wifi" size={18} color="rgba(255,255,255,0.7)" strokeWidth={1.8} />
           </View>
         </View>
 
-        {/* ── Card Middle — Bank Name ── */}
+        {/* Card Middle — Issuer & Intelligence */}
         <View style={styles.middle}>
           <Text style={styles.bankName} numberOfLines={1}>
             {bankName}
           </Text>
           
-          {/* Ambient Fee Waiver Intelligence */}
           {isActive && (
             <View style={styles.waiverAmbient}>
               {card.waiver_achieved ? (
-                <Text style={styles.waiverAmbientText}>Annual fee waived</Text>
+                <View style={styles.waiverAchievedBadge}>
+                  <DynamicIcon name="CheckCircle2" size={12} color="#10B981" />
+                  <Text style={styles.waiverAchievedText}>Annual Fee Waived</Text>
+                </View>
               ) : card.effective_fee_waiver_threshold ? (
                 <>
                   <Text style={styles.waiverAmbientText}>
-                    ₹{card.remaining_spend_for_waiver?.toLocaleString('en-IN')} left for waiver
+                    ₹{card.remaining_spend_for_waiver?.toLocaleString('en-IN')} left for fee waiver
                   </Text>
                   <FeeWaiverProgressBar 
                     threshold={card.effective_fee_waiver_threshold} 
@@ -137,7 +121,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
                   />
                   {card.days_until_renewal !== undefined && card.days_until_renewal !== null && (
                     <Text style={styles.waiverAmbientSubtext}>
-                      {card.days_until_renewal} days remaining
+                      {card.days_until_renewal} days remaining in cycle
                     </Text>
                   )}
                 </>
@@ -146,40 +130,20 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
           )}
         </View>
 
-        {/* ── Card Bottom Row ── */}
+        {/* Card Bottom Row */}
         <View style={styles.bottomRow}>
           <View style={styles.bottomLeft}>
-            <Text style={styles.cardNameLabel}>CARD</Text>
+            <Text style={styles.cardNameLabel}>CARDHOLDER ASSET</Text>
             <Text style={styles.cardNameText} numberOfLines={1}>
               {cardName}
             </Text>
           </View>
 
           <View style={styles.bottomRight}>
-            {/* Active badge / Milestone badge */}
-            {isPremium && card.milestone_progress?.some(m => !m.is_achieved && m.target_type === 'TRANSACTION_COUNT') && isActive ? (() => {
-              const m = card.milestone_progress.find(m => !m.is_achieved && m.target_type === 'TRANSACTION_COUNT')!;
-              return (
-                <View style={[styles.activeBadge, { backgroundColor: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.4)' }]}>
-                  <DynamicIcon name="CheckCircle2" size={11} color="#4ADE80" strokeWidth={2} />
-                  <Text style={[styles.activeBadgeText, { color: '#4ADE80' }]}>
-                    {m.current_value}/{m.target_value} Txns
-                  </Text>
-                </View>
-              );
-            })() : (
-              <View style={styles.activeBadge}>
-                {isActive ? (
-                  <>
-                    <DynamicIcon name="CheckCircle2" size={11} color="rgba(255,255,255,0.85)" strokeWidth={2} />
-                    <Text style={styles.activeBadgeText}>Active</Text>
-                  </>
-                ) : (
-                  <Text style={[styles.activeBadgeText, { color: 'rgba(255,255,255,0.6)' }]}>Inactive</Text>
-                )}
-              </View>
-            )}
-            {/* Network label */}
+            <View style={styles.activeBadge}>
+              <View style={[styles.activeDot, { backgroundColor: isActive ? '#10B981' : 'rgba(255,255,255,0.4)' }]} />
+              <Text style={styles.activeBadgeText}>{isActive ? 'Active' : 'Inactive'}</Text>
+            </View>
             <Text style={styles.networkText}>{networkLabel}</Text>
           </View>
         </View>
@@ -190,8 +154,13 @@ export const WalletCard: React.FC<WalletCardProps> = ({ card, index }) => {
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: 20,
+    marginBottom: 16,
     borderRadius: tokens.radius.card,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
+    shadowRadius: 20,
+    elevation: 6,
   },
   card: {
     width: CARD_WIDTH,
@@ -200,7 +169,7 @@ const styles = StyleSheet.create({
     padding: 22,
     justifyContent: 'space-between',
     overflow: 'hidden',
-    borderWidth: 0,
+    borderWidth: 1,
   },
   topEdge: {
     position: 'absolute',
@@ -208,64 +177,43 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-  },
-  noiseOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    overflow: 'hidden',
-  },
-  noiseCircle: {
-    position: 'absolute',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.20)',
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  chip: {
-    width: 36,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255,220,100,0.85)',
-    justifyContent: 'center',
     alignItems: 'center',
   },
+  chip: {
+    width: 38,
+    height: 28,
+    borderRadius: 5,
+    backgroundColor: 'rgba(255, 215, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(200, 160, 0, 0.7)',
+  },
   chipInner: {
-    width: 20,
+    width: 22,
     height: 16,
     borderRadius: 3,
-    borderWidth: 1,
-    borderColor: 'rgba(180,140,0,0.6)',
-    backgroundColor: 'rgba(255,210,80,0.4)',
+    borderWidth: 0.8,
+    borderColor: 'rgba(140, 100, 0, 0.5)',
   },
-  chipLine: {
-    position: 'absolute',
-    top: '50%',
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: 'rgba(180,140,0,0.4)',
-    marginTop: -0.5,
-  },
-  nfcIcon: {
-    opacity: 0.7,
+  nfcWrap: {
+    opacity: 0.85,
   },
   middle: {
     flex: 1,
     justifyContent: 'center',
+    marginVertical: 4,
   },
   bankName: {
-    color: 'rgba(255,255,255,0.45)',
+    color: 'rgba(255,255,255,0.7)',
     fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.semibold,
-    letterSpacing: tokens.letterSpacing.widest,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
   bottomRow: {
@@ -278,18 +226,17 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   cardNameLabel: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 8,
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 9,
     fontWeight: tokens.fontWeight.bold,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: 3,
+    letterSpacing: 1.2,
+    marginBottom: 2,
   },
   cardNameText: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: tokens.fontSize.bodyLg,
-    fontWeight: tokens.fontWeight.bold,
-    letterSpacing: 0.2,
+    color: '#FFFFFF',
+    fontSize: tokens.fontSize.headline,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: -0.3,
   },
   bottomRight: {
     alignItems: 'flex-end',
@@ -300,56 +247,66 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: tokens.radius.full,
-    borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.2)',
-    marginBottom: 6,
-    gap: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+    gap: 5,
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   activeBadgeText: {
-    color: 'rgba(255,255,255,0.85)',
+    color: '#FFFFFF',
     fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.bold,
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   networkText: {
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.85)',
     fontSize: tokens.fontSize.caption,
-    fontWeight: tokens.fontWeight.bold,
-    letterSpacing: tokens.letterSpacing.wider,
-    textTransform: 'uppercase',
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: tokens.letterSpacing.widest,
   },
   waiverAmbient: {
-    marginTop: 8,
+    marginTop: 6,
+  },
+  waiverAchievedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  waiverAchievedText: {
+    color: '#10B981',
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.bold,
   },
   waiverAmbientText: {
     color: 'rgba(255,255,255,0.85)',
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
-    letterSpacing: 0.2,
   },
   waiverAmbientSubtext: {
     color: 'rgba(255,255,255,0.5)',
     fontSize: tokens.fontSize.micro,
-    marginTop: 4,
-    letterSpacing: 0.3,
+    marginTop: 3,
   },
   progressBarBg: {
     height: 4,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     borderRadius: 2,
-    marginTop: 6,
+    marginTop: 5,
     overflow: 'hidden',
-    width: '80%',
+    width: '75%',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#22C55E', // success green
+    backgroundColor: '#10B981',
     borderRadius: 2,
-    shadowColor: '#22C55E',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
-    elevation: 2, // subtle glow
   },
 });

@@ -8,6 +8,7 @@ import { tokens } from '@/theme/tokens';
 import { getNetworkGradient } from '@/theme/colors';
 import { formatCurrencyIN } from '@/utils/currency';
 import { InsightResult } from '@/features/insights/types/insight.types';
+import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface FeaturedWalletCardProps {
   card: UserCardResponse;
@@ -30,13 +31,10 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   
   const networkGradient = getNetworkGradient(network, isDark) as [string, string];
 
-  // Fallback values if no specific AI insight exists
-  const topTag = insight?.badge_label || (card.card_status === 'ACTIVE' ? 'ACTIVE CARD' : 'INACTIVE');
-  const topTagColor = insight?.badge_color || (card.card_status === 'ACTIVE' ? colors.success : colors.textSecondary);
+  const topTag = insight?.badge_label || (card.card_status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE');
+  const topTagColor = insight?.badge_color || (card.card_status === 'ACTIVE' ? '#10B981' : colors.textSecondary);
 
-  // Actionable Insight Rendering (Minimal UI for the bottom left)
   let actionableContent;
-  
   if (insight?.category === 'FEE_WAIVER' && insight.monetary_value !== undefined) {
     const currentSpend = Number(card.current_spend) || 0;
     const target = currentSpend + insight.monetary_value;
@@ -46,7 +44,7 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
     actionableContent = (
       <View style={styles.minimalWaiver}>
         <Text style={styles.cognitionText} numberOfLines={1}>
-          <Text style={{ color: 'rgba(255,255,255,0.95)', fontWeight: tokens.fontWeight.bold }}>{formatCurrencyIN(remaining)}</Text> away from waiver
+          <Text style={{ color: '#FFFFFF', fontWeight: tokens.fontWeight.bold }}>{formatCurrencyIN(remaining)}</Text> to annual waiver
         </Text>
         <View style={styles.tinyProgressTrack}>
           <View
@@ -54,7 +52,7 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
               styles.tinyProgressFill,
               {
                 width: `${percentComplete}%`,
-                backgroundColor: topTagColor
+                backgroundColor: '#10B981',
               }
             ]}
           />
@@ -65,48 +63,65 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
     actionableContent = (
       <View style={styles.minimalInsight}>
         <Text style={styles.cognitionText} numberOfLines={2}>
-          {insight?.summary || (card.card_status === 'ACTIVE' ? 'Active and ready to use' : 'Currently inactive')}
+          {insight?.summary || (card.card_status === 'ACTIVE' ? 'Primary optimization active' : 'Card dormant')}
         </Text>
       </View>
     );
   }
+
   return (
-    <Animated.View entering={FadeIn.duration(400)} style={styles.container}>
-      {/* Ambient background glow */}
-      <View style={[styles.ambientGlow, { backgroundColor: topTagColor }]} />
-      
-      <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={[styles.touchable, { borderColor: colors.borderHighlight, borderWidth: 1 }]}>
+    <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
+      <TouchableOpacity
+        activeOpacity={0.88}
+        onPress={onPress}
+        style={[
+          styles.touchable,
+          {
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+          },
+        ]}
+      >
         <LinearGradient
           colors={networkGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.cardBackground}
         >
-          {/* Top Edge Highlight */}
-          <View style={[styles.topEdge, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.4)' }]} />
+          {/* Metallic Top Edge Highlight */}
+          <View
+            style={[
+              styles.topEdge,
+              { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.7)' },
+            ]}
+          />
 
-          <View style={styles.content}>
-            <View style={styles.headerRow}>
-              <View style={[styles.badgeWrap, { backgroundColor: `${topTagColor}20` }]}>
-                <Text style={[styles.badgeText, { color: topTagColor }]}>{topTag}</Text>
-              </View>
+          {/* Card Top Row */}
+          <View style={styles.headerRow}>
+            {/* Smart chip emblem */}
+            <View style={styles.chipEmblem}>
+              <View style={styles.chipInner} />
             </View>
 
-            {/* Group names and footer at the bottom to avoid awkward gap */}
-            <View style={styles.bottomBlock}>
-              <View style={styles.namesWrap}>
-                <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
-                <Text style={styles.cardName} numberOfLines={2}>{cardName}</Text>
-              </View>
+            <View style={[styles.badgeWrap, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(0, 0, 0, 0.06)' }]}>
+              <View style={[styles.statusDot, { backgroundColor: topTagColor }]} />
+              <Text style={[styles.badgeText, { color: isDark ? '#FFFFFF' : '#0F172A' }]}>{topTag}</Text>
+            </View>
+          </View>
 
-              <View style={styles.footerRow}>
-                <View style={styles.footerLeft}>
-                  {actionableContent}
-                </View>
-                <View style={styles.networkInfo}>
-                  {!!displayNetwork && <Text style={styles.networkName}>{displayNetwork}</Text>}
-                  {!!card.last_4_digits && <Text style={styles.cardEnds}>•••• {card.last_4_digits}</Text>}
-                </View>
+          {/* Card Content Block */}
+          <View style={styles.bottomBlock}>
+            <View style={styles.namesWrap}>
+              <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
+              <Text style={styles.cardName} numberOfLines={1}>{cardName}</Text>
+            </View>
+
+            <View style={styles.footerRow}>
+              <View style={styles.footerLeft}>
+                {actionableContent}
+              </View>
+              <View style={styles.networkInfo}>
+                {!!displayNetwork && <Text style={styles.networkName}>{displayNetwork}</Text>}
+                {!!card.last_4_digits && <Text style={styles.cardEnds}>•••• {card.last_4_digits}</Text>}
               </View>
             </View>
           </View>
@@ -118,25 +133,20 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: 240,
-    height: 180,
-    borderRadius: tokens.radius.xl,
-  },
-  ambientGlow: {
-    position: 'absolute',
-    top: -10, left: -10, right: -10, bottom: -10,
-    borderRadius: tokens.radius.xl + 10,
-    zIndex: -1,
-    opacity: 0.1,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
-    elevation: 10,
+    width: 250,
+    height: 165,
+    borderRadius: tokens.radius.card,
   },
   touchable: {
     flex: 1,
-    borderRadius: tokens.radius.xl,
+    borderRadius: tokens.radius.card,
     overflow: 'hidden',
+    borderWidth: 1,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 6,
   },
   cardBackground: {
     flex: 1,
@@ -144,45 +154,70 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   topEdge: {
-    position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  content: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
+    alignItems: 'center',
+  },
+  chipEmblem: {
+    width: 28,
+    height: 22,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 215, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(200, 160, 0, 0.8)',
+  },
+  chipInner: {
+    width: 16,
+    height: 12,
+    borderRadius: 2,
+    borderWidth: 0.8,
+    borderColor: 'rgba(120, 90, 0, 0.6)',
   },
   badgeWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 12,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   badgeText: {
     fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.widest,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: 0.6,
   },
   bottomBlock: {
     marginTop: 'auto',
   },
   namesWrap: {
-    marginBottom: 24, // Space between names and footer
+    marginBottom: 12,
   },
   bankName: {
-    fontSize: tokens.fontSize.micro,
+    fontSize: 10,
     fontWeight: tokens.fontWeight.bold,
     letterSpacing: tokens.letterSpacing.widest,
-    marginBottom: 4,
-    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 2,
+    color: 'rgba(255, 255, 255, 0.65)',
   },
   cardName: {
-    fontSize: tokens.fontSize.title,
+    fontSize: tokens.fontSize.bodyLg,
     fontWeight: tokens.fontWeight.heavy,
-    color: 'rgba(255,255,255,0.95)',
+    color: '#FFFFFF',
+    letterSpacing: -0.2,
   },
   footerRow: {
     flexDirection: 'row',
@@ -191,9 +226,7 @@ const styles = StyleSheet.create({
   },
   footerLeft: {
     flex: 1,
-    paddingRight: 12,
-    justifyContent: 'flex-end',
-    paddingBottom: 2,
+    paddingRight: 10,
   },
   minimalWaiver: {
     width: '100%',
@@ -202,18 +235,18 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   cognitionText: {
-    fontSize: tokens.fontSize.caption,
+    fontSize: tokens.fontSize.micro,
     fontWeight: tokens.fontWeight.medium,
-    lineHeight: 16,
-    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 14,
+    color: 'rgba(255, 255, 255, 0.75)',
   },
   tinyProgressTrack: {
     height: 3,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 1.5,
-    marginTop: 6,
+    marginTop: 4,
     overflow: 'hidden',
-    width: '80%',
+    width: '85%',
   },
   tinyProgressFill: {
     height: '100%',
@@ -224,14 +257,14 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   networkName: {
-    fontSize: tokens.fontSize.caption,
+    fontSize: 10,
     fontWeight: tokens.fontWeight.heavy,
     letterSpacing: tokens.letterSpacing.widest,
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   cardEnds: {
-    fontSize: 10,
-    letterSpacing: 2,
-    color: 'rgba(255,255,255,0.55)',
+    fontSize: 9,
+    letterSpacing: 1.2,
+    color: 'rgba(255, 255, 255, 0.6)',
   },
 });
