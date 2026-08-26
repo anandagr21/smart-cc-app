@@ -85,8 +85,8 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
         <Text style={[styles.cardName, { color: isActive ? colors.textPrimary : colors.textSecondary }]} numberOfLines={1}>
           {cardName}
         </Text>
-        <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-          {bankName ? `${bankName}${networkLabel ? ` • ${networkLabel}` : ''}` : networkLabel}{card.last_4_digits ? ` •••• ${card.last_4_digits}` : ''}
+        <Text style={[styles.cardMeta, { color: colors.textSecondary }]} numberOfLines={1}>
+          {[bankName, networkLabel, card.last_4_digits ? `•••• ${card.last_4_digits}` : ''].filter(Boolean).join(' • ')}
         </Text>
       </View>
 

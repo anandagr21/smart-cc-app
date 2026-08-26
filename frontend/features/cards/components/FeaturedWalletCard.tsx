@@ -25,7 +25,7 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
   const isDark = colors.isDark;
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
-  const bankName = card.card_details?.bank_name || 'Bank';
+  const bankName = card.card_details?.bank_name || '';
   const network = card.network_override || card.card_details?.network || 'VISA';
   const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' ? '' : network.toUpperCase();
   
@@ -111,7 +111,7 @@ export const FeaturedWalletCard: React.FC<FeaturedWalletCardProps> = ({
           {/* Card Content Block */}
           <View style={styles.bottomBlock}>
             <View style={styles.namesWrap}>
-              <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>
+              {!!bankName && <Text style={styles.bankName}>{bankName.toUpperCase()}</Text>}
               <Text style={styles.cardName} numberOfLines={1}>{cardName}</Text>
             </View>
 

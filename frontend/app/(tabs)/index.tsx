@@ -27,9 +27,7 @@ import { useTransactions } from '@/features/transactions/hooks/useTransactions';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { formatCategoryLabel } from '@/features/transactions/utils/categoryAccents';
 import { QueryKeys } from '@/features/core/api/queryKeys';
-import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 import { DynamicIcon } from '@/components/DynamicIcon';
-import { FeaturedWalletCard } from '@/features/cards/components/FeaturedWalletCard';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -381,38 +379,7 @@ export default function DashboardScreen() {
           />
         ) : null}
 
-        {/* ── Cards Carousel (Card Stack) ─────────────────────────── */}
-        {!isLoading && cardsData && cardsData.length > 0 ? (
-          <Animated.View entering={maybeAnimated(100)} style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-                MY CARDS ({cardsData.length})
-              </Text>
-              <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/cards')}>
-                <Text style={[styles.seeAllLink, { color: colors.primary }]}>See all</Text>
-              </TouchableOpacity>
-            </View>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.cardCarouselContent}
-            >
-              {cardsData.map((card) => {
-                const cardInsight = insights?.find((i) => i.card_id === card.id);
-                return (
-                  <View key={card.id} style={styles.carouselItemWrapper}>
-                    <FeaturedWalletCard
-                      card={card}
-                      insight={cardInsight}
-                      onPress={() => router.push('/cards')}
-                    />
-                  </View>
-                );
-              })}
-            </ScrollView>
-          </Animated.View>
-        ) : null}
 
         {/* ── Fee Waiver Radar ──────────────────────────────────────────── */}
         {!isLoading && feeWaiverAlerts.length > 0 ? (

@@ -229,7 +229,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
   if (!card) return null;
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
-  const bankName = card.card_details?.bank_name || 'Bank';
+  const bankName = card.card_details?.bank_name || '';
   const network = card.network_override || card.card_details?.network || 'VISA';
   const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' ? '' : network.toUpperCase();
   const isActive = localIsActive !== null ? localIsActive : card.card_status === 'ACTIVE';
@@ -334,7 +334,7 @@ export const CardDetailSheet: React.FC<CardDetailSheetProps> = ({ card, onClose 
                 <View style={styles.heroGlare} />
                 
                 <View style={styles.heroHeader}>
-                  <Text style={styles.heroBankName} numberOfLines={1}>{bankName}</Text>
+                  {!!bankName && <Text style={styles.heroBankName} numberOfLines={1}>{bankName}</Text>}
                   <View style={[styles.statusPill, { backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)' }]}>
                     <Text style={[styles.statusText, { color: '#FFF' }]}>{isActive ? 'ACTIVE' : 'INACTIVE'}</Text>
                   </View>

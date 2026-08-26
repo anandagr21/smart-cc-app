@@ -38,7 +38,7 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
   const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
-  const bankName = card.card_details?.bank_name || 'Bank';
+  const bankName = card.card_details?.bank_name || '';
 
   const network = card.network_override || card.card_details?.network || 'default';
   const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' || network === 'default' ? '' : network.toUpperCase();
@@ -94,7 +94,7 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
               end={{ x: 1, y: 1 }}
             >
               <Text style={styles.cardLogoInitial}>
-                {bankName.substring(0, 1).toUpperCase()}
+                {(bankName || cardName).substring(0, 1).toUpperCase()}
               </Text>
             </LinearGradient>
           </View>

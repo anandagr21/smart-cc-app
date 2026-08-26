@@ -27,7 +27,7 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
   const { themeMode } = useThemeStore();
   
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
-  const bankName = card.card_details?.bank_name || 'Bank';
+  const bankName = card.card_details?.bank_name || '';
   
   const network = card.network_override || card.card_details?.network || 'VISA';
   const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' ? '' : network;
@@ -63,8 +63,7 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
                 {cardName}
               </Text>
               <Text style={[styles.bankName, { color: colors.textMuted }]} numberOfLines={1}>
-                {bankName}{displayNetwork ? ` • ${displayNetwork}` : ''}
-                {card.last_4_digits ? ` •••• ${card.last_4_digits}` : ''}
+                {[bankName, displayNetwork, card.last_4_digits ? `•••• ${card.last_4_digits}` : ''].filter(Boolean).join(' • ')}
               </Text>
             </View>
           </View>
