@@ -9,6 +9,7 @@ import { useThemeStore } from '@/features/theme/store/themeStore';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
 import { DynamicIcon } from '@/components/DynamicIcon';
+import { getCardBankName } from '@/features/cards/utils/cardBrand';
 
 interface WalletListRowProps {
   card: UserCardResponse;
@@ -27,7 +28,7 @@ export const WalletListRow: React.FC<WalletListRowProps> = ({
   const { themeMode } = useThemeStore();
   
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
-  const bankName = card.card_details?.bank_name || '';
+  const bankName = getCardBankName(card);
   
   const network = card.network_override || card.card_details?.network || 'VISA';
   const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' ? '' : network;

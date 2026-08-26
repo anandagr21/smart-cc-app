@@ -8,6 +8,7 @@ import { getNetworkGradient } from '@/theme/colors';
 import { tokens } from '@/theme/tokens';
 import { formatCurrencyIN } from '@/utils/currency';
 import { deriveFeeWaiverProgress } from '../utils/feeWaiver';
+import { getCardBankName } from '../utils/cardBrand';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface WalletInventoryRowProps {
@@ -31,7 +32,7 @@ export const WalletInventoryRow: React.FC<WalletInventoryRowProps> = ({ card, on
   const isDark = colors.isDark;
 
   const cardName = card.nickname || card.card_details?.card_name || 'Card';
-  const bankName = card.card_details?.bank_name || '';
+  const bankName = getCardBankName(card);
   const network = card.network_override || card.card_details?.network || 'VISA';
   const networkLabel = getNetworkLabel(network);
   const isActive = card.card_status === 'ACTIVE';

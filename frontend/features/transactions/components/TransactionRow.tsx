@@ -49,7 +49,8 @@ export const TransactionRow: React.FC<TransactionRowProps> = React.memo(({
   const matchedCard = cards?.find((c) => c.id === transaction.user_card_id);
   const cardName = matchedCard?.nickname || matchedCard?.card_details?.card_name || 'Card';
 
-  const iconName = getCategoryAccent(transaction.category || 'OTHER');
+  const categoryAccent = getCategoryAccent(transaction.category || 'OTHER');
+  const iconName = categoryAccent.iconName;
 
   const isDifferent =
     transaction.normalized_merchant &&

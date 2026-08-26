@@ -6,6 +6,7 @@ import { WalletInventoryRow } from './WalletInventoryRow';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
 import { FeatureFlags } from '@/config/features';
+import { getCardBankName } from '../utils/cardBrand';
 
 interface SmartWalletInventoryProps {
   cards: UserCardResponse[];
@@ -28,7 +29,7 @@ export const SmartWalletInventory: React.FC<SmartWalletInventoryProps> = ({ card
 
     // Bank Grouping Logic
     const grouped = cards.reduce((acc, card) => {
-      const bank = card.card_details?.bank_name || 'Other';
+      const bank = getCardBankName(card) || 'Other';
       if (!acc[bank]) {
         acc[bank] = { bank, cards: [], totalSpend: 0, nearWaiverCount: 0 };
       }
