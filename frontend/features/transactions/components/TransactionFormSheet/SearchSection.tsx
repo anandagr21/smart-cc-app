@@ -17,10 +17,10 @@ const PAYMENT_MODES = [
 ];
 
 const INTENT_OPTIONS = [
-  { label: 'Max Rewards', value: 'MAX_REWARDS', icon: 'Sparkles', color: '#8B5CF6' },
-  { label: 'Save Fee', value: 'SAVE_FEE_WAIVER', icon: 'ShieldCheck', color: '#10B981' },
-  { label: 'Balanced', value: 'BALANCED', icon: 'Scale', color: '#3B82F6' },
-  { label: 'Simplify', value: 'SIMPLIFY_DECISIONS', icon: 'Zap', color: '#F59E0B' }
+  { label: 'Max Rewards', value: 'MAX_REWARDS', icon: 'Sparkles', color: '#0052FF' },
+  { label: 'Save Fee', value: 'SAVE_FEE_WAIVER', icon: 'ShieldCheck', color: '#0E9F6E' },
+  { label: 'Balanced', value: 'BALANCED', icon: 'Scale', color: '#0052FF' },
+  { label: 'Simplify', value: 'SIMPLIFY_DECISIONS', icon: 'Zap', color: '#B45309' }
 ];
 
 const DebouncedAmountInput = ({ value, onChange, colors, ...props }: any) => {
@@ -138,7 +138,6 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
   return (
     <>
       <Animated.View style={styles.heroWrap} entering={FadeIn.duration(400)}>
-        <View style={[styles.heroGlow, { backgroundColor: currentIntent.color }]} />
         
         <Animated.View style={[styles.amountHeroWrap, amountStyle]}>
           <Controller
@@ -234,7 +233,7 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
                 }}
                 style={[
                   styles.chip,
-                  { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: colors.border }
+                  { backgroundColor: colors.surfaceElevated, borderColor: colors.border }
                 ]}
               >
                 <DynamicIcon name={m.icon as any} size={14} color={colors.textMuted} style={{ marginRight: 6 }} />
@@ -263,7 +262,7 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
                       }}
                       style={[
                         styles.chip,
-                        { backgroundColor: isActive ? colors.primarySoft : 'rgba(255,255,255,0.03)' },
+                        { backgroundColor: isActive ? colors.primarySoft : colors.surfaceElevated },
                         isActive ? { borderColor: colors.primary } : { borderColor: colors.border }
                       ]}
                     >
@@ -281,7 +280,7 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
 
         {FeatureFlags.ENABLE_SMART_RECOMMENDATIONS && (
           <View style={styles.controlSection}>
-            <Text style={[styles.controlLabel, { color: colors.textMuted }]}>AI STRATEGY</Text>
+            <Text style={[styles.controlLabel, { color: colors.textMuted }]}>WHAT MATTERS MOST</Text>
             <Controller
               control={control}
               name="intent"
@@ -299,8 +298,8 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
                         }}
                         style={[
                           styles.chip,
-                          { backgroundColor: isActive ? colors.primarySoft : 'rgba(255,255,255,0.03)' },
-                          isActive ? { borderColor: intent.color } : { borderColor: colors.border }
+                          { backgroundColor: isActive ? colors.primarySoft : colors.surfaceElevated },
+                          isActive ? { borderColor: colors.primary } : { borderColor: colors.border }
                         ]}
                       >
                         <DynamicIcon name={intent.icon} size={14} color={isActive ? intent.color : colors.textMuted} style={{ marginRight: 6 }} />
@@ -326,17 +325,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 32,
     marginBottom: 16,
-    position: 'relative',
-  },
-  heroGlow: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    opacity: 0.05,
-    borderRadius: 100,
-    transform: [{ scaleX: 1.5 }, { scaleY: 0.8 }],
-    top: -20,
-    filter: 'blur(30px)',
   },
   amountHeroWrap: {
     alignItems: 'center',

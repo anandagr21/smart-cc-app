@@ -27,7 +27,7 @@ export const CardSelector: React.FC<CardSelectorProps> = ({
   const { setValue, formState: { errors } } = useFormContext<any>();
 
   return (
-    <View style={styles.walletSection}>
+    <View style={[styles.walletSection, { borderColor: colors.border }]}>
       <View style={styles.walletHeader}>
         <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Your Wallet</Text>
         {errors.user_card_id?.message && (
@@ -82,7 +82,7 @@ export const CardSelector: React.FC<CardSelectorProps> = ({
         )}
 
         {Object.keys(groupedActive).length === 0 && inactiveCards.length === 0 && (
-          <Animated.View entering={FadeIn} style={[styles.emptyState, { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: colors.border }]}>
+          <Animated.View entering={FadeIn} style={[styles.emptyState, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
             <View style={[styles.emptyIconWrap, { backgroundColor: colors.surfaceElevated }]}>
               <DynamicIcon name="Wallet" size={24} color={colors.textSecondary} />
             </View>
@@ -102,7 +102,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingTop: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   walletHeader: {
     flexDirection: 'row',

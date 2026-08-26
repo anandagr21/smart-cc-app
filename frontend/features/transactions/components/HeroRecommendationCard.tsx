@@ -44,71 +44,115 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
   const displayNetwork = network.toUpperCase() === 'NA' || network.toUpperCase() === 'N/A' || network === 'default' ? '' : network.toUpperCase();
   const gradient = getNetworkGradient(network, isDark) as [string, string];
 
+  // Build "Why this card?" bullets from engine explanations or fallback
+  const bullets: string[] = (() => {
+    if (recommendation.engine_explanations && recommendation.engine_explanations.length > 0) {
+      return recommendation.engine_explanations.slice(0, 3).map((e: any) =>
+        typeof e === 'string' ? e : e.reason || e.label || String(e)
+      );
+    }
+    const items = [];
+    if (recommendation.explanation) items.push(recommendation.explanation);
+    if (recommendation.confidence_label) items.push(`${recommendation.confidence_label} confidence`);
+    if (recommendation.fee_waiver_progress_impact > 0) {
+      items.push(`+${formatCurrencyIN(recommendation.fee_waiver_progress_impact)} toward fee waiver`);
+    }
+    return items.slice(0, 3);
+  })();
+
+  // Reward type label
+  const rewardTypeLabel = 'Cashback';
+
   return (
     <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
-      <TouchableOpacity activeOpacity={0.9} onPress={onSelect} style={styles.touchable}>
-        <LinearGradient 
-          colors={isDark ? ['rgba(79, 54, 255, 0.15)', 'rgba(79, 54, 255, 0.03)'] : ['rgba(79, 54, 255, 0.08)', 'rgba(255, 255, 255, 0.8)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.card, { borderColor: colors.primary }]}
-        >
-          {/* Left accent stripe with network gradient */}
-          <View style={styles.accentStripe}>
-            <LinearGradient colors={gradient} style={{ flex: 1 }} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
-          </View>
+      {/* Recommended Card header */}
+      <View style={styles.headerBadgeRow}>
+        <Text style={styles.trophyEmoji}>🏆</Text>
+        <Text style={[styles.headerBadgeLabel, { color: '#FBBF24' }]}>Recommended Card</Text>
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={() => setIsFeedbackVisible(true)}>
+          <DynamicIcon name="MessageSquareWarning" size={15} color={colors.textMuted} />
+        </TouchableOpacity>
+        <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress} style={{ marginLeft: 10 }}>
+          <DynamicIcon name="Info" size={15} color={colors.textMuted} />
+        </TouchableOpacity>
+      </View>
 
-          {/* EDITORIAL TAG ROW */}
-          <View style={styles.editorialRow}>
-            <View style={[styles.strategyTag, { backgroundColor: colors.primarySoft }]}>
-              <Text style={[styles.strategyText, { color: colors.primary }]}>
-                {recommendation.confidence_label?.toUpperCase() || 'OPTIMAL'}
+      {/* Main card panel */}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onSelect}
+        style={[styles.panel, { backgroundColor: isDark ? '#1A1F3A' : '#FFFFFF', borderColor: isDark ? 'rgba(139,92,246,0.25)' : 'rgba(139,92,246,0.15)' }]}
+      >
+        {/* Card identity row */}
+        <View style={styles.cardIdentityRow}>
+          <View style={[styles.cardLogoCircle, { backgroundColor: gradient[0] + '30' }]}>
+            <LinearGradient
+              colors={gradient}
+              style={styles.cardLogoInner}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Text style={styles.cardLogoInitial}>
+                {bankName.substring(0, 1).toUpperCase()}
               </Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={() => setIsFeedbackVisible(true)}>
-                <DynamicIcon name="MessageSquareWarning" size={15} color={colors.textMuted} />
-              </TouchableOpacity>
-              <TouchableOpacity hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} onPress={onInfoPress}>
-                <DynamicIcon name="Info" size={15} color={colors.textMuted} />
-              </TouchableOpacity>
-            </View>
+            </LinearGradient>
           </View>
 
-          {/* CARD IDENTITY */}
-          <View style={styles.headerRow}>
-            <View style={styles.headerLeft}>
-              <Text style={[styles.bankName, { color: colors.textMuted }]}>{bankName.toUpperCase()}</Text>
-              <Text style={[styles.cardName, { color: colors.textPrimary }]} numberOfLines={1}>{cardName}</Text>
-            </View>
-            {!!displayNetwork && (
-              <View style={[styles.networkBadge, { borderColor: colors.border }]}>
-                <LinearGradient colors={gradient} style={styles.networkBadgeInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                  <Text style={styles.networkBadgeText}>{displayNetwork}</Text>
-                </LinearGradient>
-              </View>
-            )}
-          </View>
-
-          {/* RATIONALE */}
-          <Text style={[styles.rationale, { color: colors.textSecondary }]} numberOfLines={2}>
-            {recommendation.explanation || 'Optimal choice for this transaction.'}
-          </Text>
-
-          {/* FINANCIAL IMPACT */}
-          <View style={[styles.financials, { borderTopColor: colors.border }]}>
-            <Text style={[styles.rewardValue, { color: colors.success }]}>
-              {formatCurrencyIN(recommendation.immediate_reward_value)}
+          <View style={styles.cardIdentityInfo}>
+            <Text style={[styles.cardNameText, { color: colors.textPrimary }]} numberOfLines={1}>{cardName}</Text>
+            <Text style={[styles.cardLastFour, { color: colors.textSecondary }]}>
+              •••• {card.last_4_digits || '0000'}
             </Text>
-            {recommendation.fee_waiver_progress_impact > 0 && (
-              <Text style={[styles.rewardExtra, { color: colors.primary }]}>
-                + {formatCurrencyIN(recommendation.fee_waiver_progress_impact)} fee waiver
-              </Text>
-            )}
-            <Text style={[styles.rewardLabel, { color: colors.textMuted }]}>EXPECTED REWARD</Text>
           </View>
 
-        </LinearGradient>
+          {!!displayNetwork && (
+            <Text style={[styles.networkLabel, { color: isDark ? 'rgba(255,255,255,0.7)' : '#374151' }]}>
+              {displayNetwork}
+            </Text>
+          )}
+        </View>
+
+        {/* Earnings row */}
+        <View style={[styles.earningsSection, { borderTopColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }]}>
+          <Text style={[styles.earningsLabel, { color: colors.textSecondary }]}>You'll earn</Text>
+          <View style={styles.earningsValueRow}>
+            <Text style={styles.earningsValue}>
+              +{formatCurrencyIN(recommendation.immediate_reward_value)}
+            </Text>
+            <View style={[styles.earningsTypePill, { backgroundColor: 'rgba(245,158,11,0.12)' }]}>
+              <Text style={styles.earningsTypeCoin}>🪙</Text>
+              <Text style={styles.earningsTypeText}>{rewardTypeLabel}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Why this card */}
+        {bullets.length > 0 && (
+          <View style={[styles.whySection, { borderTopColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }]}>
+            <Text style={[styles.whyLabel, { color: colors.textSecondary }]}>Why this card?</Text>
+            {bullets.map((bullet, i) => (
+              <View key={i} style={styles.bulletRow}>
+                <Text style={styles.bulletCheck}>✓</Text>
+                <Text style={[styles.bulletText, { color: colors.textPrimary }]} numberOfLines={1}>
+                  {bullet}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* CTA Button */}
+        <TouchableOpacity activeOpacity={0.85} onPress={onSelect} style={styles.ctaBtn}>
+          <LinearGradient
+            colors={['#7C3AED', '#5B21B6']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.ctaBtnInner}
+          >
+            <Text style={styles.ctaBtnText}>Use This Card</Text>
+          </LinearGradient>
+        </TouchableOpacity>
       </TouchableOpacity>
 
       <FeedbackModal
@@ -133,108 +177,158 @@ export const HeroRecommendationCard: React.FC<HeroRecommendationCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 12,
-    borderRadius: tokens.radius.lg,
-    overflow: 'hidden',
+    marginBottom: 16,
   },
-  touchable: {
-    borderRadius: tokens.radius.lg,
-  },
-  card: {
-    flexDirection: 'column',
-    padding: 16,
-    paddingLeft: 20,
-    borderRadius: tokens.radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  accentStripe: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-    borderTopLeftRadius: tokens.radius.lg,
-    borderBottomLeftRadius: tokens.radius.lg,
-    overflow: 'hidden',
-  },
-  editorialRow: {
+  headerBadgeRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 6,
     marginBottom: 10,
+    paddingHorizontal: 2,
   },
-  strategyTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
+  trophyEmoji: {
+    fontSize: 15,
   },
-  strategyText: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.heavy,
-    letterSpacing: tokens.letterSpacing.widest,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  headerLeft: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  bankName: {
-    fontSize: tokens.fontSize.micro,
+  headerBadgeLabel: {
+    fontSize: tokens.fontSize.bodySm,
     fontWeight: tokens.fontWeight.bold,
-    letterSpacing: tokens.letterSpacing.widest,
+    letterSpacing: 0.2,
+  },
+  panel: {
+    borderRadius: tokens.radius.card,
+    borderWidth: 1,
+    overflow: 'hidden',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 6,
+  },
+  cardIdentityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+  },
+  cardLogoCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  cardLogoInner: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardLogoInitial: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  cardIdentityInfo: {
+    flex: 1,
+  },
+  cardNameText: {
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.bold,
     marginBottom: 2,
   },
-  cardName: {
-    fontSize: tokens.fontSize.bodyLg,
-    fontWeight: tokens.fontWeight.bold,
+  cardLastFour: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+    letterSpacing: 1.5,
   },
-  networkBadge: {
-    width: 44,
-    height: 28,
-    borderRadius: 5,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-  },
-  networkBadgeInner: {
-    flex: 1,
-    padding: 3,
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-  },
-  networkBadgeText: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 7,
+  networkLabel: {
+    fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: tokens.letterSpacing.widest,
   },
-  rationale: {
-    fontSize: tokens.fontSize.bodySm,
-    lineHeight: 18,
-    marginBottom: 10,
+  earningsSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderTopWidth: 1,
   },
-  financials: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 10,
+  earningsLabel: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+    marginBottom: 6,
   },
-  rewardValue: {
-    fontSize: tokens.fontSize.bodyLg,
-    fontWeight: tokens.fontWeight.heavy,
-    marginBottom: 1,
+  earningsValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  rewardExtra: {
+  earningsValue: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#10B981',
+    letterSpacing: -0.5,
+  },
+  earningsTypePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: tokens.radius.full,
+  },
+  earningsTypeCoin: {
+    fontSize: 13,
+  },
+  earningsTypeText: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.semibold,
-    marginBottom: 4,
+    color: '#F59E0B',
   },
-  rewardLabel: {
-    fontSize: tokens.fontSize.micro,
-    fontWeight: tokens.fontWeight.bold,
-    letterSpacing: tokens.letterSpacing.widest,
+  whySection: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+  },
+  whyLabel: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.semibold,
+    marginBottom: 8,
+  },
+  bulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 5,
+  },
+  bulletCheck: {
+    fontSize: 13,
+    color: '#10B981',
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  bulletText: {
+    fontSize: tokens.fontSize.caption,
+    fontWeight: tokens.fontWeight.medium,
+    flex: 1,
+    lineHeight: 18,
+  },
+  ctaBtn: {
+    margin: 16,
+    borderRadius: tokens.radius.lg,
+    overflow: 'hidden',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  ctaBtnInner: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: tokens.radius.lg,
+  },
+  ctaBtnText: {
+    color: '#FFFFFF',
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.heavy,
+    letterSpacing: 0.3,
   },
 });

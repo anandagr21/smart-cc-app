@@ -4,104 +4,118 @@ import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming } fr
 import { TransactionResponse } from '../types/transaction.types';
 import { getCategoryAccent } from '../utils/categoryAccents';
 import { useCards } from '@/features/cards/hooks/useCards';
-
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { RewardInsightPill } from './RewardInsightPill';
 import { tokens } from '@/theme/tokens';
-import { getNetworkGradient } from '@/theme/colors';
-import { useThemeStore } from '@/features/theme/store/themeStore';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
 interface TransactionRowProps {
   transaction: TransactionResponse;
   onPress: (transaction: TransactionResponse) => void;
-  index: number;
+  index?: number;
 }
 
-export const TransactionRow = React.memo(({ transaction, onPress, index }: TransactionRowProps) => {
-  const { data: cardsData } = useCards();
+function formatAmount(amt: number): string {
+  return `₹${amt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+export const TransactionRow: React.FC<TransactionRowProps> = React.memo(({
+  transaction,
+  onPress,
+  index = 0,
+}) => {
   const colors = useThemeColors();
-  const { themeMode } = useThemeStore();
+  const isDark = colors.isDark;
+  const { data: cards } = useCards();
   const [reduceMotion, setReduceMotion] = useState(false);
-  const isDark = themeMode === 'dark' || (themeMode === 'system' && colors.background === '#0A0E17');
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
   }, []);
 
-  const card = cardsData?.find((c) => c.id === transaction.user_card_id);
-  const cardName = card?.nickname || card?.card_details?.card_name || 'Card';
-  const network = card?.card_details?.network || 'default';
-  const isDifferent = transaction.normalized_merchant !== transaction.merchant_name;
-  
-  const accent = getCategoryAccent(transaction.category);
-  const iconName = accent.iconName || 'Receipt';
+  const scale = useSharedValue(1);
 
-  const formatAmount = (amt: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: transaction.currency || 'INR',
-      minimumFractionDigits: 0,
-    }).format(amt);
+  const handlePressIn = () => {
+    scale.value = withTiming(0.98, { duration: tokens.duration.fast });
+  };
+  const handlePressOut = () => {
+    scale.value = withTiming(1, { duration: tokens.duration.fast });
   };
 
-  const pressOpacity = useSharedValue(1);
-  const handlePressIn = () => { pressOpacity.value = withTiming(0.6, { duration: 150 }); };
-  const handlePressOut = () => { pressOpacity.value = withTiming(1, { duration: 250 }); };
-  
   const animStyle = useAnimatedStyle(() => ({
-    opacity: pressOpacity.value,
+    transform: [{ scale: scale.value }],
   }));
 
-  const gradient = getNetworkGradient(network, isDark);
+  const matchedCard = cards?.find((c) => c.id === transaction.user_card_id);
+  const cardName = matchedCard?.nickname || matchedCard?.card_details?.card_name || 'Card';
+
+  const iconName = getCategoryAccent(transaction.category || 'OTHER');
+
+  const isDifferent =
+    transaction.normalized_merchant &&
+    transaction.merchant_name &&
+    transaction.normalized_merchant.toLowerCase() !== transaction.merchant_name.toLowerCase();
 
   return (
-    <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(index * 50).springify()}>
+    <Animated.View entering={reduceMotion ? FadeInDown.duration(0) : FadeInDown.delay(index * 35).springify()}>
       <TouchableOpacity
         onPress={() => onPress(transaction)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        activeOpacity={1}
-        delayPressIn={100}
+        activeOpacity={0.85}
+        delayPressIn={50}
       >
         <Animated.View
           style={[
             styles.row,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-            animStyle
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
+            animStyle,
           ]}
         >
-          {/* Card Network Indicator */}
-          <View style={[styles.networkStripe, { backgroundColor: gradient[0] }]} />
-
-          <View style={styles.leftContent}>
-            {/* Category Icon */}
-            <View style={[styles.iconWrap, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-              <DynamicIcon name={iconName} size={20} color={colors.textSecondary} strokeWidth={1.5} />
-            </View>
-
-            {/* Merchant Info */}
-            <View style={styles.merchantInfo}>
-              <Text style={[styles.merchantName, { color: colors.textPrimary }]} numberOfLines={1}>
-                {transaction.normalized_merchant}
-              </Text>
-              <View style={styles.metaRow}>
-                <Text style={[styles.metaText, { color: colors.textSecondary }]} numberOfLines={1}>{cardName}</Text>
-                {isDifferent && (
-                  <Text style={[styles.rawMerchantText, { color: colors.textMuted }]} numberOfLines={1}>
-                    • {transaction.merchant_name}
-                  </Text>
-                )}
-              </View>
-              <RewardInsightPill 
-                rewardEarned={transaction.reward_earned} 
-                rewardType={transaction.reward_type} 
-                missedSavings={transaction.missed_savings} 
-              />
-            </View>
+          {/* Circular Merchant Icon */}
+          <View
+            style={[
+              styles.merchantAvatar,
+              {
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 82, 255, 0.06)',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+              },
+            ]}
+          >
+            <DynamicIcon
+              name={iconName}
+              size={18}
+              color={isDark ? '#FFFFFF' : colors.primary}
+              strokeWidth={2}
+            />
           </View>
 
-          {/* Amount */}
+          {/* Merchant & Metadata */}
+          <View style={styles.leftContent}>
+            <Text style={[styles.merchantName, { color: colors.textPrimary }]} numberOfLines={1}>
+              {transaction.normalized_merchant || transaction.merchant_name || 'Transaction'}
+            </Text>
+            <View style={styles.metaRow}>
+              <Text style={[styles.metaText, { color: colors.textSecondary }]} numberOfLines={1}>
+                {cardName}
+              </Text>
+              {isDifferent && (
+                <Text style={[styles.rawMerchantText, { color: colors.textMuted }]} numberOfLines={1}>
+                  • {transaction.merchant_name}
+                </Text>
+              )}
+            </View>
+            <RewardInsightPill
+              rewardEarned={transaction.reward_earned}
+              rewardType={transaction.reward_type}
+              missedSavings={transaction.missed_savings}
+            />
+          </View>
+
+          {/* Transaction Amount */}
           <View style={styles.amountWrap}>
             <Text style={[styles.amountText, { color: colors.textPrimary }]}>
               {formatAmount(transaction.amount)}
@@ -117,75 +131,55 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingRight: 20,
-    paddingLeft: 16,
-    marginHorizontal: 24,
-    marginBottom: 12,
-    borderRadius: tokens.radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    marginBottom: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  networkStripe: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-  },
-  leftContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    minWidth: 0, // allow flex shrink below content size
-  },
-  iconWrap: {
+  merchantAvatar: {
     width: 44,
     height: 44,
-    borderRadius: tokens.radius.full,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexShrink: 0,
+    borderWidth: 1,
+    marginRight: 14,
   },
-  merchantInfo: {
+  leftContent: {
     flex: 1,
-    minWidth: 0,
+    marginRight: 12,
   },
   merchantName: {
-    fontSize: tokens.fontSize.bodyLg,
-    fontWeight: tokens.fontWeight.semibold,
-    letterSpacing: 0.2,
+    fontSize: tokens.fontSize.body,
+    fontWeight: tokens.fontWeight.bold,
+    letterSpacing: -0.2,
+    marginBottom: 2,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
-    marginBottom: 4,
-    minWidth: 0,
   },
   metaText: {
     fontSize: tokens.fontSize.caption,
     fontWeight: tokens.fontWeight.medium,
-    flexShrink: 1,
   },
   rawMerchantText: {
     fontSize: tokens.fontSize.caption,
     marginLeft: 4,
-    flexShrink: 1,
   },
   amountWrap: {
     alignItems: 'flex-end',
-    justifyContent: 'flex-start',
-    paddingLeft: 8,
-    flexShrink: 0,
-    maxWidth: '35%',
+    justifyContent: 'center',
   },
   amountText: {
     fontSize: tokens.fontSize.bodyLg,
     fontWeight: tokens.fontWeight.bold,
-    fontVariant: ['tabular-nums'],
+    letterSpacing: -0.4,
   },
 });

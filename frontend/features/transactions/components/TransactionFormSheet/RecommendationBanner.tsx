@@ -11,10 +11,10 @@ import { tokens } from '@/theme/tokens';
 import { FeatureFlags } from '@/config/features';
 
 const INTENT_LABELS: Record<string, { title: string; heroLabel: string; altLabel: string }> = {
-  BALANCED: { title: '✨ SMARTEST FINANCIAL CHOICE', heroLabel: 'Best Overall', altLabel: 'OTHER STRATEGIC OPTIONS' },
-  MAX_REWARDS: { title: '🏆 MAXIMUM REWARDS', heroLabel: 'Highest Cashback', altLabel: 'LOWER REWARD OPTIONS' },
-  SAVE_FEE_WAIVER: { title: '🛡️ FEE WAIVER FOCUS', heroLabel: 'Best for Waiver', altLabel: 'OTHER OPTIONS' },
-  SIMPLIFY_DECISIONS: { title: '✌️ SIMPLIFY YOUR WALLET', heroLabel: 'One Card to Rule', altLabel: 'MORE COMPLEX OPTIONS' },
+  BALANCED: { title: 'BEST OVERALL CHOICE', heroLabel: 'Best Overall', altLabel: 'OTHER GOOD OPTIONS' },
+  MAX_REWARDS: { title: 'MAXIMUM REWARDS', heroLabel: 'Highest Cashback', altLabel: 'LOWER REWARD OPTIONS' },
+  SAVE_FEE_WAIVER: { title: 'FEE WAIVER FOCUS', heroLabel: 'Best for Waiver', altLabel: 'OTHER OPTIONS' },
+  SIMPLIFY_DECISIONS: { title: 'SIMPLEST CHOICE', heroLabel: 'One Card for Most Purchases', altLabel: 'MORE OPTIONS' },
 };
 
 interface RecommendationBannerProps {
@@ -57,21 +57,21 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
       </View>
 
       {!hasValidInput && !isPending && winningWalletCards.length === 0 && (
-        <Animated.View entering={FadeIn} style={[styles.emptyState, { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: colors.border }]}>
-          <View style={[styles.emptyIconWrap, { backgroundColor: colors.surfaceElevated }]}>
+        <Animated.View entering={FadeIn} style={[styles.emptyState, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+          <View style={[styles.emptyIconWrap, { backgroundColor: colors.primarySoft }]}>
             <DynamicIcon name="Sparkles" size={24} color={colors.primary} />
           </View>
           <Text style={[styles.emptyStateTitle, { color: colors.textPrimary }]}>
-            Ready to Optimize
+            Find your best card
           </Text>
           <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
-            Enter an amount or merchant above to discover the best card to use.
+            Enter an amount or merchant above to see which card earns the most.
           </Text>
         </Animated.View>
       )}
 
       {isPending && hasValidInput && (
-        <Animated.View entering={FadeIn} style={[styles.thinkingState, { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: colors.border, borderWidth: 1 }]}>
+        <Animated.View entering={FadeIn} style={[styles.thinkingState, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1 }]}>
           <DynamicIcon name="Sparkles" size={28} color={colors.primary} style={styles.pulseIcon} />
           <Text style={[styles.thinkingStateText, { color: colors.textPrimary }]}>
             Calculating best rewards...

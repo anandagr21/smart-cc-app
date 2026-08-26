@@ -33,12 +33,12 @@ export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
             <DynamicIcon name="Sparkles" size={24} color={colors.primary} strokeWidth={1.5} />
           </View>
           <Text style={[styles.title, { color: colors.textPrimary }]}>
-            {hasCards ? 'Ready to earn rewards' : 'Your dashboard awaits'}
+            {hasCards ? 'Find your best card' : 'Set up in two steps'}
           </Text>
           <Text style={[styles.body, { color: colors.textSecondary }]}>
             {hasCards
-              ? 'Your card is set up! Log your first transaction to see cashback, reward efficiency, and personalized card recommendations.'
-              : 'Add a credit card and log your first transaction. Card Analyser will analyze your portfolio and recommend the best card for every purchase — automatically.'}
+              ? 'Log a purchase and see which of your cards earns the most — with the calculation explained.'
+              : 'Add your cards, then log a purchase. Card Analyser compares your cards and recommends the best one for each purchase.'}
           </Text>
         </View>
 
@@ -46,13 +46,13 @@ export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
         {!hasCards && (
           <View style={styles.ctas}>
             <Button
-              label="Add a Card"
+              label="Add a card"
               variant="primary"
               onPress={onAddCard}
               style={styles.cta}
             />
             <Button
-              label="Log a Transaction"
+              label="Log a purchase"
               variant="secondary"
               onPress={onAddTransaction}
               style={styles.cta}
@@ -64,7 +64,7 @@ export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
         {hasCards && onQuickStart && (
           <View style={styles.quickStartSection}>
             <Text style={[styles.quickStartLabel, { color: colors.textSecondary }]}>
-              Try your first recommendation:
+              Which card should I use?
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
               {[
@@ -80,7 +80,7 @@ export const EmptyDashboardState: React.FC<EmptyDashboardStateProps> = ({
                   onPress={() => onQuickStart(m.label, m.amount)}
                   style={[
                     styles.chip,
-                    { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: colors.border }
+                    { backgroundColor: colors.surfaceElevated, borderColor: colors.border }
                   ]}
                 >
                   <DynamicIcon name={m.icon as any} size={14} color={colors.textMuted} style={{ marginRight: 6 }} />

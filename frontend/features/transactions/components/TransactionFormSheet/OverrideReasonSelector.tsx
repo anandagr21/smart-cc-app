@@ -49,7 +49,7 @@ export const OverrideReasonSelector: React.FC<OverrideReasonSelectorProps> = ({
                     }}
                     style={[
                       styles.overrideChip,
-                      { backgroundColor: isActive ? colors.primarySoft : 'rgba(255,255,255,0.03)' },
+                      { backgroundColor: isActive ? colors.primarySoft : colors.surfaceElevated },
                       isActive ? { borderColor: colors.primary } : { borderColor: colors.border }
                     ]}
                   >
