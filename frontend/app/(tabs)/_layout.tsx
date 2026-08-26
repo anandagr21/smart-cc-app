@@ -16,7 +16,7 @@ import { DynamicIcon } from '@/components/DynamicIcon';
 const TABS = [
   { name: 'index', route: '/', icon: 'House', label: 'Home' },
   { name: 'cards', route: '/cards', icon: 'Wallet', label: 'Wallet' },
-  { name: 'history', route: '/history', icon: 'BarChart2', label: 'Activity' },
+  { name: 'history', route: '/history', icon: 'Activity', label: 'Activity' },
   { name: 'profile', route: '/profile', icon: 'User', label: 'Profile' },
 ];
 
