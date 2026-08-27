@@ -3,8 +3,8 @@ import { ArrowRightIcon } from "./Icons";
 import { GOOGLE_PLAY_URL, APP_WEB_URL } from "../constants";
 
 const stats = [
-  { value: "₹2.4L", label: "Avg savings / year" },
-  { value: "75+",  label: "Card profiles" },
+  { value: "75+",  label: "Indian card profiles" },
+  { value: "10×",  label: "Reward gap on food delivery*" },
   { value: "Auto", label: "Rule updates" },
 ];
 
@@ -113,9 +113,9 @@ export default function Hero() {
               transition={{ delay: 0.58, duration: 0.5 }}
             >
               {[
-                { icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z", label: "Bank-grade encryption" },
+                { icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z", label: "No bank linking" },
                 { icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z", label: "No bank linking" },
-                { icon: "M5 13l4 4L19 7", label: "75+ cards supported" },
+                { icon: "M5 13l4 4L19 7", label: "No card numbers stored" },
               ].map((b) => (
                 <div key={b.label} className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,6 +145,9 @@ export default function Hero() {
                 </motion.div>
               ))}
             </motion.div>
+            <p className="text-[10px] text-white/25 mt-3">
+              *Example: 1% vs 10% on a ₹600 order. Actual rewards depend on your cards and current bank terms.
+            </p>
           </div>
 
           {/* ── Right column — Dashboard mockup ─────────── */}
@@ -210,12 +213,12 @@ export default function Hero() {
                   transition={{ delay: 0.95 }}
                 >
                   <div>
-                    <p className="text-white/40 text-xs mb-1">Total Savings this year</p>
-                    <p className="text-white font-extrabold text-2xl">₹2,45,000</p>
+                    <p className="text-white/40 text-xs mb-1">Tonight's Swiggy order — ₹600</p>
+                    <p className="text-white font-extrabold text-2xl">Use SBI Cashback</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-green-400 text-sm font-bold">↑ 34%</p>
-                    <p className="text-white/30 text-xs">vs last year</p>
+                    <p className="text-green-400 text-sm font-bold">₹60</p>
+                    <p className="text-white/30 text-xs">vs ₹6 elsewhere</p>
                   </div>
                 </motion.div>
               </div>

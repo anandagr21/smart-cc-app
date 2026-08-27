@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import ScrollReveal from "./ScrollReveal";
 import { ArrowRightIcon } from "./Icons";
-import { GOOGLE_PLAY_URL } from "../constants";
+import { GOOGLE_PLAY_URL_CTA } from "../constants";
 
 export default function CTA() {
   return (
@@ -53,7 +53,7 @@ export default function CTA() {
               </p>
 
               <a
-                href={GOOGLE_PLAY_URL}
+                href={GOOGLE_PLAY_URL_CTA}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="cta-btn inline-flex items-center justify-center gap-2 px-8 py-4 text-white font-bold text-base rounded-xl transition-all duration-200 cursor-pointer"

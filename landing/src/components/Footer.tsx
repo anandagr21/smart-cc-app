@@ -1,10 +1,10 @@
-import { GOOGLE_PLAY_URL, APP_WEB_URL } from "../constants";
+import { GOOGLE_PLAY_URL_FOOTER, APP_WEB_URL } from "../constants";
 
 const footerLinks = {
   Product: [
     { label: "Features",    href: "#features" },
     { label: "How It Works",href: "#how-it-works" },
-    { label: "Get the App", href: GOOGLE_PLAY_URL, external: true },
+    { label: "Get the App", href: GOOGLE_PLAY_URL_FOOTER, external: true },
     { label: "Open Web App", href: APP_WEB_URL, external: true },
   ],
   Legal: [

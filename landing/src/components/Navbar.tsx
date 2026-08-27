@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect } from "react";
-import { GOOGLE_PLAY_URL, APP_WEB_URL } from "../constants";
+import { GOOGLE_PLAY_URL_NAV, APP_WEB_URL_NAV } from "../constants";
 
 const links = [
   { href: "#features",     label: "Features"     },
@@ -50,7 +50,7 @@ export default function Navbar() {
         {/* CTA + mobile burger */}
         <div className="flex items-center gap-3">
           <a
-            href={APP_WEB_URL}
+            href={APP_WEB_URL_NAV}
             target="_blank"
             rel="noopener noreferrer"
             className="hidden md:inline-flex items-center px-4 py-2.5 text-white/70 hover:text-white font-semibold text-sm transition-colors duration-200 cursor-pointer"
@@ -58,7 +58,7 @@ export default function Navbar() {
             Sign In
           </a>
           <a
-            href={GOOGLE_PLAY_URL}
+            href={GOOGLE_PLAY_URL_NAV}
             target="_blank"
             rel="noopener noreferrer"
             className="hidden md:inline-flex items-center px-5 py-2.5 bg-accent-500 hover:bg-accent-600 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-lg shadow-accent-500/25 hover:shadow-accent-500/40 cursor-pointer"
@@ -116,7 +116,7 @@ export default function Navbar() {
               </motion.a>
             ))}
             <motion.a
-              href={APP_WEB_URL}
+              href={APP_WEB_URL_NAV}
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/70 hover:text-white font-medium text-base py-2 px-3 rounded-xl hover:bg-white/5 transition-colors duration-150 cursor-pointer"
@@ -128,7 +128,7 @@ export default function Navbar() {
               Sign In
             </motion.a>
             <motion.a
-              href={GOOGLE_PLAY_URL}
+              href={GOOGLE_PLAY_URL_NAV}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-1 text-center py-3 bg-accent-500 hover:bg-accent-600 text-white font-semibold text-sm rounded-xl transition-colors duration-200 cursor-pointer"
