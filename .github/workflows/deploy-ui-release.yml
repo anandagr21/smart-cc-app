@@ -3,10 +3,25 @@ name: UI Release — EAS Update + Web Deploy
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      deploy_eas:
+        description: 'Run EAS OTA update'
+        type: boolean
+        default: false
+      deploy_web:
+        description: 'Deploy Web App to Cloudflare Pages'
+        type: boolean
+        default: true
 
 env:
   EAS_CHANNEL: production
   CLOUDFLARE_PROJECT: card-analyser-web
+  EXPO_PUBLIC_API_URL: https://api.akaovia.com/api/v1
+  EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: 136233311933-tf0jvqnnv891e024gn8dgmca5b33eo4l.apps.googleusercontent.com
+  EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: 768994784419-gftc3oigrn4snh3f2d22i2s0c1p2k2a9.apps.googleusercontent.com
+  EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID: 136233311933-rpssvtv4n2inm8ljnqrt5rd1n86b3jn9.apps.googleusercontent.com
+  EXPO_PUBLIC_SENTRY_DSN: https://3616d28bd09f1c42eb7113cfa4c15669@o4511576733384704.ingest.us.sentry.io/4511576739741696
 
 permissions:
   contents: read
@@ -14,7 +29,7 @@ permissions:
 jobs:
   eas-update:
     name: EAS OTA Update (Production)
-    if: github.ref_name == 'ui' || github.ref_name == 'all'
+    if: github.ref_name == 'ui' || github.ref_name == 'all' || (github.event_name == 'workflow_dispatch' && inputs.deploy_eas == true)
     runs-on: ubuntu-latest
 
     defaults:
@@ -38,7 +53,6 @@ jobs:
       - name: EAS Update — Production Channel
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EXPO_PUBLIC_API_URL: https://api.akaovia.com/api/v1
         run: |
           npx eas update \
             --channel ${{ env.EAS_CHANNEL }} \
@@ -46,7 +60,7 @@ jobs:
 
   web-deploy:
     name: Build & Deploy Web to Cloudflare
-    if: github.ref_name == 'ui' || github.ref_name == 'all'
+    if: github.ref_name == 'ui' || github.ref_name == 'all' || (github.event_name == 'workflow_dispatch' && inputs.deploy_web != false)
     runs-on: ubuntu-latest
 
     defaults:
@@ -68,8 +82,6 @@ jobs:
         run: npm ci
 
       - name: Build Web App
-        env:
-          EXPO_PUBLIC_API_URL: https://api.akaovia.com/api/v1
         run: npx expo export --platform web
 
       - name: Deploy to Cloudflare Pages

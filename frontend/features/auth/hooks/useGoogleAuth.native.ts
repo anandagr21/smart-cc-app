@@ -7,8 +7,11 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 // Native (iOS/Android) Google Sign-In using @react-native-google-signin
 // ---------------------------------------------------------------------------
 
-const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
-const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '';
+const DEFAULT_WEB_CLIENT_ID = '136233311933-tf0jvqnnv891e024gn8dgmca5b33eo4l.apps.googleusercontent.com';
+const DEFAULT_IOS_CLIENT_ID = '768994784419-gftc3oigrn4snh3f2d22i2s0c1p2k2a9.apps.googleusercontent.com';
+
+const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || DEFAULT_WEB_CLIENT_ID;
+const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || DEFAULT_IOS_CLIENT_ID;
 
 // Initialize Google Sign-In
 // This only needs to be called once, so we can do it at module level or in a hook

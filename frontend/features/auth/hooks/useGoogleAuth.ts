@@ -8,7 +8,9 @@ import { googleLogin } from '@/features/auth/api/authApi';
 // This file is used on web. On native, useGoogleAuth.native.ts is used instead.
 // ---------------------------------------------------------------------------
 
-const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
+const DEFAULT_WEB_CLIENT_ID = '136233311933-tf0jvqnnv891e024gn8dgmca5b33eo4l.apps.googleusercontent.com';
+const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || DEFAULT_WEB_CLIENT_ID;
+
 
 export interface UseGoogleAuthReturn {
   signIn: () => void;
