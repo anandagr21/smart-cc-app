@@ -2,8 +2,10 @@
 const PLAY_BASE = "https://play.google.com/store/apps/details?id=com.smartcc.app";
 const WEB_BASE = "https://app.akaovia.com";
 
-const utm = (base: string, source: string, medium: string, campaign = "beta-launch") =>
-  `${base}?utm_source=${source}&utm_medium=${medium}&utm_campaign=${campaign}`;
+const utm = (base: string, source: string, medium: string, campaign = "beta-launch") => {
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}utm_source=${source}&utm_medium=${medium}&utm_campaign=${campaign}`;
+};
 
 export const GOOGLE_PLAY_URL = utm(PLAY_BASE, "landing", "hero"); // Hero primary CTA
 export const GOOGLE_PLAY_URL_NAV = utm(PLAY_BASE, "landing", "navbar");

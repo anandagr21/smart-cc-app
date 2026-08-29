@@ -21,7 +21,9 @@ export default function Navbar() {
     <>
       <motion.nav
         className={`fixed top-4 left-4 right-4 z-50 max-w-6xl mx-auto flex items-center justify-between px-5 py-3 rounded-2xl transition-colors duration-300 ${
-          scrolled ? "glass-strong shadow-2xl shadow-black/40" : "glass"
+          scrolled || menuOpen
+            ? "bg-surface-900/95 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/40"
+            : "glass"
         }`}
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -55,7 +57,7 @@ export default function Navbar() {
             rel="noopener noreferrer"
             className="hidden md:inline-flex items-center px-4 py-2.5 text-white/70 hover:text-white font-semibold text-sm transition-colors duration-200 cursor-pointer"
           >
-            Sign In
+            Sign In (Web App)
           </a>
           <a
             href={GOOGLE_PLAY_URL_NAV}
@@ -95,51 +97,63 @@ export default function Navbar() {
       {/* Mobile menu */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div
-            className="fixed inset-x-4 top-20 z-40 glass-strong rounded-2xl p-5 flex flex-col gap-3 max-w-6xl mx-auto md:hidden"
-            initial={{ opacity: 0, y: -12, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.97 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-          >
-            {links.map((l, i) => (
-              <motion.a
-                key={l.href}
-                href={l.href}
-                className="text-white/70 hover:text-white font-medium text-base py-2 px-3 rounded-xl hover:bg-white/5 transition-colors duration-150 cursor-pointer"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.06 }}
-                onClick={() => setMenuOpen(false)}
-              >
-                {l.label}
-              </motion.a>
-            ))}
-            <motion.a
-              href={APP_WEB_URL_NAV}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/70 hover:text-white font-medium text-base py-2 px-3 rounded-xl hover:bg-white/5 transition-colors duration-150 cursor-pointer"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.22 }}
-              onClick={() => setMenuOpen(false)}
-            >
-              Sign In
-            </motion.a>
-            <motion.a
-              href={GOOGLE_PLAY_URL_NAV}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 text-center py-3 bg-accent-500 hover:bg-accent-600 text-white font-semibold text-sm rounded-xl transition-colors duration-200 cursor-pointer"
+          <>
+            {/* Backdrop */}
+            <motion.div
+              className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.28 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               onClick={() => setMenuOpen(false)}
+            />
+
+            <motion.div
+              className="fixed inset-x-4 top-20 z-40 bg-surface-900/98 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/80 rounded-2xl p-5 flex flex-col gap-3 max-w-6xl mx-auto md:hidden"
+              initial={{ opacity: 0, y: -12, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.97 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
-              Get the App
-            </motion.a>
-          </motion.div>
+              {links.map((l, i) => (
+                <motion.a
+                  key={l.href}
+                  href={l.href}
+                  className="text-white/80 hover:text-white font-medium text-base py-2 px-3 rounded-xl hover:bg-white/5 transition-colors duration-150 cursor-pointer"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {l.label}
+                </motion.a>
+              ))}
+              <motion.a
+                href={APP_WEB_URL_NAV}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/80 hover:text-white font-medium text-base py-2 px-3 rounded-xl hover:bg-white/5 transition-colors duration-150 cursor-pointer"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.22 }}
+                onClick={() => setTimeout(() => setMenuOpen(false), 150)}
+              >
+                Sign In (Web App)
+              </motion.a>
+              <motion.a
+                href={GOOGLE_PLAY_URL_NAV}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 text-center py-3 bg-accent-500 hover:bg-accent-600 text-white font-semibold text-sm rounded-xl transition-colors duration-200 cursor-pointer shadow-lg shadow-accent-500/25"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.28 }}
+                onClick={() => setTimeout(() => setMenuOpen(false), 150)}
+              >
+                Get the App
+              </motion.a>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
