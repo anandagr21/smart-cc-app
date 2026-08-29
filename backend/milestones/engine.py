@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from typing import Any
 from decimal import Decimal
@@ -18,10 +19,18 @@ class MilestoneEngine:
             return []
             
         milestones_data = getattr(catalog, "milestones_json", {}) or {}
+        if isinstance(milestones_data, str):
+            try:
+                milestones_data = json.loads(milestones_data)
+            except (json.JSONDecodeError, TypeError):
+                milestones_data = {}
+
         if isinstance(milestones_data, list):
             milestones = milestones_data
-        else:
+        elif isinstance(milestones_data, dict):
             milestones = milestones_data.get("milestones", [])
+        else:
+            milestones = []
             
         if not milestones:
             return []
@@ -32,6 +41,8 @@ class MilestoneEngine:
         annual_spend = getattr(user_card, "annual_spend", Decimal("0.00"))
         
         for m in milestones:
+            if not isinstance(m, dict):
+                continue
             period = str(m.get("period", "MONTHLY")).upper()
             
             # Determine Target Type
