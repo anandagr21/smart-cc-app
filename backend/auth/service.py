@@ -65,7 +65,64 @@ class AuthService:
         self._user_repo.session.add(record)
         await self._user_repo.session.flush()
 
-    async def _issue_tokens(self, user) -> TokenResponse:
+    async def _ensure_session(
+        self, user_id: UUID, token_family: str, ip_address: str | None, device_label: str | None = None
+    ) -> None:
+        """Create or touch a Session row for this token_family (ponytail: 1:1 with family)."""
+        from models.session import Session
+
+        session: AsyncSession = self._user_repo.session
+        result = await session.execute(select(Session).where(Session.token_family == token_family))
+        existing = result.scalar_one_or_none()
+        if existing:
+            existing.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            if existing.is_revoked:
+                existing.is_revoked = False
+                existing.revoked_at = None
+            if device_label and existing.device_label != device_label[:100]:
+                existing.device_label = device_label[:100]
+            session.add(existing)
+            await session.flush()
+            return
+        settings = get_settings()
+        # ponytail: legacy app sends no header → store coarse fallback, not NULL, so analytics never has NULL bucket
+        safe_label = device_label or None  # already coarse from _resolve_device_label
+        if not safe_label:
+            safe_label = "Unknown device"
+        row = Session(
+            user_id=user_id,
+            token_family=token_family,
+            ip_address=(ip_address or "")[:45] if ip_address else None,
+            device_label=safe_label[:100],
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=settings.refresh_token_expire_days),
+        )
+        session.add(row)
+        await session.flush()
+
+    async def _touch_session(self, token_family: str) -> None:
+        from models.session import Session
+
+        session: AsyncSession = self._user_repo.session
+        result = await session.execute(select(Session).where(Session.token_family == token_family))
+        row = result.scalar_one_or_none()
+        if row and not row.is_revoked:
+            row.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            session.add(row)
+            await session.flush()
+
+    async def _revoke_session_family(self, token_family: str) -> None:
+        from models.session import Session
+
+        session: AsyncSession = self._user_repo.session
+        result = await session.execute(select(Session).where(Session.token_family == token_family))
+        row = result.scalar_one_or_none()
+        if row:
+            row.is_revoked = True
+            row.revoked_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            session.add(row)
+            await session.flush()
+
+    async def _issue_tokens(self, user, ip_address: str | None = None, device_label: str | None = None) -> TokenResponse:
         """Create access + refresh tokens and persist the refresh token record.
 
         Returns a TokenResponse with both tokens and the user profile.
@@ -74,6 +131,7 @@ class AuthService:
         refresh_token_str, jti, family = create_refresh_token(user.id)
 
         await self._store_refresh_token(user.id, jti, family)
+        await self._ensure_session(user.id, family, ip_address, device_label)
 
         return TokenResponse(
             access_token=access_token,
@@ -92,7 +150,7 @@ class AuthService:
     # Registration & Login
     # ------------------------------------------------------------------
 
-    async def register(self, request: UserRegisterRequest) -> TokenResponse:
+    async def register(self, request: UserRegisterRequest, ip_address: str | None = None, device_label: str | None = None) -> TokenResponse:
         """Register a new user and return access + refresh tokens.
 
         Steps:
@@ -118,9 +176,9 @@ class AuthService:
             "full_name": request.full_name,
         })
 
-        return await self._issue_tokens(user)
+        return await self._issue_tokens(user, ip_address, device_label)
 
-    async def login(self, request: UserLoginRequest) -> TokenResponse:
+    async def login(self, request: UserLoginRequest, ip_address: str | None = None, device_label: str | None = None) -> TokenResponse:
         """Authenticate an existing user and return access + refresh tokens.
 
         Steps:
@@ -149,9 +207,9 @@ class AuthService:
                 code="INVALID_CREDENTIALS",
             )
 
-        return await self._issue_tokens(user)
+        return await self._issue_tokens(user, ip_address, device_label)
 
-    async def google_login(self, id_token_str: str) -> TokenResponse:
+    async def google_login(self, id_token_str: str, ip_address: str | None = None, device_label: str | None = None) -> TokenResponse:
         """Authenticate using a Google ID token and return access + refresh tokens.
 
         Verifies the token against all configured Google client IDs
@@ -203,7 +261,7 @@ class AuthService:
                 "google_id": google_id,
             })
 
-        return await self._issue_tokens(user)
+        return await self._issue_tokens(user, ip_address, device_label)
 
     # ------------------------------------------------------------------
     # Token Refresh (with rotation + reuse detection)
@@ -299,6 +357,7 @@ class AuthService:
             await session.execute(
                 delete(RefreshToken).where(RefreshToken.token_family == family)
             )
+            await self._revoke_session_family(family)
             await session.flush()
             raise UnauthorizedException(
                 message="Security alert: Token reuse detected. All sessions have been revoked. Please log in again.",
@@ -317,6 +376,9 @@ class AuthService:
         token_record.is_used = True
         session.add(token_record)
         await session.flush()
+
+        # 6b. Touch session last_active
+        await self._touch_session(family)
 
         # 7. Fetch the user
         user = await self._user_repo.get_by_id_or_raise(user_id)
@@ -371,3 +433,58 @@ class AuthService:
             terms_accepted=user.terms_accepted,
             is_premium=user.is_premium,
         )
+
+    # ------------------------------------------------------------------
+    # Sessions
+    # ------------------------------------------------------------------
+
+    async def list_sessions(self, user_id: UUID) -> list:
+        from models.session import Session
+
+        session: AsyncSession = self._user_repo.session
+        result = await session.execute(
+            select(Session).where(Session.user_id == user_id).order_by(Session.last_active_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def revoke_session(self, user_id: UUID, session_id: UUID) -> None:
+        from models.session import Session
+
+        db: AsyncSession = self._user_repo.session
+        result = await db.execute(select(Session).where(Session.id == session_id, Session.user_id == user_id))
+        row = result.scalar_one_or_none()
+        if not row:
+            from core.exceptions import NotFoundException
+
+            raise NotFoundException(message="Session not found.", code="SESSION_NOT_FOUND")
+        row.is_revoked = True
+        row.revoked_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        db.add(row)
+        await db.execute(delete(RefreshToken).where(RefreshToken.token_family == row.token_family))
+        await db.flush()
+
+    async def revoke_all_sessions(self, user_id: UUID, keep_current_family: str | None = None) -> int:
+        from models.session import Session
+
+        db: AsyncSession = self._user_repo.session
+        result = await db.execute(select(Session).where(Session.user_id == user_id, Session.is_revoked == False))  # noqa: E712
+        rows = list(result.scalars().all())
+        count = 0
+        for row in rows:
+            if keep_current_family and row.token_family == keep_current_family:
+                continue
+            row.is_revoked = True
+            row.revoked_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            db.add(row)
+            await db.execute(delete(RefreshToken).where(RefreshToken.token_family == row.token_family))
+            count += 1
+        await db.flush()
+        return count
+
+    async def logout(self, user_id: UUID, token_family: str | None = None) -> None:
+        """Logout current family (revoke session + refresh tokens for that family)."""
+        if not token_family:
+            return
+        await self._revoke_session_family(token_family)
+        await self._user_repo.session.execute(delete(RefreshToken).where(RefreshToken.token_family == token_family))
+        await self._user_repo.session.flush()

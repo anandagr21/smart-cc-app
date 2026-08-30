@@ -56,6 +56,18 @@ apiClient.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      // ponytail: stdlib only — no expo-device/ua-parser at 50 users; upgrade when you need modelName
+      let label: string;
+      if (Platform.OS === 'web') {
+        const ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '').toLowerCase();
+        const browser = ua.includes('edg') ? 'Edge' : ua.includes('chrome') ? 'Chrome' : ua.includes('safari') ? 'Safari' : ua.includes('firefox') ? 'Firefox' : 'Web';
+        label = browser === 'Web' ? 'Web' : `Web • ${browser}`;
+      } else {
+        const v = String(Platform.Version ?? '').trim();
+        const os = Platform.OS === 'android' ? 'Android' : 'iOS';
+        label = v ? `${os} ${v}` : os;
+      }
+      config.headers['X-Device-Label'] = label;
     } catch (error) {
       console.error('Error fetching auth token:', error);
     }
