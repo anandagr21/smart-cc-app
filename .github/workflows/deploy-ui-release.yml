@@ -54,9 +54,14 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          npx eas update \
+          # ponytail: npx eas fails when eas-cli not in deps; install globally in CI
+          if ! npx --yes eas --version >/dev/null 2>&1; then
+            npm install -g eas-cli
+          fi
+          eas update \
             --channel ${{ env.EAS_CHANNEL }} \
-            --message "${{ github.ref_name }} — ${{ github.sha }}"
+            --message "${{ github.ref_name }} — ${{ github.sha }}" \
+            --non-interactive
 
   web-deploy:
     name: Build & Deploy Web to Cloudflare

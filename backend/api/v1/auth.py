@@ -50,25 +50,34 @@ def _resolve_device_label(request: Request) -> str | None:
     dl = request.headers.get("x-device-label")
     if dl and dl.strip():
         return dl.strip()[:100]
-    # legacy fallback — old app didn't send header
+    # legacy fallback — old app didn't send header (and EAS OTA failed, so some
+    # Android bundles still have no header — UA is okhttp/dalvik, not "android").
     ua = (request.headers.get("user-agent") or "").lower()
     if not ua:
         return None
-    if "android" in ua:
-        return "Android"
-    if "iphone" in ua or "ipad" in ua or "ipod" in ua:
-        return "iOS"
-    if "expo" in ua:
-        return "Web"
-    if "chrome" in ua or "chromium" in ua:
-        return "Web • Chrome"
-    if "safari" in ua:
-        return "Web • Safari"
-    if "firefox" in ua or "fxios" in ua:
-        return "Web • Firefox"
+    # Web browsers first — mobile Chrome UA contains "android" + "chrome", must
+    # classify as Web before native Android check or mobile web becomes "Android".
     if "edg" in ua:
         return "Web • Edge"
-    return "Web"
+    if "chrome" in ua or "chromium" in ua:
+        return "Web • Chrome"
+    if "firefox" in ua or "fxios" in ua:
+        return "Web • Firefox"
+    if "safari" in ua and "chrome" not in ua and "chromium" not in ua and "edg" not in ua:
+        return "Web • Safari"
+    # Native Android: axios/RN uses okhttp/4.x, older RN uses dalvik
+    if "android" in ua or "okhttp" in ua or "dalvik" in ua:
+        return "Android"
+    # Native iOS: NSURLSession uses CFNetwork/Darwin
+    if "iphone" in ua or "ipad" in ua or "ipod" in ua or "cfnetwork" in ua or "darwin" in ua:
+        return "iOS"
+    if "expo" in ua:
+        if "android" in ua:
+            return "Android"
+        if "ios" in ua:
+            return "iOS"
+        return "Web"
+    return "Unknown device"
 
 
 @router.post(

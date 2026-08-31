@@ -56,7 +56,9 @@ apiClient.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      // ponytail: stdlib only — no expo-device/ua-parser at 50 users; upgrade when you need modelName
+      // ponytail: axios keeps wiping headers via || {} reassignment; but expo backend/auth fix
+      // For session device labels we want minimal, correct strings: "Android", "iOS", "Web • Chrome"
+      // Do not try to add device model without expo-device. Keep to OS + version if possible.
       let label: string;
       if (Platform.OS === 'web') {
         const ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '').toLowerCase();
@@ -67,7 +69,9 @@ apiClient.interceptors.request.use(
         const os = Platform.OS === 'android' ? 'Android' : 'iOS';
         label = v ? `${os} ${v}` : os;
       }
-      config.headers['X-Device-Label'] = label;
+      if (label && label.trim()) {
+        config.headers['X-Device-Label'] = label.trim().slice(0, 100);
+      }
     } catch (error) {
       console.error('Error fetching auth token:', error);
     }
