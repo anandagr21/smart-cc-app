@@ -100,13 +100,15 @@ def create_app() -> FastAPI:
     if settings.is_production and "*" in settings.cors_origins:
         raise ValueError("Wildcard CORS origins are not permitted in production.")
 
-    # CORS — allow configured origins (frontend, mobile dev)
+    # CORS — allow configured origins and expose headers so the browser can read
+    # Authorization/token on credentials requests (allow_credentials=True).
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Device-Label"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
     )
 
     # Request ID, logging, global exception handling
