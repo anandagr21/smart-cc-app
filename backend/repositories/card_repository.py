@@ -144,6 +144,27 @@ class UserCardRepository(BaseRepository[UserCard, dict, dict]):
 
         return items, total
 
+    async def get_raw_by_user(
+        self, user_id: UUID, skip: int = 0, limit: int = 100
+    ) -> list[UserCard]:
+        """Fetch raw UserCard entities joined with CardCatalog in a single query."""
+        from sqlalchemy.orm import joinedload
+
+        visible_statuses = ["ACTIVE", "INACTIVE", "LOCKED"]
+        query = (
+            select(UserCard)
+            .where(
+                UserCard.user_id == user_id,
+                UserCard.card_status.in_(visible_statuses),
+            )
+            .options(joinedload(UserCard.card_catalog))
+            .order_by(UserCard.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().unique().all())
+
     async def get_by_user_and_id(
         self, user_id: UUID, card_id: UUID
     ) -> UserCard:

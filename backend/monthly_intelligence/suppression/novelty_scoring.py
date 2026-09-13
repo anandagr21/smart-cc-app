@@ -48,22 +48,28 @@ class NoveltyScoringEngine:
         return filtered
 
     async def mark_narratives_shown(self, user_id: UUID, narratives: List[Narrative], period: str):
+        if not narratives:
+            return
+
         now = datetime.utcnow()
-        
+        groups = [n.novelty_group for n in narratives if n.novelty_group]
+        if not groups:
+            return
+
+        stmt = select(InsightSuppression).where(
+            InsightSuppression.user_id == user_id,
+            InsightSuppression.scope == "MONTHLY",
+            InsightSuppression.novelty_group.in_(groups),
+            InsightSuppression.period == period,
+        )
+        result = await self.db.execute(stmt)
+        existing_map = {s.novelty_group: s for s in result.scalars().all()}
+
         for n in narratives:
             if not n.novelty_group:
                 continue
-                
-            # Check if exists
-            stmt = select(InsightSuppression).where(
-                InsightSuppression.user_id == user_id,
-                InsightSuppression.scope == "MONTHLY",
-                InsightSuppression.novelty_group == n.novelty_group,
-                InsightSuppression.period == period
-            )
-            result = await self.db.execute(stmt)
-            supp = result.scalars().first()
-            
+
+            supp = existing_map.get(n.novelty_group)
             if supp:
                 supp.last_shown_at = now
             else:
@@ -74,8 +80,8 @@ class NoveltyScoringEngine:
                     scope="MONTHLY",
                     novelty_group=n.novelty_group,
                     period=period,
-                    last_shown_at=now
+                    last_shown_at=now,
                 )
                 self.db.add(supp)
-                
+
         await self.db.commit()

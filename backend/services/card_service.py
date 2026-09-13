@@ -141,6 +141,8 @@ class UserCardService:
         Intended for internal engine consumption (insights, recommendations)
         where the full ORM object graph is needed, not just the API DTO.
         """
+        if hasattr(self._user_card_repo, "get_raw_by_user"):
+            return await self._user_card_repo.get_raw_by_user(user_id, skip=skip, limit=limit)
         items, _ = await self._user_card_repo.get_by_user(
             user_id, skip=skip, limit=limit
         )

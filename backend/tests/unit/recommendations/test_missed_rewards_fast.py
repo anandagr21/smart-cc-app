@@ -154,3 +154,44 @@ async def test_recommendation_batch_evaluation():
     # User card service called only once for entire batch!
     assert mock_card_service.get_user_cards.call_count == 1
 
+
+@pytest.mark.asyncio
+async def test_behavior_analytics_in_memory():
+    from datetime import date
+    from monthly_intelligence.analytics.behavior_analytics import BehaviorAnalyticsEngine
+    from transactions.models import Transaction
+
+    card_a = MockUserCard("Super Dining Card", 5.0, "dining")
+    card_b = MockUserCard("Basic Card", 1.0, "dining")
+
+    tx1 = Transaction(
+        id=uuid.uuid4(),
+        user_id=uuid.uuid4(),
+        user_card_id=card_a.id,
+        merchant_name="Swiggy",
+        normalized_merchant="Swiggy",
+        category="dining",
+        amount=Decimal("1000"),
+        transaction_date=date(2026, 9, 10),
+    )
+    tx2 = Transaction(
+        id=uuid.uuid4(),
+        user_id=uuid.uuid4(),
+        user_card_id=card_b.id,
+        merchant_name="Zomato",
+        normalized_merchant="Zomato",
+        category="dining",
+        amount=Decimal("1000"),
+        transaction_date=date(2026, 9, 12),
+    )
+
+    engine = BehaviorAnalyticsEngine()
+    metrics = await engine.compute_monthly_metrics(uuid.uuid4(), [tx1, tx2], [card_a, card_b])
+
+    assert metrics["transaction_count"] == 2
+    assert metrics["total_spent"] == 2000.0
+    assert metrics["strongest_category"] == "dining"
+    assert metrics["optimization_rate"] == 50.0  # 1 was optimized (card_a), 1 missed (card_b)
+    assert metrics["missed_opportunity_value"] > 0
+
+

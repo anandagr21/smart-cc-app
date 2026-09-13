@@ -61,10 +61,11 @@ class MonthlyIntelligenceOrchestrator:
         
         period_str = f"{target_year}-{target_month:02d}"
 
-        # 2. Fetch raw state
+        # 2. Fetch raw state (combined single transaction query for both months)
         cards = await self.card_service.fetch_raw_cards(user_id, skip=0, limit=100)
-        curr_txns = await self.transaction_service.fetch_raw_transactions_by_date(user_id, curr_start, curr_end)
-        prev_txns = await self.transaction_service.fetch_raw_transactions_by_date(user_id, prev_start, prev_end)
+        all_txns = await self.transaction_service.fetch_raw_transactions_by_date(user_id, prev_start, curr_end)
+        curr_txns = [t for t in all_txns if t.transaction_date >= curr_start]
+        prev_txns = [t for t in all_txns if t.transaction_date < curr_start]
         
         # 3. Analytics (MoM metrics)
         curr_metrics = await self.analytics_engine.compute_monthly_metrics(user_id, curr_txns, cards)
