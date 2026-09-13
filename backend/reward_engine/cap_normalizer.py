@@ -150,9 +150,23 @@ def _extract_legacy_caps(config: dict[str, Any]) -> list[CapRule]:
     return rules
 
 
+_CAP_TYPE_ALIAS_MAP: dict[str, str] = {
+    "per_transaction_cap": CAP_TYPE_TRANSACTION,
+    "per_transaction": CAP_TYPE_TRANSACTION,
+    "transaction": CAP_TYPE_TRANSACTION,
+    "txn_cap": CAP_TYPE_TRANSACTION,
+    "monthly": CAP_TYPE_MONTHLY,
+    "quarterly": CAP_TYPE_QUARTERLY,
+    "annual": CAP_TYPE_ANNUAL,
+    "category": CAP_TYPE_CATEGORY,
+    "merchant": CAP_TYPE_MERCHANT,
+}
+
+
 def _parse_cap_entry(entry: dict[str, Any]) -> CapRule:
     """Parse a single cap entry dict (from the 'caps' list or CapConfigInput)."""
-    cap_type = str(entry.get("type", entry.get("cap_type", CAP_TYPE_TRANSACTION)))
+    raw_cap_type = str(entry.get("type", entry.get("cap_type", CAP_TYPE_TRANSACTION))).strip().lower()
+    cap_type = _CAP_TYPE_ALIAS_MAP.get(raw_cap_type, raw_cap_type)
     _validate_cap_type(cap_type)
 
     limit = _safe_decimal(entry.get("limit", 0))

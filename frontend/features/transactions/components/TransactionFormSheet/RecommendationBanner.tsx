@@ -5,6 +5,7 @@ import { useFormContext } from 'react-hook-form';
 
 import { DynamicIcon } from '@/components/DynamicIcon';
 import { HeroRecommendationCard } from '../HeroRecommendationCard';
+import { MissingBestCard } from '../MissingBestCard';
 import { SecondaryRecommendationCard } from '../SecondaryRecommendationCard';
 import { useThemeColors } from '@/features/theme/hooks/useThemeColors';
 import { tokens } from '@/theme/tokens';
@@ -29,6 +30,7 @@ interface RecommendationBannerProps {
   onExplainPress: (id: string) => void;
   triggerHaptic: (type: 'selection') => void;
   calculationId?: string;
+  missingBestCard?: any | null;
 }
 
 export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
@@ -39,7 +41,8 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
   selectedCardId,
   onExplainPress,
   triggerHaptic,
-  calculationId
+  calculationId,
+  missingBestCard
 }) => {
   const colors = useThemeColors();
   const { setValue, watch } = useFormContext<any>();
@@ -56,7 +59,7 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
         <Text style={[styles.sectionTitle, { color: colors.success }]}>{labels.title}</Text>
       </View>
 
-      {!hasValidAmount && !isPending && winningWalletCards.length === 0 && (
+      {Boolean(!hasValidAmount && !isPending && winningWalletCards.length === 0) && (
         <Animated.View entering={FadeIn} style={[styles.emptyState, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
           <View style={[styles.emptyIconWrap, { backgroundColor: colors.primarySoft }]}>
             <DynamicIcon name="Sparkles" size={24} color={colors.primary} />
@@ -70,7 +73,7 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
         </Animated.View>
       )}
 
-      {isPending && hasValidAmount && (
+      {Boolean(isPending && hasValidAmount) && (
         <Animated.View entering={FadeIn} style={[styles.thinkingState, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1 }]}>
           <DynamicIcon name="Sparkles" size={28} color={colors.primary} style={styles.pulseIcon} />
           <Text style={[styles.thinkingStateText, { color: colors.textPrimary }]}>
@@ -79,7 +82,7 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
         </Animated.View>
       )}
 
-      {!isPending && hasValidAmount && winningWalletCards.length > 0 && (
+      {Boolean(!isPending && hasValidAmount && winningWalletCards.length > 0) && (
         <Animated.View entering={FadeInUp.springify().damping(20).stiffness(150)}>
           <Animated.View entering={ZoomIn.duration(400).springify()}>
             <HeroRecommendationCard
@@ -96,7 +99,9 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
             />
           </Animated.View>
 
-          {winningWalletCards.length > 1 && (
+          {missingBestCard ? <MissingBestCard gap={missingBestCard} /> : null}
+
+          {winningWalletCards.length > 1 ? (
             <View style={styles.alternativesWrap}>
               <Text style={[styles.alternativesTitle, { color: colors.textMuted }]}>
                 {labels.altLabel}
@@ -119,7 +124,7 @@ export const RecommendationBanner: React.FC<RecommendationBannerProps> = ({
                 ))}
               </View>
             </View>
-          )}
+          ) : null}
 
           <View style={styles.aiDisclaimerWrap}>
             <DynamicIcon name="Info" size={12} color={colors.textMuted} />

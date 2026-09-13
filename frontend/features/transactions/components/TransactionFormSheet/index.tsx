@@ -458,6 +458,7 @@ export const TransactionFormSheet: React.FC<TransactionFormSheetProps> = ({
                   onExplainPress={setExplainCardId}
                   triggerHaptic={triggerHaptic}
                   calculationId={getRecommendation.data?.calculation_id}
+                  missingBestCard={getRecommendation.data?.missing_best_card}
                 />
 
                 <CardSelector

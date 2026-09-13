@@ -45,6 +45,18 @@ class CardCatalogRepository(BaseRepository[CardCatalog, dict, dict]):
         """List only active (currently offered) card catalog entries."""
         return await self.list(skip=skip, limit=limit, is_active=True)
 
+    async def list_active_not_in_wallet(self, user_id: UUID) -> list[CardCatalog]:
+        """Catalog cards not already in user's wallet (active only)."""
+        owned_ids = select(UserCard.card_catalog_id).where(
+            UserCard.user_id == user_id, UserCard.card_status.in_(["ACTIVE", "INACTIVE", "LOCKED"])
+        )
+        q = select(CardCatalog).where(
+            CardCatalog.is_active == True,  # noqa: E712
+            CardCatalog.id.notin_(owned_ids),
+        ).order_by(CardCatalog.card_name)
+        result = await self.session.execute(q)
+        return list(result.scalars().all())
+
 
 class UserCardRepository(BaseRepository[UserCard, dict, dict]):
     """Repository for user-owned card instances.

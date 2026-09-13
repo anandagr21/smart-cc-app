@@ -115,7 +115,24 @@ class Settings(BaseSettings):
     log_format: Literal["json", "text"] = "json"
 
     # ---- CORS ----
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:19006", "http://localhost:8081", "http://localhost:8082", "https://akaovia.com", "https://app.akaovia.com", "https://card-analyser-web.pages.dev", "https://api.akaovia.com"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:19006",
+        "http://localhost:8081",
+        "http://localhost:8082",
+        "http://localhost:8000",
+        "https://akaovia.com",
+        "https://app.akaovia.com",
+        "https://card-analyser-web.pages.dev",
+        "https://api.akaovia.com",
+        # Expo LAN — physical device hits 192.168.x.x, not localhost
+        "http://192.168.1.23:8000",
+        "http://192.168.1.23:8081",
+        "http://192.168.1.23:19006",
+        "http://192.168.1.23:3000",
+        "exp://192.168.1.23:8081",
+        "exp://192.168.1.23:19000",
+    ]
 
     # ---- API ----
     api_v1_prefix: str = "/api/v1"

@@ -32,20 +32,14 @@ class TransactionEnrichmentService:
         for tx in transactions:
             # Use pre-normalized data from the transaction if available (avoids
             # expensive per-transaction merchant resolution DB lookups)
-            if tx.normalized_merchant and tx.normalized_merchant != tx.merchant_name:
+            if tx.normalized_merchant:
                 normalized_name = tx.normalized_merchant
                 category = tx.category or "unknown"
             else:
-                # Legacy transaction — fall back to full resolution
-                match_res = await self.merchant_service.find_best_match(tx.merchant_name)
-
-                if match_res.merchant:
-                    normalized_name = match_res.merchant.canonical_name
-                    category = match_res.merchant.category
-                else:
-                    norm_res = self.merchant_service.normalize_merchant(tx.merchant_name)
-                    normalized_name = norm_res.canonical_name
-                    category = norm_res.category or "unknown"
+                # In-memory deterministic normalization — zero DB lookups
+                norm_res = self.merchant_service.normalize_merchant(tx.merchant_name)
+                normalized_name = norm_res.canonical_name
+                category = norm_res.category or "unknown"
 
             enriched.append(EnrichedTransaction(
                 id=str(tx.id),

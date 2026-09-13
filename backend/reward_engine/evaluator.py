@@ -92,14 +92,17 @@ def evaluate(
     Returns:
         EvaluationResult with effective_reward_inr, breakdown, and diagnostics.
     """
-    import sentry_sdk
-    sentry_sdk.set_tag("service", "reward_engine")
-    sentry_sdk.add_breadcrumb(
-        category="reward_engine",
-        message=f"Evaluating rewards for merchant: {txn.merchant}",
-        level="info",
-        data={"amount": str(txn.amount), "category": txn.category}
-    )
+    try:
+        import sentry_sdk as _sentry  #
+        _sentry.set_tag("service", "reward_engine")
+        _sentry.add_breadcrumb(
+            category="reward_engine",
+            message=f"Evaluating rewards for merchant: {txn.merchant}",
+            level="info",
+            data={"amount": str(txn.amount), "category": txn.category}
+        )
+    except Exception:
+        pass
 
     breakdown: list[EvaluationStep] = []
     warnings: list[str] = []
@@ -155,11 +158,16 @@ def evaluate(
 
     if match is None:
         warnings.append("No applicable reward rule matched this transaction.")
-        sentry_sdk.add_breadcrumb(
-            category="reward_engine",
-            message="No applicable reward rule matched this transaction.",
-            level="info"
-        )
+        try:
+            import sentry_sdk as _sentry2  #
+
+            _sentry2.add_breadcrumb(
+                category="reward_engine",
+                message="No applicable reward rule matched this transaction.",
+                level="info"
+            )
+        except Exception:
+            pass
         return EvaluationResult(
             effective_reward_inr=ZERO_DECIMAL,
             reward_type=RewardType.NONE,

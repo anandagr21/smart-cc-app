@@ -133,8 +133,9 @@ def parse_rules_from_catalog(catalog_card: Any, card_name: str) -> list[Normaliz
             cap_limit = float(r.get("cap_limit", 0) or 0)
             if cap_limit > 0:
                 cap_cycle = r.get("cap_cycle", "per_transaction")
+                cap_type_name = "transaction_cap" if cap_cycle == "per_transaction" else f"{cap_cycle}_cap"
                 caps.append({
-                    "cap_type": f"{cap_cycle}_cap",
+                    "cap_type": cap_type_name,
                     "limit": cap_limit,
                     "scope": cap_cycle,
                 })

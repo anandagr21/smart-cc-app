@@ -28,6 +28,21 @@ export interface OptimizerRankedCard {
   engine_explanations?: string[];
 }
 
+export interface MissingBestCard {
+  card_id: string;
+  card_name: string;
+  bank_name?: string | null;
+  affiliate_url: string;
+  incremental_reward: number;
+  owned_best_reward: number;
+  global_best_reward: number;
+  annual_fee: number;
+  fee_waiver_threshold?: number | null;
+  why_better: string;
+  cap_note?: string | null;
+  disclosure: string;
+}
+
 export interface RecommendationResponse {
   calculation_id?: string;
   resolved_merchant_name: string | null;
@@ -44,6 +59,7 @@ export interface RecommendationResponse {
   all_ranked_cards: OptimizerRankedCard[];
   explanations: string[];
   warnings: string[];
+  missing_best_card?: MissingBestCard | null;
 }
 
 export interface SingleResponse<T> {

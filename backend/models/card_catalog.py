@@ -90,6 +90,9 @@ class CardCatalog(SQLModel, table=True):
     )
     is_approved: bool = Field(default=False)
 
+    affiliate_url: str | None = Field(default=None, max_length=2048, description="Partner apply link with UTM; ranking never uses it.")
+    affiliate_active: bool = Field(default=False, description="Only gap cards with active link are shown.")
+
     # ---- Relationships ----
     user_cards: list["UserCard"] = Relationship(
         back_populates="card_catalog",

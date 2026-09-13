@@ -21,6 +21,23 @@ from schemas.common import SingleResponse
 
 from reward_engine.transaction_optimizer.schemas import OptimizationIntent, OptimizerRankedCard
 
+
+class MissingBestCard(BaseModel):
+    """Gap card not in wallet — deterministic shadow rank."""
+
+    card_id: UUID = Field(..., description="Catalog card id (not UserCard).")
+    card_name: str = Field(..., description="Display name.")
+    bank_name: str | None = Field(default=None)
+    affiliate_url: str = Field(..., description="Partner apply link; ranking never uses it.")
+    incremental_reward: float = Field(..., description="global_best - owned_best in INR for this txn.")
+    owned_best_reward: float = Field(...)
+    global_best_reward: float = Field(...)
+    annual_fee: float = Field(default=0)
+    fee_waiver_threshold: float | None = Field(default=None)
+    why_better: str = Field(default="", description="Human line: e.g. 5% on Flipkart vs your 1.5% capped.")
+    cap_note: str | None = Field(default=None)
+    disclosure: str = Field(default="Partner link — ranking unchanged.")
+
 class RecommendationRequest(BaseModel):
     """Input parameters for a recommendation request."""
 
@@ -89,4 +106,7 @@ class RecommendationResponse(BaseModel):
     )
     warnings: list[str] = Field(
         default_factory=list, description="Top-level aggregate warnings."
+    )
+    missing_best_card: MissingBestCard | None = Field(
+        default=None, description="Best catalog card not in wallet that beats owned best — gap affiliate wedge."
     )

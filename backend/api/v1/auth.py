@@ -45,7 +45,7 @@ async def _get_auth_service(user_repo: UserRepository = Depends(get_user_repo)) 
 
 def _resolve_device_label(request: Request) -> str | None:
     """Resolve device label with legacy fallback."""
-    # ponytail: explicit X-Device-Label preferred ("Android 14" / "iOS 18.1" / "Web • Chrome"),
+    #
     # fallback parses User-Agent so old apps (no header) don't store NULL.
     dl = request.headers.get("x-device-label")
     if dl and dl.strip():
@@ -224,7 +224,7 @@ async def list_sessions(
             "id": str(r.id),
             "token_family": r.token_family,
             "ip_address": r.ip_address,
-            "device_label": r.device_label or "Unknown device",  # ponytail: legacy NULL fallback for old sessions before header existed
+            "device_label": r.device_label or "Unknown device",  #
             "created_at": r.created_at.isoformat() if r.created_at else None,
             "last_active_at": r.last_active_at.isoformat() if r.last_active_at else None,
             "expires_at": r.expires_at.isoformat() if r.expires_at else None,
@@ -257,7 +257,7 @@ async def revoke_all_sessions(
     current_user: UserResponse = Depends(get_current_user),
     auth_service: AuthService = Depends(_get_auth_service),
 ) -> dict:
-    # ponytail: path /auth/sessions without trailing slash handles "revoke all" — keep after /sessions/{id} so `{id}` doesn't greedily match "sessions"
+    #
     # FastAPI resolves literal before param, so /sessions is safe even when /sessions/{id} exists.
     count = await auth_service.revoke_all_sessions(current_user.id)
     return {"data": {"revoked_count": count}}
@@ -272,7 +272,7 @@ async def logout(
     current_user: UserResponse = Depends(get_current_user),
     auth_service: AuthService = Depends(_get_auth_service),
 ) -> dict:
-    # ponytail: logout revokes the most recent active session for this user (1 device = 1 family at 50 users).
+    #
     # Upgrade to family-in-access-token claim when multi-device logout precision matters.
     rows = await auth_service.list_sessions(current_user.id)
     active = [r for r in rows if not r.is_revoked]

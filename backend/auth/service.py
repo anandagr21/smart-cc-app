@@ -68,7 +68,7 @@ class AuthService:
     async def _ensure_session(
         self, user_id: UUID, token_family: str, ip_address: str | None, device_label: str | None = None
     ) -> None:
-        """Create or touch a Session row for this token_family (ponytail: 1:1 with family)."""
+        """Create or touch a Session row for this token_family."""
         from models.session import Session
 
         session: AsyncSession = self._user_repo.session
@@ -85,7 +85,7 @@ class AuthService:
             await session.flush()
             return
         settings = get_settings()
-        # ponytail: legacy app sends no header → store coarse fallback, not NULL, so analytics never has NULL bucket
+        # legacy app sends no header → store coarse fallback, not NULL
         safe_label = device_label or None  # already coarse from _resolve_device_label
         if not safe_label:
             safe_label = "Unknown device"

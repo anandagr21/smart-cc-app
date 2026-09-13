@@ -56,9 +56,7 @@ apiClient.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      // ponytail: axios keeps wiping headers via || {} reassignment; but expo backend/auth fix
       // For session device labels we want minimal, correct strings: "Android", "iOS", "Web • Chrome"
-      // Do not try to add device model without expo-device. Keep to OS + version if possible.
       let label: string;
       if (Platform.OS === 'web') {
         const ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '').toLowerCase();
