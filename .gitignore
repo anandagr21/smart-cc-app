@@ -228,3 +228,6 @@ graphify-out/
 .agents/
 .agent/
 .DS_Store
+
+brag**/
+reels-output/

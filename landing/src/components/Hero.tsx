@@ -214,7 +214,7 @@ export default function Hero() {
                 >
                   <div>
                     <p className="text-white/40 text-xs mb-1">Tonight's Swiggy order — ₹600</p>
-                    <p className="text-white font-extrabold text-2xl">Use SBI Cashback</p>
+                    <p className="text-white font-extrabold text-2xl">Use Swiggy HDFC</p>
                   </div>
                   <div className="text-right">
                     <p className="text-green-400 text-sm font-bold">₹60</p>

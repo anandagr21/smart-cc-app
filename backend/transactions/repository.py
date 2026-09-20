@@ -11,9 +11,12 @@ from datetime import date
 from typing import Optional
 from uuid import UUID
 
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, update
 
+from behavioral_memory.models import RecommendationBehaviorRecord
+from models.transaction_optimization import TransactionOptimizationRecord
 from transactions.constants import TransactionStatus
 from transactions.exceptions import TransactionNotFoundError
 from transactions.models import Transaction
@@ -116,5 +119,20 @@ class TransactionRepository:
 
     async def delete_transaction(self, transaction: Transaction) -> None:
         """Delete an existing transaction. Flushes so caller manages commit."""
+        # ponytail: dependents reference transactions.id with NO ACTION (no ON DELETE
+        # CASCADE migration), and every API-created transaction gets a behavior record,
+        # so hard delete always 500s. Prune the 1:1 dependent rows here — one guard in
+        # the shared choke point instead of a migration + one per caller. If new tables
+        # FK to transactions.id, add them here.
+        await self._session.execute(
+            delete(RecommendationBehaviorRecord).where(
+                RecommendationBehaviorRecord.transaction_id == transaction.id
+            )
+        )
+        await self._session.execute(
+            delete(TransactionOptimizationRecord).where(
+                TransactionOptimizationRecord.transaction_id == transaction.id
+            )
+        )
         await self._session.delete(transaction)
         await self._session.flush()
